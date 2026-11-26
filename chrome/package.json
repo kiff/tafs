@@ -4,6 +4,7 @@
   "type": "module",
   "description": "tafs in your Chrome: the MV3 extension (docs/chrome.md).",
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "e2e": "node --test e2e/*.e2e.test.js"
   }
 }

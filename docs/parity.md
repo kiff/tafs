@@ -19,14 +19,14 @@ One row per feature, one column per device: **done**, **partial** (what's missin
 | Windows | done 50, not for it 8 | the 58 iPad view files |
 | Linux | done 53, not for it 5 | the 58 iPad view files |
 | Android | done 55, not for it 3 | the 58 iPad view files |
-| Wear OS | built 25, partial 3, not for it 4 | the [Watches](#watches) table |
-| Apple Watch | built 21, partial 5, not started 1, not for it 5 | the [Watches](#watches) table |
-| Chrome extension | done 9, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
+| Wear OS | built 26, partial 3, not for it 4 | the [Watches](#watches) table |
+| Apple Watch | built 24, partial 4, not started 1, not for it 4 | the [Watches](#watches) table |
+| Chrome extension | done 10, partial 3, not for it 2 | the [Chrome extension](#chrome-extension) table |
 
 **The three biggest gaps**
 1. **The desktop ports are level with the iPad.** macOS 12 has 50 screens done and 8 not for it: its last three, the alerts, count as done since a signed `PUSH=1` build showed a held call's alert with tafs closed (tafs-macos#262). Windows has 50 done and 8 not for it, Linux 53 done and 5 not for it, each with its reason.
 2. **Mac 13+ and the Chrome extension** are what's partial on a computer: Mac 13+'s 2 wait on the owner's check on a signed Mac ([mac-app.md](mac-app.md#the-owners-check-on-a-signed-mac)), and the extension's 3 are named in its [table](#chrome-extension).
-3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): the complication's count, and three switches built but off until the owner's yes or the privacy page. (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
+3. **The watches wait on the owner's own checks**: every merged row reads built until the owner has seen it work. **Apple Watch is behind Wear OS** ([Watches](#watches)): the complication's count, and two switches built but off until the owner's yes or the privacy page (the brief, and the phone making the text). (iPhone/iPad and Android are level: the loop card landed last, tafs#1861.)
 
 ## The iPad's screens
 
@@ -144,7 +144,7 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | # | Feature | iPhone/iPad | Android | Where it's said |
 | -: | :- | :- | :- | :- |
 | 1 | KIFF's words for a connection, v2 (`POST /v1/profiles/words?v=2`) | done (tafs#1762) | done (1.27.7) | coach.md, "KIFF's words for a connection" |
-| 2 | A failed run's refused line, with Retry | done (a taf's chat: tafs#1766; Coach's: tafs#1867) | done (`chatFailed`, `ChatEnd.Failed`) | android-app.md:24-30, ios-app.md |
+| 2 | A failed run's refused line, with Retry; Try again under it only on tafs cloud's `failed.retry`, in its `retry_label` | done (a taf's chat: tafs#1766; Coach's: tafs#1867); Try again on `retry`: not yet | done (`chatFailed`, `ChatEnd.Failed`; Try again: `failedRetry`) | android-app.md:24-30, ios-app.md |
 | 3 | An answered connect card: its Card line opens that Card as signed | done (tafs#1771) | done | coach.md:55-60 |
 | 4 | View-only read from `approval_mode` in `GET /v1/me` | done (tafs#1772) | done | approvals.md:158-162 |
 | 5 | A removed taf's connections ended by tafs cloud, not the phone | done (`AppModel.removeTaf`) | done (1.17.1) | connect-apps.md:128-133 |
@@ -159,6 +159,10 @@ What one phone has and the other doesn't, beyond the screens above. Each was che
 | 14 | A re-pairing reads the Chromes and connections again, and signs only what it showed | done (tafs#1859) | done (tafs#1761) | android-app.md, ios-app.md, "Pairing a Chrome" |
 | 15 | A re-pairing after a reinstall starts on the one Chrome alike | done (tafs#1780) | done (tafs#1781) | chrome.md, "Your Chrome" 1 |
 | 16 | The release card: Allow a saved sign-in into the owner's Chrome (`tafs-chrome/release/v1`) | held by the owner's decision: no passwords go through the extension (built on a branch, not opened) | built and off, and stays off by the same decision (tafs#1830, #1837, tafs#1882) | chrome.md, "The phone's release card" |
+| 17 | Delete a Coach conversation for good (`DELETE /v1/tafs/{id}/chats/{session}`, tafs cloud's words in each chats-list read's `delete`; the 409's `error`) | done for iOS 1.0.1 (tafs#2107: `AppModel.deleteSetupChat`; only in tafs cloud's words, no stand-ins; the watch drops its kept Coach thread) | done (`AppModel.deleteCoachChat`; the watch's copy put empty) | android-app.md, "Deleting a conversation" |
+| 18 | A phone that serves a watch registers for background pushes only while alerts are off (`alerts: false`, tafs#2100), so the watch stays in step; the blocked-alerts prompt with a settings link and a re-check; the one-time "Your watch is using tafs" prompt | done for iOS 1.0.1 (tafs#2101) | done (146, tafs#2115) | ios-app.md, android-app.md; privacy line: kiff/cloud#165, merged with the first of the two builds |
+| 19 | The Card step before Coach's first approval (tafs#2091's words; what's shown equals what's signed, compared on structured fields, failing closed), and Coach takes no typing until its tools are approved | done for iOS 1.0.1 (tafs#2112: `CardStepCheck`, failing closed; a phone that can't approve with Face ID or Touch ID gets no button and signs nothing). The box stays locked, under tafs cloud's `locked`, or the app's own line when none came (tafs#2123) | done (146, tafs#2115): `CardStepScreen`, `CardStepCheck` on the iPhone's allowlist, failing closed; no strong biometric, no step (Open Settings); the box stays locked, under `locked` or the app's `coach.tools.write_after` | coach.md, "Coach's tools step"; ios-app.md, "The Card step" |
+| 20 | The first approval's tools batch (`POST /v1/connections/batch`) held to the Card step: each connection one of its tools, Coach's own control server at this app's tafs cloud, only the keys tafs cloud writes | done for iOS 1.0.1 (tafs#2116: `CardStepCheck.batchMatches`) | not yet: not in 147, which compares only the draft (`CardStepCheck.matches`); the next build | ios-app.md, "The Card step" |
 
 ## Your Chrome
 
@@ -186,6 +190,7 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 | A step handed to the person ("Your turn": the taf asks, the person does it) | done (tafs#1806) | the extension types, clicks and fills nothing; planque's `browse_hand` tools are still to land |
 | A run in the owner's window, its tabs kept as "· done" until that taf's next run | done (tafs#1782, #1813, #1815) | a tab the person moved or is using is never closed |
 | Re-pairing replaces (Your Chrome 1), one fingerprint (5), isolation (6) | done | |
+| A taf on the tab you're on: a message from the side panel joins that tab, and carries the page only on the taf's own signed sites | done (tafs#2024, #2025, #2030, #2040, #2048, #2051) | Chrome 0.2.12–0.2.22, with page consent "2"; the taf reads a joined tab only at its exact address and opens anything else in a tab of its own; tafs cloud checks the sites again and gives a page turn only `browse_open` and `browse_read`. Since 0.2.17, in any tab of a run: only the run's own step moves it, and the person's own move hands the tab back to them as it is (`given_back`); the extension never asks for a blocked address again; the fence covers navigations only, and what an allowed site's page sends by itself is that site's own (`requests.e2e.test.js`). Since 0.2.18, a step the taf couldn't do says why in plain words in the side panel, in the person's language (`step_refused_<code>`, tafs#2049, #2054, #2055). Since 0.2.19, Chrome's own fence blocks a sensitive site under a taf's site (a bank label, Chrome's own pages, a site under a listed public suffix, an address with user info) before any request, with the code the extension's own check gives (tafs#2059). Since 0.2.20, a taf never acts on a control the page made unusable (disabled, in a disabled fieldset, inert, `aria-disabled`, a read-only text field, a disabled option), and can't "uncheck" a radio (tafs#2061). Since 0.2.21, a step that ran (a click, Back or a hand-over) whose page is then too large to send is answered done with no page (`page_dropped`), never as a failure, so the taf reads again and never repeats it; planque tells the taf it ran (tafs#2068, planque#431). Since 25 Nov, planque's list of a Chrome's connections carries each one's phone-signed sites (planque#433); before it, the extension never had them, so no taf message ever carried the page in production. Since 0.2.22, the side panel says why a message went without the page (no page consent, with a banner above the message box; a sensitive site; a site switched off; not the taf's site), and a turn that failed says so under the message in tafs cloud's words, with Try again only where nothing was done (tafs#2077, #2075). planque allows no build from 0.2.12 to 0.2.18 (planque#424, #425, #429), and allows 0.2.19 to 0.2.22 (planque#428, #430, #432, #434). Open: a dialog a page raises as it loads reaches Chrome as a real dialog, and the run waits; the guard goes in once the page has committed (`docs/chrome.md`). It reaches the Web Store with the current build's package (the store row below) |
 | Sealed values (Saved sign-ins) | partial | the extension checks the release; the phone's card that signs `tafs-chrome/release/v1` is designed ([chrome.md](chrome.md), "The phone's release card") and isn't built |
 | Screenshots of a run's acts | partial | built; off (`config.js`) until planque keeps them and the privacy words are live |
 | In the Chrome Web Store | partial | CI builds the package (`chrome-package.yml`); the upload waits on the owner's yes |
@@ -194,42 +199,43 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 
 ## Watches
 
-A watch row is **done** only once the owner has seen it work: on their Galaxy Watch 5 for Wear OS, and for the Apple Watch, which they don't own, in Xcode's simulator. Merged code isn't enough. Until the owner's checks of the current builds come back (the Apple Watch app in the iPhone's build 3974, Wear's internal-track build), a row whose code has merged reads **built**. Each row then moves to done, or to "broken on the owner's check" with the build and the fix, from the owner's result; a row whose code isn't in the build they checked stays built.
+A watch row is **done** only once the owner has seen it work: on their Galaxy Watch 5 for Wear OS, and for the Apple Watch, which they don't own, in Xcode's simulator. Merged code isn't enough. Until the owner's checks of the current builds come back (the Apple Watch app in the iPhone's build 3974; Wear 0.4.10 with Android 147, on Play's internal tracks since 26 Nov), a row whose code has merged reads **built**. Each row then moves to done, or to "broken on the owner's check" with the build and the fix, from the owner's result; a row whose code isn't in the build they checked stays built.
 
 | # | Feature | Apple Watch | Wear OS | Why, or what's missing |
 | -: | :- | :- | :- | :- |
-| 1 | Needs you on the wrist: the count and each held call | built | built | |
-| 2 | Refuse a held call | built | built | takes power away, so the watch may; needs the watch's lock |
+| 1 | Needs you on the wrist: the count and each held call | built (26 Nov, tafs#2129: the phone pushes its held calls, `needs_you`, with no amount; held calls sit on top of the Inbox, leave when answered or past their time on the watch's clock, and the count shows on the Inbox page); the count on the watch face waits on an App Group (row 24) | broken on the owner's check of Wear 0.4.9 (26 Nov: a held call reached the Inbox only on a read, with no alert or tile count); rebuilt in 0.4.10, on the internal track since 26 Nov (tafs#2131: `kept/needs-you` pushed by the phone, the watch's own alert, the tile) | |
+| 2 | Refuse a held call | built | broken on the owner's check of Wear 0.4.9 (26 Nov: a Refuse the phone couldn't make said only "Open on phone"); rebuilt in 0.4.10, on the internal track since 26 Nov (tafs#2131: "Not refused. Refuse it on your phone.") | takes power away, so the watch may; needs the watch's lock |
 | 3 | Halt a taf, or every taf | built | built | |
 | 4 | Approve anything | not for it | not for it | the approval key lives on the phone, behind Face ID or the fingerprint |
 | 5 | Resume a halted taf | not for it | not for it | it gives power back: phone only |
 | 6 | Ask by voice or text | built | built | |
-| 7 | Check before sending (Re-record, Delete, Type, Quick reply) | built | built | |
+| 7 | Check before sending (Re-record, Delete, Type, Quick reply) | built | built | Edit before sending (the owner's ask, 26 Nov): on Wear 0.4.10 tapping the words opens them to change, and the recording goes once they change (tafs#2131); the Apple Watch next, after iPhone 1.0.1, with the same `watch.edit_words` |
 | 8 | Keep for later | built | built | Apple Watch: on (`CoachModel.keepForLaterOn`), with the privacy page's line and the owner's yes |
 | 9 | Send, then "Coach is answering" | built | built | |
-| 10 | The answer: Hear it, and Reply | built (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only) | built | |
-| 11 | An answer you can't miss, with the app put away | built | built | Apple Watch: tafs cloud's push for a watch request wakes the iPhone, which posts the answer as W3 does (`WatchAskPush`), for a request it sent. Wear OS: the push starts a job on the phone that keeps the answer for the watch as a Data Layer item, delivered and notified with the watch's app closed (docs/watch-wear.md, Delivery) |
-| 12 | Coach as one conversation | built | built | Wear OS: kept across put-away; across opens (30 messages, up to 20 threads with each taf's, 30 days unopened) behind `KEEP_THREADS` (on in `-test` builds) until the owner's yes and the Privacy page's line |
-| 13 | Chat with one taf | built | built | tafs cloud's switch still decides per account |
+| 10 | The answer: Hear it, Reply, and Read more for the whole answer | built (Hear: tafs#1868, `WatchHear`, a voice of the app's own language only); Read more on a taf's cut line from before the visit, missing until 26 Nov (as on Wear 0.4.9), built since tafs#2133 (Wear's `line-full` shape: the taf's own message, whole, held for the visit only) | broken on the owner's check of Wear 0.4.9 (26 Nov: no Read more on a taf's cut answer from the phone's thread; Coach's took two taps); rebuilt in 0.4.10, on the internal track since 26 Nov (tafs#2131: `line-full`, one tap) | Read more reads the whole answer, Coach's too (`?full=1`, tafs#2020), on both watches and the phones' From your watch days (tafs#2021, tafs#2018). Wear 0.4.9: answers drawn and spoken as plain text (no raw markdown); the Apple Watch follows. |
+| 11 | An answer you can't miss, with the app put away | built | built | failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov); both rebuilt to the owner's 8 calls. Apple Watch: the iPhone posts the answer, a taf chat's under the taf's name, and the watch shows the iPhone's notification (`CoachFollow`, tafs#2018). Wear OS: the push starts a job on the phone that hands the answer to the watch as a Data Layer item, delivered and notified with the watch's app closed (tafs#2021). Android 146: a phone that serves the watch registers for its background pushes with alerts off (`alerts: false`), so the answer reaches a watch whose phone never turned alerts on (the owner's S23, 25 Nov); the iPhone follows with the same rule (tafs#2101). Android 146 also keeps the taf list for the watch as it changes (`kept/tafs`) and answers the watch's reads within its 10 s; the phone's blocked-alerts dialog has Open notification settings and a re-check, and "Your watch is using tafs" shows once (the iPhone in tafs#2101) |
+| 12 | Coach as one conversation, opening on the newest, in step with the phone | built | built | failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov); rebuilt in tafs#2021 and tafs#2018: one thread with the phone's, pushed live, opening at the bottom |
+| 13 | Chat with one taf: send in the thread with your time and ✓, the answer under it | built | built | failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov) (Send gave "Open on phone"); rebuilt in tafs#2021 and tafs#2018. A message from another device reaches the watch by tafs cloud's `taf_chat` push (tafs#2022). tafs cloud's switch still decides per account, and the watch says it's off before recording Wear 0.4.9: while the chat shows "answering", the watch follows the answer itself (every 5 s, 2 minutes at most), and the words just sent show whole; the Apple Watch follows. |
 | 14 | A taf's page and its settings | built | built | |
 | 15 | Your tafs, with their state | built | built | |
 | 16 | Today's calendar | built | built | |
 | 17 | The Account page | built | built | |
-| 18 | Sign out on this watch alone | built | built | |
+| 18 | Sign out on this watch alone | built; one tap on the watch alone signed it back in (found 26 Nov, the same gap as Wear's); the phone's Allow before it signs in again, built since tafs#2132 (a one-time ask, Allow behind the phone's lock, a swipe is Deny, unanswered after ten minutes it lapses). A signed-out watch takes none of the phone's pushes (tafs#2129) | broken on the owner's check of Wear 0.4.9 (26 Nov: one tap on the watch alone signed it back in); rebuilt in 0.4.10, on the internal track since 26 Nov (tafs#2131: the phone's Allow before it signs in again) | |
 | 19 | Sign in, pair a device, add a passkey, change a Card | not for it | not for it | no sign-in of its own; the keys stay on the phone |
-| 20 | The inbox kept on the watch | built | built | Wear OS: only on a watch with a screen lock; without one, the Inbox lists every answer the watch knows, opened ones too |
+| 20 | The inbox kept on the watch | built | built | Wear OS: failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov); rebuilt in tafs#2021, kept encrypted (AES-GCM under the watch's Keystore key), only on a watch with a screen lock Wear 0.4.9: a reopen no longer drops lines the encrypted store missed, and a taf's answer is never filed here; the Apple Watch follows if its store can fail the same way. |
 | 21 | The inbox's read and dismissed, in step with the phone | built (`InboxModel.sync`, `inbox_marks` / `inbox_mark`) | built (`WatchModel.syncInbox`, `inbox-marks` / `inbox-mark`) | tafs cloud keeps them (`/v1/watch/inbox`), by id alone |
 | 22 | Your brief | partial | partial | built; off (`briefOnWatch`, `BRIEF_ON_WATCH`) until the owner's yes |
 | 23 | "From your watch" on the phone | built | built | |
-| 24 | A complication or tile (count, Ask tafs) | partial | built | Apple Watch: Ask tafs on the face and in the Smart Stack (`TafsWatchWidgets`), opening Coach's home listening; the count of what waits comes with an App Group |
-| 25 | The phone makes the text when the watch's recognizer gives up | partial | built | Apple Watch: built, off (`WatchVoice.on`) until the privacy page says so and the owner says yes |
+| 24 | A complication or tile (count, Ask tafs) | partial | broken on the owner's check of Wear 0.4.9 (26 Nov: the count stayed 0 with a call held); rebuilt in 0.4.10, on the internal track since 26 Nov (tafs#2131: the count follows `kept/needs-you`, the tile redrawn) | Apple Watch: Ask tafs on the face and in the Smart Stack (`TafsWatchWidgets`), opening Coach's home listening; the count of what waits comes with an App Group |
+| 25 | The phone makes the text when the watch's recognizer gives up | partial | built | Apple Watch: built, off (`WatchVoice.on`) until the privacy page says so and the owner says yes. Wear 0.4.10: the seconds left show while recording, and a stop at the 30 s limit says so and keeps what was heard (tafs#2131). The Apple Watch records nothing itself while `WatchVoice.on` is off: watchOS's dictation |
 | 26 | Play and Pause the recording before sending | not started | partial | Apple Watch: W12 held for the owner's yes. Wear: test builds only (`KEEP_AUDIO`) |
-| 27 | Opening at once from what the watch kept | partial | built | Apple Watch: built, off (`WatchCache.on`) |
-| 28 | Open on phone | not for it | built | watchOS can't open the iPhone app |
-| 29 | The all-clear picture | built | built | |
-| 30 | Saying why the phone can't be reached, with Try again | built | built | |
+| 27 | Opening at once from what the watch kept, with no "Asking your phone…" | built | built | Wear OS: failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov). Both rebuilt to keep Coach's and each taf's thread (30 messages, 20 threads, 30 days unopened, no amounts), at rest encrypted on Wear and protected on the Apple Watch (tafs#2021, tafs#2018), and on with the Privacy line (kiff/cloud#151): Wear 0.4.8 (`KEEP_THREADS`, tafs#2027) and the Apple Watch (`WatchThreads.on`, tafs#2028) Wear 0.4.9: a slow list read keeps the last taf list (never empties) and is read again; the phone pushes the list as `kept/tafs` on change (Android 146); the Apple Watch follows. |
+| 28 | Open on phone, and "The rest is on your phone" in the thread | built; nothing showed after View on phone or Approve on your phone (found 26 Nov); "Opened on your phone" for a moment once the phone says it opened, built since tafs#2134. Approve on your phone opens the held call on the phone (tafs#2129) | broken on the owner's check of Wear 0.4.9 (26 Nov: nothing showed on the watch after Open on phone); rebuilt in 0.4.10, on the internal track since 26 Nov (tafs#2131: Wear's Open on phone confirmation) | Wear OS: failed on the owner's Galaxy Watch 5 check of Wear 0.4.7 (25 Nov); rebuilt in tafs#2021. Apple Watch: the iPhone opens the chat when tafs is in front, else posts a notification whose tap opens it (`WatchOpen`, tafs#2018) Wear 0.4.9: a message sent from the watch keeps its turn, so a cut answer has Read more; a cut line from the phone has Open on phone; the Apple Watch follows. |
+| 29 | The all-clear picture | built; an ended hold stayed in the Inbox (found 26 Nov, as on Wear 0.4.9); it leaves since tafs#2129, and Needs you's list, brief and counts drop it at its end on the watch's clock since tafs#2133 | broken on the owner's check of Wear 0.4.9 (26 Nov: an ended hold stayed in the Inbox with Refuse); rebuilt in 0.4.10, on the internal track since 26 Nov (tafs#2131: a call the phone no longer lists leaves) | |
+| 30 | Saying the phone can't be reached, with retries on their own | built | built | the owner's call: no Try again. One calm "Linking tafs. Keep your phone nearby and connected." (`watch.linking`) on the first link, retries with backoff (tafs#2021, tafs#2018) Wear 0.4.9: a send with no receipt shows the calm linking screen and sends again by itself under the same id (no Retry until 10 minutes pass); the pages' and a taf page's small line is the calm one, retrying by itself; the Apple Watch follows. |
 | 31 | Working without the phone | not for it | not for it | the phone holds the session and the keys |
 | 32 | In the store | partial | partial | Apple Watch: only the TestFlight build carries it. Wear: the internal track; production is the owner's |
+| 33 | One account's data never shows under another's: a change of the phone's sign-in, or a sign-out the watch didn't hear, wipes what it kept | built (tafs#2092: the mark checked before anything is drawn, Retry only where safe; tafs#2097: the person's acts go only to the sign-in they were made under) | built (tafs#2093) | Wear OS: the phone's random account mark on every reply and kept item, checked before anything is drawn and failing closed, and `kept/signed-out` at sign-out (docs/watch-wear.md). Apple Watch: the same rule (docs/watch-app.md), in iOS 1.0.1. Both read built until the owner's check |
 
 ## One layout on every app
 
@@ -246,6 +252,87 @@ Where each app stands: done on the iPhone, iPad and Mac 13+ (tafs#2009), Android
   Text and rows inside the column stay aligned left, and a window narrower than the cap is unchanged. Each app keeps these caps as named constants, in one place, so no page sets its own number.
 - **An explanation sits beside its action.** On Account, Chrome's text goes under the Chrome row, with its button. How sign-in works goes into the sign-in section, said once. How it works is one entry. No section is only an explanation.
 
+## The owner's findings of 24–25 Nov, device by device
+
+Every finding from the owner's walk-throughs of the Chrome extension, the Galaxy Watch 5 and Windows, read again on each repo's main. Each cell is **fixed** (with the change), **n/a** (and why), **built** (a watch's code merged, before the owner's check) or **open** (what's left). "—" means the device has nothing that finding is about.
+
+**Chrome extension (A–F)**
+
+| Finding | iPhone/iPad, Mac 13+ | Android | macOS 12, Windows, Linux | Chrome extension |
+| :- | :- | :- | :- | :- |
+| A. Coach said it never read a page it had read | — | — | — | fixed in tafs cloud: Coach's history says which of its turns read a page, and the host (tafs#2000) |
+| B. A Wikipedia taf refused an article's address | — | — | — | fixed for new tafs: planque opens `https://<language>.wikipedia.org/wiki/<Title>` for a grant on wikipedia.org (planque#411), and `a-browser-taf@5`, `@6` say so (tafs#2002, tafs#2019). **Open** for tafs already set up: they keep their old instructions until the tafs upgrade runs, which waits on the owner |
+| C. The box still said "working" after the taf's last answer | n/a: the panel's own state (the fix is in the extension only) | n/a, same | n/a, same | fixed (tafs#2001, 0.2.9) |
+| D. The tab group kept "· working" after Stop | — | — | — | fixed: "is done" on Stop (tafs#2001) |
+| E. Chat as the apps do it: the composer pinned, your message at once with a working line, attachments, microphone | the reference | the reference | the reference; no microphone on Windows or Linux (speech would leave the device) | fixed: pinned composer and your message at once (tafs#2001, and with a short chat tafs#2017), attachments (tafs#2005). Microphone n/a, as on Windows and Linux: Chrome's speech recognition sends the audio off the device |
+| F. Back, New conversation and ⋮ scroll away | n/a: the system's own bar | n/a, same | n/a, same | fixed: a sticky header (tafs#2001) |
+
+**Your tab and the page (Chrome 0.2.12–0.2.22)**
+
+| Finding | Chrome extension |
+| :- | :- |
+| A run started from the side panel should work in the tab you're on | fixed (tafs#2024, 0.2.12) |
+| A step of another run must never work in a tab joined by an earlier one | fixed (tafs#2025, 0.2.13) |
+| A joined tab was sent to another address | fixed for an open: a joined tab is read only at its own address, and any other open goes to the run's own tab (tafs#2030, 0.2.14). An act (a link clicked, a form sent, back) moving a joined tab within the run's sites is the feature: the work happens in your tab, where you see it. The store and Privacy words say so |
+| A taf's message carries the page you're on | fixed: only on that taf's phone-signed sites, under page consent "2", checked again by tafs cloud, and a page turn only reads (tafs#2030) |
+| The person's own Back in a joined tab, to a page they had before the run, was read and acted on | fixed: only the run's own step adds a page the taf may read; any other move hands the tab back (tafs#2040, 0.2.15), and planque passes the taf no page at another address (planque#422) |
+| In a tab of the run's own, an address the person typed, or their Back or Forward, was read | fixed: the same rule in every tab of a run (tafs#2048, 0.2.16) |
+| Two tafs of the same name shared a kept tab and group | fixed: kept by grant, never by name (tafs#2048, 0.2.16) |
+| After the fence stopped a navigation, the extension asked for that address again, unfenced | fixed: it never does, in any tab; the tab goes back to the person as it is, and their own next try loads (tafs#2051, 0.2.17). planque allows no build from 0.2.12 to 0.2.16 (planque#424, #425) |
+| A sensitive site under a taf's site (`bank.example.com` under `example.com`) could be reached once by a link | fixed: Chrome's own fence blocks it before any request, in a run's own tab and in a joined one (tafs#2059, 0.2.19). planque allows no build from 0.2.12 to 0.2.18 (planque#429). Open: planque still allows 0.1.0–0.2.11, whose fence has the same gap |
+| A taf's act landed on a control the person can't use (a field in a disabled fieldset, a read-only field, a disabled option), or answered ok to "uncheck" a radio that stayed checked | fixed: refused `disabled`, or `bad_step` for the radio (tafs#2061, 0.2.20) |
+| A click that ran was answered as a failure when the page then grew too large to send, so the taf could click Submit again | fixed: answered done with no page (`page_dropped`), and planque tells the taf it ran and not to repeat it; a Pay or order click was already refused before anything is pressed (tafs#2068, planque#431, 0.2.21) |
+| A taf message never carried the page in production: planque's connections had no phone-signed sites, which the extension reads them from (its e2e's fake planque sent them, so every test passed) | fixed: planque sends each connection's `sites_signed`, the same pair its steps carry (planque#433); the extension's tests and fake planque are now built from planque's own contract files (tafs#2077) |
+| A message sent without the page, or a turn that failed, said nothing in the side panel | fixed: a banner above the message box when there's no page consent, a line under the message saying why the page didn't go, and the failed turn's line in tafs cloud's words, with Try again only when the run's record shows nothing was done (tafs#2077, 0.2.22; tafs#2075) |
+| A dialog a page raises as it loads (an `alert`, a `confirm`) reaches Chrome as a real dialog, and the run waits until it's answered | open: the guard goes in once the page has committed, so the page's own script comes first (`gaps2.e2e.test.js` pins it). A sandbox on a run's own tabs closed it in a spike, but it could answer a page the person opened in that tab, so it doesn't ship |
+| What an allowed site's page sends by itself (a `fetch`, an image, a beacon) after the taf typed there | not a gap: the fence covers navigations only, by design, as when the person types there; the store and Privacy words say so (tafs#2052) |
+
+The other devices have no tab to join: — on each.
+
+**The watch (the owner's 8 calls)**
+
+| Call | Apple Watch | Wear OS | Phones |
+| :- | :- | :- | :- |
+| 1. Kept on the watch, opening at once | built (tafs#2018, #2028) | built (tafs#2021, #2027) | — |
+| 2. One thread with the phone's, live | built | built | fixed: the phones push it (tafs#2018, tafs#2021) |
+| 3. Opens on the newest message | built | built | fixed: both phones' taf chats open at the bottom (`TafChatView`) |
+| 4. Send in the thread, with your time and ✓ | built | built | — |
+| 5. Nothing replaces the chat; Open on phone opens it | built (`WatchOpen`) | built | — |
+| 6. No Try again: retries on their own, one calm "Linking tafs" | built | built | — |
+| 7. An answer you can't miss, with the app put away | built (the iPhone's notification) | built (tafs#2021) | — |
+| 8. The whole answer from its preview | built (`?full=1`, tafs#2020) | built | fixed: the phones' From your watch (tafs#2020) |
+
+Each watch cell moves to done, or to "broken on the owner's check", from the owner's check of the current builds ([Watches](#watches)).
+
+**Windows (notes 1–5)**
+
+| Note | iPhone/iPad, Mac 13+ | Android | macOS 12 | Windows | Linux |
+| :- | :- | :- | :- | :- | :- |
+| 1. One centred column on every page | fixed (tafs#2009) | fixed (tafs#2011, #2013) | fixed (tafs-macos#264) | fixed (tafs-windows#342) | fixed (tafs-linux#136) |
+| 2. Plan & usage and Calendar cut off when maximized | fixed by note 1's caps | fixed by note 1's caps | fixed by note 1's caps | fixed (tafs-windows#342) | fixed by note 1's caps |
+| 3. Connect apps: a long status ("Volver a conectar") cut, and Ask Coach over it | fixed: a long button goes under the status (`BesideOrUnder`, tafs#2035) | n/a: a row has one action at a time (Connect, Sign in again or Ask Coach), and every line wraps; drawn whole at 360 dp in es, de, fr, pl and en (`ConnectAppsNarrowTest`) | fixed: the button goes under a worded status (tafs-macos#268) | fixed (tafs-windows#342) | fixed: the status wraps, the button under it (tafs-linux#139) |
+| 4. Account's explanations beside their actions | fixed (tafs#2009) | fixed (tafs#2011) | fixed (tafs-macos#264) | fixed (tafs-windows#342) | fixed (tafs-linux#136) |
+| 5a. Overview cut "1 persona" in a medium window | fixed: two lines, the count held whole (`peopleLine`, tafs#2035) | fixed: who uses a taf, under its name, two lines, the count held whole (`PeopleWords.peopleLine`, tafs#2042; Android 144 on Play's internal track) | fixed: two lines, the count held whole (tafs-macos#268) | fixed: it wraps (tafs-windows#342) | fixed: two lines, the count held whole (tafs-linux#139) |
+| 5b. Connect apps' lines in English in another language | fixed at the source: planque's catalogue in every app language (planque#414), asked in the person's language (tafs#2015) | fixed, same | fixed, same | fixed, same; checked in Spanish | fixed, same |
+
+**Cut answers**
+
+| Finding | Where | State |
+| :- | :- | :- |
+| Coach's answer to a watch ask stopped at 140 characters, with nothing to open it | both watches, and the phones' From your watch | fixed in tafs cloud: `?full=1` gives the whole answer (tafs#2020); built on the watches |
+| A taf said its read was cut, in bytes | every taf, on any device | fixed for new tafs: the tafs' shared instructions read on and never talk about size (tafs#2019, `a-browser-taf@6`). **Open** for tafs already set up, until the tafs upgrade runs |
+
+**Coach, from the end-to-end runs (tafs cloud, so every device alike)**
+
+| Finding | State |
+| :- | :- |
+| Coach drafted a held Card with no total, KIFF refused it ("a mandate with no aggregate bounds nothing"), and Coach asked the owner to change their own rule | fixed: the held Card's one total is KIFF's own count, drafted by Coach, and a refusal says how (`draft-the-card@47`, tafs#2045) |
+| Coach added four letters to a tool's name, and KIFF refused it ("not declared") | partial: tool names are copied from planque letter for letter, with no example to build from (`draft-the-card@47`, `set-up-a-taf@15`, tafs#2045, #2047), and the draft still lands. But the E2E of 25 Nov on those skills was still refused twice first (`read_charge_…` and `stripe_api_read_…`, once each), so fewer, not none |
+| "Every refund held, over €50 refused" was drafted by hand eleven times: KIFF refused a held Card with no amount cap, tafs cloud refused each way out, and Coach asked the owner to change their rules, said it waited for an approval that had been refused, and answered "what was refused?" with a new choice | fixed: tafs cloud builds a money tool's Cards from the agreed rules, the held Card carrying the refused Card's cap (refused past it, never held), and Approve answers any other draft with the exact Cards; Coach says nothing after an approval, its line on a refused card leaves the chat, and a refusal asked about is quoted (`cardsFromRules`, `draft-the-card@48`) |
+
+**Open, in one place:**
+1. Tafs set up before tonight keep their old instructions (B, and the cut read) until the tafs upgrade runs. That waits on the owner.
+
 ## Today's cross-device work
 
 What landed on 23 Nov, device by device, read again against each repo's main on 25 Nov. "—" means the feature isn't that device's. What's still open is listed under the table.
@@ -261,8 +348,49 @@ What landed on 23 Nov, device by device, read again against each repo's main on 
 | An approval that lands after its run ended says so (tafs cloud's `run_ended`, tafs#1812) | done (tafs#1814: the chat's line, with Retry) | done (tafs#1816: the chat's line, with Retry) | done (tafs-macos#263: said on Needs you, not in the chat) | done (tafs-windows#271: said on Needs you, not in the chat) | done (tafs-linux#99) | — |
 | An API door's example safe to paste into a shell (a plain path only, quoted; `vectors/api-door-endpoint.json`, tafs#1877) | done (tafs#1875) | done (tafs#1874) | done (tafs-macos#205) | done (tafs-windows#323) | done (tafs-linux#111) | — |
 | The side panel is the taf in this Chrome (tafs#1799), no client named (tafs#1810), the read after an act waits for its navigation (tafs#1811) | — | — | — | — | — | done |
+| Try again under a failed run's line, shown only when tafs cloud's `failed` says `retry`, in its `retry_label` (`contracts/conversation-failed.json`) | not yet: Retry shows on every failed run and sends the message again, even after the run acted; `retry` isn't read (`AppModel.retryChatRun`) | done (tafs#2084) | not yet: the pin has `retry` since tafs-macos#271, nothing reads it | done (tafs-windows#351): until then nothing read `failed` at all | not yet: the pin has `retry` since tafs-linux#141, nothing reads it | done (0.2.22, tafs#2077) |
 
-**Still open:** nothing to build. Every row above is done on each device it's for, except the sealed sign-in fill's release card, which stays held and off by the owner's decision.
+**Still open:** Try again on a failed run's line, on the iPhone and iPad and on the three desktops. Every other row above is done on each device it's for, except the sealed sign-in fill's release card, which stays held and off.
+
+## The chat, on every surface that draws it
+
+The chat is one thing drawn in several places: Coach's chat and a taf's on the phones, and the Chrome extension's side panel. It follows the same rules everywhere ([chat.md](chat.md)). **From 25 Nov, a pull request that changes the chat on a phone sets its Chrome cell here in the same change**, as done or not yet, so the panel never silently falls behind. The desktops follow their own `docs/port-checklist.md`.
+
+| Feature | iPhone/iPad | Android | Chrome side panel |
+| :- | :- | :- | :- |
+| Each message's time, and a header where a day starts | done | done | done (0.2.24): in the panel's language and the computer's zone; the language's own 12- or 24-hour clock (a browser doesn't say the computer's) |
+| Copy an answer | done | done | done (0.2.24): no permission asked for; a refused clipboard selects the words and says so |
+| Report this answer (⋯) | done | done | done (0.2.24): only on a message the panel may show (its own chats, and a run's turn shown there), always with the chat's session (the route open to the panel, tafs#2119) |
+| Your own message: Send again, Edit and send, Copy | done | done | done (0.2.24): Send again and Edit and send only in a chat begun in this Chrome (a taf's chat always; a Coach chat once a send from here went into it); a run's turn from another device gets Copy only (a failed turn has Retry, 0.2.22) |
+| A run's work folded into "Worked 12 s · N steps", which opens the steps again | done | done | done (0.2.24): the run's card gives way to it once tafs cloud says the turn is over; a run that works, is paused or waits on the person keeps its card |
+| Answers in markdown, drawn as the phones draw them | done | done | done (0.2.24): the phones' rules in the panel's own reader (`chatmd.js`); a link shows its address and never opens |
+| The working line, and a failed turn's line with why | done | done | done (0.2.22) |
+| Try again under a failed turn, only on tafs cloud's `failed.retry` | not yet: Retry shows on every failed run | done (tafs#2084) | done (0.2.22) |
+| Delete a conversation for good | done for iOS 1.0.1 (tafs#2107) | done (tafs#2099) | not yet: the panel's chats can't delete; a deleted chat leaves the panel with it (no copy kept by the extension) |
+| A run that worked in this Chrome, started by you from another device: its message, steps and answer | — | — | done (kiff/cloud#169, planque#439, tafs#2119; the Privacy line kiff/cloud#167): only that run's turn, never the rest of its chat, read as the person; it leaves when the chat is deleted, the Chrome is unpaired, or its connection moves to another Chrome; an existing Chrome pairs once more. No extension release: the panel's chats list carries it |
+
+## 25 Nov, device by device
+
+What merged or opened on 25 Nov, read against kiff/tafs main `954be1a` and each desktop repo's main. **done** means merged on main (a phone or watch row still waits for its build to ship); **not yet** says what's missing. "—" means the feature isn't that device's.
+
+| Feature | iPhone/iPad | Android | Apple Watch | Wear OS | macOS 12 | Windows | Linux | Chrome extension |
+| :- | :- | :- | :- | :- | :- | :- | :- | :- |
+| A watch wipes what it kept when the phone's sign-in changes or it signs out | — | — | done (tafs#2092, #2097) | done (tafs#2093) | — | — | — | — |
+| Background-only pushes for a phone that serves a watch, with alerts off (tafs#2100, live) | done (tafs#2101) | done (146, tafs#2115) | — | — | — | — | — | — |
+| The alerts prompts: blocked alerts with a settings link, and "Your watch is using tafs" once | done (tafs#2101) | done (146, tafs#2115) | — | — | — | — | — | — |
+| Delete a Coach conversation for good (tafs#2095 live; words tafs#2096, live) | done for iOS 1.0.1 (tafs#2107) | done (tafs#2099) | done for the phone's conversation (tafs#2107: `WatchPush.forget` drops the kept Coach thread); its own conversations can't be deleted yet | done for the phone's conversation (tafs#2099: the kept copy put empty); its own conversations can't be deleted yet | not yet: the pin at tafs `2bda52b` carries `delete` in `coach-chats`, and nothing draws it | done (tafs-windows#351): only in tafs cloud's words; a delete that goes through also empties the files opened from a chat and the last export | not yet: as macOS 12 (the pin is at `2bda52b`, tafs-linux#145) | not yet: the side panel's chats can't delete |
+| The Card step before Coach's first approval (tafs#2091's words, tafs#2109's fields), shown = signed | done for iOS 1.0.1 (tafs#2112; its tools batch too, tafs#2116) | done (146, tafs#2115); its tools batch: not yet (not in 147; the next build) | — | — | not yet: the pin at `2bda52b` predates tafs#2109's fields (a computer signs with its passkey: `card_step_give_passkey`) | done (tafs-windows#352's pin, tafs-windows#351): this PC's passkey, shown = signed checked before Windows Hello, its tools batch too | not yet: as macOS 12 | — (never approves) |
+| Coach takes no typing until its tools are approved; the box never opens without a line | done for iOS 1.0.1 (tafs#2112); the app's own line when `locked` is blank (tafs#2123) | done (146, tafs#2115): `locked` or the app's `coach.tools.write_after`, then the step's `row` or "Coach's tools" | — | — | not yet | done (tafs-windows#351): `locked`, else `coach.tools.write_after`; `row`, else "Coach's tools" | not yet | not yet: the side panel's Coach |
+| Try again under a failed run's line, only on tafs cloud's `failed.retry` | not yet (see the row above, 23 Nov) | done (tafs#2084) | — | — | not yet | done (tafs-windows#351) | not yet | done (0.2.22) |
+| Sign-out leaves nothing of the account: its alerts and the files opened from its chats | done (`AppModel.forgetSession`) | opened files: done (`openedFiles` at sign-out); its token is taken back, and alerts already in the shade are cleared (146: `clearShown`) | — | — | alerts: done (tafs-macos#272), shipped in v0.1-7 | done | opened files: done (tafs-linux#142), shipped in v1.1.2; alerts were already withdrawn | — |
+| The fence: kiff.dev never opened, merchant consoles sensitive, money sent out refused as a payment step | done (sensitive list, tafs#2103) | done (sensitive list, tafs#2103) | — | — | — | — | — | done on main (tafs#2103); ships in 0.2.23. tafs cloud's page reads match (tafs#2105) |
+| The page shows a taf at work: a glow, "… is working here" at the top, a drawn pointer, and no act without its aim | — | — | — | — | — | — | — | done on main (tafs#2108); ships in 0.2.23 |
+
+**Still open from 25 Nov:**
+- The Card step and the composer lock on macOS 12 and Linux: each needs a pin at or after tafs#2109, then the port, as Windows did (tafs-windows#351). Windows ships them with its signed installer.
+- The Card step's tools batch on Android (not in 147; the next build).
+- Delete on macOS 12 and Linux, and in Chrome.
+- Try again on `failed.retry`: iOS, macOS 12 and Linux.
 
 ## Counting checks
 

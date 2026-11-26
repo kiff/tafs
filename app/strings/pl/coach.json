@@ -186,6 +186,7 @@
   "coach.tools.give": "Daj Coachowi jego narzędzia",
   "coach.tools.giving": "Przekazywanie…",
   "coach.tools.title": "Narzędzia Coacha",
+  "coach.tools.write_after": "Najpierw zatwierdź narzędzia Coacha, potem możesz pisać.",
   "coach.tools_eyebrow": "Narzędzia",
   "coach.tools_not_given": "Narzędzia Coacha nie zostały przekazane. {why}",
   "coach.tools_not_read": "Nie udało się odczytać narzędzi Coacha. {why}",

@@ -57,6 +57,7 @@
     <string name="watch_ask">ჰკითხეთ tafs-ს</string>
     <string name="watch_ask_needs_consent">სანამ tafs-ს ჰკითხავთ, თქვენს ტელეფონზე tafs-ში ჩართეთ AI-ის გამოყენება.</string>
     <string name="watch_ask_not_on">თქვენი საათიდან კითხვა ჯერ ჩართული არ არის.</string>
+    <string name="watch_ask_phone_sign_in">სთხოვეთ ტელეფონს ამ საათში შესვლა</string>
     <string name="watch_ask_text_only">tafs თქვენს სიტყვებს იღებს ტექსტად, არასოდეს თქვენს ხმას.</string>
     <string name="watch_asking_phone">ვეკითხებით თქვენს ტელეფონს…</string>
     <string name="watch_calendar_today">დღევანდელი კალენდარი</string>
@@ -68,6 +69,7 @@
     <string name="watch_deleted_nothing_sent">წაიშალა. არაფერი გაიგზავნა.</string>
     <string name="watch_didnt_catch">ვერ გავიგე. შეეხეთ ხელახლა საცდელად.</string>
     <string name="watch_dismiss">უარყოფა</string>
+    <string name="watch_edit_words">შესაცვლელად შეეხეთ ტექსტს</string>
     <string name="watch_glance_description">რამდენი გელოდებათ, არასოდეს რა ან ვინ.</string>
     <string name="watch_halt_all_q">გაჩერდეს თქვენი ყველა taf?</string>
     <plurals name="watch_halt_now_count">
@@ -83,6 +85,7 @@
         <item quantity="one">%1$s დაკავებული ზარი გელოდებათ</item>
         <item quantity="other">%1$s დაკავებული ზარი გელოდებათ</item>
     </plurals>
+    <string name="watch_held_channel">დაკავებული ზარები</string>
     <string name="watch_inbox_empty">ახალი არაფერია. Coach-ის პასუხები და თქვენი taf-ების შეტყობინებები აქ ჩნდება.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s წაუკითხავი შემოსულებში</item>
@@ -97,7 +100,7 @@
     <string name="watch_menu">მენიუ</string>
     <string name="watch_mic_needed">ხმით სათხოვნელად ამ საათზე tafs-ს მიეცით მიკროფონის უფლება.</string>
     <string name="watch_more_on_phone">დანარჩენი თქვენს ტელეფონზეა.</string>
-    <string name="watch_needs_lock">ამ საათიდან უარის სათქმელად ან გასაჩერებლად დააყენეთ მასზე ეკრანის ჩაკეტვა და განბლოკეთ.</string>
+    <string name="watch_needs_lock">ამ საათიდან გასაგზავნად, უარის სათქმელად ან გასაჩერებლად დააყენეთ მასზე ეკრანის ჩაკეტვა და განბლოკეთ.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s გელოდებათ</item>
         <item quantity="other">%1$s გელოდებათ</item>
@@ -107,6 +110,7 @@
     <string name="watch_nothing_sent_until">არაფერი იგზავნება, სანამ არ დაამტკიცებთ.</string>
     <string name="watch_nothing_waits">არაფერი გელოდებათ.</string>
     <string name="watch_open_on_phone">გახსენით ტელეფონზე</string>
+    <string name="watch_opened_on_phone">გაიხსნა ტელეფონზე</string>
     <string name="watch_page_brief">მიმოხილვა</string>
     <string name="watch_page_inbox">შემოსულები</string>
     <string name="watch_paused_still_answers">დაპაუზებულია: მისი განრიგი გამორთულია. ის მაინც პასუხობს, რასაც გაუგზავნით.</string>
@@ -130,6 +134,7 @@
     <string name="watch_recent_chats">ბოლო ჩატები</string>
     <string name="watch_recording">იწერება</string>
     <string name="watch_recording_not_received">ჩანაწერი თქვენს ტელეფონამდე ვერ მივიდა. სცადეთ ხელახლა ან აკრიფეთ.</string>
+    <string name="watch_refuse_on_phone">არ უარყოფილა. უარყავით ტელეფონზე.</string>
     <string name="watch_refused">უარყოფილია. არაფერი გაიგზავნა.</string>
     <string name="watch_reply">პასუხი</string>
     <string name="watch_rerecord">ხელახლა ჩაწერა</string>
@@ -138,14 +143,20 @@
     <string name="watch_resume_on_phone">განაახლეთ თქვენს ტელეფონზე</string>
     <string name="watch_retry">სცადეთ ხელახლა</string>
     <string name="watch_review">შეამოწმეთ გაგზავნამდე</string>
+    <string name="watch_seconds_left">დარჩა %1$s წმ</string>
     <string name="watch_sending">იგზავნება…</string>
     <string name="watch_sent">გაიგზავნა</string>
     <string name="watch_settings_of">%1$s · პარამეტრები</string>
+    <string name="watch_sign_in_allow">დაშვება</string>
+    <string name="watch_sign_in_denied">შესვლა არ მოხდა. ეს საათი გამოსული რჩება.</string>
+    <string name="watch_sign_in_deny">უარყოფა</string>
     <string name="watch_sign_in_on_phone">ჯერ შედით tafs-ში თქვენს ტელეფონზე.</string>
+    <string name="watch_sign_in_watch_q">შევიდეს ეს საათი თქვენი სახელით?</string>
     <string name="watch_sign_out_q">გამოხვიდეთ ამ საათზე?</string>
     <string name="watch_sign_out_sub">თქვენი ტელეფონი შესული რჩება. ეს საათი ივიწყებს თქვენს taf-ებს, ჩატებს და შემოსულებს.</string>
     <string name="watch_signed_in">შესულია</string>
     <string name="watch_signed_out_here">ამ საათზე გამოხვედით. თქვენი ტელეფონი შესული რჩება.</string>
+    <string name="watch_stopped_at_limit">შეჩერდა %1$s ლიმიტზე. მოსმენილი ქვემოთაა.</string>
     <string name="watch_swipe_settings">გადაიტანეთ მარცხნივ მისი პარამეტრებისთვის</string>
     <string name="watch_tap_start">შეეხეთ „დაწყებას“, შემდეგ ისაუბრეთ. თქვენი სიტყვები აქ ჩანს საუბრისას.</string>
     <string name="watch_timing">მოსმენა %1$s მწ · ქვითარი %2$s მწ · შედეგი %3$s მწ</string>
@@ -154,8 +165,10 @@
     <string name="watch_type">აკრიფეთ</string>
     <string name="watch_type_hint">მისწერეთ Coach-ს…</string>
     <string name="watch_update_phone">განაახლეთ tafs თქვენს ტელეფონზე, შემდეგ სცადეთ ხელახლა.</string>
+    <string name="watch_view_on_phone">ნახეთ ტელეფონზე</string>
     <string name="watch_view_only_phone">ეს ტელეფონი მხოლოდ ნახვას ახერხებს, ამიტომ საათიდან ვერ ჰკითხავთ. შედით ტელეფონზე, რომელსაც დამტკიცება შეუძლია.</string>
     <string name="watch_voice_text_only">Coach თქვენს სიტყვებს იღებს ტექსტად, არასოდეს თქვენს ხმას.</string>
+    <string name="watch_waiting_for_phone">ველოდებით თქვენს ტელეფონს…</string>
     <string name="watch_what_it_does">რას აკეთებს</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s მუშაობს</item>

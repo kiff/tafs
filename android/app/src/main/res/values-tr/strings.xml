@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Yanıt süresi: %3$s. Siz onaylayana kadar hiçbir şey gönderilmez.</string>
     <string name="alert_answered">Bir taf birine yanıt verdi</string>
     <string name="alert_approve_once">Bir kez onayla…</string>
+    <string name="alert_blocked_body">Bu %1$s cihazı artık sormuyor, bu yüzden tafs uyarıları Ayarlar\'da kapalı. Onaylar ve yanıtlar size ulaşsın diye onları orada açın.</string>
+    <string name="alert_blocked_body_android">Android artık sormuyor, bu yüzden tafs uyarıları telefonunuzun ayarlarında kapalı. Onaylar ve yanıtlar size, bu telefonda ve saatinizde ulaşsın diye onları orada açın. Saatiniz güncellemelerini her durumda alır.</string>
+    <string name="alert_blocked_body_watch">iPhone\'unuz artık sormuyor, bu yüzden tafs uyarıları Ayarlar\'da kapalı. Onaylar ve yanıtlar size, bu iPhone\'da ve saatinizde ulaşsın diye onları orada açın. Saatiniz güncellemelerini her durumda alır.</string>
+    <string name="alert_blocked_title">tafs için uyarıları açın</string>
     <string name="alert_by_email">E-postayla</string>
     <string name="alert_example">Örnek</string>
     <string name="alert_foot_cant_answer_holds">Uyarılar, tutulan çağrıları yanıtlayabilenlere gider. Bu hesaptaki rolünüz yanıtlayamaz.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Uyarılar bu telefon için henüz açık değil. %1$s</string>
     <string name="alert_not_refused">Reddedilmedi</string>
     <string name="alert_not_sent">Bir yanıt gönderilmedi</string>
+    <string name="alert_now_on">Uyarılar açık.</string>
     <string name="alert_on_this_device">Bu %1$s üzerindeki uyarılar</string>
+    <string name="alert_open_notification_settings">Bildirim ayarlarını aç</string>
+    <string name="alert_open_settings">Ayarlar\'ı aç</string>
     <string name="alert_open_tafs_answer_kiff_did">Yanıtlamak için tafs\'ı açın: KIFF hangi sürümünü gördüğünüzü söylemedi.</string>
     <string name="alert_open_tafs_answer_phone_can">Yanıtlamak için tafs\'ı açın: bu telefon bildirimden imzalayamıyor.</string>
     <string name="alert_prompt">Bir taf\'ın size ihtiyacı olduğunda uyarı alın</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Kullanılamıyor</string>
     <string name="alert_status_off">Kapalı</string>
     <string name="alert_status_on">Açık</string>
+    <string name="alert_still_off">Uyarılar hâlâ kapalı.</string>
     <string name="alert_still_on_after_sign_out_body">tafs bunları kapatamadı (%1$s). Tekrar deneyin ya da yine de oturumu kapatıp Ayarlar\'dan tafs bildirimlerini kapatın.</string>
     <string name="alert_still_on_after_sign_out_title">Bu %1$s bu hesabın uyarılarını almaya devam edebilir</string>
     <string name="alert_taf_needs_you">%1$s sizi bekliyor</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs reddetmek için KIFF\'e ulaşamadı. Yanıtlamak için tafs\'ı açın.</string>
+    <string name="alert_watch_first_body">Onayları ve yanıtları bu telefonda ve saatinizde uyarı olarak görmek için tafs uyarılarını açın. Açmasanız da saatiniz güncellemelerini almaya devam eder.</string>
+    <string name="alert_watch_first_title">Saatiniz tafs kullanıyor</string>
     <string name="alert_what_alerts">Sizi ne uyarır</string>
     <string name="alert_with_sound">Sesli</string>
     <string name="app_name">tafs</string>
@@ -846,6 +856,7 @@
     <string name="coach_tools_give">Coach\'a araçlarını ver</string>
     <string name="coach_tools_giving">Veriliyor…</string>
     <string name="coach_tools_title">Coach\'un araçları</string>
+    <string name="coach_tools_write_after">Önce Coach\'un araçlarını onaylayın, sonra yazabilirsiniz.</string>
     <string name="coach_tools_eyebrow">Araçlar</string>
     <string name="coach_tools_not_given">Coach\'un araçları verilmedi. %1$s</string>
     <string name="coach_tools_not_read">Coach\'un araçları okunamadı. %1$s</string>
@@ -2780,6 +2791,7 @@
     <string name="watch_ask">tafs\'a sor</string>
     <string name="watch_ask_needs_consent">tafs\'a sormadan önce telefonunuzdaki tafs\'ta yapay zekâ kullanımına izin verin.</string>
     <string name="watch_ask_not_on">Saatinizden sorma henüz açık değil.</string>
+    <string name="watch_ask_phone_sign_in">Telefonunuzdan bu saatte oturum açmasını isteyin</string>
     <string name="watch_ask_text_only">tafs sözlerinizi metin olarak alır, sesinizi asla.</string>
     <string name="watch_asking_phone">Telefonunuza soruluyor…</string>
     <string name="watch_calendar_today">Bugünün takvimi</string>
@@ -2791,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Silindi. Hiçbir şey gönderilmedi.</string>
     <string name="watch_didnt_catch">Anlayamadım. Tekrar denemek için dokunun.</string>
     <string name="watch_dismiss">Kapat</string>
+    <string name="watch_edit_words">Değiştirmek için metne dokunun</string>
     <string name="watch_glance_description">Kaç tanesinin sizi beklediği; ne olduğu veya kim olduğu asla.</string>
     <string name="watch_halt_all_q">Tüm tafs\'larınız dondurulsun mu?</string>
     <plurals name="watch_halt_now_count">
@@ -2806,6 +2819,7 @@
         <item quantity="one">%1$s tutulan çağrı sizi bekliyor</item>
         <item quantity="other">%1$s tutulan çağrı sizi bekliyor</item>
     </plurals>
+    <string name="watch_held_channel">Tutulan çağrılar</string>
     <string name="watch_inbox_empty">Yeni bir şey yok. Coach\'un yanıtları ve tafs\'larınızın uyarıları buraya düşer.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Gelen kutusunda %1$s okunmamış</item>
@@ -2820,7 +2834,7 @@
     <string name="watch_menu">Menü</string>
     <string name="watch_mic_needed">Sesle sormak için bu saatte tafs\'a mikrofon izni verin.</string>
     <string name="watch_more_on_phone">Gerisi telefonunuzda.</string>
-    <string name="watch_needs_lock">Bu saatten reddetmek veya dondurmak için saatte bir ekran kilidi ayarlayın ve kilidini açın.</string>
+    <string name="watch_needs_lock">Bu saatten göndermek, reddetmek veya dondurmak için saatte bir ekran kilidi ayarlayın ve kilidini açın.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s tane sizi bekliyor</item>
         <item quantity="other">%1$s tane sizi bekliyor</item>
@@ -2830,6 +2844,7 @@
     <string name="watch_nothing_sent_until">Siz onaylayana kadar hiçbir şey gönderilmez.</string>
     <string name="watch_nothing_waits">Sizi bekleyen bir şey yok.</string>
     <string name="watch_open_on_phone">Telefonda aç</string>
+    <string name="watch_opened_on_phone">Telefonunuzda açıldı</string>
     <string name="watch_page_brief">Özet</string>
     <string name="watch_page_inbox">Gelen kutusu</string>
     <string name="watch_paused_still_answers">Duraklatıldı: zamanlaması kapalı. Gönderdiklerinize yine yanıt verir.</string>
@@ -2853,6 +2868,7 @@
     <string name="watch_recent_chats">Son sohbetler</string>
     <string name="watch_recording">Kaydediyor</string>
     <string name="watch_recording_not_received">Kayıt telefonunuza ulaşmadı. Tekrar deneyin veya yazın.</string>
+    <string name="watch_refuse_on_phone">Reddedilmedi. Telefonunuzda reddedin.</string>
     <string name="watch_refused">Reddedildi. Hiçbir şey gönderilmedi.</string>
     <string name="watch_reply">Yanıtla</string>
     <string name="watch_rerecord">Yeniden kaydet</string>
@@ -2861,14 +2877,20 @@
     <string name="watch_resume_on_phone">Telefonunuzda sürdürün</string>
     <string name="watch_retry">Tekrar dene</string>
     <string name="watch_review">Göndermeden önce kontrol edin</string>
+    <string name="watch_seconds_left">%1$s sn kaldı</string>
     <string name="watch_sending">Gönderiliyor…</string>
     <string name="watch_sent">Gönderildi</string>
     <string name="watch_settings_of">%1$s · ayarlar</string>
+    <string name="watch_sign_in_allow">İzin ver</string>
+    <string name="watch_sign_in_denied">Oturum açılmadı. Bu saat oturumu kapalı kalır.</string>
+    <string name="watch_sign_in_deny">Reddet</string>
     <string name="watch_sign_in_on_phone">Önce telefonunuzda tafs\'ta oturum açın.</string>
+    <string name="watch_sign_in_watch_q">Bu saatte sizin adınıza oturum açılsın mı?</string>
     <string name="watch_sign_out_q">Bu saatte oturum kapatılsın mı?</string>
     <string name="watch_sign_out_sub">Telefonunuzda oturum açık kalır. Bu saat tafs\'larınızı, sohbetlerinizi ve gelen kutunuzu unutur.</string>
     <string name="watch_signed_in">Oturum açık</string>
     <string name="watch_signed_out_here">Bu saatte oturum kapatıldı. Telefonunuzda oturum açık kalır.</string>
+    <string name="watch_stopped_at_limit">%1$s sınırında durdu. Duyulanlar aşağıda.</string>
     <string name="watch_swipe_settings">Ayarları için sola kaydırın</string>
     <string name="watch_tap_start">Başlat\'a dokunun, sonra konuşun. Sözleriniz konuştukça burada görünür.</string>
     <string name="watch_timing">Dinleme %1$s ms · makbuz %2$s ms · sonuç %3$s ms</string>
@@ -2877,8 +2899,10 @@
     <string name="watch_type">Yaz</string>
     <string name="watch_type_hint">Coach\'a yazın…</string>
     <string name="watch_update_phone">Telefonunuzda tafs\'ı güncelleyin, sonra tekrar deneyin.</string>
+    <string name="watch_view_on_phone">Telefonda görüntüle</string>
     <string name="watch_view_only_phone">Bu telefon yalnızca görüntüleyebilir, bu yüzden saatten soramazsınız. Onay verebilen bir telefonda oturum açın.</string>
     <string name="watch_voice_text_only">Coach sözlerinizi metin olarak alır, sesinizi asla.</string>
+    <string name="watch_waiting_for_phone">Telefonunuz bekleniyor…</string>
     <string name="watch_what_it_does">Ne yapar</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s çalışıyor</item>

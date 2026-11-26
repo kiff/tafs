@@ -211,3 +211,113 @@ test("a page tafs cloud refuses never holds the person's words: they go once mor
   const other = new Coach({ token: "t", base: "https://cloud.test", fetch: async (url, init) => (url.endsWith("/v1/setup") ? { ok: true, status: 200, json: async () => ({ setup: { id: "c" } }) } : { ok: false, status: 400, json: async () => ({ error: "x", code: "too_long" }) }) });
   await assert.rejects(other.send("Hi", { clientID: "m2", page: { url: "https://a.example/", text: "t" } }), (e) => e.code === "too_long");
 });
+
+// Chrome 0.2.14: a taf works on the page you're on. Its message carries the page in front, as Coach's does.
+test("a message to a taf carries the page in front as Coach's does, only with words, and a refused page never holds the words", async () => {
+  const calls = [];
+  let refuse = false;
+  const fetch = async (url, init) => {
+    const body = init.body ? JSON.parse(init.body) : null;
+    calls.push([init.method, url.replace("https://cloud.test", ""), body]);
+    if (refuse && body && body.page) return { ok: false, status: 400, json: async () => ({ error: "only Coach reads the page you have open", code: "page_refused" }) };
+    if (init.method === "GET") return { ok: true, status: 200, json: async () => ({ messages: [{ from: "owner", text: "Lis cette page", at: "t1", id: "m1", reading: "fr.wikipedia.org" }] }) };
+    return { ok: true, status: 202, json: async () => ({ id: "m1" }) };
+  };
+  const c = new Coach({ token: "tok", fetch, base: "https://cloud.test" });
+  const page = { url: "https://fr.wikipedia.org/wiki/Grenoble", title: "Grenoble", text: "Grenoble est une commune", truncated: true, extra: "never sent" };
+  await c.sendToTaf("taf-a", "Lis cette page et résume-la", "cm1", [], page);
+  assert.deepEqual(calls.at(-1), ["POST", "/v1/tafs/taf-a/messages", { text: "Lis cette page et résume-la", client_message_id: "cm1", page: { url: page.url, title: "Grenoble", text: "Grenoble est une commune", truncated: true } }]);
+  // Files alone: no page.
+  await c.sendToTaf("taf-a", "  ", "cm2", ["att_" + "0".repeat(32)], page);
+  assert.equal(calls.at(-1)[2].page, undefined);
+  // tafs cloud that doesn't take a page on a taf's messages yet (400 page_refused): the words go once more on their own.
+  refuse = true;
+  const before = calls.length;
+  const sent = await c.sendToTaf("taf-a", "Lis cette page", "cm3", [], page);
+  const posts = calls.slice(before);
+  assert.equal(posts.length, 2);
+  assert.ok(posts[0][2].page && !posts[1][2].page);
+  assert.equal(posts[1][2].client_message_id, "cm3", "the same message");
+  assert.equal(sent.page_refused, true);
+  // The chat says which site went with a message, as Coach's does.
+  assert.equal((await c.tafThread("taf-a")).messages[0].reading, "fr.wikipedia.org");
+});
+
+// Chrome 0.2.22: a chat's failed run, read from tafs cloud's own contract (contracts/conversation-failed.json, written by its
+// tests), never a copy of it.
+test("a chat's failed run is read with it, Coach's or a taf's, from tafs cloud's contract: its words as sent, and Try again only when offered", async () => {
+  const { readFileSync } = await import("node:fs");
+  const contract = JSON.parse(readFileSync(new URL("../../contracts/conversation-failed.json", import.meta.url), "utf8")).answer;
+  let answer = contract;
+  const fetch = async (url) => {
+    const body = url.endsWith("/v1/setup") ? { setup: { id: "taf-coach" } } : url.includes("/conversation") ? answer : {};
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const c = new Coach({ token: "tok", fetch, base: "https://cloud.test" });
+  for (const t of [await c.tafThread("taf-a"), await c.thread()]) {
+    // As the file has it: `retry` true only when it says true, its label when it has one.
+    const label = typeof contract.failed.retry_label === "string" ? { retryLabel: contract.failed.retry_label.trim() } : {};
+    assert.deepEqual(t.failed, { run: contract.failed.run, code: contract.failed.code, words: contract.failed.words, retry: contract.failed.retry === true, ...label });
+    assert.equal(t.working, null);
+    assert.deepEqual(t.messages.map((m) => m.id), [contract.failed.run + ".in"], "the run's own message, by tafs cloud's id");
+  }
+  // tafs cloud's `retry` and `retry_label`, once it sends them.
+  answer = { ...contract, failed: { ...contract.failed, retry: true, retry_label: "  Try again  " } };
+  const t = await c.tafThread("taf-a");
+  assert.equal(t.failed.retry, true);
+  assert.equal(t.failed.retryLabel, "Try again");
+  // None, or one with no words: no line at all. `retry` is true only when it says true.
+  for (const failed of [undefined, null, { run: "r1", words: "  " }, { words: "It failed." }]) {
+    answer = { ...contract, failed };
+    assert.equal((await c.tafThread("taf-a")).failed, null, JSON.stringify(failed));
+  }
+  answer = { ...contract, failed: { run: "r1", code: "failed", words: "It failed.", retry: "yes" } };
+  assert.equal((await c.tafThread("taf-a")).failed.retry, false);
+});
+
+// Chrome 0.2.24: the chat drawn by the phones' rules (docs/chat.md).
+test("a chat's messages keep their chat, time, kind and an answer's work in tafs cloud's words, never a step's tool", async () => {
+  const fetch = async (url) => {
+    const body = url.endsWith("/v1/setup")
+      ? { setup: { id: "taf-coach" } }
+      : { messages: [
+        { id: "r1.in", from: "owner", kind: "message", text: "Refund Rae", at: "2026-11-25T09:00:00Z", session: "s1", work: { ms: 1, steps: [] } },
+        { id: "r1.3", from: "taf", kind: "message", text: "Done.", at: "2026-11-25T09:00:12Z", session: "s1", work: { ms: 12000, steps: [{ tool: "stripe_refund", words: "Refunding…", error: true, why: "Card declined" }] } },
+        { id: "r2.in", from: "owner", kind: "kickoff", text: "Daily check", at: "2026-11-25T10:00:00Z", session: "s1" },
+      ] };
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const c = new Coach({ token: "t", fetch, base: "https://cloud.test" });
+  for (const t of [await c.thread("s1"), await c.tafThread("taf-a")]) {
+    assert.deepEqual(t.messages[0], { from: "owner", text: "Refund Rae", at: "2026-11-25T09:00:00Z", session: "s1", id: "r1.in" }, "the person's message carries no work");
+    assert.deepEqual(t.messages[1].work, { ms: 12000, steps: [{ words: "Refunding…", failed: true, why: "Card declined", notMade: false }] });
+    assert.equal(t.messages[1].session, "s1", "a taf's answer names its chat, for a report");
+    assert.equal(t.messages[2].kind, "kickoff");
+    assert.equal(JSON.stringify(t).includes("stripe_refund"), false);
+  }
+});
+
+test("Report this answer goes to tafs cloud's route with a reason, the note, and the chat's session, always", async () => {
+  const calls = [];
+  let answer = { status: 200, body: { report: { id: "rep1", at: "2026-11-25T10:00:00Z", new: true } } };
+  const fetch = async (url, init) => {
+    calls.push([init.method, url, init.body && JSON.parse(init.body)]);
+    const body = url.endsWith("/v1/setup") ? { setup: { id: "taf-coach" } } : answer.body;
+    const status = url.endsWith("/v1/setup") ? 200 : answer.status;
+    return { ok: status < 400, status, json: async () => body };
+  };
+  const c = new Coach({ token: "t", fetch, base: "https://cloud.test" });
+  assert.deepEqual(await c.report("taf-a", "r1.3", { reason: "wrong", note: "  off  ", session: "s1" }), { id: "rep1", at: "2026-11-25T10:00:00Z", new: true });
+  assert.deepEqual(calls.at(-1), ["POST", "https://cloud.test/v1/tafs/taf-a/messages/r1.3/report", { reason: "wrong", note: "off", session: "s1" }]);
+  await c.report(null, "r 9.2", { reason: "other", note: "", session: "s2" });
+  assert.deepEqual(calls.at(-1), ["POST", "https://cloud.test/v1/tafs/taf-coach/messages/r%209.2/report", { reason: "other", session: "s2" }], "Coach's, by its id");
+  const n = calls.length;
+  await assert.rejects(c.report("taf-a", "r1.3", { reason: "wrong", session: "" }), { code: "bad_report" }, "never without the chat");
+  await assert.rejects(c.report("taf-a", "r1.3", { reason: "spam", session: "s1" }), { code: "bad_report" });
+  assert.equal(calls.length, n, "nothing sent");
+  // A refusal keeps tafs cloud's words and its status for the panel.
+  answer = { status: 403, body: { error: "halted", words: "Your account is halted." } };
+  await assert.rejects(c.report("taf-a", "r1.3", { reason: "wrong", session: "s1" }), { status: 403, words: "Your account is halted." });
+  answer = { status: 404, body: { error: "no answer of the taf's by that id" } };
+  await assert.rejects(c.report("taf-a", "r1.3", { reason: "wrong", session: "s1" }), (e) => e.status === 404 && e.words === undefined);
+});

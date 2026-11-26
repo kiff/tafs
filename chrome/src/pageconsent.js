@@ -1,12 +1,17 @@
 /**
  * Coach reads the page in front only with the person's page consent (docs/chrome.md, "Coach reads the page you're on"):
- * off until they allow it on the panel's screen, which says what goes to Anthropic and when. Two records must hold before
+ * off until they allow it on the panel's screen, which says what goes to the AI model and when. Two records must hold before
  * the tab is touched: the allow kept here for this pairing and this person (wiped with the pairing, which an unpair and a
  * sign-out both end), and tafs cloud's consent for the current words. Either missing, the words go alone.
  */
 
-/** The page consent's words' version: tafs cloud's PAGE_CONSENT_VERSION. Raised with the words, so everyone is asked again. */
-export const PAGE_CONSENT_VERSION = "1";
+/**
+ * The page consent's words' version: tafs cloud's PAGE_CONSENT_VERSION. Raised when its words change, so everyone is asked
+ * again; not for a rewording that stays true ("the Claude AI model" in place of "Anthropic's Claude" kept "2"), and not when
+ * the company running the model changes: these words name only the model, and the AI consent points to who may run it. A
+ * page only ever goes with a turn, and every turn needs that AI consent at its exact version.
+ */
+export const PAGE_CONSENT_VERSION = "2";
 
 /** Whether the allow kept here is this person's, on this pairing's session, for the current words. */
 export function allowedHere(session, allow) {

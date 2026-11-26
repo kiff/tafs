@@ -186,6 +186,7 @@
   "coach.tools.give": "Beri Coach alatnya",
   "coach.tools.giving": "Memberikan…",
   "coach.tools.title": "Alat Coach",
+  "coach.tools.write_after": "Setujui alat Coach dulu, lalu Anda bisa menulis.",
   "coach.tools_eyebrow": "Alat",
   "coach.tools_not_given": "Alat Coach tidak diberikan. {why}",
   "coach.tools_not_read": "Alat Coach tidak dapat dibaca. {why}",

@@ -11,6 +11,8 @@ final class WatchRelayTests: XCTestCase {
     /// A reading that counts what it's asked, and has nothing to sign with.
     private final class Reading: WatchReading {
         var signedIn = true
+        /// This session's mark for the watch; none in the tests that don't look at it.
+        var mark: String?
         var reads = 0
         var fails = false
         var refused: [String] = []
@@ -155,6 +157,81 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(reading.reads, 1)
         // The reply survives the wire as it was.
         XCTAssertEqual(WatchMessage.decode(WatchReply.self, from: WatchMessage.encode(reply)), reply)
+    }
+
+    /// Whose answer it is (`WatchMark`): every reply carries the session's mark while signed in, a refusal included, and
+    /// none once signed out, so the watch wipes one account's data before it shows another's.
+    func testEveryReplyCarriesTheSessionsMarkAndSignedOutNone() async {
+        let reading = Reading(at: now)
+        let mark = WatchMark.make()
+        reading.mark = mark
+        let read = await send(WatchRequest(.needsYou, made: now), reading: reading)
+        XCTAssertEqual(read.outcome, .ok)
+        XCTAssertEqual(read.mark, mark)
+        let refused = await raw("not json", reading: reading)
+        XCTAssertEqual(refused.outcome, .refused)
+        XCTAssertEqual(refused.mark, mark)
+        XCTAssertEqual(WatchMessage.decode(WatchReply.self, from: WatchMessage.encode(read))?.mark, mark, "on the wire")
+        reading.signedIn = false
+        let out = await send(WatchRequest(.needsYou, made: now), reading: reading)
+        XCTAssertEqual(out.outcome, .signedOut)
+        XCTAssertNil(out.mark)
+    }
+
+    /// The person's acts carry the watch's mark: one sent under another sign-in's does nothing and answers signed out, so
+    /// the watch forgets what it kept; one under this session's mark goes; one with no mark (a watch before marks) goes as
+    /// before. A read never needs one. As Wear OS's WatchRelay.
+    func testAnActUnderAnotherSignInsMarkDoesNothing() async {
+        let reading = Reading(at: now)
+        let mark = WatchMark.make()
+        reading.mark = mark
+        var refuse = WatchRequest(.refuse, made: now, hold: "ce_1")
+        refuse.mark = WatchMark.make()
+        let other = await send(refuse, reading: reading)
+        XCTAssertEqual(other.outcome, .signedOut)
+        XCTAssertNil(other.mark)
+        XCTAssertTrue(reading.untouched, "nothing refused under another sign-in")
+        var halt = WatchRequest(.halt, made: now, taf: "taf-1")
+        halt.mark = WatchMark.make()
+        _ = await send(halt, reading: reading)
+        var coach = WatchRequest(.coach, made: now, text: "Pause Rae")
+        coach.mark = WatchMark.make()
+        _ = await send(coach, reading: reading)
+        XCTAssertTrue(reading.untouched, "nor halted, nor sent to Coach")
+
+        refuse.mark = mark
+        _ = await send(refuse, reading: reading)
+        XCTAssertEqual(reading.refused, ["ce_1"], "this session's mark: it goes")
+        refuse.mark = nil
+        _ = await send(refuse, reading: reading)
+        XCTAssertEqual(reading.refused, ["ce_1", "ce_1"], "no mark, from a watch before marks: as before")
+
+        var read = WatchRequest(.needsYou, made: now)
+        read.mark = WatchMark.make()
+        let readReply = await send(read, reading: reading)
+        XCTAssertEqual(readReply.outcome, .ok, "a read is the same for anyone")
+        XCTAssertFalse(WatchRequest.Kind.needsYou.carriesMark)
+        XCTAssertFalse(WatchRequest.Kind.transcribe.carriesMark)
+        XCTAssertTrue([WatchRequest.Kind.refuse, .halt, .haltAll, .coach, .coachSend, .inboxMark].allSatisfy(\.carriesMark))
+    }
+
+    /// The phone's mark: new at each sign-in, made for a session from before marks, gone at sign-out, and never anything
+    /// but its own shape.
+    func testThePhonesMarkIsNewAtEachSignInAndGoesAtSignOut() {
+        final class Box: @unchecked Sendable { var value: String? }
+        let box = Box()
+        let store = PhoneWatchMark.Store(load: { box.value }, save: { box.value = $0 }, delete: { box.value = nil })
+        XCTAssertNil(PhoneWatchMark.stored(store))
+        let made = PhoneWatchMark.current(store)
+        XCTAssertTrue(WatchMark.isMark(made), "a session from before marks gets one")
+        XCTAssertEqual(PhoneWatchMark.current(store), made)
+        let next = PhoneWatchMark.began(store)
+        XCTAssertNotEqual(next, made, "a new sign-in, a new mark, whoever it is")
+        XCTAssertEqual(PhoneWatchMark.stored(store), next)
+        PhoneWatchMark.ended(store)
+        XCTAssertNil(PhoneWatchMark.stored(store))
+        box.value = "t_01"
+        XCTAssertNil(PhoneWatchMark.stored(store), "not a mark the phone made")
     }
 
     func testAnApprovalIsNeverAnswered() async {
@@ -755,6 +832,31 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertLessThanOrEqual(lines.last?.text.count ?? 0, WatchCoachAnswer.wristLength + 1)
         let reading = Reading(at: now)
         let none = await send(WatchRequest(.tafChat, made: now, taf: " "), reading: reading)
+        XCTAssertEqual(none, WatchReply(.refused))
+        XCTAssertTrue(reading.untouched)
+    }
+
+    /// Row 10: Read more on a cut line from before this visit answers the taf's message whole, by the id the line was given;
+    /// never the person's own words, nor anything that isn't a message. A request naming no taf is refused unread.
+    func testReadMoreOnAChatLineGivesTheTafsMessageWhole() async {
+        let at = Date(timeIntervalSince1970: 1_763_600_000)
+        let long = String(repeating: "word ", count: 100)
+        let taf = TafsCloud.ChatMessage(at: at, from: .taf, kind: .message, text: long, session: "s1", serverID: nil)
+        let mine = TafsCloud.ChatMessage(at: at.addingTimeInterval(1), from: .owner, kind: .message, text: long, session: "s1", serverID: "m1")
+        let kickoff = TafsCloud.ChatMessage(at: at.addingTimeInterval(2), from: .taf, kind: .kickoff, text: long, session: "s1", serverID: nil)
+        let lines = KeptWatchReading.chatLines([taf, mine])
+        XCTAssertEqual(lines.first?.more, true)
+        XCTAssertTrue(WatchChatLine.isID(lines.first?.id), "the watch can name it back")
+        XCTAssertTrue(WatchChatLine.isID(lines.last?.id))
+        let whole = KeptWatchReading.wholeLine([taf, mine, kickoff], id: taf.id)
+        XCTAssertEqual(whole?.text, long.trimmingCharacters(in: .whitespacesAndNewlines))
+        XCTAssertEqual(whole?.more, false)
+        XCTAssertEqual(whole?.at, at)
+        XCTAssertNil(KeptWatchReading.wholeLine([taf, mine], id: mine.id), "never the person's own words")
+        XCTAssertNil(KeptWatchReading.wholeLine([kickoff], id: kickoff.id))
+        XCTAssertNil(KeptWatchReading.wholeLine([taf], id: "s1|nope"))
+        let reading = Reading(at: now)
+        let none = await send(WatchRequest(.lineFull, made: now, taf: " ", message: taf.id), reading: reading)
         XCTAssertEqual(none, WatchReply(.refused))
         XCTAssertTrue(reading.untouched)
     }

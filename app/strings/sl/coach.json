@@ -186,6 +186,7 @@
   "coach.tools.give": "Daj Coachu njegova orodja",
   "coach.tools.giving": "Predajam…",
   "coach.tools.title": "Orodja Coacha",
+  "coach.tools.write_after": "Najprej odobrite orodja Coacha, nato lahko pišete.",
   "coach.tools_eyebrow": "Orodja",
   "coach.tools_not_given": "Orodja Coacha niso bila predana. {why}",
   "coach.tools_not_read": "Orodij Coacha ni bilo mogoče prebrati. {why}",

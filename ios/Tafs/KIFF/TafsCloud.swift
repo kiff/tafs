@@ -1228,16 +1228,30 @@ final class TafsCloud {
     struct RunFailed: Equatable {
         let run: String
         let words: String
+        /// Whether sending the person's message again is safe: tafs cloud reads it from what the run did (nothing that
+        /// acted), never from its code. Absent or anything but `true` is no Try again.
+        var retry = false
+        /// The Try again button's words, only with `retry`.
+        var retryLabel: String? = nil
 
-        /// `failed` as the thread sends it: `{run, code, words}`. One with no words, or of another
+        /// `failed` as the thread sends it: `{run, code, words, retry, retry_label}`. One with no words, or of another
         /// shape, is no line, never the thread with it.
         struct Lenient: Decodable {
             let failed: RunFailed?
             init(from decoder: Decoder) throws {
-                struct Wire: Decodable { let run: String?; let words: String? }
+                struct Wire: Decodable {
+                    let run: String?
+                    let words: String?
+                    let retry: Bool?
+                    let retryLabel: String?
+                    enum CodingKeys: String, CodingKey { case run, words, retry, retryLabel = "retry_label" }
+                }
                 let w = try? Wire(from: decoder)
                 let words = w?.words?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                failed = words.isEmpty ? nil : RunFailed(run: w?.run ?? "", words: words)
+                let retry = w?.retry == true
+                let label = w?.retryLabel?.trimmingCharacters(in: .whitespacesAndNewlines)
+                failed = words.isEmpty ? nil : RunFailed(run: w?.run ?? "", words: words, retry: retry,
+                                                         retryLabel: retry && label?.isEmpty == false ? label : nil)
             }
         }
     }
@@ -1733,11 +1747,49 @@ final class TafsCloud {
         var id: String { session }
     }
 
+    /// tafs cloud's words for deleting a chat, in the person's language, sent with each chats-list read (`delete`), so
+    /// they're on hand when the network isn't. The app has none of its own: Delete conversation shows only once a read has
+    /// brought them all.
+    struct DeleteWords: Decodable, Equatable {
+        let item: String
+        let confirmTitle: String
+        let confirmBody: String
+        let confirmButton: String
+        let failed: String
+
+        enum CodingKeys: String, CodingKey {
+            case item, failed
+            case confirmTitle = "confirm_title", confirmBody = "confirm_body", confirmButton = "confirm_button"
+        }
+
+        /// Every line there: a read with one missing or blank shows no Delete at all.
+        var complete: Bool { ![item, confirmTitle, confirmBody, confirmButton, failed].contains { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } }
+    }
+
+    /// A chats-list read: the chats, newest first, and the words for deleting one when tafs cloud sends them.
+    struct ChatsRead: Decodable {
+        let chats: [Chat]
+        /// Nil from a tafs cloud that doesn't send them yet, or whose words don't read.
+        let delete: DeleteWords?
+
+        enum CodingKeys: String, CodingKey { case chats, delete }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            chats = try c.decode([Chat].self, forKey: .chats)
+            // Words that don't read leave the list as it is, with no Delete.
+            delete = (try? c.decodeIfPresent(DeleteWords.self, forKey: .delete)).flatMap { $0?.complete == true ? $0 : nil }
+        }
+    }
+
     /// The taf's chats, newest first.
     func chats(_ id: String) async throws -> [Chat] {
-        struct Response: Decodable { let chats: [Chat] }
-        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/chats")
-        return r.chats
+        try await chatsRead(id).chats
+    }
+
+    /// The taf's chats, with what tafs cloud sends beside them (the words for deleting one).
+    func chatsRead(_ id: String) async throws -> ChatsRead {
+        try await send("GET", "/v1/tafs/\(escaped(id))/chats")
     }
 
     /// Archives one of the taf's chats (kiff/tafs#82): tafs cloud leaves it out of `chats`
@@ -1749,9 +1801,20 @@ final class TafsCloud {
 
     /// The chats the owner archived, to find and reopen one (kiff/tafs#97).
     func archivedChats(_ id: String) async throws -> [Chat] {
-        struct Response: Decodable { let chats: [Chat] }
-        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/chats/archived")
-        return r.chats
+        try await archivedChatsRead(id).chats
+    }
+
+    /// The archived chats, with what tafs cloud sends beside them.
+    func archivedChatsRead(_ id: String) async throws -> ChatsRead {
+        try await send("GET", "/v1/tafs/\(escaped(id))/chats/archived")
+    }
+
+    /// Deletes one of the person's own chats for good (docs/api.md): its messages and the files they added, on every
+    /// device. tafs cloud decides whose it is: 404 for one that isn't theirs or is already gone, 409 while its run works or
+    /// waits on a card, with its words as the refusal's `error`.
+    func deleteChat(_ id: String, session: String) async throws {
+        struct Response: Decodable { let deleted: Bool? }
+        let _: Response = try await send("DELETE", "/v1/tafs/\(escaped(id))/chats/\(escaped(session))")
     }
 
     /// Puts an archived chat back in the list (kiff/tafs#97).
@@ -2474,6 +2537,28 @@ final class TafsCloud {
             var lead = ""
             var start = ""
             var does = ""
+            /// The Card step before the signature (tafs#2091's words, docs/coach.md): its title, its four lines, the label of
+            /// the fold over KIFF's own words for the Cards, and a whole-sentence button for each way a device approves.
+            var title = ""
+            var allows = ""
+            var asks = ""
+            var sign = ""
+            var stop = ""
+            var exact = ""
+            var giveFingerprint = ""
+            var giveFace = ""
+            /// The one line in place of the message box while the Card step waits (`card_step_locked`); empty from a tafs
+            /// cloud that doesn't send it yet.
+            var locked = ""
+
+            /// The button for this phone's way of approving, as a whole sentence; empty when tafs cloud sent none for it.
+            func give(face: Bool) -> String { face ? giveFace : giveFingerprint }
+
+            /// Every line of the Card step there, the button for this device's way of approving included: then Start's screen
+            /// is the Card step. Anything missing, and it's Start's screen as before.
+            func cardStep(face: Bool) -> Bool {
+                ![title, allows, asks, sign, stop, exact, give(face: face)].contains { $0.isEmpty }
+            }
         }
         var state = "unknown"
         var scheme = ""
@@ -2500,6 +2585,24 @@ final class TafsCloud {
         /// Start on its own screen, in tafs cloud's words, with what's signed drawn under them:
         /// the one tap signs, and there's no step to open.
         var oneScreen: Bool { startable && words != nil }
+
+        /// Start's screen is the Card step (docs/coach.md): every line of it sent, for this device's way of approving.
+        func cardStep(face: Bool) -> Bool { oneScreen && words?.cardStep(face: face) == true }
+
+        /// Whether the plain list the Card step shows is exactly what the draft signs (`CardStepCheck`): false, and the Card
+        /// step asks for no signature.
+        var cardStepSigns: Bool {
+            guard let draft, let step else { return false }
+            return CardStepCheck.matches(step: step, draft: draft.body, agent: agentID)
+        }
+
+        /// Whether the tools batch signed with it (when there is one) connects only the step's tools, as Coach's own control
+        /// server at this app's tafs cloud (`mcp`): false, and nothing is signed.
+        func batchSigns(mcp: String) -> Bool {
+            guard let connect else { return true }
+            guard let step else { return false }
+            return CardStepCheck.batchMatches(step: step, batch: connect.body, mcp: mcp)
+        }
 
         /// What the tools step draws for it: its words, the batch's lines, and what's to give.
         var tools: CoachTools {
@@ -2549,10 +2652,119 @@ final class TafsCloud {
             if let step = RawJSON.value(of: "coach_tools_step", in: raw) { s.step = try? JSONDecoder().decode(CoachTools.Step.self, from: step) }
             if let w = fields["words"] as? [String: Any] {
                 func said(_ key: String) -> String { ((w[key] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
-                let words = Words(lead: said("lead"), start: said("start"), does: said("does"))
+                var words = Words(lead: said("lead"), start: said("start"), does: said("does"))
+                let lines = w["lines"] as? [String: Any] ?? [:]
+                let buttons = w["buttons"] as? [String: Any] ?? [:]
+                func line(_ d: [String: Any], _ key: String) -> String { ((d[key] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
+                words.title = said("title"); words.exact = said("exact")
+                words.allows = line(lines, "allows"); words.asks = line(lines, "asks"); words.sign = line(lines, "sign"); words.stop = line(lines, "stop")
+                words.giveFingerprint = line(buttons, "fingerprint"); words.giveFace = line(buttons, "face")
+                words.locked = said("locked")
                 if !words.lead.isEmpty, !words.start.isEmpty { s.words = words }
             }
             return s
+        }
+    }
+
+    /// The Card step's shown = signed (docs/coach.md, "Coach's tools step"): the plain list the step shows, each tool with its
+    /// Card, its limit a day and whether past it the call waits for the person, against the Cards' draft the one approval signs,
+    /// compared on structured fields and failing closed. Each signed Card is read on an allowlist: its id, its subject (the
+    /// draft's own agent), the gateway domain, `on_exceed` (`owner` or `refuse`, with a hold's expiry only on `owner`), grants
+    /// that name an action and nothing else, and exactly one aggregate, a count a calendar day. Anything else on a Card, a grant
+    /// or the aggregate is a mismatch, and so is a tool, a Card or an action on one side only.
+    enum CardStepCheck {
+        private static let cardKeys: Set<String> = ["id", "subject", "domain", "on_exceed", "hold_expiry", "grants", "aggregates"]
+        private static let aggregateKeys: Set<String> = ["quantity", "limit", "window"]
+
+        struct Signed: Hashable {
+            let card: String
+            let tool: String
+            let limit: Int
+            let asks: Bool
+        }
+
+        static func matches(step: CoachTools.Step, draft: Data, agent: String) -> Bool {
+            guard let shown = shown(step), let signed = signed(draft, agent: agent) else { return false }
+            return !shown.isEmpty && shown == signed
+        }
+
+        private static let connectionKeys: Set<String> = ["name", "url", "tool", "mode", "audience", "control", "idempotency_argument", "read_only", "replace"]
+
+        /// The tools batch the same approval signs (`POST /v1/connections/batch`), held to the step: each connection is one of
+        /// the step's tools (its `name` the tool's), connected as Coach's own control server at this app's tafs cloud (`url` and
+        /// `audience` both `mcp`, `control: true`, `mode: verify`), with only the keys tafs cloud writes (`read_only` and
+        /// `replace` only as true). Anything else, a tool twice, or an empty batch is a mismatch, and nothing is signed.
+        static func batchMatches(step: CoachTools.Step, batch: Data, mcp: String) -> Bool {
+            let tools = Set(step.groups.flatMap { $0.tools.compactMap { $0.tool?.lowercased() } })
+            guard !tools.isEmpty, !mcp.isEmpty,
+                  let body = (try? JSONSerialization.jsonObject(with: batch)) as? [String: Any], Set(body.keys) == ["connections"],
+                  let connections = body["connections"] as? [Any], !connections.isEmpty else { return false }
+            var seen = Set<String>()
+            for item in connections {
+                guard let c = item as? [String: Any], Set(c.keys).isSubset(of: connectionKeys),
+                      let tool = c["tool"] as? String, c["name"] as? String == tool, tools.contains(tool.lowercased()),
+                      seen.insert(tool.lowercased()).inserted,
+                      c["url"] as? String == mcp, c["audience"] as? String == mcp,
+                      c["mode"] as? String == "verify", flag(c["control"]) == true,
+                      let op = c["idempotency_argument"] as? String, !op.isEmpty else { return false }
+                for key in ["read_only", "replace"] where c[key] != nil {
+                    guard flag(c[key]) == true else { return false }
+                }
+            }
+            return true
+        }
+
+        /// A JSON boolean as it came, never a number read as one.
+        private static func flag(_ value: Any?) -> Bool? {
+            guard let n = value as? NSNumber, CFGetTypeID(n) == CFBooleanGetTypeID() else { return nil }
+            return n.boolValue
+        }
+
+        /// What the step shows as signed by this draft, one entry per tool (those `in_draft`, or every one from a tafs cloud
+        /// that doesn't mark them); nil when such a tool doesn't say all of it, or a tool is listed twice.
+        static func shown(_ step: CoachTools.Step) -> Set<Signed>? {
+            var out = Set<Signed>()
+            var tools = Set<String>()
+            for group in step.groups {
+                for t in group.tools where t.inDraft != false {
+                    guard let tool = t.tool, !tool.isEmpty, let card = t.card, !card.isEmpty, let limit = t.limit, limit >= 0, let asks = t.asks,
+                          tools.insert(tool.lowercased()).inserted else { return nil }
+                    out.insert(Signed(card: card, tool: tool.lowercased(), limit: limit, asks: asks))
+                }
+            }
+            return out
+        }
+
+        /// What the draft signs, one entry per Card and action; nil when anything on it is outside the allowlist.
+        static func signed(_ draft: Data, agent: String) -> Set<Signed>? {
+            guard let body = (try? JSONSerialization.jsonObject(with: draft)) as? [String: Any],
+                  let cards = body["cards"] as? [Any], !cards.isEmpty else { return nil }
+            let owner = (body["agent_id"] as? String) ?? agent
+            guard !owner.isEmpty, agent.isEmpty || owner == agent else { return nil }
+            var out = Set<Signed>()
+            var ids = Set<String>()
+            var actions = Set<String>()
+            for item in cards {
+                guard let card = item as? [String: Any], Set(card.keys).isSubset(of: cardKeys),
+                      let id = card["id"] as? String, !id.isEmpty, ids.insert(id).inserted,
+                      card["subject"] as? String == owner, card["domain"] as? String == "gateway",
+                      let onExceed = card["on_exceed"] as? String, onExceed == "owner" || onExceed == "refuse" else { return nil }
+                if card["hold_expiry"] != nil {
+                    guard onExceed == "owner", card["hold_expiry"] is String else { return nil }
+                }
+                guard let aggregates = card["aggregates"] as? [Any], aggregates.count == 1,
+                      let aggregate = aggregates[0] as? [String: Any], Set(aggregate.keys) == aggregateKeys,
+                      aggregate["quantity"] as? String == "count", aggregate["window"] as? String == "calendar_day",
+                      let limit = (aggregate["limit"] as? NSNumber).flatMap({ CFGetTypeID($0) == CFBooleanGetTypeID() ? nil : $0 }),
+                      limit.doubleValue == limit.doubleValue.rounded(), limit.intValue >= 0 else { return nil }
+                guard let grants = card["grants"] as? [Any], !grants.isEmpty else { return nil }
+                for g in grants {
+                    guard let grant = g as? [String: Any], Set(grant.keys) == ["action"],
+                          let action = grant["action"] as? String, !action.isEmpty, actions.insert(action.lowercased()).inserted else { return nil }
+                    out.insert(Signed(card: id, tool: action.lowercased(), limit: limit.intValue, asks: onExceed == "owner"))
+                }
+            }
+            return out
         }
     }
 
@@ -2584,11 +2796,28 @@ final class TafsCloud {
                 var name = ""
                 var does = ""
                 var why = ""
+                /// What its Card signs, as data (docs/coach.md, "Coach's tools step"): the action, its Card's id, the Card's
+                /// count a day, and whether past it the call waits for the person. Nil from a tafs cloud that doesn't send them.
+                var tool: String? = nil
+                var card: String? = nil
+                var limit: Int? = nil
+                var asks: Bool? = nil
+                /// Whether its Card is in the draft this same answer carries to sign: every one on a first start, only the
+                /// missing ones later. Nil from a tafs cloud that doesn't say.
+                var inDraft: Bool? = nil
+                init(name: String, does: String = "", why: String = "", tool: String? = nil, card: String? = nil, limit: Int? = nil, asks: Bool? = nil, inDraft: Bool? = nil) {
+                    self.name = name; self.does = does; self.why = why; self.tool = tool; self.card = card; self.limit = limit; self.asks = asks; self.inDraft = inDraft
+                }
                 init(from decoder: Decoder) throws {
                     let c = try decoder.container(keyedBy: CodingKeys.self)
                     name = Step.text(c, .name); does = Step.text(c, .does); why = Step.text(c, .why)
+                    tool = (try? c.decodeIfPresent(String.self, forKey: .tool)) ?? nil
+                    card = (try? c.decodeIfPresent(String.self, forKey: .card)) ?? nil
+                    limit = (try? c.decodeIfPresent(Int.self, forKey: .limit)) ?? nil
+                    asks = (try? c.decodeIfPresent(Bool.self, forKey: .asks)) ?? nil
+                    inDraft = (try? c.decodeIfPresent(Bool.self, forKey: .inDraft)) ?? nil
                 }
-                enum CodingKeys: String, CodingKey { case name, does, why }
+                enum CodingKeys: String, CodingKey { case name, does, why, tool, card, limit, asks, inDraft = "in_draft" }
             }
             struct Group: Decodable, Equatable {
                 var name = ""
@@ -2640,6 +2869,30 @@ final class TafsCloud {
 
         var toGive: Bool { state == "to_give" }
         var given: Bool { state == "given" }
+
+        /// The Cards' draft this read asks to sign: on its own (`card`), or in the pair (`together`).
+        var draftBody: Data? { card?.body ?? together?.draft?.body }
+
+        /// Shown = signed for a later approval of Coach's Cards: when tafs cloud marks which tools this draft carries
+        /// (`in_draft`), those must be exactly what the draft signs (`CardStepCheck`). True with no draft to sign, and from a
+        /// tafs cloud that doesn't mark them, where KIFF's own words are what's shown as signed.
+        var draftSigns: Bool {
+            guard let draftBody else { return true }
+            guard let step, marksDraft else { return true }
+            return CardStepCheck.matches(step: step, draft: draftBody, agent: "")
+        }
+
+        /// tafs cloud says which tools a draft carries (`in_draft`): the step's data is there to compare with.
+        var marksDraft: Bool { step?.groups.contains(where: { $0.tools.contains { $0.inDraft != nil } }) == true }
+
+        /// The tools batch this read asks to sign (on its own, or in the pair), held to the step as the first start's is
+        /// (`CardStepCheck.batchMatches`), once tafs cloud marks the step's data. True with no batch, and from a tafs cloud
+        /// that doesn't mark it.
+        func batchSigns(mcp: String) -> Bool {
+            guard let batch = connect?.body ?? together?.connect?.body else { return true }
+            guard let step, marksDraft else { return true }
+            return CardStepCheck.batchMatches(step: step, batch: batch, mcp: mcp)
+        }
 
         /// Read from `GET /v1/setup`'s answer; nil from a tafs cloud that sends no `tools`.
         /// The bodies are kept as their own bytes: they're signed and sent as they came.
@@ -3009,7 +3262,10 @@ final class TafsCloud {
     /// This phone gets the account's alerts at `deviceToken`. With `target`, also hands over
     /// the KIFF target's signing secret, which checks KIFF's deliveries. `sound` false: this
     /// phone's alerts arrive quietly, with no sound or banner.
-    func registerPush(deviceToken: String, environment: String, sound: Bool = true, target: KIFFClient.AlertTarget? = nil, kinds: [String: Bool]? = nil) async throws -> PushStatus {
+    /// `alerts: false` registers this phone for background pushes only (a phone that serves a watch with alerts off): tafs
+    /// cloud sends it every silent change and never a visible alert, and it takes no alert target.
+    func registerPush(deviceToken: String, environment: String, sound: Bool = true, target: KIFFClient.AlertTarget? = nil, kinds: [String: Bool]? = nil,
+                      alerts: Bool? = nil) async throws -> PushStatus {
         struct Target: Encodable {
             let id: String, signingSecret: String
             enum CodingKeys: String, CodingKey { case id, signingSecret = "signing_secret" }
@@ -3017,11 +3273,12 @@ final class TafsCloud {
         struct Body: Encodable {
             let deviceToken: String, environment: String, sound: Bool, alertTarget: Target?
             let kinds: [String: Bool]?
-            enum CodingKeys: String, CodingKey { case environment, sound, kinds, deviceToken = "device_token", alertTarget = "alert_target" }
+            let alerts: Bool?
+            enum CodingKeys: String, CodingKey { case environment, sound, kinds, alerts, deviceToken = "device_token", alertTarget = "alert_target" }
         }
         return try await send("POST", "/v1/push", body: Body(
             deviceToken: deviceToken, environment: environment, sound: sound,
-            alertTarget: target.map { Target(id: $0.id, signingSecret: $0.signingSecret) }, kinds: kinds))
+            alertTarget: target.map { Target(id: $0.id, signingSecret: $0.signingSecret) }, kinds: kinds, alerts: alerts))
     }
 
     /// Whether tafs cloud holds KIFF's alert secret for the account (kiff/tafs#206).

@@ -22,6 +22,9 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
         didSet { if let onOpen, let waiting = pendingOpen { pendingOpen = nil; onOpen(waiting) } }
     }
     private(set) var pendingOpen: String?
+    /// The app's own delegate, once launched: SwiftUI's adaptor keeps it, and `UIApplication.shared.delegate` is SwiftUI's,
+    /// not this one. View on phone (`WatchOpen`) opens a chat through it while tafs is in front.
+    static weak var current: PushDelegate?
 
     #if targetEnvironment(macCatalyst)
     /// The Mac's menu bar has no document items (Duplicate, Move, Rename, Export): tafs has no
@@ -35,6 +38,7 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        Self.current = self
         // Set before launch ends, so a tap that launched the app is delivered here.
         UNUserNotificationCenter.current().delegate = self
         // Approve and Refuse on a hold's notification (kiff/tafs#210).
@@ -54,6 +58,14 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
                                             withCompletionHandler completionHandler: @escaping () -> Void) {
         let info = response.notification.request.content.userInfo
+        // A watch's Ask your phone to sign this watch in: Allow (only once the phone is unlocked) or Deny, by the watch's id.
+        if response.notification.request.content.categoryIdentifier == WatchSignInAsk.categoryID {
+            let id = info[WatchSignInAsk.idKey] as? String ?? ""
+            let action = response.actionIdentifier
+            completionHandler()
+            Task { @MainActor in WatchSignInAsk.respond(action: action, id: id) }
+            return
+        }
         let destination = info["open"] as? String
         let hold = info["hold_id"] as? String
         let action = response.actionIdentifier
@@ -116,6 +128,8 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
             // The alert can come before KIFF's list of held calls has the hold: Needs you then
             // said "Nothing is waiting" under it (the 755 retest). It reads again until it's there.
             if let hold, let onHoldAlert = self.onHoldAlert { await onHoldAlert(hold) } else { await self.onHeldChanged?() }
+            // The watch's Inbox and Needs you take the held call in at once (`WatchPushRelay.needsYou`).
+            if hold != nil { await WatchPushRelay.holds() }
         }
     }
 
@@ -135,7 +149,13 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
             // tafs not open, and only for a request this iPhone sent for its watch (`WatchAskPush`).
             let ask = change == "watch_ask" ? userInfo["ask_id"] as? String : nil
             Task {
-                if let ask { await WatchAskPush.run(ask) } else { await onChange?(change, taf) }
+                if let ask {
+                    await WatchAskPush.run(ask)
+                } else {
+                    // The watch's Inbox and its taf chats stay in step too (docs/watch-app.md, "Kept and pushed").
+                    await WatchPushRelay.run(change: change, taf: taf)
+                    await onChange?(change, taf)
+                }
                 completionHandler(.newData)
             }
             return
@@ -144,6 +164,8 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
         if userInfo["answered"] as? Bool == true { Self.removeAlerts(forHold: hold) }
         Task {
             await onHeldChanged?()
+            // A hold came, or was answered on any device: the watch is told with no ask of its own.
+            await WatchPushRelay.holds()
             completionHandler(.newData)
         }
     }

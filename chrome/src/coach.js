@@ -3,12 +3,48 @@
 // refuses anything else for a view-only session. The panel sends the owner's words and the files they picked (attach.js). When Coach
 // or a taf works on a page, its first step there is to read it itself, through planque.
 
+import { workOf, reportBody } from "./chatrow.js";
+
 export const CLOUD = "https://cloud.tafs.kiff.dev";
 
 /** The longest message tafs cloud takes. */
 export const MAX_TEXT = 2000;
 
-/** tafs cloud's Coach routes, as the session's own: `token` is the view-only KIFF session's, `fetch` the browser's. */
+/**
+ * A chat's messages as the panel draws them: the person's and the taf's, with their id, time, chat, kind, the page they
+ * carried, and an answer's work (chatrow.js `workOf`: how long and the steps, in tafs cloud's words, never a tool's name).
+ */
+function chatMessages(list) {
+  return (Array.isArray(list) ? list : [])
+    .filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string")
+    .map((m) => {
+      const work = m.from === "taf" ? workOf(m.work) : null;
+      return {
+        from: m.from,
+        text: m.text,
+        at: m.at,
+        ...(typeof m.session === "string" && m.session ? { session: m.session } : {}),
+        ...(m.kind === "kickoff" ? { kind: "kickoff" } : {}),
+        ...(typeof m.id === "string" && m.id ? { id: m.id } : {}),
+        ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}),
+        ...(work ? { work } : {}),
+      };
+    });
+}
+
+/**
+ * The chat's failed turn, as tafs cloud reads it (`failed: {run, code, words, retry?, retry_label?}`, contracts/
+ * conversation-failed.json): the latest run ended in an error, said in the person's language. Its `words` are drawn as they
+ * are, whatever the code; `retry` and `retry_label` say whether it offers Try again, and in which words (coachchat.js
+ * `retryOf`). Null when there's none, or no words to show.
+ */
+export function failedOf(t) {
+  const f = t && t.failed;
+  if (!f || typeof f !== "object" || typeof f.run !== "string" || !f.run || typeof f.words !== "string" || !f.words.trim()) return null;
+  const label = typeof f.retry_label === "string" ? f.retry_label.trim().slice(0, 60) : "";
+  return { run: f.run, code: typeof f.code === "string" ? f.code : "", words: f.words, retry: f.retry === true, ...(label ? { retryLabel: label } : {}) };
+}
+
 export class Coach {
   constructor({ token, fetch = globalThis.fetch.bind(globalThis), base = CLOUD, lang = "en" }) {
     Object.assign(this, { token, fetch, base, lang });
@@ -22,7 +58,9 @@ export class Coach {
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(data.words || data.error || "tafs cloud answered " + res.status), { status: res.status, code: data.code });
+    // A refusal keeps tafs cloud's own words for people (`words`), when it sent them, for the panel to show as they are.
+    const words = typeof data.words === "string" && data.words.trim() ? data.words.trim() : undefined;
+    if (!res.ok) throw Object.assign(new Error(words || data.error || "tafs cloud answered " + res.status), { status: res.status, code: data.code, ...(words ? { words } : {}) });
     return data;
   }
 
@@ -43,8 +81,9 @@ export class Coach {
     if (!id) return null;
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation" + (session ? "/" + encodeURIComponent(session) : ""));
     return {
-      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, session: m.session, ...(typeof m.id === "string" && m.id ? { id: m.id } : {}), ...(typeof m.reading === "string" && m.reading ? { reading: m.reading } : {}) })),
+      messages: chatMessages(t.messages),
       working: t.working ? t.working.session : null,
+      failed: failedOf(t),
       // A card that waits on the owner (an approval, a sign-in) is answered on the phone, never here.
       waitsOnPhone: Array.isArray(t.components) && t.components.some((c) => c && (c.type === "approval" || c.type === "sign_in") && !c.answer),
     };
@@ -79,18 +118,42 @@ export class Coach {
   async tafThread(id) {
     const t = await this.call("GET", "/v1/tafs/" + encodeURIComponent(id) + "/conversation");
     return {
-      messages: (t.messages || []).filter((m) => m && (m.from === "owner" || m.from === "taf") && typeof m.text === "string").map((m) => ({ from: m.from, text: m.text, at: m.at, ...(typeof m.id === "string" && m.id ? { id: m.id } : {}) })),
+      messages: chatMessages(t.messages),
       working: t.working ? t.working.session : null,
+      failed: failedOf(t),
       waitsOnPhone: Array.isArray(t.components) && t.components.some((c) => c && (c.type === "approval" || c.type === "sign_in") && !c.answer),
     };
   }
 
-  /** Sends the owner's words, and the files they attached (ids, at most 5), to a taf's own chat. */
-  async sendToTaf(id, words, clientID, attachments = []) {
+  /**
+   * Sends the owner's words, and the files they attached (ids, at most 5), to a taf's own chat, with the page in front as
+   * Coach's send has it (`page`, read on this send, only on the taf's own signed sites: sw.js), and only with words.
+   */
+  async sendToTaf(id, words, clientID, attachments = [], page = null) {
     const text = String(words || "").trim().slice(0, MAX_TEXT);
     const files = fileIDs(attachments);
     if (!text && !files.length) throw Object.assign(new Error("nothing to send"), { code: "empty" });
-    return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/messages", { text, client_message_id: clientID, ...(files.length ? { attachments: files } : {}) });
+    const body = { text, client_message_id: clientID, ...(files.length ? { attachments: files } : {}) };
+    return this.postWithPage("/v1/tafs/" + encodeURIComponent(id) + "/messages", body, text, page);
+  }
+
+  /**
+   * POSTs a message with the page in front, when there is one and words go with it, as data for this turn only: tafs cloud
+   * keeps its host, never its text. A page tafs cloud refuses (`page_refused`, nothing started) never holds the message: the
+   * words go once more on their own, and the answer says `page_refused`.
+   */
+  async postWithPage(path, body, text, page) {
+    if (text && page && typeof page.url === "string" && typeof page.text === "string") {
+      body = { ...body, page: { url: page.url, title: String(page.title || ""), text: page.text, truncated: page.truncated === true } };
+    }
+    try {
+      return await this.call("POST", path, body);
+    } catch (e) {
+      if (!body.page || e.status !== 400 || e.code !== "page_refused") throw e;
+      const { page: _dropped, ...words } = body; // eslint-disable-line no-unused-vars
+      const sent = await this.call("POST", path, words);
+      return { ...sent, page_refused: true };
+    }
   }
 
   /**
@@ -139,6 +202,21 @@ export class Coach {
     return this.call("POST", "/v1/tafs/" + encodeURIComponent(id) + "/chats/" + encodeURIComponent(session) + "/" + (archived ? "archive" : "unarchive"));
   }
 
+  /**
+   * Reports an answer of taf `id`'s (Coach's when `id` is null) by its message id, as the phones do (`POST …/messages/{message}/
+   * report`, docs/chat.md "Reporting an answer"): a reason, the note when there is one, and the chat's `session`, always: tafs
+   * cloud takes a report from the panel only for an answer in a chat it may show. Answers `{id, at, new}`; `new: false` when
+   * the person had reported it already.
+   */
+  async report(id, message, { reason, note, session }) {
+    const body = reportBody(reason, note, session);
+    if (!body || typeof message !== "string" || !message) throw Object.assign(new Error("not a report tafs cloud takes"), { code: "bad_report" });
+    const taf = id || (await this.coach());
+    if (!taf) throw Object.assign(new Error("Coach isn't started"), { code: "no_coach" });
+    const { report } = await this.call("POST", "/v1/tafs/" + encodeURIComponent(taf) + "/messages/" + encodeURIComponent(message) + "/report", body);
+    return report || {};
+  }
+
   /** The person's page consent at tafs cloud: `{given, version}` (Coach reading the page in front, docs/chrome.md). */
   async pageConsent() {
     const { consent } = await this.call("GET", "/v1/me/page-consent");
@@ -171,22 +249,8 @@ export class Coach {
     if (files.length) body.attachments = files;
     if (newChat) body.new_chat = true;
     else if (session) body.session = session;
-    // The page in front, read on this send (aside.js), as data for this turn only: tafs cloud keeps its host, never its text.
-    // A page goes only with words (tafs cloud's rule): files alone go without it.
-    if (text && page && typeof page.url === "string" && typeof page.text === "string") {
-      body.page = { url: page.url, title: String(page.title || ""), text: page.text, truncated: page.truncated === true };
-    }
-    const path = "/v1/tafs/" + encodeURIComponent(id) + "/messages";
-    try {
-      return await this.call("POST", path, body);
-    } catch (e) {
-      // tafs cloud refused the page (nothing started): the person's words go once more on their own, as a page that can't be
-      // read never holds a message. The answer then names no page.
-      if (!body.page || e.status !== 400 || e.code !== "page_refused") throw e;
-      const { page: _dropped, ...words } = body; // eslint-disable-line no-unused-vars
-      const sent = await this.call("POST", path, words);
-      return { ...sent, page_refused: true };
-    }
+    // The page in front, read on this send (aside.js): a page goes only with words (tafs cloud's rule), files alone without it.
+    return this.postWithPage("/v1/tafs/" + encodeURIComponent(id) + "/messages", body, text, page);
   }
 }
 

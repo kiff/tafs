@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. الرد قبل %3$s. لا يُرسل شيء حتى توافق.</string>
     <string name="alert_answered">ردّ taf على أحدهم</string>
     <string name="alert_approve_once">الموافقة مرة واحدة…</string>
+    <string name="alert_blocked_body">لم يعد هذا الجهاز (%1$s) يسأل، لذا فإن تنبيهات tafs متوقفة في الإعدادات. شغّلها هناك لتصلك الموافقات والإجابات.</string>
+    <string name="alert_blocked_body_android">لم يعد Android يسأل، لذا فإن تنبيهات tafs متوقفة في إعدادات هاتفك. شغّلها هناك لتصلك الموافقات والإجابات على هذا الهاتف وعلى ساعتك. تصل التحديثات إلى ساعتك في كل الأحوال.</string>
+    <string name="alert_blocked_body_watch">لم يعد جهاز iPhone الخاص بك يسأل، لذا فإن تنبيهات tafs متوقفة في الإعدادات. شغّلها هناك لتصلك الموافقات والإجابات على هذا الـ iPhone وعلى ساعتك. تصل التحديثات إلى ساعتك في كل الأحوال.</string>
+    <string name="alert_blocked_title">شغّل التنبيهات لـ tafs</string>
     <string name="alert_by_email">بالبريد الإلكتروني</string>
     <string name="alert_example">مثال</string>
     <string name="alert_foot_cant_answer_holds">تصل التنبيهات إلى من يحق لهم الرد على طلبات الاستدعاء المعلّقة. دورك في هذا الحساب لا يتيح ذلك.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">التنبيهات غير مفعّلة لهذا الهاتف بعد. %1$s</string>
     <string name="alert_not_refused">لم يتم الرفض</string>
     <string name="alert_not_sent">لم يُرسل رد</string>
+    <string name="alert_now_on">التنبيهات قيد التشغيل.</string>
     <string name="alert_on_this_device">التنبيهات على هذا الجهاز (%1$s)</string>
+    <string name="alert_open_notification_settings">فتح إعدادات الإشعارات</string>
+    <string name="alert_open_settings">فتح الإعدادات</string>
     <string name="alert_open_tafs_answer_kiff_did">افتح tafs لتردّ: لم يذكر KIFF أي نسخة منه رأيتها.</string>
     <string name="alert_open_tafs_answer_phone_can">افتح tafs لتردّ: لا يستطيع هذا الهاتف التوقيع عليه من الإشعار.</string>
     <string name="alert_prompt">احصل على تنبيه عندما يحتاجك taf</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">غير متاح</string>
     <string name="alert_status_off">متوقف</string>
     <string name="alert_status_on">قيد التشغيل</string>
+    <string name="alert_still_off">لا تزال التنبيهات متوقفة.</string>
     <string name="alert_still_on_after_sign_out_body">لم يتمكن tafs من إيقافها (%1$s). حاول مرة أخرى، أو سجّل الخروج على أي حال وأوقف إشعارات tafs من الإعدادات.</string>
     <string name="alert_still_on_after_sign_out_title">قد يظل هذا الجهاز (%1$s) يتلقى تنبيهات هذا الحساب</string>
     <string name="alert_taf_needs_you">%1$s بانتظارك</string>
@@ -50,6 +58,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">تعذّر على tafs الوصول إلى KIFF لرفضه. افتح tafs لتردّ.</string>
+    <string name="alert_watch_first_body">لترى الموافقات والإجابات كتنبيهات على هذا الهاتف وعلى ساعتك، شغّل التنبيهات لـ tafs. ستظل ساعتك تتلقى تحديثاتها حتى إن لم تفعل.</string>
+    <string name="alert_watch_first_title">ساعتك تستخدم tafs</string>
     <string name="alert_what_alerts">ما الذي ينبّهك</string>
     <string name="alert_with_sound">مع صوت</string>
     <string name="app_name">tafs</string>
@@ -978,6 +988,7 @@
     <string name="coach_tools_give">منح Coach أدواته</string>
     <string name="coach_tools_giving">جارٍ المنح…</string>
     <string name="coach_tools_title">أدوات Coach</string>
+    <string name="coach_tools_write_after">وافق على أدوات Coach أولاً، ثم يمكنك الكتابة.</string>
     <string name="coach_tools_eyebrow">الأدوات</string>
     <string name="coach_tools_not_given">لم تُمنح أدوات Coach. %1$s</string>
     <string name="coach_tools_not_read">تعذّرت قراءة أدوات Coach. %1$s</string>
@@ -3080,6 +3091,7 @@
     <string name="watch_ask">اسأل tafs</string>
     <string name="watch_ask_needs_consent">قبل أن تسأل tafs، اسمح باستخدام الذكاء الاصطناعي في tafs على هاتفك.</string>
     <string name="watch_ask_not_on">السؤال من ساعتك غير مفعّل بعد.</string>
+    <string name="watch_ask_phone_sign_in">اطلب من هاتفك تسجيل دخول هذه الساعة</string>
     <string name="watch_ask_text_only">يتلقى tafs كلماتك كنص، وليس صوتك أبدًا.</string>
     <string name="watch_asking_phone">جارٍ سؤال هاتفك…</string>
     <string name="watch_calendar_today">تقويم اليوم</string>
@@ -3091,6 +3103,7 @@
     <string name="watch_deleted_nothing_sent">تم الحذف. لم يُرسل شيء.</string>
     <string name="watch_didnt_catch">لم أسمع ذلك. اضغط للمحاولة مرة أخرى.</string>
     <string name="watch_dismiss">تجاهل</string>
+    <string name="watch_edit_words">انقر على النص لتغييره</string>
     <string name="watch_glance_description">كم منها بانتظارك، دون أن تُعرف ما هي أو من.</string>
     <string name="watch_halt_all_q">تجميد جميع tafs لديك؟</string>
     <plurals name="watch_halt_now_count">
@@ -3114,6 +3127,7 @@
         <item quantity="many">%1$s استدعاءً معلّقًا بانتظارك</item>
         <item quantity="other">%1$s استدعاء معلّق بانتظارك</item>
     </plurals>
+    <string name="watch_held_channel">الاستدعاءات المعلّقة</string>
     <string name="watch_inbox_empty">لا جديد. تصل هنا ردود Coach وتنبيهات tafs لديك.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="zero">لا غير مقروء في «الوارد»</item>
@@ -3132,7 +3146,7 @@
     <string name="watch_menu">القائمة</string>
     <string name="watch_mic_needed">للسؤال بالصوت، اسمح للميكروفون لـ tafs على هذه الساعة.</string>
     <string name="watch_more_on_phone">الباقي على هاتفك.</string>
-    <string name="watch_needs_lock">للرفض أو التجميد من هذه الساعة، اضبط قفل الشاشة عليها وافتحها.</string>
+    <string name="watch_needs_lock">للإرسال أو الرفض أو التجميد من هذه الساعة، اضبط قفل الشاشة عليها وافتحها.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="zero">لا شيء بانتظارك</item>
         <item quantity="one">واحد بانتظارك</item>
@@ -3146,6 +3160,7 @@
     <string name="watch_nothing_sent_until">لا يُرسل شيء حتى توافق.</string>
     <string name="watch_nothing_waits">لا شيء بانتظارك.</string>
     <string name="watch_open_on_phone">فتح على الهاتف</string>
+    <string name="watch_opened_on_phone">فُتح على هاتفك</string>
     <string name="watch_page_brief">الملخص</string>
     <string name="watch_page_inbox">الوارد</string>
     <string name="watch_paused_still_answers">متوقف مؤقتًا: جدوله متوقف. ما زال يردّ على ما ترسله.</string>
@@ -3173,6 +3188,7 @@
     <string name="watch_recent_chats">المحادثات الأخيرة</string>
     <string name="watch_recording">جارٍ التسجيل</string>
     <string name="watch_recording_not_received">لم يصل التسجيل إلى هاتفك. حاول مرة أخرى، أو اكتب بدلًا من ذلك.</string>
+    <string name="watch_refuse_on_phone">لم يُرفض. ارفضه من هاتفك.</string>
     <string name="watch_refused">مرفوض. لم يُرسل شيء.</string>
     <string name="watch_reply">رد</string>
     <string name="watch_rerecord">إعادة التسجيل</string>
@@ -3181,14 +3197,20 @@
     <string name="watch_resume_on_phone">استئناف على هاتفك</string>
     <string name="watch_retry">إعادة المحاولة</string>
     <string name="watch_review">راجع قبل الإرسال</string>
+    <string name="watch_seconds_left">يتبقى %1$s ث</string>
     <string name="watch_sending">جارٍ الإرسال…</string>
     <string name="watch_sent">أُرسل</string>
     <string name="watch_settings_of">%1$s · الإعدادات</string>
+    <string name="watch_sign_in_allow">السماح</string>
+    <string name="watch_sign_in_denied">لم يتم تسجيل الدخول. تبقى هذه الساعة مسجَّلة الخروج.</string>
+    <string name="watch_sign_in_deny">الرفض</string>
     <string name="watch_sign_in_on_phone">سجّل الدخول إلى tafs على هاتفك أولًا.</string>
+    <string name="watch_sign_in_watch_q">هل تريد تسجيل دخول هذه الساعة باسمك؟</string>
     <string name="watch_sign_out_q">تسجيل الخروج على هذه الساعة؟</string>
     <string name="watch_sign_out_sub">يبقى هاتفك مسجّل الدخول. وتنسى هذه الساعة tafs لديك ومحادثاتك ووارداتك.</string>
     <string name="watch_signed_in">تم تسجيل الدخول</string>
     <string name="watch_signed_out_here">تم تسجيل الخروج على هذه الساعة. ويبقى هاتفك مسجّل الدخول.</string>
+    <string name="watch_stopped_at_limit">توقف عند حد %1$s. ما سُمع موجود أدناه.</string>
     <string name="watch_swipe_settings">اسحب لإعداداته</string>
     <string name="watch_tap_start">اضغط «بدء» ثم تحدّث. تظهر كلماتك هنا أثناء حديثك.</string>
     <string name="watch_timing">الاستماع %1$s م ث · الإيصال %2$s م ث · النتيجة %3$s م ث</string>
@@ -3197,8 +3219,10 @@
     <string name="watch_type">كتابة</string>
     <string name="watch_type_hint">اكتب إلى Coach…</string>
     <string name="watch_update_phone">حدّث tafs على هاتفك ثم حاول مرة أخرى.</string>
+    <string name="watch_view_on_phone">عرض على الهاتف</string>
     <string name="watch_view_only_phone">هذا الهاتف للعرض فقط، لذا لا يمكنك السؤال من الساعة. سجّل الدخول على هاتف يستطيع الموافقة.</string>
     <string name="watch_voice_text_only">يتلقى Coach كلماتك كنص، وليس صوتك أبدًا.</string>
+    <string name="watch_waiting_for_phone">في انتظار هاتفك…</string>
     <string name="watch_what_it_does">ما الذي يفعله</string>
     <plurals name="watch_working_count">
         <item quantity="zero">لا يعمل شيء</item>

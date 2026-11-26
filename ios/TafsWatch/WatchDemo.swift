@@ -153,6 +153,15 @@ final class DemoPhone: PhoneAsking {
                 marks.dismissed = Array(Set(marks.dismissed + new.dismissed)).sorted()
             }
             return WatchReply(.ok, marks: marks)
+        case .openOnPhone:
+            // The demo has no phone to open.
+            return WatchReply(.ok)
+        case .signInWatch:
+            // The demo has no phone to ask: its watch signs in on its own tap (`SignedOutHereScreen`).
+            return WatchReply(.ok)
+        case .lineFull:
+            // A cut line of the demo's taf chat, whole.
+            return WatchReply(.ok, coach: WatchCoachAnswer.whole(Self.longAnswer, approveOnPhone: false))
         }
     }
 

@@ -1,4 +1,5 @@
 import { watchAskOn } from "./watch-ask.js";
+import { deviceItem, deviceOf } from "./push-store.js";
 import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { appSecret } from "./appsecret.js";
@@ -15,7 +16,6 @@ import { KIFF_API } from "./kiff.js";
 import { PLANQUE } from "./setupdef.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
 import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepConsent, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
-import { parseKinds } from "./alert-preferences.js";
 import { routing, silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
 import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
@@ -209,11 +209,8 @@ const push: PushStore = {
   async get(tenant) {
     const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: `push#${tenant}` } }, ConsistentRead: true }));
     const devices: Device[] = Object.entries(out.Item?.devices?.M ?? {}).flatMap(([token, v]) => {
-      const m = v.M ?? {};
-      const env = m.environment?.S;
-      return env === "sandbox" || env === "production"
-        ? [{ token, platform: m.platform?.S === "android" ? "android" as const : m.platform?.S === "macos" ? "macos" as const : "ios" as const, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, ...(m.manages ? { manages: m.manages.BOOL === true } : {}), silent: m.silent?.BOOL === true, ...(m.kinds?.S ? { kinds: parseKinds(JSON.parse(m.kinds.S)) } : {}), at: m.at?.S ?? "" }]
-        : [];
+      const d = deviceOf(token, v.M ?? {});
+      return d ? [d] : [];
     });
     const secrets = Object.values(out.Item?.secrets?.M ?? {})
       .map((v) => ({ s: v.M?.secret?.S ?? "", at: v.M?.at?.S ?? "" }))
@@ -223,7 +220,7 @@ const push: PushStore = {
     return { devices, secrets };
   },
   async addDevice(tenant, d) {
-    await setEntry(tenant, "devices", d.token, { platform: { S: d.platform ?? "ios" }, environment: { S: d.environment }, subject: { S: d.subject }, answers: { BOOL: d.answers }, adds_tasks: { BOOL: d.addsTasks === true }, manages: { BOOL: d.manages === true }, silent: { BOOL: d.silent === true }, ...(d.kinds ? { kinds: { S: JSON.stringify(d.kinds) } } : {}), at: { S: d.at } });
+    await setEntry(tenant, "devices", d.token, deviceItem(d));
   },
   async removeDevice(tenant, token) {
     await dynamo.send(new UpdateItemCommand({

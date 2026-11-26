@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { type Deps, handle, type HTTPEvent } from "../src/cloud/handler.js";
 import { foldMarks, INBOX_FOLD_AT, INBOX_IDS_MAX, INBOX_KEPT_MS, INBOX_MARK_MAX, inboxKey, inboxMarks, markInbox } from "../src/cloud/watch-inbox.js";
 import { memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs, fakeAgents } from "./fakes.js";
@@ -14,7 +14,7 @@ const ANA = "u_ana";
 const BO = "u_bo";
 const NOW = new Date("2026-11-23T23:00:00Z");
 
-function world(opts: { coach?: boolean; watchAsk?: boolean } = {}) {
+function world(opts: { coach?: boolean; watchAsk?: boolean; sent?: (token: string) => "sent" | "gone" | "failed" } = {}) {
   let clock = NOW;
   const coach = memoryCoach(() => clock);
   const pushed: Array<{ token: string; payload: Record<string, unknown> }> = [];
@@ -27,7 +27,14 @@ function world(opts: { coach?: boolean; watchAsk?: boolean } = {}) {
     agents: fakeAgents(() => clock).api, keys: memoryKeys(), accounts: memoryAccounts(), tafs: memoryTafs(), names: memoryNames(), slots: memorySlots(),
     claims: memoryClaims(), removals: memoryRemovals(), archived: memoryArchived(), aiConsent: false, watchAsk: opts.watchAsk ?? false,
     push: { get: async () => ({ devices, secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
-    apns: { send: async (d, n) => { pushed.push({ token: d.token, payload: n.payload }); return "sent" as const; } },
+    apns: {
+      send: async (d, n) => {
+        pushed.push({ token: d.token, payload: n.payload });
+        const r = opts.sent?.(d.token) ?? "sent";
+        if (r === "failed") throw new Error(`push service refused ${d.token}`);
+        return r;
+      },
+    },
     forward: async () => undefined, ...(opts.coach === false ? {} : { coach }), kiffBase: "https://api.test", now: () => clock,
     fetch: (async (url: string, init?: RequestInit) => {
       const who = String(((init?.headers ?? {}) as Record<string, string>).authorization ?? "").replace("Bearer ", "");
@@ -92,6 +99,20 @@ describe("the watch Inbox's read and dismissed", () => {
     w.pushed.length = 0;
     await w.call("GET");
     expect(w.pushed).toEqual([]);
+  });
+
+  it("logs each push with what changed, the phone's platform and how it went, never a token, an id or the person", async () => {
+    const lines: string[] = [];
+    const log = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { lines.push(a.join(" ")); });
+    try {
+      const w = world({ sent: (token) => (token === "fcm-ana" ? "failed" : "gone") });
+      await w.call("POST", { dismissed: ["hold_1"] });
+      const pushes = lines.filter((l) => l.startsWith("phone push"));
+      expect(pushes.sort()).toEqual(["phone push watch_inbox: failed (android)", "phone push watch_inbox: gone (ios)"]);
+      for (const l of lines) for (const secret of ["fcm-ana", "a".repeat(64), ANA, T, "hold_1"]) expect(l).not.toContain(secret);
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it("refuses anything but a line's ids, and keeps nothing of a refused write", async () => {

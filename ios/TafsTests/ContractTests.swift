@@ -36,6 +36,23 @@ final class ContractTests: XCTestCase {
         XCTAssertNil(TafsCloud.CoachStart.read(try answer("setup-time-zone.json")), "no start in an answer without one")
     }
 
+    /// The Card step as tafs cloud sends it (docs/ios-app.md, "The Card step"): every line of its words, for a Face ID phone
+    /// and a Touch ID one, and the plain list it shows equal to the draft it signs, compared on the allowlist. A later read of
+    /// a Coach that exists, with only tools to connect, marks no tool in a draft and signs no Card (`draftSigns`).
+    func testTheCardStepReadsAsTafsCloudSendsItAndItsListIsWhatItSigns() throws {
+        for file in ["setup-start.json", "setup-start-draft-alone.json"] {
+            let start = try XCTUnwrap(TafsCloud.CoachStart.read(try answer(file)), "\(file): no start read")
+            XCTAssertTrue(start.cardStep(face: true), "\(file): the Card step's words, for Face ID")
+            XCTAssertTrue(start.cardStep(face: false), "\(file): the Card step's words, for Touch ID")
+            XCTAssertFalse(start.words?.locked.isEmpty ?? true, "\(file): the locked line")
+            XCTAssertTrue(start.cardStepSigns, "\(file): the plain list is what the draft signs")
+            XCTAssertTrue(start.batchSigns(mcp: "https://tafs.test/v1/mcp"), "\(file): the batch connects only the step's tools, at tafs cloud")
+            XCTAssertFalse(start.connect != nil && start.batchSigns(mcp: "https://other.test/v1/mcp"), "\(file): never another tafs cloud's")
+        }
+        let tools = try XCTUnwrap(TafsCloud.CoachTools.read(try answer("setup-coach.json")), "setup-coach.json: no tools read")
+        XCTAssertTrue(tools.draftSigns, "tools to connect, no Card drafted: nothing to compare")
+    }
+
     /// Coach's drafted door as tafs cloud sends it (`doors-api-draft.json`): drawn from `body`, whose canonical bytes are what
     /// the owner signs, with the draft's own id inside them.
     func testCoachsDraftedDoorReadsAsTafsCloudSendsIt() throws {

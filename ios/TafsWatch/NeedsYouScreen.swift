@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Needs you on the wrist: the count, then each held call in the phone's words (the taf, what
 /// it asks with its amount, why it was held, and when it lapses). Refuse is answered from here,
-/// through the phone; approving is on the phone.
+/// through the phone; approving is on the phone, which Approve on your phone opens at the call.
 /// Until the phone answers, it says it's loading, never that nothing is waiting.
 struct NeedsYouScreen: View {
     @ObservedObject var model: NeedsYouModel
@@ -44,14 +44,14 @@ struct NeedsYouScreen: View {
                     Text(Words.Watch.asOf(time: needsYou.at.formatted(date: .omitted, time: .shortened)))
                 }
                 ForEach(needsYou.calls) { call in
-                    HeldCallRow(call: call, answer: model.answers[call.id]) {
+                    HeldCallRow(call: call, answer: model.answers[call.id], approve: { Task { await model.approveOnPhone(call.id) } }) {
                         Task { await model.refuse(call.id) }
                     }
                 }
             }
             .refreshable { await model.load() }
         case .unreachable(let why):
-            WatchNotice(line: why.line) { await model.load() }
+            WatchNotice(line: why.waiting) { await model.load() }
         case .signedOut:
             WatchNotice(line: Words.Watch.signInOnPhone) { await model.load() }
         case .failed(let why):
@@ -61,10 +61,13 @@ struct NeedsYouScreen: View {
 }
 
 /// One held call, as the phone words it: the taf, what it asks, why, and by when. Refuse, once
-/// confirmed, and what came of it; never Approve.
+/// confirmed, and what came of it; never Approve: Approve on your phone opens the call on the phone.
 struct HeldCallRow: View {
     let call: WatchNeedsYou.Call
     let answer: WatchAnswer?
+    @ObservedObject private var opened = WatchOpenedNotice.shared
+    /// Approve on your phone (`NeedsYouModel.approveOnPhone`): the phone opens this call, to approve behind Face ID there.
+    var approve: () -> Void = {}
     let refuse: () -> Void
     @State private var confirming = false
 
@@ -84,10 +87,21 @@ struct HeldCallRow: View {
                 Button(Words.NeedsYou.refuse, role: .destructive) { confirming = true }
                     .buttonStyle(.bordered)
                     .padding(.top, 4)
-                // The watch never approves: an approval is signed on the phone, behind Face ID.
-                Label(Words.Watch.approveOnPhone, systemImage: "iphone")
-                    .font(.footnote)
+                // The watch never approves: the phone opens this call, and an approval is signed there, behind Face ID.
+                if opened.key == call.id {
+                    Label(Words.Watch.openedOnPhone, systemImage: "checkmark")
+                        .font(.footnote)
+                        .foregroundStyle(WatchLook.coach)
+                        .padding(.top, 2)
+                } else {
+                    Button(action: approve) {
+                        Label(Words.Watch.approveOnPhone, systemImage: "iphone")
+                            .font(.footnote)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(WatchLook.coach)
                     .padding(.top, 2)
+                }
             case .sending:
                 ProgressView()
             case .done(let line):
@@ -116,11 +130,39 @@ struct WatchNotice: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
+                ProgressView()
                 Text(line)
                     .multilineTextAlignment(.center)
-                Button(Words.Common.tryAgain) { Task { await retry() } }
             }
         }
+        // No Try again (docs/watch-app.md, "Linking tafs"): the watch reads again by itself, sooner at first, then every
+        // `WatchRetry.most` seconds while the screen is shown.
+        .task {
+            await WatchRetry.wait()
+            await retry()
+        }
+    }
+}
+
+/// How long a screen waits before it reads again by itself: 3 s, then twice as long each time it's shown again within a
+/// minute, at most `most`. A read that answers starts over.
+@MainActor
+enum WatchRetry {
+    static let first: TimeInterval = 3
+    static let most: TimeInterval = 30
+    private static var next = first
+    private static var last = Date.distantPast
+
+    static func delay(now: Date = Date()) -> TimeInterval {
+        if now.timeIntervalSince(last) > 60 { next = first }
+        let wait = next
+        next = min(next * 2, most)
+        last = now
+        return wait
+    }
+
+    static func wait() async {
+        try? await Task.sleep(nanoseconds: UInt64(delay() * 1_000_000_000))
     }
 }
 
@@ -150,7 +192,7 @@ struct BriefList: View {
                     if model.refusable(decision), let hold = decision.holdID,
                        let call = needsYou.calls.first(where: { $0.id == hold }) {
                         // The same row as Needs you's: Refuse, confirmed, behind the passcode; never Approve.
-                        HeldCallRow(call: call, answer: model.answers[hold]) {
+                        HeldCallRow(call: call, answer: model.answers[hold], approve: { Task { await model.approveOnPhone(hold) } }) {
                             Task { await model.refuse(hold) }
                         }
                     } else {

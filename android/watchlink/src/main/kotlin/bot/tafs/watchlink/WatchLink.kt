@@ -3,6 +3,10 @@ package bot.tafs.watchlink
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
 
 /**
  * What the watch may ask the phone, and nothing else (docs/watch-wear.md). The watch holds no keys and no session: it asks, and
@@ -68,6 +72,18 @@ sealed interface WatchRequest {
 
   /** Read more on a taf's answer: the whole answer to the watch's request [askId], read from tafs cloud only on the tap. */
   data class AskFull(override val madeAt: Long, val askId: String) : WatchRequest
+
+  /**
+   * A cut line of a taf's chat as the phone holds it ([ChatLine.more]), whole, for Read more: the taf and the message's own id.
+   * Answered as [WatchReply.AskFull], shown and never kept.
+   */
+  data class LineFull(override val madeAt: Long, val tafId: String, val lineId: String) : WatchRequest
+
+  /**
+   * Sign in again, asked from a watch signed out on itself (watch row 18): the phone asks its person "Sign this watch in as you?",
+   * behind its own lock, and answers by [KeptSignIn] with this [ask] id. The request alone signs nothing in.
+   */
+  data class SignInAsk(override val madeAt: Long, val ask: String) : WatchRequest
 
   /** The calendar's [day] (`YYYY-MM-DD`, in the account's zone), or today there with [day] null: what the tafs will do then. */
   data class Calendar(override val madeAt: Long, val day: String? = null) : WatchRequest
@@ -278,7 +294,12 @@ sealed interface WatchReply {
  * reach, its app open or not. [putAt] is when the phone put it, so a changed state is a changed item.
  */
 @Serializable
-data class KeptAsk(@SerialName("put_at") val putAt: Long, val ask: AskLine)
+data class KeptAsk(
+  @SerialName("put_at") val putAt: Long,
+  val ask: AskLine,
+  /** The phone's account mark when it was put ([WatchLink.isMark]); none from an older phone. */
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
+)
 
 /**
  * A taf's chat as the phone holds it now (the last [ChatLine.KEPT] turns, as [WatchReply.TafChat] gives them), kept for the watch
@@ -291,6 +312,8 @@ data class KeptChat(
   @SerialName("taf_id") val tafId: String,
   val lines: List<ChatLine> = emptyList(),
   val zone: String? = null,
+  /** The phone's account mark when it was put ([WatchLink.isMark]); none from an older phone. */
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
 )
 
 /**
@@ -302,6 +325,62 @@ data class KeptMarks(
   @SerialName("put_at") val putAt: Long,
   val read: List<String> = emptyList(),
   val dismissed: List<String> = emptyList(),
+  /** The phone's account mark when it was put ([WatchLink.isMark]); none from an older phone. */
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
+)
+
+/**
+ * The person's tafs as the phone holds them now, the lines [WatchReply.Tafs] gives, kept for the watch as a Data Layer item
+ * ([WatchLink.KEPT_TAFS]) when the list changes on the phone (a sign-in, a taf added, removed, paused or halted), so the watch's
+ * Tafs page moves as the phone's does without a read. Put on change only, never on a timer.
+ */
+@Serializable
+data class KeptTafs(
+  @SerialName("put_at") val putAt: Long,
+  val tafs: List<TafLine> = emptyList(),
+  @SerialName("all_halted") val allHalted: Boolean = false,
+  val zone: String? = null,
+  /** The phone's account mark when it was put ([WatchLink.isMark]); none from an older phone. */
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
+)
+
+/**
+ * Needs you as the phone holds it now, the lines [WatchReply.NeedsYou] gives, kept for the watch as a Data Layer item
+ * ([WatchLink.KEPT_NEEDS_YOU]) when its held calls or count change on the phone (a call held, answered, refused or run out), so a
+ * held call reaches the wrist without the watch asking: its count, its line at the top of the Inbox, and Refuse or Approve on
+ * your phone. Put on change only, never on a timer.
+ */
+@Serializable
+data class KeptNeedsYou(
+  @SerialName("put_at") val putAt: Long,
+  val count: Int = 0,
+  val words: String = "",
+  val calls: List<HeldLine> = emptyList(),
+  /** The phone's account mark when it was put ([WatchLink.isMark]); none from an older phone. */
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
+)
+
+/**
+ * The phone's person's answer to a watch's [WatchRequest.SignInAsk] ([WatchLink.KEPT_SIGN_IN]): Allow or Deny, for that [ask] id
+ * alone. Only Allow, from the paired phone, for the ask the watch is waiting on, signs the watch in again, and it starts empty.
+ */
+@Serializable
+data class KeptSignIn(
+  @SerialName("put_at") val putAt: Long,
+  val ask: String,
+  val allowed: Boolean,
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
+)
+
+/**
+ * The phone signed out ([WatchLink.KEPT_SIGNED_OUT]): put at every sign-out, so a watch out of reach then still forgets the
+ * account when it's next in reach, without asking. [mark] is the account mark the phone dropped, so a late one never wipes the
+ * account the watch has read since.
+ */
+@Serializable
+data class KeptSignedOut(
+  @SerialName("put_at") val putAt: Long,
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
 )
 
 /** One of a taf's Cards, as the phone's Card tab draws it: its title, the face's figure and line, and its rules in one line each. */
@@ -393,6 +472,11 @@ data class HeldLine(
   val reason: String? = null,
   /** Whether the wrist may refuse it; an approval is always the phone's. */
   val refusable: Boolean,
+  /**
+   * When KIFF's hold ends, in milliseconds since 1970: past it, the watch drops the call on its own clock (its line, alert and
+   * count), with no word from the phone. None from an older phone.
+   */
+  @SerialName("ends_at") val endsAt: Long? = null,
 )
 
 /** A taf in one line: its name, its state in tafs cloud's words, and whether it is halted. */
@@ -451,12 +535,54 @@ object WatchLink {
   /** A taf's chat as the phone holds it, by the phone's id for the taf: `kept/taf-chat/{id}` ([KeptChat]). */
   const val KEPT_TAF_CHAT = KEPT + "taf-chat/"
 
+  /** The phone signed out ([KeptSignedOut]): the watch forgets everything of the account, without asking. */
+  const val KEPT_SIGNED_OUT = KEPT + "signed-out"
+
+  /** The person's tafs as the phone holds them now ([KeptTafs]), put when the list changes there. */
+  const val KEPT_TAFS = KEPT + "tafs"
+
+  /** Needs you as the phone holds it now ([KeptNeedsYou]), put when its held calls or count change there. */
+  const val KEPT_NEEDS_YOU = KEPT + "needs-you"
+
+  /** The phone's Allow or Deny for a watch's sign-in ask ([KeptSignIn]). */
+  const val KEPT_SIGN_IN = KEPT + "sign-in"
+
+  /**
+   * The key of the phone's account mark: random, made at each sign-in on the phone and dropped at sign-out, never derived from
+   * the account, so it says only "the same sign-in as before" or "not". On every reply from a signed-in phone, and on what it keeps
+   * for the watch. A watch that sees it change forgets everything it kept, before it shows anything of the reply.
+   */
+  const val MARK_KEY = "account_mark"
+
+  /** An account mark as the phone makes it: 16 to 64 base64url characters. */
+  private val MARK = Regex("^[A-Za-z0-9_-]{16,64}$")
+
+  fun isMark(mark: String?): Boolean = mark != null && MARK.matches(mark)
+
+  /**
+   * The requests that carry the person's words or acts (Ask, a taf's message and a message kept for later included; Coach; Refuse;
+   * Halt; an Inbox mark), which the watch sends with the account mark it holds, to a phone that has shown it knows marks. A phone
+   * whose own mark differs, or that has no session, answers [WatchReply.SignedOut] and does nothing with it, so a message meant for
+   * one sign-in never reaches another. No read carries one: a read is the same for anyone.
+   */
+  fun carriesMark(request: WatchRequest): Boolean = request is WatchRequest.Ask || request is WatchRequest.Coach ||
+    request is WatchRequest.Refuse || request is WatchRequest.Halt || request is WatchRequest.InboxMark
+
+  /** The paths of [carriesMark]'s requests: the only bodies that may hold [MARK_KEY]; any other refuses it, as any unknown field. */
+  private val MARKED_PATHS = setOf(ASK, COACH, REFUSE, HALT, INBOX_MARK)
+
   /** A taf's id on the phone, as a kept item's path may name it. */
   private val TAF_ID = Regex("^[A-Za-z0-9_.:-]{1,128}$")
   const val BRIEF = PREFIX + "brief"
   const val TAF = PREFIX + "taf"
   const val TAF_CHAT = PREFIX + "taf-chat"
   const val ASK_FULL = PREFIX + "ask-full"
+
+  /** A cut line of a taf's chat, whole ([WatchRequest.LineFull]). */
+  const val LINE_FULL = PREFIX + "line-full"
+
+  /** A watch signed out on itself asks to be signed in again ([WatchRequest.SignInAsk]). */
+  const val SIGN_IN_ASK = PREFIX + "sign-in-ask"
   const val CALENDAR = PREFIX + "calendar"
   const val ACCOUNT = PREFIX + "account"
   const val TRANSCRIBE = PREFIX + "transcribe"
@@ -529,6 +655,8 @@ object WatchLink {
   @Serializable private data class TafBody(@SerialName("made_at") val madeAt: Long, @SerialName("taf_id") val tafId: String)
 
   @Serializable private data class AskFullBody(@SerialName("made_at") val madeAt: Long, @SerialName("ask_id") val askId: String)
+  @Serializable private data class SignInAskBody(@SerialName("made_at") val madeAt: Long, val ask: String)
+  @Serializable private data class LineFullBody(@SerialName("made_at") val madeAt: Long, @SerialName("taf_id") val tafId: String, @SerialName("line_id") val lineId: String)
 
   @Serializable private data class CalendarBody(@SerialName("made_at") val madeAt: Long, val day: String? = null)
 
@@ -543,6 +671,17 @@ object WatchLink {
 
   /** A recording's id, as the watch makes it: as an ask's own id. */
   fun isVoiceId(id: String): Boolean = CLIENT_ID.matches(id)
+
+  /**
+   * The watch's side: the path and body for [request], with [mark] in it ([MARK_KEY]) when the request is one that carries it
+   * ([carriesMark]) and the watch knows the phone reads marks; otherwise exactly as before marks.
+   */
+  fun encode(request: WatchRequest, mark: String?): Pair<String, ByteArray> {
+    val (path, body) = encode(request)
+    if (!isMark(mark) || !carriesMark(request)) return path to body
+    val fields = json.parseToJsonElement(body.decodeToString()).jsonObject
+    return path to JsonObject(fields + (MARK_KEY to JsonPrimitive(mark))).toString().encodeToByteArray()
+  }
 
   /** The watch's side: the path and body for [request]. */
   fun encode(request: WatchRequest): Pair<String, ByteArray> {
@@ -562,6 +701,8 @@ object WatchLink {
       is WatchRequest.Taf -> TAF to json.encodeToString(TafBody.serializer(), TafBody(request.madeAt, request.tafId))
       is WatchRequest.TafChat -> TAF_CHAT to json.encodeToString(TafBody.serializer(), TafBody(request.madeAt, request.tafId))
       is WatchRequest.AskFull -> ASK_FULL to json.encodeToString(AskFullBody.serializer(), AskFullBody(request.madeAt, request.askId))
+      is WatchRequest.LineFull -> LINE_FULL to json.encodeToString(LineFullBody.serializer(), LineFullBody(request.madeAt, request.tafId, request.lineId))
+      is WatchRequest.SignInAsk -> SIGN_IN_ASK to json.encodeToString(SignInAskBody.serializer(), SignInAskBody(request.madeAt, request.ask))
       is WatchRequest.Calendar -> CALENDAR to json.encodeToString(CalendarBody.serializer(), CalendarBody(request.madeAt, request.day))
       is WatchRequest.Account -> ACCOUNT to json.encodeToString(Read.serializer(), Read(request.madeAt))
       is WatchRequest.Transcribe -> TRANSCRIBE to json.encodeToString(TranscribeBody.serializer(), TranscribeBody(request.madeAt, request.voiceId, request.language))
@@ -576,7 +717,8 @@ object WatchLink {
 
   /** What the phone did with a message: the one request it may act on, or why it refused it. */
   sealed interface Accepted {
-    data class Yes(val request: WatchRequest) : Accepted
+    /** The request, and the account mark it was sent under ([MARK_KEY]); none from a watch before marks, or on a read. */
+    data class Yes(val request: WatchRequest, val mark: String? = null) : Accepted
     data class No(val reason: NotAccepted) : Accepted
   }
 
@@ -585,7 +727,19 @@ object WatchLink {
    * above pass, each exactly as [encode] writes it, made within [MAX_AGE_MS] of [nowMs].
    */
   fun accept(path: String, data: ByteArray, nowMs: Long): Accepted {
-    val text = runCatching { data.decodeToString(throwOnInvalidSequence = true) }.getOrNull() ?: return Accepted.No(NotAccepted.MALFORMED)
+    val raw = runCatching { data.decodeToString(throwOnInvalidSequence = true) }.getOrNull() ?: return Accepted.No(NotAccepted.MALFORMED)
+    // The account mark, on the requests that may carry it only: taken out, checked, and the rest read as strictly as before.
+    var mark: String? = null
+    val text = if (path !in MARKED_PATHS) raw else try {
+      val fields = json.parseToJsonElement(raw).jsonObject
+      if (MARK_KEY !in fields) raw else {
+        mark = (fields[MARK_KEY] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull?.takeIf(::isMark)
+          ?: return Accepted.No(NotAccepted.MALFORMED)
+        JsonObject(fields - MARK_KEY).toString()
+      }
+    } catch (_: IllegalArgumentException) {
+      return Accepted.No(NotAccepted.MALFORMED)
+    }
     val request = try {
       when (path) {
         NEEDS_YOU -> WatchRequest.NeedsYou(json.decodeFromString(Read.serializer(), text).madeAt)
@@ -605,6 +759,8 @@ object WatchLink {
         TAF -> json.decodeFromString(TafBody.serializer(), text).let { WatchRequest.Taf(it.madeAt, it.tafId) }
         TAF_CHAT -> json.decodeFromString(TafBody.serializer(), text).let { WatchRequest.TafChat(it.madeAt, it.tafId) }
         ASK_FULL -> json.decodeFromString(AskFullBody.serializer(), text).let { WatchRequest.AskFull(it.madeAt, it.askId) }
+        LINE_FULL -> json.decodeFromString(LineFullBody.serializer(), text).let { WatchRequest.LineFull(it.madeAt, it.tafId, it.lineId) }
+        SIGN_IN_ASK -> json.decodeFromString(SignInAskBody.serializer(), text).let { WatchRequest.SignInAsk(it.madeAt, it.ask) }
         CALENDAR -> json.decodeFromString(CalendarBody.serializer(), text).let { WatchRequest.Calendar(it.madeAt, it.day) }
         ACCOUNT -> WatchRequest.Account(json.decodeFromString(Read.serializer(), text).madeAt)
         TRANSCRIBE -> json.decodeFromString(TranscribeBody.serializer(), text).let { WatchRequest.Transcribe(it.madeAt, it.voiceId, it.language) }
@@ -621,7 +777,7 @@ object WatchLink {
     if (!wellFormed(request)) return Accepted.No(NotAccepted.MALFORMED)
     if (nowMs - request.madeAt > MAX_AGE_MS) return Accepted.No(NotAccepted.TOO_OLD)
     if (request.madeAt - nowMs > MAX_SKEW_MS) return Accepted.No(NotAccepted.FROM_THE_FUTURE)
-    return Accepted.Yes(request)
+    return Accepted.Yes(request, mark)
   }
 
   private fun wellFormed(request: WatchRequest): Boolean = when (request) {
@@ -634,18 +790,36 @@ object WatchLink {
     is WatchRequest.Taf -> request.tafId.isNotBlank() && request.tafId.length <= 128
     is WatchRequest.TafChat -> request.tafId.isNotBlank() && request.tafId.length <= 128
     is WatchRequest.AskFull -> ID.matches(request.askId)
+    is WatchRequest.LineFull -> request.tafId.isNotBlank() && request.tafId.length <= 128 && request.lineId.isNotBlank() && request.lineId.length <= 128
+    is WatchRequest.SignInAsk -> CLIENT_ID.matches(request.ask)
     is WatchRequest.Calendar -> request.day == null || DAY.matches(request.day)
     is WatchRequest.Transcribe -> CLIENT_ID.matches(request.voiceId) && LANGUAGE.matches(request.language)
     is WatchRequest.InboxMark -> InboxMarkIds.complete(request.read, request.dismissed)
     is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief, is WatchRequest.Account, is WatchRequest.InboxMarks -> true
   }
 
-  /** The phone's answer, as bytes for the Data Layer. */
-  fun encodeReply(reply: WatchReply): ByteArray = replies.encodeToString(WatchReply.serializer(), reply).encodeToByteArray()
+  /**
+   * The phone's answer, as bytes for the Data Layer, with its account [mark] beside the reply's own fields ([MARK_KEY]) when it
+   * has one: a watch before marks ignores it, as it does any field it doesn't know.
+   */
+  fun encodeReply(reply: WatchReply, mark: String? = null): ByteArray {
+    val fields = replies.encodeToJsonElement(WatchReply.serializer(), reply).jsonObject
+    val sent = if (isMark(mark)) JsonObject(fields + (MARK_KEY to JsonPrimitive(mark))) else fields
+    return sent.toString().encodeToByteArray()
+  }
 
   /** The watch's side: the phone's answer, or null for one it doesn't understand (a newer phone), which it shows as Open on phone. */
-  fun decodeReply(data: ByteArray): WatchReply? =
-    runCatching { replies.decodeFromString(WatchReply.serializer(), data.decodeToString()) }.getOrNull()
+  fun decodeReply(data: ByteArray): WatchReply? = decodeMarked(data)?.reply
+
+  /** A reply and the phone's account mark on it; [mark] is null from a phone before marks, or for one that isn't a mark. */
+  data class Marked(val reply: WatchReply, val mark: String?)
+
+  /** The watch's side: the phone's answer and its account mark, or null for one it doesn't understand. */
+  fun decodeMarked(data: ByteArray): Marked? = runCatching {
+    val fields = replies.parseToJsonElement(data.decodeToString()).jsonObject
+    val mark = (fields[MARK_KEY] as? JsonPrimitive)?.contentOrNull?.takeIf(::isMark)
+    Marked(replies.decodeFromJsonElement(WatchReply.serializer(), JsonObject(fields - MARK_KEY)), mark)
+  }.getOrNull()
 
   /** The phone's side: an ask's new state, for the watch ([ASK_RESULT]). */
   fun encodeResult(ask: AskLine): ByteArray = replies.encodeToString(AskLine.serializer(), ask).encodeToByteArray()
@@ -682,6 +856,27 @@ object WatchLink {
   fun decodeKeptMarks(data: ByteArray): KeptMarks? =
     runCatching { replies.decodeFromString(KeptMarks.serializer(), data.decodeToString()) }.getOrNull()
       ?.let { it.copy(read = InboxMarkIds.checked(it.read), dismissed = InboxMarkIds.checked(it.dismissed)) }
+
+  fun encodeKept(kept: KeptTafs): ByteArray = replies.encodeToString(KeptTafs.serializer(), kept).encodeToByteArray()
+
+  fun decodeKeptTafs(data: ByteArray): KeptTafs? =
+    runCatching { replies.decodeFromString(KeptTafs.serializer(), data.decodeToString()) }.getOrNull()
+
+  fun encodeKept(kept: KeptNeedsYou): ByteArray = replies.encodeToString(KeptNeedsYou.serializer(), kept).encodeToByteArray()
+
+  fun decodeKeptNeedsYou(data: ByteArray): KeptNeedsYou? =
+    runCatching { replies.decodeFromString(KeptNeedsYou.serializer(), data.decodeToString()) }.getOrNull()
+
+  fun encodeKept(kept: KeptSignedOut): ByteArray = replies.encodeToString(KeptSignedOut.serializer(), kept).encodeToByteArray()
+
+  fun encodeKept(kept: KeptSignIn): ByteArray = replies.encodeToString(KeptSignIn.serializer(), kept).encodeToByteArray()
+
+  fun decodeKeptSignIn(data: ByteArray): KeptSignIn? =
+    runCatching { replies.decodeFromString(KeptSignIn.serializer(), data.decodeToString()) }.getOrNull()?.takeIf { CLIENT_ID.matches(it.ask) }
+
+  fun decodeKeptSignedOut(data: ByteArray): KeptSignedOut? =
+    runCatching { replies.decodeFromString(KeptSignedOut.serializer(), data.decodeToString()) }.getOrNull()
+      ?.let { it.copy(mark = it.mark?.takeIf(::isMark)) }
 
   /** Replies tolerate fields a newer phone adds; requests, which the phone acts on, don't. */
   private val replies = Json { ignoreUnknownKeys = true; classDiscriminator = "kind"; explicitNulls = false }

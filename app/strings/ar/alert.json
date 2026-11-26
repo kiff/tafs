@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. الرد قبل {zone}. لا يُرسل شيء حتى توافق.",
   "alert.answered": "ردّ taf على أحدهم",
   "alert.approve_once": "الموافقة مرة واحدة…",
+  "alert.blocked.body": "لم يعد هذا الجهاز ({device}) يسأل، لذا فإن تنبيهات tafs متوقفة في الإعدادات. شغّلها هناك لتصلك الموافقات والإجابات.",
+  "alert.blocked.body_android": "لم يعد Android يسأل، لذا فإن تنبيهات tafs متوقفة في إعدادات هاتفك. شغّلها هناك لتصلك الموافقات والإجابات على هذا الهاتف وعلى ساعتك. تصل التحديثات إلى ساعتك في كل الأحوال.",
+  "alert.blocked.body_watch": "لم يعد جهاز iPhone الخاص بك يسأل، لذا فإن تنبيهات tafs متوقفة في الإعدادات. شغّلها هناك لتصلك الموافقات والإجابات على هذا الـ iPhone وعلى ساعتك. تصل التحديثات إلى ساعتك في كل الأحوال.",
+  "alert.blocked.title": "شغّل التنبيهات لـ tafs",
   "alert.by_email": "بالبريد الإلكتروني",
   "alert.example": "مثال",
   "alert.foot.cant_answer_holds": "تصل التنبيهات إلى من يحق لهم الرد على طلبات الاستدعاء المعلّقة. دورك في هذا الحساب لا يتيح ذلك.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "التنبيهات غير مفعّلة لهذا الهاتف بعد. {why}",
   "alert.not_refused": "لم يتم الرفض",
   "alert.not_sent": "لم يُرسل رد",
+  "alert.now_on": "التنبيهات قيد التشغيل.",
   "alert.on_this_device": "التنبيهات على هذا الجهاز ({device})",
+  "alert.open_notification_settings": "فتح إعدادات الإشعارات",
+  "alert.open_settings": "فتح الإعدادات",
   "alert.open_tafs_answer_kiff_did": "افتح tafs لتردّ: لم يذكر KIFF أي نسخة منه رأيتها.",
   "alert.open_tafs_answer_phone_can": "افتح tafs لتردّ: لا يستطيع هذا الهاتف التوقيع عليه من الإشعار.",
   "alert.prompt": "احصل على تنبيه عندما يحتاجك taf",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "غير متاح",
   "alert.status.off": "متوقف",
   "alert.status.on": "قيد التشغيل",
+  "alert.still_off": "لا تزال التنبيهات متوقفة.",
   "alert.still_on_after_sign_out.body": "لم يتمكن tafs من إيقافها ({why}). حاول مرة أخرى، أو سجّل الخروج على أي حال وأوقف إشعارات tafs من الإعدادات.",
   "alert.still_on_after_sign_out.title": "قد يظل هذا الجهاز ({device}) يتلقى تنبيهات هذا الحساب",
   "alert.taf_needs_you": "{taf} بانتظارك",
@@ -47,6 +55,8 @@
     "other": "{count} taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "تعذّر على tafs الوصول إلى KIFF لرفضه. افتح tafs لتردّ.",
+  "alert.watch_first.body": "لترى الموافقات والإجابات كتنبيهات على هذا الهاتف وعلى ساعتك، شغّل التنبيهات لـ tafs. ستظل ساعتك تتلقى تحديثاتها حتى إن لم تفعل.",
+  "alert.watch_first.title": "ساعتك تستخدم tafs",
   "alert.what_alerts": "ما الذي ينبّهك",
   "alert.with_sound": "مع صوت"
 }

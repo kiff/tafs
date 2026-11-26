@@ -47,6 +47,18 @@ protocol WatchReading {
     func inboxMarks() async -> WatchReply
     /// Marks Inbox lines read or dismissed at tafs cloud, by id alone, and answers the marks as they stand.
     func inboxMark(_ marks: WatchInboxMarks) async -> WatchReply
+    /// View on phone: opens Coach's chat, or the taf's, on this phone (`WatchOpen`).
+    func openOnPhone(taf: String?) async -> WatchReply
+    /// Approve on your phone: Needs you at the held call `hold`, when this phone's own fresh read lists it, else Needs you
+    /// with nothing chosen (`WatchOpen.holdDestination`). Nothing is signed: that's the phone's card, behind Face ID.
+    func openHold(_ hold: String) async -> WatchReply
+    /// Ask your phone to sign this watch in (row 18): asks this phone's owner, with Allow behind the phone's lock
+    /// (`WatchSignInAsk`). Nothing is sent to the watch now; only the owner's Allow signs it in.
+    func askWatchSignIn(_ id: String) async -> WatchReply
+    /// Read more on a cut line from a taf's chat (row 10): that message whole, the taf's words only, for a taf the phone lists.
+    func lineFull(taf: String, id: String) async -> WatchReply
+    /// This session's mark for the watch (`WatchMark`, `PhoneWatchMark`), on every reply; none when signed out.
+    var mark: String? { get }
 }
 
 extension WatchReading {
@@ -68,6 +80,15 @@ extension WatchReading {
     /// A reader from before the Inbox's marks: the watch keeps its own.
     func inboxMarks() async -> WatchReply { WatchReply(.notYet) }
     func inboxMark(_ marks: WatchInboxMarks) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader that opens nothing.
+    func openOnPhone(taf: String?) async -> WatchReply { WatchReply(.notYet) }
+    func openHold(_ hold: String) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader that asks no one: the watch stays signed out.
+    func askWatchSignIn(_ id: String) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader from before Read more on a chat line: the rest is on the phone.
+    func lineFull(taf: String, id: String) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader with no session of its own (the tests' readers): no mark.
+    var mark: String? { nil }
 }
 
 /// Answers the watch's requests (docs/watch-app.md, "The relay"). It answers only the kinds
@@ -129,13 +150,25 @@ enum WatchRelay {
         return groups.joined(separator: separator)
     }
 
+    /// The answer to the watch's request, with whose it is (`WatchMark`): every reply carries the session's mark while the
+    /// phone is signed in, so the watch can tell an answer for another account from one for its own, and none once it's
+    /// signed out.
     static func answer(_ data: Data, now: Date, reading: WatchReading) async -> WatchReply {
+        var reply = await answered(data, now: now, reading: reading)
+        reply.mark = reply.outcome == .signedOut ? nil : reading.mark
+        return reply
+    }
+
+    private static func answered(_ data: Data, now: Date, reading: WatchReading) async -> WatchReply {
         guard let request = WatchMessage.decode(WatchRequest.self, from: data), request.isComplete else {
             return WatchReply(.refused)
         }
         // Live only: a request held up somewhere is never acted on late.
         guard abs(now.timeIntervalSince(request.made)) <= WatchRequest.maxAge else { return WatchReply(.stale) }
         guard reading.signedIn else { return WatchReply(.signedOut) }
+        // The person's act, sent under another sign-in's mark (signed in as someone else since the watch last read): nothing
+        // is done with it, and the watch, told signed out, forgets what it kept, as Wear OS's WatchRelay.
+        if request.kind.carriesMark, let mark = request.mark, mark != reading.mark { return WatchReply(.signedOut) }
         switch request.kind {
         case .needsYou:
             do {
@@ -186,6 +219,16 @@ enum WatchRelay {
         case .inboxMark:
             guard let marks = request.marks else { return WatchReply(.refused) }
             return await reading.inboxMark(marks)
+        case .signInWatch:
+            // A watch signed out on itself asks to be signed in again: only this phone's owner says yes, behind its lock.
+            return await reading.askWatchSignIn(request.message?.lowercased() ?? "")
+        case .openOnPhone:
+            // Approve on your phone: only the hold's id, and only under this phone's own account (the mark, above).
+            if let hold = request.hold { return await reading.openHold(hold) }
+            return await reading.openOnPhone(taf: request.taf)
+        case .lineFull:
+            // Read only: one of the taf's own messages, whole, from a chat the phone lists.
+            return await reading.lineFull(taf: request.taf ?? "", id: request.message ?? "")
         case .tafChat:
             // Read only: the person's own chat with a taf the phone lists.
             do {
@@ -226,6 +269,31 @@ enum WatchRelay {
 /// in (`HoldNotification.fill`): the phone may be locked, with tafs not open.
 @MainActor
 struct KeptWatchReading: WatchReading {
+    /// A taf's id and its name as Your tafs lists it, to title its answer; "tafs" when the list can't be read now.
+    func tafName(_ id: String?) async -> WatchTafName? {
+        guard let id, !id.isEmpty else { return nil }
+        let name = (try? await tafs())?.first { $0.id == id }?.name
+        return WatchTafName(id: id, name: name ?? "tafs")
+    }
+
+    func openOnPhone(taf: String?) async -> WatchReply {
+        await WatchOpen.run(WatchOpen.destination(taf: taf))
+        return WatchReply(.ok)
+    }
+
+    func askWatchSignIn(_ id: String) async -> WatchReply {
+        // Notifications off: nothing can be asked, and the watch says so rather than wait.
+        guard await WatchSignInAsk.post(id) else { return WatchReply(.failed, line: Words.Alert.allowNotifications) }
+        return WatchReply(.ok)
+    }
+
+    /// The held call read fresh from KIFF with this phone's session: opened at it only while that read lists it.
+    func openHold(_ hold: String) async -> WatchReply {
+        let listed = try? await kiff.heldCalls().map(\.id)
+        await WatchOpen.run(WatchOpen.holdDestination(hold, listed: listed))
+        return WatchReply(.ok)
+    }
+
     let kiff: KIFFClient
     let cloud: TafsCloud
     let signer: ApprovalSigning
@@ -257,6 +325,9 @@ struct KeptWatchReading: WatchReading {
 
     var signedIn: Bool { kiff.token != nil }
 
+    /// The kept session's mark; none without a session.
+    var mark: String? { signedIn ? PhoneWatchMark.current() : nil }
+
     func needsYou(now: Date) async throws -> WatchNeedsYou {
         async let home = try? cloud.home()
         async let tafs = try? cloud.tafs()
@@ -275,7 +346,7 @@ struct KeptWatchReading: WatchReading {
                 return WatchNeedsYou.Call(id: hold.id, taf: taf, what: what,
                                           summary: WatchRelay.withoutAmount(call.proposed.summary, amount: call.proposed.amount),
                                           reason: call.reason,
-                                          answerBy: HoldNotification.time(call.expiresAt, in: zone))
+                                          answerBy: HoldNotification.time(call.expiresAt, in: zone), ends: call.expiresAt)
             }
         let count = await home?.needsYou?.count ?? calls.count
         return WatchNeedsYou(count: max(count, calls.count), calls: calls, at: now)
@@ -526,11 +597,14 @@ struct KeptWatchReading: WatchReading {
             let asked = try await cloud.watchAsk(body: body, signature: "t=\(signedAt),v1=\(signature)")
             let ticket = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: asked.id, sent: nil)
             // Row 11: tafs cloud's push for this request is read only because this iPhone sent it (`WatchAskPush`).
-            if follows { WatchAskPushes().sent(asked.id) }
-            // W3: if the watch is put away before the request ends, the iPhone posts how it went (`CoachFollow`).
+            if follows { WatchAskPushes().sent(asked.id, taf: tafID) }
+            // W3: if the watch is put away before the request ends, the iPhone posts how it went (`CoachFollow`), under the
+            // taf's name for a taf's chat.
             if follows {
                 let reading = self
-                Task { @MainActor in await CoachFollow.run(ticket, read: { await reading.readCoach($0) }) }
+                Task { @MainActor in
+                    await CoachFollow.run(ticket, taf: { await reading.tafName(tafID) }, read: { await reading.readCoach($0) })
+                }
             }
             return WatchReply(.ok, ticket: ticket)
         } catch let e as TafsCloud.CloudError where e.status == 404 && e.code == "no_coach" {
@@ -617,6 +691,28 @@ struct KeptWatchReading: WatchReading {
         return Self.chatLines(try await cloud.conversation(id).messages)
     }
 
+    func lineFull(taf: String, id: String) async -> WatchReply {
+        do {
+            guard try await cloud.tafs().contains(where: { $0.id == taf }),
+                  let whole = Self.wholeLine(try await cloud.conversation(taf).messages, id: id) else {
+                return WatchReply(.failed, line: Words.Watch.openOnPhone)
+            }
+            return WatchReply(.ok, coach: whole)
+        } catch {
+            return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud)
+        }
+    }
+
+    /// The taf's message `id` whole (Read more), at most `WatchCoachAnswer.wholeLength`. Never the person's own words, and
+    /// nothing that isn't a message: those are nil, and the rest stays on the phone.
+    nonisolated static func wholeLine(_ messages: [TafsCloud.ChatMessage], id: String) -> WatchCoachAnswer? {
+        guard let m = messages.first(where: { $0.id == id }), m.kind == .message, m.from != .owner,
+              !m.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        var whole = WatchCoachAnswer.whole(m.text, approveOnPhone: false)
+        whole.at = m.at
+        return whole
+    }
+
     nonisolated static func chatLines(_ messages: [TafsCloud.ChatMessage]) -> [WatchChatLine] {
         let said = messages.filter { $0.kind == .message && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         return said.suffix(WatchChatLine.last).map { m in
@@ -690,6 +786,41 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
         WCSession.default.activate()
     }
 
+    /// Whether a paired watch has tafs installed: nothing is handed on otherwise.
+    var watchListening: Bool {
+        guard WCSession.isSupported() else { return false }
+        let session = WCSession.default
+        return session.activationState == .activated && session.isPaired && session.isWatchAppInstalled
+    }
+
+    /// Hands the watch a push (`WatchPush`), queued: WatchConnectivity delivers it in order, from the background and while
+    /// the watch app is put away. An older push of the same request or chat still waiting is cancelled, so a watch out of
+    /// reach for an hour gets each thread's newest state, not every step of it.
+    func push(_ push: WatchPush) {
+        guard watchListening else { return }
+        // Read under a session that has since ended or changed: never handed on as the account's now.
+        guard push.mark != nil, push.mark == PhoneWatchMark.stored() else { return }
+        let session = WCSession.default
+        for waiting in session.outstandingUserInfoTransfers {
+            guard let old = WatchPush.from(waiting.userInfo), old.kind == push.kind, old.ask == push.ask, old.taf == push.taf,
+                  old.at <= push.at else { continue }
+            waiting.cancel()
+        }
+        session.transferUserInfo(push.userInfo)
+    }
+
+    /// The phone signed in (a new session's mark) or out (none): every push still waiting goes, since each was read under the
+    /// session before, and the watch is told at once (queued) and as the application context, which WatchConnectivity
+    /// keeps as the latest and hands a watch that was out of reach as soon as it's back, ahead of a long queue.
+    func account(_ mark: String?) {
+        guard watchListening else { return }
+        let session = WCSession.default
+        for waiting in session.outstandingUserInfoTransfers { waiting.cancel() }
+        let push = WatchPush(.account, at: Date(), mark: mark)
+        try? session.updateApplicationContext(push.userInfo)
+        session.transferUserInfo(push.userInfo)
+    }
+
     /// The watch's own recording (row 44, A): moved before this returns, since WatchConnectivity deletes the file after.
     func session(_ session: WCSession, didReceive file: WCSessionFile) {
         guard let id = WatchVoiceInbox.shared.place(file.fileURL, metadata: file.metadata) else { return }
@@ -702,6 +833,8 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     func sessionDidDeactivate(_ session: WCSession) { session.activate() }
 
     func session(_ session: WCSession, didReceiveMessageData messageData: Data, replyHandler: @escaping (Data) -> Void) {
+        // The watch is using tafs: the phone says once what alerts need (AppModel.checkAlertsOnReturn).
+        UserDefaults.standard.set(true, forKey: AppModel.watchUsedKey)
         let reply = Reply(replyHandler)
         Task { @MainActor in
             let answer = await WatchRelay.answer(messageData, now: Date(), reading: KeptWatchReading())

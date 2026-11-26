@@ -186,6 +186,7 @@
   "coach.tools.give": "Дај му на Coach неговите алатки",
   "coach.tools.giving": "Се дава…",
   "coach.tools.title": "Алатки на Coach",
+  "coach.tools.write_after": "Прво одобри ги алатките на Coach, потоа ќе можеш да пишуваш.",
   "coach.tools_eyebrow": "Алатки",
   "coach.tools_not_given": "Алатките на Coach не се дадени. {why}",
   "coach.tools_not_read": "Алатките на Coach не можеа да се прочитаат. {why}",

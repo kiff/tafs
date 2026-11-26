@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Antwoord vóór %3$s. Er wordt niets verzonden tot je goedkeurt.</string>
     <string name="alert_answered">Een taf heeft iemand geantwoord</string>
     <string name="alert_approve_once">Eenmalig goedkeuren…</string>
+    <string name="alert_blocked_body">Deze %1$s vraagt het niet meer, dus meldingen voor tafs staan uit in Instellingen. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken.</string>
+    <string name="alert_blocked_body_android">Android vraagt het niet meer, dus meldingen voor tafs staan uit in de instellingen van je telefoon. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken, op deze telefoon en op je horloge. Je horloge krijgt zijn updates hoe dan ook.</string>
+    <string name="alert_blocked_body_watch">Je iPhone vraagt het niet meer, dus meldingen voor tafs staan uit in Instellingen. Zet ze daar aan zodat goedkeuringen en antwoorden je bereiken, op deze iPhone en op je horloge. Je horloge krijgt zijn updates hoe dan ook.</string>
+    <string name="alert_blocked_title">Meldingen voor tafs aanzetten</string>
     <string name="alert_by_email">Via e-mail</string>
     <string name="alert_example">Voorbeeld</string>
     <string name="alert_foot_cant_answer_holds">Meldingen gaan naar de mensen die vastgehouden aanroepen mogen beantwoorden. Jouw rol in dit account mag dat niet.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Meldingen staan nog niet aan voor deze telefoon. %1$s</string>
     <string name="alert_not_refused">Niet geweigerd</string>
     <string name="alert_not_sent">Een antwoord is niet verzonden</string>
+    <string name="alert_now_on">Meldingen staan aan.</string>
     <string name="alert_on_this_device">Meldingen op deze %1$s</string>
+    <string name="alert_open_notification_settings">Meldingsinstellingen openen</string>
+    <string name="alert_open_settings">Instellingen openen</string>
     <string name="alert_open_tafs_answer_kiff_did">Open tafs om te antwoorden: KIFF gaf niet aan welke versie je hebt gezien.</string>
     <string name="alert_open_tafs_answer_phone_can">Open tafs om te antwoorden: deze telefoon kan het niet vanuit de melding ondertekenen.</string>
     <string name="alert_prompt">Krijg een melding als een taf op jou wacht</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Niet beschikbaar</string>
     <string name="alert_status_off">Uit</string>
     <string name="alert_status_on">Aan</string>
+    <string name="alert_still_off">Meldingen staan nog uit.</string>
     <string name="alert_still_on_after_sign_out_body">tafs kon ze niet uitzetten (%1$s). Probeer het opnieuw, of log toch uit en zet meldingen voor tafs uit in Instellingen.</string>
     <string name="alert_still_on_after_sign_out_title">Deze %1$s krijgt misschien nog meldingen van dit account</string>
     <string name="alert_taf_needs_you">%1$s wacht op jou</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs kon KIFF niet bereiken om te weigeren. Open tafs om te antwoorden.</string>
+    <string name="alert_watch_first_body">Zet meldingen voor tafs aan om goedkeuringen en antwoorden als melding te zien, op deze telefoon en op je horloge. Je horloge blijft zijn updates krijgen, ook als je dat niet doet.</string>
+    <string name="alert_watch_first_title">Je horloge gebruikt tafs</string>
     <string name="alert_what_alerts">Waarvoor je een melding krijgt</string>
     <string name="alert_with_sound">Met geluid</string>
     <string name="app_name">tafs</string>
@@ -846,6 +856,7 @@
     <string name="coach_tools_give">Coach zijn tools geven</string>
     <string name="coach_tools_giving">Geven…</string>
     <string name="coach_tools_title">Tools van Coach</string>
+    <string name="coach_tools_write_after">Keur eerst de tools van Coach goed, dan kun je schrijven.</string>
     <string name="coach_tools_eyebrow">Tools</string>
     <string name="coach_tools_not_given">De tools van Coach zijn niet gegeven. %1$s</string>
     <string name="coach_tools_not_read">Kon de tools van Coach niet lezen. %1$s</string>
@@ -2780,6 +2791,7 @@
     <string name="watch_ask">Vraag tafs</string>
     <string name="watch_ask_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je tafs iets vraagt.</string>
     <string name="watch_ask_not_on">Vragen vanaf je horloge staat nog niet aan.</string>
+    <string name="watch_ask_phone_sign_in">Vraag je telefoon om dit horloge in te loggen</string>
     <string name="watch_ask_text_only">tafs krijgt je woorden als tekst, nooit je stem.</string>
     <string name="watch_asking_phone">Je telefoon vragen…</string>
     <string name="watch_calendar_today">Agenda van vandaag</string>
@@ -2791,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Verwijderd. Er is niets verstuurd.</string>
     <string name="watch_didnt_catch">Niet verstaan. Tik om het opnieuw te proberen.</string>
     <string name="watch_dismiss">Negeren</string>
+    <string name="watch_edit_words">Tik op de tekst om hem te wijzigen</string>
     <string name="watch_glance_description">Hoeveel er op je wachten, nooit wat of wie.</string>
     <string name="watch_halt_all_q">Al je tafs stilzetten?</string>
     <plurals name="watch_halt_now_count">
@@ -2806,6 +2819,7 @@
         <item quantity="one">%1$s vastgehouden aanroep wacht op jou</item>
         <item quantity="other">%1$s vastgehouden aanroepen wachten op jou</item>
     </plurals>
+    <string name="watch_held_channel">Vastgehouden aanroepen</string>
     <string name="watch_inbox_empty">Niets nieuws. Hier komen de antwoorden van Coach en de meldingen van je tafs.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s ongelezen in je Inbox</item>
@@ -2820,7 +2834,7 @@
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.</string>
     <string name="watch_more_on_phone">De rest staat op je telefoon.</string>
-    <string name="watch_needs_lock">Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.</string>
+    <string name="watch_needs_lock">Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te versturen, te weigeren of stil te zetten.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s wacht op jou</item>
         <item quantity="other">%1$s wachten op jou</item>
@@ -2830,6 +2844,7 @@
     <string name="watch_nothing_sent_until">Er wordt niets verstuurd tot je goedkeurt.</string>
     <string name="watch_nothing_waits">Er wacht niets op je.</string>
     <string name="watch_open_on_phone">Openen op telefoon</string>
+    <string name="watch_opened_on_phone">Geopend op je telefoon</string>
     <string name="watch_page_brief">Overzicht</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt.</string>
@@ -2853,6 +2868,7 @@
     <string name="watch_recent_chats">Recente chats</string>
     <string name="watch_recording">Opnemen</string>
     <string name="watch_recording_not_received">De opname is niet op je telefoon aangekomen. Probeer het opnieuw, of typ het.</string>
+    <string name="watch_refuse_on_phone">Niet geweigerd. Weiger het op je telefoon.</string>
     <string name="watch_refused">Geweigerd. Er is niets verstuurd.</string>
     <string name="watch_reply">Antwoorden</string>
     <string name="watch_rerecord">Opnieuw opnemen</string>
@@ -2861,14 +2877,20 @@
     <string name="watch_resume_on_phone">Hervat op je telefoon</string>
     <string name="watch_retry">Opnieuw</string>
     <string name="watch_review">Controleer voor je verstuurt</string>
+    <string name="watch_seconds_left">Nog %1$s s</string>
     <string name="watch_sending">Versturen…</string>
     <string name="watch_sent">Verstuurd</string>
     <string name="watch_settings_of">%1$s · instellingen</string>
+    <string name="watch_sign_in_allow">Toestaan</string>
+    <string name="watch_sign_in_denied">Niet ingelogd. Dit horloge blijft uitgelogd.</string>
+    <string name="watch_sign_in_deny">Weigeren</string>
     <string name="watch_sign_in_on_phone">Log eerst in bij tafs op je telefoon.</string>
+    <string name="watch_sign_in_watch_q">Dit horloge inloggen als jij?</string>
     <string name="watch_sign_out_q">Uitloggen op dit horloge?</string>
     <string name="watch_sign_out_sub">Je telefoon blijft ingelogd. Dit horloge vergeet je tafs, chats en Inbox.</string>
     <string name="watch_signed_in">Ingelogd</string>
     <string name="watch_signed_out_here">Uitgelogd op dit horloge. Je telefoon blijft ingelogd.</string>
+    <string name="watch_stopped_at_limit">Gestopt bij de limiet van %1$s. Wat er gehoord is, staat hieronder.</string>
     <string name="watch_swipe_settings">Veeg naar links voor zijn instellingen</string>
     <string name="watch_tap_start">Tik op Starten en spreek. Je woorden verschijnen hier terwijl je praat.</string>
     <string name="watch_timing">Luisteren %1$s ms · ontvangst %2$s ms · resultaat %3$s ms</string>
@@ -2877,8 +2899,10 @@
     <string name="watch_type">Typen</string>
     <string name="watch_type_hint">Schrijf aan Coach…</string>
     <string name="watch_update_phone">Werk tafs bij op je telefoon en probeer het opnieuw.</string>
+    <string name="watch_view_on_phone">Bekijken op telefoon</string>
     <string name="watch_view_only_phone">Deze telefoon kan alleen bekijken, dus je kunt niets vragen vanaf je horloge. Log in op een telefoon die kan goedkeuren.</string>
     <string name="watch_voice_text_only">Coach krijgt je woorden als tekst, nooit je stem.</string>
+    <string name="watch_waiting_for_phone">Wachten op je telefoon…</string>
     <string name="watch_what_it_does">Wat hij doet</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s bezig</item>

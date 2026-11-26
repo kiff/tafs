@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -77,11 +78,14 @@ internal fun TafScreen(
       act.halt(open.tafId)
     }, cancel = { confirming = false })
   }
+  // While its chat is answering, on screen: the answer followed through the phone, bounded, and stopped when the screen goes.
+  val answering = chat && open.chat.answering
+  androidx.compose.runtime.LaunchedEffect(open.tafId, answering) { if (answering) act.followAnswer(open.tafId) }
   HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
     // 1A: its chat first, then its page, then its settings; with the switch off, its page and settings as before.
     val page = if (chat) i - 1 else i
     // The chat opens on its newest message, with the send bar under it, as a chat app does; older ones are above (the owner's call).
-    val latest = if (page < 0) tafChatLatest(open) else 0
+    val latest = if (page < 0) tafChatFocus(open) else 0
     val list = rememberScalingLazyListState(initialCenterItemIndex = latest)
     if (page < 0) androidx.compose.runtime.LaunchedEffect(latest) { list.scrollToItem(latest) }
     ScalingLazyColumn(
@@ -146,9 +150,16 @@ private fun ScalingLazyListScope.notReadTaf(open: WatchModel.OpenTaf, act: Actio
   when (val read = open.read) {
     WatchModel.TafRead.Asking -> line(Words.Watch.askingPhone)
     WatchModel.TafRead.SignedOut -> line(Words.Watch.signInOnPhone)
-    is WatchModel.TafRead.PhoneUnreachable -> {
-      line(read.why.line)
-      item { Button(onClick = { act.openTaf(open.tafId) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
+    // The phone out of reach or slow: the calm linking line, and the page read again by itself while it shows (row 30, call 6).
+    is WatchModel.TafRead.PhoneUnreachable -> if (read.why == LinkFailure.NoApp) line(read.why.line) else item {
+      androidx.compose.runtime.LaunchedEffect(open.tafId) {
+        for (pause in RETRY_BACKOFF_MS + List(LINKING_TRIES) { LINKING_RETRY_MS }) {
+          kotlinx.coroutines.delay(pause)
+          act.rereadTaf()
+        }
+      }
+      Text(Words.Watch.linking, style = MaterialTheme.typography.bodySmall, color = Look.dim, textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp))
     }
     WatchModel.TafRead.UpdatePhone -> line(Words.Watch.updatePhone)
     is WatchModel.TafRead.Failed -> {
@@ -178,17 +189,24 @@ private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions,
     if (bot.tafs.watchlink.ChatTime.startsDay(previous, day)) item { DayHeader(WatchChatTime.day(day)) }
     previous = day
   }
-  (open.chat.history as? WatchModel.TafChat.History.Read)?.lines?.forEach { line ->
+  shownLines(open).forEach { line ->
     val at = WatchChatTime.instantOf(line.at)
     at?.let(::header)
-    item { ChatBubble(line.text, mine = line.mine, foot = if (line.more) Words.Watch.moreOnPhone else null, time = at?.let { WatchChatTime.time(it) }) }
+    // A taf's cut answer: Read more shows it whole in place, in one tap (row 10); the person's own cut words say the rest is on
+    // the phone, as before.
+    val whole = if (line.more && !line.mine) open.chat.whole[lineKey(line.id)] else null
+    item {
+      ChatBubble((whole as? WatchModel.Whole.Read)?.text ?: line.text, mine = line.mine, foot = if (line.more && line.mine) Words.Watch.moreOnPhone else null,
+        time = at?.let { WatchChatTime.time(it) })
+    }
+    if (line.more && !line.mine) item { LineMore(line.id, whole, open, act) }
   }
   for (turn in open.chat.turns) {
     val at = java.time.Instant.ofEpochMilli(turn.at)
     header(at)
     // Its own words, with "HH:mm ✓" under them: in the thread only once tafs cloud took it.
     item { ChatBubble(turn.said, mine = true, time = WatchChatTime.time(at), sent = true) }
-    item { TafAnswer(turn, open.name, open.chat.whole[turn.ask.id], act) }
+    item { TafAnswer(turn, open.name, open.chat.whole[turn.ask.id], act, waitedOut = open.chat.waitedOut, onPhone = onPhone(open)) }
   }
   if (open.halted) {
     item { Centred(Words.Halt.Explain.halted, Look.danger) }
@@ -229,15 +247,60 @@ internal fun tafChatLatest(open: WatchModel.OpenTaf): Int {
     if (bot.tafs.watchlink.ChatTime.startsDay(previous, day)) n++
     previous = day
   }
-  (open.chat.history as? WatchModel.TafChat.History.Read)?.lines?.forEach { line ->
+  shownLines(open).forEach { line ->
     WatchChatTime.instantOf(line.at)?.let(::header)
     n++
+    if (line.more && !line.mine) n++
   }
   for (turn in open.chat.turns) {
     header(java.time.Instant.ofEpochMilli(turn.at))
     n += 2
   }
   return n
+}
+
+/**
+ * Where a taf's chat is centred: with a message sent from the watch, the line under its newest one ("{taf} is answering", or its
+ * answer), so the person's words just sent sit whole above it, never cut by the top edge (the Galaxy Watch 5 re-test);
+ * else what comes after the newest message ([tafChatLatest]).
+ */
+internal fun tafChatFocus(open: WatchModel.OpenTaf): Int = tafChatLatest(open).let { if (open.chat.turns.isNotEmpty()) it - 1 else it }
+
+/** The phone's lines of a taf's chat, less those of the messages sent from this watch, which their turns show ([KeptThreads.shownLines]). */
+internal fun shownLines(open: WatchModel.OpenTaf): List<bot.tafs.watchlink.ChatLine> =
+  (open.chat.history as? WatchModel.TafChat.History.Read)?.lines?.let { lines ->
+    KeptThreads.shownLines(lines, open.chat.turns.map { KeptTurn(WatchModel.Said(it.said, it.at), it.ask) })
+  }.orEmpty()
+
+/**
+ * Under a taf's cut answer from the phone's thread (row 10): Read more until it's read, "Loading…" while the phone reads it, and,
+ * when it can't be read here, the rest is on the phone with Open on phone. Read whole, nothing.
+ */
+@Composable
+private fun LineMore(lineId: String, whole: WatchModel.Whole?, open: WatchModel.OpenTaf, act: Actions) {
+  Column(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    when (whole) {
+      is WatchModel.Whole.Read -> Unit
+      WatchModel.Whole.Reading -> Text(Words.Common.loading, style = MaterialTheme.typography.labelSmall, color = Look.dim)
+      WatchModel.Whole.OnPhone -> {
+        Text(Words.Watch.moreOnPhone, style = MaterialTheme.typography.labelSmall, color = Look.dim)
+        OpenChatOnPhone(open, act)
+      }
+      null -> {
+        Button(onClick = { act.readMoreLine(lineId) }, modifier = Modifier.fillMaxWidth().testTag(LINE_READ_MORE + lineId), colors = neutralButton()) { Text(Words.Watch.readMore) }
+        OpenChatOnPhone(open, act)
+      }
+    }
+  }
+}
+
+/** Read more under a cut line of the phone's thread, by the line's id, for the screen tests. */
+internal const val LINE_READ_MORE = "line-read-more-"
+
+/** Open on phone, under a cut answer: the phone opens this taf's chat, where the whole answer is; the watch stays where it is. */
+@Composable
+private fun OpenChatOnPhone(open: WatchModel.OpenTaf, act: Actions) {
+  Button(onClick = { act.openOnPhone(onPhone(open)) }, modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp), colors = neutralButton()) { Text(Words.Watch.openOnPhone) }
 }
 
 /** A line under a taf's name in its chat: its state, the paused line, or why nothing is sent. */
@@ -254,7 +317,8 @@ internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null, time:
       Modifier.background(if (mine) Look.mineGround else Look.neutral, androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 5.dp),
       verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-      Text(text, style = MaterialTheme.typography.bodySmall, color = if (mine) Look.onMineGround else Look.text)
+      // The person's own words as they wrote them; a taf's, plain (no markdown on the watch).
+      Text(if (mine) text else Plain.of(text), style = MaterialTheme.typography.bodySmall, color = if (mine) Look.onMineGround else Look.text)
       foot?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = Look.dim) }
     }
     time?.let { if (sent) SentFoot(it, sent = true, Modifier.padding(horizontal = 8.dp)) else MessageTime(it) }
@@ -266,16 +330,20 @@ internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null, time:
  * the whole once read, "The rest is on your phone" when it can't be; held, Approve on your phone (the watch never approves).
  */
 @Composable
-internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.Whole?, act: Actions) {
+internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.Whole?, act: Actions, waitedOut: Boolean = false, onPhone: String? = null) {
   val ask = turn.ask
   if (!ask.ended && !ask.held) {
     // Taken: the ✓ under the person's words says it; then "{taf} is answering" until the answer.
     if (ask.state != bot.tafs.watchlink.AskLine.ACCEPTED) {
       Text(Words.Chat.tafIsAnswering(taf), style = MaterialTheme.typography.labelSmall, color = Look.done, modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp))
     }
+    // Followed for two minutes with no answer yet: it still lands here when it comes; meanwhile, the phone has the chat.
+    if (waitedOut && onPhone != null) {
+      Button(onClick = { act.openOnPhone(onPhone) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) }
+    }
     return
   }
-  val shown = (whole as? WatchModel.Whole.Read)?.text ?: ask.line ?: ask.words
+  val shown = Plain.of((whole as? WatchModel.Whole.Read)?.text ?: ask.line ?: ask.words)
   Column(Modifier.fillMaxWidth().padding(horizontal = 6.dp)) {
     Column(
       Modifier.background(Look.neutral, androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 5.dp),
@@ -290,6 +358,10 @@ internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.
         WatchModel.Foot.OnPhone -> Text(Words.Watch.moreOnPhone, style = MaterialTheme.typography.labelSmall, color = Look.dim)
         null -> Unit
       }
+    }
+    // The whole couldn't be read on the watch: the phone opens on this chat, where it is.
+    if (footOf(ask, whole) == WatchModel.Foot.OnPhone && onPhone != null) {
+      Button(onClick = { act.openOnPhone(onPhone) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) }
     }
     // When the answer came, under it (row 44, C).
     WatchChatTime.instantOf(ask.updated)?.let { MessageTime(WatchChatTime.time(it)) }

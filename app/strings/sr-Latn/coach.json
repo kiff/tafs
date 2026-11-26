@@ -186,6 +186,7 @@
   "coach.tools.give": "Dajte Coachu njegove alate",
   "coach.tools.giving": "Davanje…",
   "coach.tools.title": "Coachovi alati",
+  "coach.tools.write_after": "Najpre odobrite Coachove alate, zatim možete pisati.",
   "coach.tools_eyebrow": "Alati",
   "coach.tools_not_given": "Coachovi alati nisu dani. {why}",
   "coach.tools_not_read": "Coachove alate nije bilo moguće pročitati. {why}",

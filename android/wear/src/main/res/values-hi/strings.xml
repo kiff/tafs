@@ -57,6 +57,7 @@
     <string name="watch_ask">tafs से पूछें</string>
     <string name="watch_ask_needs_consent">tafs से पूछने से पहले, अपने फ़ोन पर tafs में AI के उपयोग की अनुमति दें।</string>
     <string name="watch_ask_not_on">घड़ी से पूछना अभी चालू नहीं है।</string>
+    <string name="watch_ask_phone_sign_in">इस घड़ी में साइन इन कराने के लिए अपने फ़ोन से कहें</string>
     <string name="watch_ask_text_only">tafs को आपके शब्द टेक्स्ट के रूप में मिलते हैं, आपकी आवाज़ कभी नहीं।</string>
     <string name="watch_asking_phone">आपके फ़ोन से पूछा जा रहा है…</string>
     <string name="watch_calendar_today">आज का कैलेंडर</string>
@@ -68,6 +69,7 @@
     <string name="watch_deleted_nothing_sent">हटाया गया। कुछ नहीं भेजा गया।</string>
     <string name="watch_didnt_catch">समझ नहीं आया। फिर कोशिश करने के लिए टैप करें।</string>
     <string name="watch_dismiss">खारिज करें</string>
+    <string name="watch_edit_words">बदलने के लिए टेक्स्ट पर टैप करें</string>
     <string name="watch_glance_description">कितनों को आपकी ज़रूरत है, कभी यह नहीं कि क्या या किसे।</string>
     <string name="watch_halt_all_q">आपके सभी taf रोकें?</string>
     <plurals name="watch_halt_now_count">
@@ -83,6 +85,7 @@
         <item quantity="one">%1$s रोकी गई कॉल को आपकी ज़रूरत है</item>
         <item quantity="other">%1$s रोकी गई कॉल को आपकी ज़रूरत है</item>
     </plurals>
+    <string name="watch_held_channel">रोकी गई कॉल</string>
     <string name="watch_inbox_empty">कुछ नया नहीं। Coach के उत्तर और आपके taf के अलर्ट यहाँ आते हैं।</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Inbox में %1$s अपठित</item>
@@ -97,7 +100,7 @@
     <string name="watch_menu">मेनू</string>
     <string name="watch_mic_needed">आवाज़ से पूछने के लिए, इस घड़ी पर tafs के लिए माइक्रोफ़ोन की अनुमति दें।</string>
     <string name="watch_more_on_phone">बाकी आपके फ़ोन पर है।</string>
-    <string name="watch_needs_lock">इस घड़ी से अस्वीकार या रोकने के लिए, उस पर स्क्रीन लॉक सेट करें और उसे अनलॉक करें।</string>
+    <string name="watch_needs_lock">इस घड़ी से भेजने, अस्वीकार करने या रोकने के लिए, उस पर स्क्रीन लॉक सेट करें और उसे अनलॉक करें।</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s को आपकी ज़रूरत है</item>
         <item quantity="other">%1$s को आपकी ज़रूरत है</item>
@@ -107,6 +110,7 @@
     <string name="watch_nothing_sent_until">आपके मंज़ूर करने तक कुछ नहीं भेजा जाता।</string>
     <string name="watch_nothing_waits">आपके लिए कुछ इंतज़ार में नहीं है।</string>
     <string name="watch_open_on_phone">फ़ोन पर खोलें</string>
+    <string name="watch_opened_on_phone">फ़ोन पर खुल गया</string>
     <string name="watch_page_brief">ब्रीफ़</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">थमा हुआ: इसका निर्धारित समय बंद है। यह अब भी आपके भेजे का उत्तर देता है।</string>
@@ -130,6 +134,7 @@
     <string name="watch_recent_chats">हाल की चैट</string>
     <string name="watch_recording">रिकॉर्ड हो रहा है</string>
     <string name="watch_recording_not_received">रिकॉर्डिंग आपके फ़ोन तक नहीं पहुँची। फिर कोशिश करें, या इसके बजाय टाइप करें।</string>
+    <string name="watch_refuse_on_phone">अस्वीकार नहीं हुआ। अपने फ़ोन पर अस्वीकार करें।</string>
     <string name="watch_refused">अस्वीकार। कुछ नहीं भेजा गया।</string>
     <string name="watch_reply">उत्तर दें</string>
     <string name="watch_rerecord">फिर रिकॉर्ड करें</string>
@@ -138,14 +143,20 @@
     <string name="watch_resume_on_phone">अपने फ़ोन पर फिर शुरू करें</string>
     <string name="watch_retry">फिर कोशिश करें</string>
     <string name="watch_review">भेजने से पहले जाँचें</string>
+    <string name="watch_seconds_left">%1$s से. बाकी</string>
     <string name="watch_sending">भेजा जा रहा है…</string>
     <string name="watch_sent">भेजा गया</string>
     <string name="watch_settings_of">%1$s · सेटिंग</string>
+    <string name="watch_sign_in_allow">अनुमति दें</string>
+    <string name="watch_sign_in_denied">साइन इन नहीं हुआ। यह घड़ी साइन आउट रहेगी।</string>
+    <string name="watch_sign_in_deny">मना करें</string>
     <string name="watch_sign_in_on_phone">पहले अपने फ़ोन पर tafs में साइन इन करें।</string>
+    <string name="watch_sign_in_watch_q">इस घड़ी में आपके नाम से साइन इन करें?</string>
     <string name="watch_sign_out_q">इस घड़ी पर साइन आउट करें?</string>
     <string name="watch_sign_out_sub">आपका फ़ोन साइन इन रहता है। यह घड़ी आपके taf, चैट और inbox भूल जाती है।</string>
     <string name="watch_signed_in">साइन इन</string>
     <string name="watch_signed_out_here">इस घड़ी पर साइन आउट हुआ। आपका फ़ोन साइन इन रहता है।</string>
+    <string name="watch_stopped_at_limit">%1$s की सीमा पर रुका। जो सुना गया वह नीचे है।</string>
     <string name="watch_swipe_settings">इसकी सेटिंग के लिए बाईं ओर स्वाइप करें</string>
     <string name="watch_tap_start">शुरू करें पर टैप करें, फिर बोलें। आपके शब्द बोलते समय यहाँ दिखते हैं।</string>
     <string name="watch_timing">सुना %1$s ms · रसीद %2$s ms · नतीजा %3$s ms</string>
@@ -154,8 +165,10 @@
     <string name="watch_type">टाइप करें</string>
     <string name="watch_type_hint">Coach को लिखें…</string>
     <string name="watch_update_phone">अपने फ़ोन पर tafs अपडेट करें, फिर फिर कोशिश करें।</string>
+    <string name="watch_view_on_phone">फ़ोन पर देखें</string>
     <string name="watch_view_only_phone">यह फ़ोन केवल देख सकता है, इसलिए आप घड़ी से नहीं पूछ सकते। मंज़ूर कर सकने वाले फ़ोन पर साइन इन करें।</string>
     <string name="watch_voice_text_only">Coach को आपके शब्द टेक्स्ट के रूप में मिलते हैं, आपकी आवाज़ कभी नहीं।</string>
+    <string name="watch_waiting_for_phone">आपके फ़ोन का इंतज़ार…</string>
     <string name="watch_what_it_does">यह क्या करता है</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s काम कर रहा है</item>

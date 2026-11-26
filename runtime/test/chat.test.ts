@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, chatTitle, handle, HELD_FULL_WORDS, type HTTPEvent, MEMORY, NOT_SENT_WORDS, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
+import { keys as coachKeys } from "../src/cloud/coach.js";
+import { driveKeys } from "../src/cloud/drive.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { withReplyLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { contract } from "./contract.js";
@@ -1207,27 +1209,55 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     const run = await waiting(w);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: "test" } })).status).toBe(200);
     // kiff/agents' copy: refused before its next turn, so nothing more in the session.
-    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "ERROR", code: "ai_unavailable", error: "Our AI provider isn't serving us right now, so this stopped." });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "ERROR", code: "ai_unavailable", error: "Our AI provider isn't serving us right now, so this stopped.", sent: 0 });
     const thread = async (lang?: string) => (await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", ...(lang ? { headers: { "accept-language": lang } } : {}) })).body;
     const en = await thread();
     expect(en.working).toBeNull();
-    expect(en.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable });
+    expect(en.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").turn_failed_ours, retry: true, retry_label: wordsIn("en").turn_failed_retry });
     contract("conversation-failed", "GET /v1/tafs/{id}/conversation once the run a card's answer resumed was refused by the AI provider: `failed` with its code and words, neither at work nor waiting.", en);
-    expect((await thread("fr")).failed.words).toBe(wordsIn("fr").code_ai_unavailable);
+    expect((await thread("fr")).failed.words).toBe(wordsIn("fr").turn_failed_ours);
     // A run that ends ERROR uses no credits, whatever it did before the card (KIFF's meter: a failed run is free).
     // But one that already sent a write did act, so it gets the partway words, which say it stopped partway and
     // make no claim about credits. A run with only refusals or reads keeps code_ai_unavailable.
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { refund: { sent: 1 } } });
     const partway = await thread();
-    expect(partway.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable_partway });
-    expect(partway.failed.words).not.toBe(wordsIn("en").code_ai_unavailable);
+    expect(partway.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").turn_failed_ours_partway, retry: false });
+    expect(partway.failed.words).not.toBe(wordsIn("en").turn_failed_ours);
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { lookup: { refused: 2 } } });
-    expect((await thread()).failed.words).toBe(wordsIn("en").code_ai_unavailable);
+    expect((await thread()).failed.words).toBe(wordsIn("en").turn_failed_ours);
     // An ERROR with no code still ends with words, never silence; and never kiff/agents' English in a French thread.
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: undefined, error: "the run failed" });
     const plain = await thread("fr");
     expect(plain.failed?.run).toBe(run.id);
     expect(typeof plain.failed?.words === "string" && plain.failed.words.length > 0).toBe(true);
+    // The owner's rule (25 Nov): every reason is said, in tafs cloud's words, and Try again only when the record shows
+    // the run did nothing that acted: a call sent, held, of unknown outcome, gone through, or a write sent.
+    expect(plain.failed).toMatchObject({ code: "failed", words: wordsIn("fr").turn_failed_error, retry: true });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { error: "the run reached its time limit", tally: undefined });
+    expect((await thread()).failed).toMatchObject({ code: "timeout", words: wordsIn("en").turn_failed_time, retry: true, retry_label: wordsIn("en").turn_failed_retry });
+    for (const acted of [{ tally: { refund: { sent: 1 } } }, { tally: { refund: { held: 1 } } }, { tally: { refund: { unknown: 1 } } }, { done: [{ tool: "refund" }] }, { sent: 1 }]) {
+      Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: undefined, done: undefined, sent: undefined }, acted);
+      const f = (await thread()).failed;
+      expect(f, JSON.stringify(acted)).toMatchObject({ code: "timeout", words: wordsIn("en").turn_failed_time_partway, retry: false });
+      expect(f.retry_label, JSON.stringify(acted)).toBeUndefined();
+    }
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: undefined, done: undefined, sent: 0, error: "the run failed" });
+    expect((await thread()).failed).toMatchObject({ code: "failed", words: wordsIn("en").turn_failed_error, retry: true });
+    // A record that can't say is never safe: resumed after a crash, a lease that ran out, no count of writes, or turns
+    // with no tally of what they did.
+    const unsure: Array<Record<string, unknown>> = [
+      { resumes: 1 },
+      { error: "its lease ran out: the invocation crashed or timed out" },
+      { sent: undefined },
+      { turns: 3, tally: undefined },
+    ];
+    for (const record of unsure) {
+      Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: undefined, done: undefined, sent: 0, resumes: undefined, turns: 0, error: "the run failed" }, record);
+      expect((await thread()).failed?.retry, JSON.stringify(record)).toBe(false);
+    }
+    // Turns whose tally shows only reads or refusals: safe.
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { resumes: undefined, error: "the run failed", sent: 0, turns: 3, tally: { lookup: { refused: 2 } } });
+    expect((await thread()).failed?.retry).toBe(true);
     expect(plain.failed.words).not.toContain("the run failed");
     // A later run that answered closes it: no failure line left over.
     const next = await w.agents.api.startRun("t_acme", RAE, "Try again", { ...ANA, session: run.session });
@@ -1646,6 +1676,71 @@ describe("chats (kiff/tafs#73)", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${job.session}/archive`, { token: "ana" })).status).toBe(404);
     expect((await call(w, "POST", `/v1/tafs/${MAX}/chats/${theirs.session}/archive`, { token: "ana" })).status).toBe(404);
     expect(w.agents.calls.filter((c) => c.startsWith("archive"))).toEqual([]);
+  });
+
+  it("deletes a person's own chat for good, with what tafs cloud kept beside it, and keeps the runs' records", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const old = await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe", ANA);
+    (w.agents.runs.find((x) => x.id === old.id) as { status: string }).status = "COMPLETED";
+    w.at(NOW);
+    w.agents.events.get(old.session)!.push({ session: old.session, run: old.id, seq: 9, time: NOW.toISOString(), kind: "answered",
+      body: { id: "c_approve", type: "approval", answer: "failed: rules not agreed" } });
+    const until = new Date(NOW.getTime() + 86_400_000);
+    const kept = [`t_acme#set-aside#${old.session}`, `t_acme#coach-connected#${old.session}`, coachKeys.chatNotes("t_acme", "u_ana", old.session),
+      `t_acme#approval-note#${old.session}#c_approve`, `t_acme#steer-held#${RAE}#u_ana#${old.session}`, `t_acme#steer-chat#${RAE}#u_ana#${old.session}`,
+      driveKeys.recap("t_acme", "drv_1"), driveKeys.steps("t_acme", "drv_1")];
+    const other = `t_acme#approval-note#other-session#c_approve`;
+    for (const key of [...kept, other, driveKeys.recap("t_acme", "drv_2")]) await w.coach.put(key, { note: "x" }, until);
+    // The chat's drives, as its thread finds their ends; another chat's drive stays.
+    await w.coach.put(driveKeys.recaps("t_acme", old.session), ["drv_1"], until);
+    kept.push(driveKeys.recaps("t_acme", old.session));
+
+    const r = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${old.session}`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ session: old.session, deleted: true });
+    expect(w.agents.calls).toContain(`deleteSession ${old.session} member:u_ana`);
+    for (const key of kept) expect(await w.coach.get(key)).toBeUndefined();
+    expect(await w.coach.get(other)).toEqual({ note: "x" });
+    expect(await w.coach.get(driveKeys.recap("t_acme", "drv_2"))).toEqual({ note: "x" });
+    // Gone from the list and by its id; the run's record stays.
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" })).body.chats).toEqual([]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation/${old.session}`, { token: "ana" })).status).toBe(404);
+    expect(w.agents.runs.some((x) => x.id === old.id)).toBe(true);
+    // A second delete finds nothing.
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${old.session}`, { token: "ana" })).status).toBe(404);
+  });
+
+  it("sends what an app draws to delete a chat with both chats lists, in the person's language", async () => {
+    const w = world();
+    const words = (lang: "en" | "de") => {
+      const x = wordsIn(lang);
+      return { item: x.chat_delete_item, confirm_title: x.chat_delete_confirm_title, confirm_body: x.chat_delete_confirm_body,
+        confirm_button: x.chat_delete_confirm_button, failed: x.chat_delete_failed };
+    };
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" })).body.delete).toEqual(words("en"));
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/chats/archived`, { token: "ana", headers: { "accept-language": "de" } })).body.delete).toEqual(words("de"));
+    expect(words("de").item).not.toBe(words("en").item);
+  });
+
+  it("deletes only the person's own chat with that taf, and never one still working or waiting on them", async () => {
+    const w = world();
+    const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
+    const job = await jobRun(w, NOW, "Done.");
+    const bos = await w.agents.api.startRun("t_acme", RAE, "Mine", { requester: { kind: "member" as const, id: "u_bos" } });
+    (w.agents.runs.find((x) => x.id === bos.id) as { status: string }).status = "COMPLETED";
+    for (const [taf, session] of [[RAE, theirs.session], [RAE, job.session], [MAX, theirs.session], [RAE, bos.session], [RAE, "archived"]] as const) {
+      expect((await call(w, "DELETE", `/v1/tafs/${taf}/chats/${session}`, { token: "ana" })).status).toBe(404);
+    }
+    const working = await w.agents.api.startRun("t_acme", RAE, "Still going", ANA);
+    const busy = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${working.session}`, { token: "ana" });
+    expect(busy.status).toBe(409);
+    expect(busy.body.error).toBe(wordsIn("en").chat_delete_busy);
+    const busyFr = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${working.session}`, { token: "ana", headers: { "accept-language": "fr" } });
+    expect(busyFr.body.error).toBe(wordsIn("fr").chat_delete_busy);
+    (w.agents.runs.find((x) => x.id === working.id) as { status: string }).status = "PAUSED";
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${working.session}`, { token: "ana" })).status).toBe(409);
+    expect(w.agents.calls.filter((c) => c.startsWith("deleteSession"))).toEqual([]);
   });
 
   it("moves the chats archived before kiff/agents kept archives there, once", async () => {

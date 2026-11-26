@@ -186,6 +186,7 @@
   "coach.tools.give": "Coachにツールを渡す",
   "coach.tools.giving": "渡しています…",
   "coach.tools.title": "Coachのツール",
+  "coach.tools.write_after": "先にCoachのツールを承認してください。その後、書き込めます。",
   "coach.tools_eyebrow": "ツール",
   "coach.tools_not_given": "Coachのツールは渡されませんでした。{why}",
   "coach.tools_not_read": "Coachのツールを読み込めませんでした。{why}",

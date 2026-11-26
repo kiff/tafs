@@ -47,6 +47,10 @@
         <p id="tafPhone" class="note" data-m="approve_on_phone" hidden></p>
         <p id="tafNote" class="note"></p>
         <form id="tafForm" class="composer" hidden>
+          <div id="tafConsentOff" class="banner" hidden>
+            <p data-m="page_consent_off"></p>
+            <button type="button" id="tafConsentOpen" data-m="page_consent_turn_on"></button>
+          </div>
           <ul id="tafFiles" class="files" hidden></ul>
           <div class="box">
             <button type="button" id="tafAttach" class="attach" data-m-label="attach_files">+</button>
@@ -68,10 +72,6 @@
           <h2 data-m="coach_title"></h2>
           <button type="button" id="coachNew" class="quiet small push" data-m="coach_new"></button>
         </div>
-        <div id="pageConsentOff" class="banner" hidden>
-          <p data-m="page_consent_off"></p>
-          <button type="button" id="pageConsentOpen" data-m="page_consent_turn_on"></button>
-        </div>
         <h3 id="coachOpen" hidden></h3>
         <div id="coachEmpty" hidden>
           <p><strong data-m="coach_empty_title"></strong></p>
@@ -81,6 +81,10 @@
         <p id="coachPhone" class="note" data-m="approve_on_phone" hidden></p>
         <p id="coachNote" class="note"></p>
         <div class="dock">
+        <div id="pageConsentOff" class="banner" hidden>
+          <p data-m="page_consent_off"></p>
+          <button type="button" id="pageConsentOpen" data-m="page_consent_turn_on"></button>
+        </div>
         <p id="coachReads" class="note" hidden><span id="coachReadsWords"></span> <button type="button" id="coachReadsSwitch" class="quiet small" hidden></button> <button type="button" id="coachReadsStop" class="quiet small" data-m="page_consent_withdraw"></button></p>
         <form id="coachForm" class="composer">
           <ul id="coachFiles" class="files" hidden></ul>
@@ -143,6 +147,33 @@
         <div class="buttons">
           <button type="button" id="pageConsentAllow" data-m="page_consent_allow"></button>
           <button type="button" id="pageConsentNotNow" class="quiet" data-m="page_consent_not_now"></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="report" class="sheet" role="dialog" aria-modal="true" aria-labelledby="reportTitle" hidden>
+      <div class="sheetbody">
+        <h2 id="reportTitle" tabindex="-1" data-m="report_menu"></h2>
+        <form id="reportForm">
+          <fieldset class="reasons">
+            <legend data-m="report_what_wrong"></legend>
+            <label><input type="radio" name="reason" value="offensive"> <span data-m="report_reason_offensive"></span></label>
+            <label><input type="radio" name="reason" value="harmful"> <span data-m="report_reason_harmful"></span></label>
+            <label><input type="radio" name="reason" value="wrong"> <span data-m="report_reason_wrong"></span></label>
+            <label><input type="radio" name="reason" value="other"> <span data-m="report_reason_other"></span></label>
+          </fieldset>
+          <textarea id="reportNote" rows="3" data-m-placeholder="report_note_hint" data-m-label="report_note_hint"></textarea>
+          <p id="reportNoteLong" class="note bad" data-m="report_note_most" hidden></p>
+          <p class="note" data-m="report_person_reads"></p>
+          <p id="reportFailed" class="note bad" role="alert" hidden></p>
+          <div class="buttons">
+            <button type="submit" id="reportSend" data-m="report_send"></button>
+            <button type="button" id="reportCancel" class="quiet" data-m="report_cancel"></button>
+          </div>
+        </form>
+        <div id="reportDone" hidden>
+          <p id="reportDoneWords" role="status"></p>
+          <button type="button" id="reportClose" data-m="report_done"></button>
         </div>
       </div>
     </section>

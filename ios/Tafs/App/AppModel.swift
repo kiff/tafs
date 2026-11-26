@@ -1,6 +1,7 @@
 import CryptoKit
 import Foundation
 import SwiftUI
+import UserNotifications
 
 /// The app's state: the tafs, what waits for the owner, and the record.
 ///
@@ -110,6 +111,8 @@ final class AppModel: ObservableObject {
             UserDefaults.standard.set(false, forKey: alertsEnabledKey)
             alertsReady = false
             phoneAlerts = nil
+            // Alerts off, a watch still served: it keeps its silent pushes, with no alert.
+            await registerBackgroundOnly(token, gen: gen)
             await loadPhoneAlerts()
         } catch { if gen == accountGeneration { phoneAlertsError = error.localizedDescription } }
     }
@@ -1018,6 +1021,10 @@ final class AppModel: ObservableObject {
     /// the app says so from the start and never asks for Face ID or Touch ID for an approval KIFF would refuse.
     func useSession(_ token: String, tenant: String? = nil, viewOnly: Bool = false) async {
         Keychain.save(token, for: Self.tokenAccount)
+        // A new session's mark for the watch, whoever signed in: the watch wipes what it kept for the one before, and the
+        // alerts of the one before go (`PhoneWatchMark`).
+        PhoneWatchMark.removeAlerts()
+        PhoneWatchMark.tellWatch(PhoneWatchMark.began())
         if let tenant {
             Keychain.save(tenant, for: Self.tenantAccount)
             Keychain.save("1", for: Self.keyedAccount)
@@ -1051,7 +1058,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; setupDraftErrors = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; chatDeleteWords = nil; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
@@ -2026,6 +2033,10 @@ final class AppModel: ObservableObject {
     func forgetSession() {
         DriveSession.shared.stop("signed_out")
         Keychain.delete(Self.tokenAccount)
+        // The watch keeps nothing of this account, and is told now, not at its next ask; the account's alerts go.
+        PhoneWatchMark.ended()
+        PhoneWatchMark.tellWatch(nil)
+        PhoneWatchMark.removeAlerts()
         Keychain.delete(Self.tenantAccount)
         Keychain.delete(Self.keyedAccount)
         Keychain.delete(Self.approvalKeyedAccount)
@@ -2049,7 +2060,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; setupDraftErrors = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; chatDeleteWords = nil; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
@@ -2353,6 +2364,17 @@ final class AppModel: ObservableObject {
         // Before Coach exists, its tools are given by starting it: one Face ID for both.
         if setupTaf == nil, coachStart?.startable == true {
             guard !givingCoachTools else { return false }
+            // A device that can't approve (no Face ID or Touch ID, or it's off for tafs) signs nothing: the approval key
+            // needs one, never the passcode. Its words say what to do, and nothing is asked or sent.
+            if approvalBlocked {
+                coachToolsError = approvalReadiness.short(kind: Biometry.kind)
+                return false
+            }
+            // The Card step asks for no signature when its plain list isn't exactly what the draft signs (shown = signed).
+            if let start = coachStart, start.cardStep(face: Biometry.isFace), !start.cardStepSigns || !start.batchSigns(mcp: coachMCP) {
+                coachToolsError = Words.Version.outOfDateCard
+                return false
+            }
             givingCoachTools = true
             defer { givingCoachTools = false }
             coachToolsError = nil
@@ -2394,7 +2416,7 @@ final class AppModel: ObservableObject {
         // Only the step that was shown is signed: tafs cloud's read now must be byte for byte the batch, the
         // Cards' draft and the pair the person read. On any difference nothing is signed; the step is drawn
         // again from this read (above), and the person reads it and gives again.
-        guard let shown, Self.toolsBodies(shown) == Self.toolsBodies(tools) else {
+        guard let shown, Self.toolsBodies(shown) == Self.toolsBodies(tools), tools.draftSigns, tools.batchSigns(mcp: coachMCP) else {
             coachToolsError = Words.Version.outOfDateCard
             return false
         }
@@ -2472,19 +2494,30 @@ final class AppModel: ObservableObject {
     /// Tells tafs cloud this phone's token again (tokens change), with a secret it hasn't
     /// confirmed yet if there is one, and learns whether the account's alerts are set up.
     func syncPush() async {
-        guard mode == .kiff, let token = pushToken else { return }
+        guard mode == .kiff else { return }
+        guard let token = pushToken else {
+            // No token yet, and alerts not on: a phone that serves a watch asks iOS for one anyway, for the silent pushes its
+            // watch's threads move with (iOS gives it with no permission). It arrives at `pushTokenArrived`, which comes back here.
+            if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool != true, servesWatch() { requestPushToken?() }
+            return
+        }
         let gen = accountGeneration
         let handoff = pendingHandoff
         if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool == false {
             alertsReady = false
             if let handoff, (try? await cloud.keepAlerts(handoff.target)) != nil, gen == accountGeneration { pendingHandoff = nil }
+            await registerBackgroundOnly(token, gen: gen)
             return
         }
         if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool != true && handoff == nil {
             // A different account must not inherit this phone's earlier alert consent.
             let previous = try? await cloud.phoneAlerts(token)
             guard gen == accountGeneration else { return }
-            guard previous?.enabled == true else { alertsReady = false; return }
+            guard previous?.enabled == true else {
+                alertsReady = false
+                await registerBackgroundOnly(token, gen: gen)
+                return
+            }
             UserDefaults.standard.set(true, forKey: alertsEnabledKey)
         }
         guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target, kinds: savedAlertKinds) else {
@@ -2494,6 +2527,71 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return }
         if handoff != nil { pendingHandoff = nil }
         applyPush(status)
+    }
+
+    /// Whether this phone serves an Apple Watch that has tafs: then, with alerts off, it still takes its watch's silent pushes.
+    /// False on a Mac and on an iPad. A test's own.
+    var servesWatch: @MainActor () -> Bool = { WatchPushRelay.watchListening }
+
+    /// Alerts off on a phone that serves a watch (row 13, as Android's): tafs cloud keeps its token for background pushes only
+    /// (`alerts: false`): every silent change its watch's threads move with, and never a visible alert, nor an alert target.
+    /// Nothing with no watch. A failure leaves it for the next sync.
+    private func registerBackgroundOnly(_ token: String, gen: Int) async {
+        guard servesWatch(), gen == accountGeneration else { return }
+        _ = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, alerts: false)
+    }
+
+    // MARK: Guidance on alerts (the owner's call, row 13; as Android's)
+
+    /// What tafs says about alerts: notifications blocked in Settings, with the way there and a check on return; and, once per
+    /// phone, that its watch is using tafs.
+    enum AlertsPrompt: Equatable { case blocked, watchFirst }
+    @Published var alertsPrompt: AlertsPrompt?
+    /// After Open Settings: whether alerts are on now, said once on return.
+    @Published var alertsRecheck: String?
+    /// Opened Settings from the blocked prompt: checked again when tafs is back.
+    private var awaitingNotificationSettings = false
+    /// iOS's notification permission for tafs now; nil where there's none to read (the app's own).
+    var notificationAuthorization: (@MainActor () async -> UNAuthorizationStatus)?
+    /// Opens tafs's own notification settings (the app's own).
+    var openNotificationSettings: (@MainActor () -> Void)?
+    /// The watch has asked this phone something: set by the relay, read here.
+    nonisolated static let watchUsedKey = "watch.used"
+    /// The watch prompt was shown on this phone: never again.
+    nonisolated static let watchPromptShownKey = "alerts.watch_prompt_shown"
+
+    /// The blocked prompt's words: with the watch's line only on a phone that serves one.
+    var alertsBlockedBody: String {
+        servesWatch() ? Words.Alert.Blocked.bodyWatch : Words.Alert.Blocked.body(device: "\(ThisDevice.kind)")
+    }
+
+    /// Open Settings: to tafs's own switch, and the permission is read again on return.
+    func goToNotificationSettings() {
+        alertsPrompt = nil
+        awaitingNotificationSettings = true
+        openNotificationSettings?()
+    }
+
+    /// Back in tafs: after Open Settings, whether alerts are on now, said once, and turned on when they may be. And the watch
+    /// prompt, once per phone, when its watch has used tafs and alerts aren't on.
+    func checkAlertsOnReturn() async {
+        guard mode == .kiff, !Screenshots.enabled else { return }
+        if awaitingNotificationSettings {
+            awaitingNotificationSettings = false
+            let status = await notificationAuthorization?()
+            if status == .authorized || status == .provisional {
+                alertsRecheck = Words.Alert.nowOn
+                await turnOnAlerts()
+            } else {
+                alertsRecheck = Words.Alert.stillOff
+            }
+            return
+        }
+        let defaults = UserDefaults.standard
+        guard alertsPrompt == nil, alertsReady != true, defaults.bool(forKey: Self.watchUsedKey),
+              !defaults.bool(forKey: Self.watchPromptShownKey) else { return }
+        defaults.set(true, forKey: Self.watchPromptShownKey)
+        alertsPrompt = .watchFirst
     }
 
     /// Sound for alerts on this device (Settings, Notifications & haptics; the 901 test). Off,
@@ -2533,6 +2631,11 @@ final class AppModel: ObservableObject {
         defer { turningOnAlerts = false }
         let gen = accountGeneration
 
+        // iOS no longer asks once it was refused: say so, with the way to tafs's own switch, rather than a line to act on alone.
+        if await notificationAuthorization?() == .denied {
+            alertsPrompt = .blocked
+            return false
+        }
         guard await askNotificationPermission?() ?? false else {
             lastError = Words.Alert.allowNotifications
             return false
@@ -5847,6 +5950,17 @@ final class AppModel: ObservableObject {
     /// so nothing a person attached stays on the phone after them (docs/data.md).
     static let openedFiles = FileManager.default.temporaryDirectory.appendingPathComponent("attachments", isDirectory: true)
 
+    /// Tells the watch to drop its kept copy of Coach's thread (`WatchPush.forget`), with this session's mark; nothing on a
+    /// Mac or with no watch. Settable for the tests.
+    static var forgetOnWatch: @MainActor () -> Void = {
+        WatchPushRelay.toWatch(WatchPush(.forget, at: Date()), mark: PhoneWatchMark.current())
+    }
+
+    /// The attachments opened full size, alone: a deleted conversation's copies go with it (`deleteSetupChat`).
+    static func removeOpenedAttachments() {
+        try? FileManager.default.removeItem(at: openedFiles)
+    }
+
     static func removeOpenedFiles() {
         try? FileManager.default.removeItem(at: openedFiles)
         // The last export's files too: a person's chats never stay on the phone after them.
@@ -5920,6 +6034,11 @@ final class AppModel: ObservableObject {
         /// Why the failed run stopped, in tafs cloud's words, when its `end` sends them
         /// (`ai_unavailable`): said as they are, with Retry.
         var failedWhy: String?
+        /// Retry sends the message again with no word from tafs cloud: for an approval that came after its run ended, and a
+        /// switch that stopped a run while it waited, as before (and as Android). The held call itself never ran, but steps
+        /// before it may have, and Retry sends the whole message again: gating these on tafs cloud's `retry` too is a
+        /// change of its own. A run that failed on its own needs tafs cloud's `failed.retry` (`chatRetryLabel`).
+        var retryAsIs = false
         /// The run at work, as tafs cloud says, for writing to it.
         var workingRun: String?
         /// What the owner wrote to the latest run that it hasn't read, as kiff/agents says
@@ -6069,6 +6188,7 @@ final class AppModel: ObservableObject {
         if ended != nil { chatStates[tafID]?.awaiting = nil }
         if ended == "ERROR" {
             chatStates[tafID]?.ended = .failed(retry: text)
+            chatStates[tafID]?.retryAsIs = false
             chatStates[tafID]?.endedRun = chatStates[tafID]?.live?.run
             chatStates[tafID]?.wentThrough = didBefore
             chatStates[tafID]?.failedWhy = whyFailed
@@ -6295,6 +6415,7 @@ final class AppModel: ObservableObject {
         guard let text = chats[tafID]?.last(where: { $0.from == .owner })?.text, !text.isEmpty else { return }
         chatStates[tafID, default: ChatState()].awaiting = nil
         chatStates[tafID]?.ended = .failed(retry: text)
+        chatStates[tafID]?.retryAsIs = true
         chatStates[tafID]?.endedRun = nil
         chatStates[tafID]?.wentThrough = []
         chatStates[tafID]?.failedWhy = words
@@ -6312,14 +6433,27 @@ final class AppModel: ObservableObject {
         guard let text = owner.last(where: { sessions.contains($0.session) })?.text, !text.isEmpty else { return }
         chatStates[tafID, default: ChatState()].awaiting = nil
         chatStates[tafID]?.ended = .failed(retry: text)
+        chatStates[tafID]?.retryAsIs = true
         chatStates[tafID]?.endedRun = nil
         chatStates[tafID]?.wentThrough = []
         chatStates[tafID]?.failedWhy = words
     }
 
-    /// Retry on a run that failed part-way: its message is sent again.
+    /// The words of the button under a failed run's line, or none: no button. A run that failed on its own offers it only
+    /// when tafs cloud's thread says sending its message again is safe (`failed.retry`, for that run: nothing it did
+    /// acted), in tafs cloud's words, so a run that acted part-way is never done twice with one tap. As Android's
+    /// `failedRetry`.
+    func chatRetryLabel(_ tafID: UUID) -> String? {
+        let state = chatState(tafID)
+        guard case .failed? = state.ended else { return nil }
+        if state.retryAsIs { return Words.Chat.retry }
+        guard let failed = state.runFailed, failed.retry, state.endedRun == nil || state.endedRun == failed.run else { return nil }
+        return failed.retryLabel ?? Words.Chat.retry
+    }
+
+    /// Retry on a run that failed: its message is sent again, only where `chatRetryLabel` offers it.
     func retryChatRun(_ tafID: UUID) async {
-        guard case .failed(let text) = chatStates[tafID]?.ended else { return }
+        guard chatRetryLabel(tafID) != nil, case .failed(let text) = chatStates[tafID]?.ended else { return }
         chatStates[tafID]?.ended = nil
         chatStates[tafID]?.endedRun = nil
         await submitChat(text, to: tafID)
@@ -7200,10 +7334,14 @@ final class AppModel: ObservableObject {
         case "taf", "halted", "resumed":
             // A refresh reads planque's grants too.
             await refresh()
+        case "taf_chat":
+            // A message in the person's chat with the taf, from any device, or its run answered (the owner's call 2b): only
+            // that chat is read again, where it's open.
+            break
         default:
             return
         }
-        if let tafID, change == "taf" || change == "knock", chats[tafID] != nil { await loadChat(tafID) }
+        if let tafID, change == "taf" || change == "knock" || change == "taf_chat", chats[tafID] != nil { await loadChat(tafID) }
         // Its work too, where its page has read it.
         if let tafID, change == "taf", works[tafID] != nil { await loadWork(tafID) }
     }
@@ -8217,6 +8355,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupChats: [TafsCloud.Chat] = []
     /// Setup's archived chats, under Archived (kiff/tafs#97).
     @Published private(set) var archivedSetupChats: [TafsCloud.Chat] = []
+    /// tafs cloud's words for deleting a conversation, from the last chats-list read that sent them all; nil until one
+    /// has, and then Delete conversation isn't offered (the app has no words of its own for it).
+    @Published private(set) var chatDeleteWords: TafsCloud.DeleteWords?
     /// What the owner sent that tafs cloud's thread doesn't have yet (kiff/tafs#82): shown
     /// at once, and kept across reloads until tafs cloud's copy arrives, so a tapped choice
     /// shows when it's tapped, and once. A reload while the send is on its way would
@@ -8637,8 +8778,9 @@ final class AppModel: ObservableObject {
     func loadSetupChats() async {
         guard mode == .kiff, let s = setupTaf else { return }
         let gen = accountGeneration
-        guard let chats = try? await cloud.chats(s.id), gen == accountGeneration else { return }
-        setupChats = chats
+        guard let read = try? await cloud.chatsRead(s.id), gen == accountGeneration else { return }
+        setupChats = read.chats
+        if let words = read.delete { chatDeleteWords = words }
     }
 
     /// Archives one of Setup's chats (kiff/tafs#82): tafs cloud keeps it out of the list
@@ -8665,8 +8807,52 @@ final class AppModel: ObservableObject {
     func loadArchivedSetupChats() async {
         guard mode == .kiff, let s = setupTaf else { return }
         let gen = accountGeneration
-        guard let chats = try? await cloud.archivedChats(s.id), gen == accountGeneration else { return }
-        archivedSetupChats = chats
+        guard let read = try? await cloud.archivedChatsRead(s.id), gen == accountGeneration else { return }
+        archivedSetupChats = read.chats
+        if let words = read.delete { chatDeleteWords = words }
+    }
+
+    /// Deletes one of Coach's conversations for good, after the person confirmed it in tafs cloud's words: it leaves both
+    /// lists, and the one shown gives way to a new conversation. tafs cloud decides whose it is, and the app decides nothing:
+    /// - one it doesn't have (404: already gone, or never this person's) leaves the lists, with nothing said;
+    /// - one still working or waiting on a card (409) stays, with the refusal's own words;
+    /// - any other failure keeps it, with `failed` from the last read, so the line is on hand with no network.
+    /// Never asked without tafs cloud's words: Delete isn't offered until a read has brought them.
+    func deleteSetupChat(_ session: String) async -> ChatDeleted {
+        guard mode == .kiff, let s = setupTaf, let words = chatDeleteWords else { return .notAsked }
+        let gen = accountGeneration
+        do {
+            try await cloud.deleteChat(s.id, session: session)
+        } catch let e as TafsCloud.CloudError where e.status == 404 {
+            // Already gone, or never this person's: it leaves the lists all the same.
+        } catch let e as TafsCloud.CloudError where e.status == 409 {
+            guard gen == accountGeneration else { return .notAsked }
+            return .kept(e.localizedDescription)
+        } catch {
+            guard gen == accountGeneration else { return .notAsked }
+            return .kept(words.failed)
+        }
+        guard gen == accountGeneration else { return .notAsked }
+        setupChats.removeAll { $0.session == session }
+        archivedSetupChats.removeAll { $0.session == session }
+        // An attachment opened from it keeps a copy on the phone, which would outlive "deleted for good": that folder is only
+        // a cache, so all of it goes.
+        Self.removeOpenedAttachments()
+        // The watch's kept Coach thread can hold this conversation's turns (its words go to Coach's own chat when its
+        // requests are switched off): it drops that copy. Only a cache, read again on its next visit.
+        Self.forgetOnWatch()
+        if setupChat == session || (setupChat == nil && setupThread.session == session) { newSetupChat() }
+        return .gone
+    }
+
+    /// What became of a conversation the person asked to delete.
+    enum ChatDeleted: Equatable {
+        /// Gone from tafs cloud (or it never had it), and from both lists.
+        case gone
+        /// Still there, with the line saying why: the 409's own words, or tafs cloud's `failed`.
+        case kept(String)
+        /// Nothing was asked: no words from tafs cloud yet, or the account changed meanwhile.
+        case notAsked
     }
 
     /// Puts an archived chat of Setup's back in the list (kiff/tafs#97). False, with why in
@@ -8975,6 +9161,15 @@ final class AppModel: ObservableObject {
                         setupError = approvalKeyRefused()
                         return false
                     }
+                    // After a Card step, only what it showed is sent: this read's batch and draft, byte for byte, and its
+                    // plain list equal to the draft. On any difference nothing is sent, and the step is drawn again from
+                    // this read for the person to read and approve again.
+                    if let shown = coachStart, shown.cardStep(face: Biometry.isFace),
+                       Self.startBodies(shown) != Self.startBodies(start) || !start.cardStepSigns || !start.batchSigns(mcp: coachMCP) {
+                        coachStart = start
+                        setupError = Words.Version.outOfDateCard
+                        return false
+                    }
                     // One Face ID, the one just asked: Coach's tools and its draft with its Cards.
                     coachStart = start
                     setupTaf = try await startCoachTogether(start, tenant: tenant, gen: gen)
@@ -9007,6 +9202,15 @@ final class AppModel: ObservableObject {
     /// batch answered, then tafs cloud claims the draft's key. With every tool connected, the draft
     /// goes alone. A draft KIFF refuses after the batch went in is started again from the next read,
     /// which carries the draft alone, under a new Face ID: never the pair again.
+    /// Coach's own control server, as this app reaches tafs cloud: the address every connection of Coach's tools batch must
+    /// name (`CardStepCheck.batchMatches`).
+    var coachMCP: String { cloud.baseURL.appendingPathComponent("v1/mcp").absoluteString }
+
+    /// What a first start signs, as the bytes tafs cloud wrote: each request's method, path and body, in order.
+    static func startBodies(_ start: TafsCloud.CoachStart) -> [Data] {
+        start.requests.flatMap { [Data($0.id.utf8), Data($0.method.utf8), Data($0.path.utf8), $0.body] }
+    }
+
     private func startCoachTogether(_ start: TafsCloud.CoachStart, tenant: String, gen: Int) async throws -> TafsCloud.CloudTaf? {
         guard let draftRequest = start.draft else { return nil }
         let draft: KIFFClient.AgentDraft
@@ -9313,9 +9517,17 @@ final class AppModel: ObservableObject {
         return setupThread.ownerWords(message.text)
     }
 
-    /// Retry on a run that failed part-way: its message is sent again.
+    /// The words of the button under Coach's failed run, or none: only where tafs cloud's thread says sending the message
+    /// again is safe (`failed.retry`, for that run), as a taf's chat (`chatRetryLabel`).
+    var setupRetryLabel: String? {
+        guard case .failed? = setupEnded, let failed = setupThread.failed, failed.retry,
+              setupEndedRun == nil || setupEndedRun == failed.run else { return nil }
+        return failed.retryLabel ?? Words.Chat.retry
+    }
+
+    /// Retry on Coach's run that failed: its message is sent again, only where `setupRetryLabel` offers it.
     func retrySetupRun() async {
-        guard case .failed(let text) = setupEnded else { return }
+        guard setupRetryLabel != nil, case .failed(let text) = setupEnded else { return }
         setupEnded = nil
         await submitSetup(text)
     }

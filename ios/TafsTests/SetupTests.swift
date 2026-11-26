@@ -280,6 +280,28 @@ final class SetupTests: XCTestCase {
     /// With Start's own words (`start.words`), Start's screen draws them and what's signed, so
     /// Send signs and starts Coach under the one Face ID, then goes on to send: no step opens.
     /// Without a line or a button, it's the step as before.
+    /// The Card step on a phone with no Face ID or Touch ID: the approval key needs one, never the passcode, so Give asks for
+    /// nothing and sends nothing, and says what to do in the readiness's own words.
+    func testAPhoneThatCantApproveSignsNothingAtTheCardStep() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON())
+        await model.loadSetup()
+        XCTAssertEqual(model.coachStart?.startable, true)
+        model.readApprovalReadiness = { .noneEnrolled }
+        model.checkApprovalReadiness()
+        XCTAssertTrue(model.approvalBlocked)
+        StubProtocol.sent = []
+        let given = await model.giveCoachTools()
+        XCTAssertFalse(given)
+        XCTAssertEqual(signer.prompts, [], "no prompt")
+        XCTAssertTrue(sent("POST", "mcp.test", "/v1/connections/batch").isEmpty, "nothing sent")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts").isEmpty)
+        XCTAssertEqual(model.coachToolsError, ApprovalReadiness.noneEnrolled.short(kind: Biometry.kind))
+        model.readApprovalReadiness = { .ready }
+        model.checkApprovalReadiness()
+    }
+
     func testStartsOwnWordsMakeOneScreenAndSendSignsAndSends() async throws {
         let worded = Self.startJSON().replacingOccurrences(of: #""coach_tools_step":"#,
             with: #""words":{"lead":"Start sets up approvals and gives Coach its tools.","start":"Start","does":"One fingerprint, on this device."},"coach_tools_step":"#)
@@ -365,6 +387,8 @@ final class SetupTests: XCTestCase {
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: session)
         let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session)
         let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: StubVendor())
+        // Ready whatever runs the tests, as `model(signer:)`: a Mac with no Touch ID isn't, and the signer here is a stub.
+        model.readApprovalReadiness = { .ready }; model.checkApprovalReadiness()
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
@@ -1646,7 +1670,7 @@ final class SetupTests: XCTestCase {
         thread(answer)
         await model.loadSetup()
         XCTAssertNil(model.setupError)
-        XCTAssertEqual(model.setupThread.failed, TafsCloud.RunFailed(run: "run2", words: words))
+        XCTAssertEqual(model.setupThread.failed, TafsCloud.RunFailed(run: "run2", words: words, retry: true, retryLabel: "Try again"))
         let line = try XCTUnwrap(model.setupRunFailedLine)
         XCTAssertEqual(line.from, .taf)
         XCTAssertEqual(line.text, words, "tafs cloud's words, as they are")
@@ -1699,9 +1723,10 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// A run that fails part-way says so and offers Retry, which sends its message again; a
-    /// stopped run is marked stopped (#58 B1, B8).
-    func testARunThatFailsPartWayOffersRetry() async throws {
+    /// A run that fails says so, and offers Retry, which sends its message again, only where tafs cloud's thread says it's
+    /// safe (`failed.retry`); with no such word there's no Retry and nothing is sent. A stopped run is marked stopped
+    /// (#58 B1, B8).
+    func testARunThatFailsOffersRetryOnlyWhereTafsCloudSaysItsSafe() async throws {
         final class Sent { var texts: [String] = [] }
         let model = await model(signer: FaceIDSigner())
         model.planqueSetUp(for: "t_01")
@@ -1725,9 +1750,28 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(model.setupEnded, .failed(retry: "Connect my Stripe"))
         XCTAssertFalse(model.setupThinking, "the run is over")
 
+        // No word from tafs cloud on it: no Retry, and nothing is sent.
+        XCTAssertNil(model.setupRetryLabel)
         await model.retrySetupRun()
         await model.setupStream?.value
-        XCTAssertEqual(sent.texts, ["Connect my Stripe", "Connect my Stripe"])
+        XCTAssertEqual(sent.texts, ["Connect my Stripe"])
+
+        // tafs cloud's thread says nothing it did acted (contracts/conversation-failed.json): Retry, in its words.
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("contracts/conversation-failed.json")
+        let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let answer = String(decoding: try JSONSerialization.data(withJSONObject: try XCTUnwrap(root["answer"])), as: UTF8.self)
+        // The thread is read again when a run's stream ends, whichever chat the read names: this run's says Retry is safe.
+        for path in ["conversation", "conversation/s1", "conversation/sess1"] {
+            StubProtocol.responses["GET /v1/tafs/taf-setup/" + path] = (200, answer)
+        }
+        _ = await model.sendSetup("Connect my Stripe")
+        await model.setupStream?.value
+        XCTAssertEqual(model.setupEnded, .failed(retry: "Connect my Stripe"))
+        XCTAssertEqual(model.setupRetryLabel, "Try again")
+        await model.retrySetupRun()
+        await model.setupStream?.value
+        XCTAssertEqual(sent.texts, ["Connect my Stripe", "Connect my Stripe", "Connect my Stripe"])
 
         ending = "CANCELLED"
         await model.sendSetup("again")
@@ -2497,6 +2541,100 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/chats/s_2/unarchive").count, 1)
         XCTAssertTrue(model.archivedSetupChats.isEmpty)
         XCTAssertFalse(sent("GET", "cloud.test", "/v1/tafs/taf-setup/chats").isEmpty, "the list is read again")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Delete conversation (docs/ios-app.md, "Deleting a conversation"): offered only in tafs cloud's words, sent with a
+    /// chats-list read. A delete that goes through leaves both lists and the screen; 404 leaves quietly; 409 stays with the
+    /// refusal's own words; anything else stays with tafs cloud's `failed` line, which was read before the network went.
+    func testDeletingAConversationForGood() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        let chats = """
+        {"session":"s_3","started":"2026-10-19T10:00:00.000Z","updated":"2026-10-19T10:05:00.000Z","title":"Refunds"},
+        {"session":"s_2","started":"2026-10-18T10:00:00.000Z","updated":"2026-10-18T10:05:00.000Z","title":"Answer customer questions"},
+        {"session":"s_1","started":"2026-10-17T09:00:00.000Z","updated":"2026-10-17T09:30:00.000Z","title":"Connect my Stripe"}
+        """
+        // An older tafs cloud sends no words: no Delete.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, #"{"chats":[\#(chats)]}"#)
+        await model.loadSetup()
+        await model.loadSetupChats()
+        XCTAssertNil(model.chatDeleteWords, "no words from tafs cloud, no Delete")
+        let notAsked = await model.deleteSetupChat("s_2")
+        XCTAssertEqual(notAsked, .notAsked)
+        XCTAssertTrue(sent("DELETE", "cloud.test", "/v1/tafs/taf-setup/chats/s_2").isEmpty, "nothing asked without the words")
+
+        // Words with a blank line don't count either.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, """
+        {"chats":[\(chats)],"delete":{"item":"Delete conversation","confirm_title":"","confirm_body":"b","confirm_button":"Delete","failed":"f"}}
+        """)
+        await model.loadSetupChats()
+        XCTAssertNil(model.chatDeleteWords)
+
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, """
+        {"chats":[\(chats)],"delete":{"item":"Gespräch löschen","confirm_title":"Dieses Gespräch löschen?","confirm_body":"Seine Nachrichten …","confirm_button":"Löschen","failed":"Es wurde nicht gelöscht."}}
+        """)
+        await model.loadSetupChats()
+        XCTAssertEqual(model.chatDeleteWords?.item, "Gespräch löschen", "tafs cloud's words, in the person's language")
+        XCTAssertEqual(model.chatDeleteWords?.confirmButton, "Löschen")
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s_2"] = (200, """
+        {"messages":[{"at":"2026-10-18T10:00:00.000Z","from":"owner","kind":"message","text":"Answer customer questions","session":"s_2"}],"components":[]}
+        """)
+        await model.openSetupChat("s_2")
+
+        // A copy of an attachment opened from it goes with it.
+        try FileManager.default.createDirectory(at: AppModel.openedFiles, withIntermediateDirectories: true)
+        let copy = AppModel.openedFiles.appendingPathComponent("f_1.txt")
+        try Data("x".utf8).write(to: copy)
+
+        // The watch is told to drop its kept Coach thread, once per delete that went through.
+        var watchTold = 0
+        let tellWatch = AppModel.forgetOnWatch
+        AppModel.forgetOnWatch = { watchTold += 1 }
+        defer { AppModel.forgetOnWatch = tellWatch }
+
+        StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_2"] = (200, #"{"session":"s_2","deleted":true}"#)
+        StubProtocol.sent = []
+        let gone = await model.deleteSetupChat("s_2")
+        XCTAssertEqual(watchTold, 1, "the watch drops its kept copy")
+        XCTAssertEqual(gone, .gone)
+        XCTAssertEqual(sent("DELETE", "cloud.test", "/v1/tafs/taf-setup/chats/s_2").count, 1)
+        XCTAssertEqual(model.setupChats.map(\.session), ["s_3", "s_1"])
+        XCTAssertNil(model.setupChat, "the deleted one isn't shown")
+        XCTAssertTrue(model.setupFresh, "a new conversation instead")
+        XCTAssertTrue(model.setupThread.messages.isEmpty)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: copy.path), "no opened copy outlives it")
+
+        // 404: already gone, or never this person's. It leaves the list, with nothing said.
+        StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_3"] = (404, #"{"error":"no such chat"}"#)
+        let quiet = await model.deleteSetupChat("s_3")
+        XCTAssertEqual(quiet, .gone)
+        XCTAssertEqual(model.setupChats.map(\.session), ["s_1"])
+
+        // 409: still working or waiting on a card. It stays, with the refusal's own words.
+        StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_1"] = (409, #"{"error":"Dieses Gespräch arbeitet noch oder wartet auf dich."}"#)
+        let busy = await model.deleteSetupChat("s_1")
+        XCTAssertEqual(busy, .kept("Dieses Gespräch arbeitet noch oder wartet auf dich."))
+        XCTAssertEqual(watchTold, 2, "404 told it once more; a 409 tells it nothing")
+        XCTAssertEqual(model.setupChats.map(\.session), ["s_1"], "still listed")
+
+        // Anything else: it stays, with tafs cloud's `failed` line from the last read.
+        StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_1"] = (503, #"{"error":"down"}"#)
+        let failed = await model.deleteSetupChat("s_1")
+        XCTAssertEqual(failed, .kept("Es wurde nicht gelöscht."))
+        XCTAssertEqual(model.setupChats.map(\.session), ["s_1"])
+
+        // From Archived too, and an archived read that brings no words keeps the ones on hand.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats/archived"] = (200, """
+        {"chats":[{"session":"s_9","started":"2026-10-10T10:00:00.000Z","updated":"2026-10-10T10:05:00.000Z","title":"Old"}]}
+        """)
+        await model.loadArchivedSetupChats()
+        XCTAssertEqual(model.chatDeleteWords?.item, "Gespräch löschen")
+        StubProtocol.responses["DELETE /v1/tafs/taf-setup/chats/s_9"] = (200, #"{"session":"s_9","deleted":true}"#)
+        let archivedGone = await model.deleteSetupChat("s_9")
+        XCTAssertEqual(archivedGone, .gone)
+        XCTAssertTrue(model.archivedSetupChats.isEmpty)
         Keychain.delete(AppModel.planqueAccount)
     }
 

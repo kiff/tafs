@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AGREE_FIRST, askedInSession, checkDraft, type DecideContext, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
+import { AGREE_FIRST, askedInSession, checkDraft, type DecideContext, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, KIFFS_OWN_TOTAL, MONEY_NEVER_CANT, MONEY_UNBUILT, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
 import { unpinnedConnection } from "../src/cloud/rules.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
@@ -608,6 +608,52 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     s.grants = [grant({ status: "connected" }, { tools: tools.map(({ resource_argument: _, ...t }) => t) })];
     draft([each([count(1, { per: "charge", window: "lifetime" })]), daily([day(20_000)]), others]);
     expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+  });
+
+  // E2E 45557276812, Setup: the owner agreed "over €5 a refund asks me, past €50 a day is refused". tafs cloud's check
+  // refused a count on the held Card (count_on_amount), then a day's total on it beside the refused Card's
+  // (day_total_twice); told only to drop them, Coach drafted the held Card with no total, KIFF refused it ("a mandate with
+  // no aggregate bounds nothing"), and Coach told the owner KIFF couldn't hold both rules. The owner picked "refuse over
+  // €5", so nothing was held. Replayed: each refusal names the held Card's one total, KIFF's own count, and the day's total
+  // on the refused Card; the two Cards those answers describe are signed.
+  it("replayed, the refusals that took a held Card's total away name KIFF's own count, and the two Cards they describe are signed", async () => {
+    const s = services();
+    const tools = [{ tool: "list_charges", name: "list_charges", title: "List charges", read_only: true },
+      { tool: "stripe_api_read", name: "read_charge", title: "Read one charge", read_only: true },
+      { tool: "refund_charge", name: "refund_charge", title: "Refund a charge", amount_argument: "amount" }];
+    s.grants = [grant({ status: "connected" }, { tools })];
+    const day = { quantity: "sum(amount)", limit: 5000, window: "calendar_day" };
+    const count = (limit: number) => ({ quantity: "count", limit, window: "calendar_day" });
+    // Over €5 a refund: asks the owner. Past €50 a day: refused. Reads on their own Card, with KIFF's count.
+    const held = (aggregates: unknown[]) => ({ id: "held", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates });
+    const refused = { id: "refused", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge" }], aggregates: [day] };
+    const reads = { id: "reads", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "list_charges" }, { action: "read_charge" }], aggregates: [count(READS_A_DAY)] };
+    const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+    const draft = (cards: unknown[]) => { s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards }; };
+    // 1. The run's first refusal: 1,000,000 refunds a day on the held Card.
+    draft([held([count(1_000_000)]), refused, reads]);
+    const first = await ask();
+    expect(first).toMatchObject({ outcome: "answered", note: WORDS.countOnAmount("Refund a charge") });
+    expect(String(first.answer)).toContain(`failed: the draft counts "Refund a charge"'s calls (1000000 per calendar_day) beside its amount limits`);
+    expect(String(first.answer)).toContain(KIFFS_OWN_TOTAL);
+    // 2. Its second: the day's €50 on the held Card too.
+    draft([held([day]), refused, reads]);
+    const second = await ask();
+    expect(second).toMatchObject({ outcome: "answered", note: WORDS.dayTotalTwice("Refund a charge") });
+    expect(String(second.answer)).toContain(`5000 on one whose on_exceed is "owner", and 5000 on one whose on_exceed is "refuse"`);
+    expect(String(second.answer)).toContain(KIFFS_OWN_TOTAL);
+    // What both say: the held Card's total is KIFF's, in its one shape, and the owner's rules stay as agreed.
+    expect(KIFFS_OWN_TOTAL).toContain(`quantity "count", limit 10000, window "calendar_day", no per`);
+    expect(KIFFS_OWN_TOTAL).toContain("The day's total goes once, on the refused Card.");
+    expect(KIFFS_OWN_TOTAL).toContain("never tell them KIFF can't, and never ask them to change a rule for it");
+    // 3. The two Cards they describe: signed, the owner's rules as agreed.
+    draft([held([count(READS_A_DAY)]), refused, reads]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // A count on the refused Card isn't a held Card's total: refused without KIFF's count offered in its place.
+    draft([held([]), { ...refused, aggregates: [day, count(30)] }, reads]);
+    const onRefused = await ask();
+    expect(onRefused).toMatchObject({ outcome: "answered", note: WORDS.countOnAmount("Refund a charge") });
+    expect(String(onRefused.answer)).not.toContain(KIFFS_OWN_TOTAL);
   });
 
   // Eval 43402441612: "one invoice per order, ever" and "up to 10 drafts a day" signed as 1 create_invoice in the Card's
@@ -2636,7 +2682,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     unagreed.rules("rules-1", RULES, false);
     expect(await check(unagreed.w, { conversation: events(unagreed.w) })).toMatchObject({ outcome: "answered", code: "rules_unagreed", redraft: true });
     const unsaid = await setUp("refuse");
-    (unsaid.s.drafts.drf_1.cards as Array<{ aggregates: unknown[] }>)[0]!.aggregates = [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }];
+    Object.assign((unsaid.s.drafts.drf_1.cards as Array<Record<string, unknown>>)[0]!, { domain: "gateway", aggregates: [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }] });
     unsaid.rules("rules-1", [{ tool: "refund_charge", over: "refuse", limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }] }, { tool: "list_charges", over: "refuse" }], true, "Refunds only refunds charges.");
     expect(await check(unsaid.w, { conversation: events(unsaid.w) })).toMatchObject({ outcome: "answered", code: "rules_unsaid", redraft: true });
     // No rules shown, where they're required: refused with the conversation, ok without it (as before).
@@ -2889,10 +2935,19 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     /** The refund Card with a cap on each refund and the day's total, and what else it carries. */
     function setFigures(s: ReturnType<typeof services>, max: number, aggregates: unknown[]) {
       s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
-        { id: "c1", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max }] }], aggregates },
+        { id: "c1", subject: "refunds-x", domain: "gateway", on_exceed: "refuse", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max }] }], aggregates },
         { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }] };
     }
     const dayTotal = (limit: number) => ({ quantity: "sum(amount)", window: "calendar_day", limit });
+    /** The refund's Cards as cardsFromRules builds them: the refused one (each refund's cap, if any, and the day's total), the held one. */
+    const REFUSED_CARD = (max: number | undefined, day: number) => ({ id: "refunds-x-refund_charge_k3-refused", subject: "refunds-x", domain: "gateway",
+      grants: [{ action: "refund_charge_k3", ...(max === undefined ? {} : { per_action_max: [{ quantity: "sum(amount)", max }] }) }],
+      aggregates: [{ quantity: "sum(amount)", limit: day, window: "calendar_day" }], on_exceed: "refuse" });
+    const HELD_CARD = (max: number) => ({ id: "refunds-x-refund_charge_k3-held", subject: "refunds-x", domain: "gateway",
+      grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max }] }],
+      aggregates: [{ quantity: "count", limit: 10000, window: "calendar_day" }], on_exceed: "owner" });
+    const KIFFS_COUNT = { quantity: "count", window: "calendar_day", limit: 10000 };
+    const MONEY_CARDS = (cards: unknown[]) => `failed: "Refund a charge" moves money, so its Cards are the ones the rules the owner agreed give, and the draft's differ. Draft it again with exactly these Cards in place of every Card covering "refund_charge_k3", the other Cards as they are, and nothing else changed: ${JSON.stringify(cards)}.`;
 
     it("the agreed figures on the Card are signed; a Card at 50000 a refund against an agreed 500 is refused, and Coach hears the fix", async () => {
       const ok = await setUp("refuse");
@@ -2903,10 +2958,77 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       setFigures(off.s, 50000, [dayTotal(5000)]);
       off.rules("rules-1", FIGURED);
       const r = await off.tap();
+      // A money tool's Cards are the ones its rules give: Coach hears them whole (moneyCardsOff), before the figure checks.
       expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
-      expect(String(r.answer)).toContain(`failed: the rules the owner agreed give "Refund a charge" 500 as each call on sum(amount), and a Card covering it has 50000. Draft it again with per_action_max {quantity: "sum(amount)", max: 500} on its grant, and no other figure for it on any Card.`);
+      expect(String(r.answer)).toContain(`${MONEY_CARDS([REFUSED_CARD(500, 5000)])} These are the owner's rules as agreed`);
       expect(String(r.answer)).toContain(DRAW_AGAIN);
       expect(off.s.checks).toEqual([]);
+    });
+
+    // KIFF's draft read writes words on each Card for the owner (its lines, each grant's title, each total's and cap's unit
+    // and what it counts): read as terms, the Cards the refusal prescribes were refused again, every time Coach drafted them.
+    it("the Cards the refusal prescribes, as KIFF's draft read shows them with its words, are signed", async () => {
+      const { s, rules, tap } = await setUp("refuse");
+      const words = (l: Record<string, unknown>) => ({ ...l, quantity_of: { kind: "sum", parameter: "amount" }, unit: "EUR", scale: 2 });
+      const card = REFUSED_CARD(500, 5000);
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
+        { ...card, lines: ["Refund a charge", "Up to 50.00 EUR a day"], aggregates: card.aggregates.map(words),
+          grants: card.grants.map((g) => ({ ...g, title: "Refund a charge", per_action_max: (g.per_action_max ?? []).map(words) })) },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", lines: ["List charges"], grants: [{ action: "list_charges_k3", title: "List charges" }], aggregates: [] }] };
+      rules("rules-1", FIGURED);
+      expect(await tap()).toMatchObject({ outcome: "sign" });
+    });
+
+    // The apple@ rebuild's words, "Every refund asks you first", over a figure that inherits the rule's ask: no Cards
+    // KIFF signs hold every refund asking, so Approve shows the rules again, whatever Card Coach drafted. The words are
+    // every_call_unheld's: an inherited ask alone is read as the rule's (an Eval, 26 Nov, below).
+    it("words that say every refund asks, over a cap that asks, are shown again: no Card holds every refund", async () => {
+      const inherited = [{ tool: "refund_charge", over: "ask", limits: [EACH, { ...DAY, over: "refuse" }] }, { tool: "list_charges", over: "refuse" }];
+      const { s, rules, tap } = await setUp("refuse");
+      setFigures(s, 500, [dayTotal(5000)]);
+      rules("rules-1", inherited, true, "Every refund asks you first. Refunds over €5 ask you, and are refused past €50 a day.");
+      const r = await tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
+      expect(String(r.answer)).toContain("the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks");
+      expect(String(r.answer)).toContain(MONEY_NEVER_CANT);
+      expect(s.checks).toEqual([]);
+    });
+
+    // A refusal is what Coach tells the owner from: it names only what the rules need, never a rule the owner can't have
+    // (an Eval, 26 Nov: "would let every call under it run unasked" became "can't be set to run by themselves under €5").
+    it("no money refusal says the owner can't have a rule, and each one tells Coach never to", () => {
+      for (const [code, text] of Object.entries(MONEY_UNBUILT)) {
+        expect(text, code).not.toMatch(/can['’]?t|cannot|can not|impossible|not possible|couldn['’]?t/i);
+      }
+      expect(MONEY_NEVER_CANT).toContain("Never tell the owner a rule can't be set");
+    });
+
+    // An Eval, 26 Nov, run 2: the owner agreed "up to €5 each, by itself; over €5 asks you first", with the €5 cap inheriting
+    // the rule's ask. It was refused (ask_inherited), the refusal steered Coach to tell the owner such a cap couldn't be
+    // set, and a €4 refund meant to run by itself was held. Now those rules give the two Cards, prescribed as such.
+    it("a cap that inherits the rule's ask, under words that say it runs by itself below it, gives the two Cards", async () => {
+      const said = "Refund a charge: up to €5 each, by itself; over €5 asks you first; past €50 a day it is refused.";
+      const inherited = [{ tool: "refund_charge", over: "ask", limits: [EACH, { ...DAY, over: "refuse" }] }, { tool: "list_charges", over: "refuse" }];
+      const { s, rules, tap } = await setUp("refuse");
+      setFigures(s, 500, [dayTotal(5000)]);
+      rules("rules-1", inherited, true, said);
+      const r = await tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
+      expect(String(r.answer)).not.toContain("no Cards KIFF signs");
+      expect(String(r.answer)).toContain('"on_exceed":"owner"');
+      expect(String(r.answer)).toContain('"per_action_max":[{"quantity":"sum(amount)","max":500}]');
+      expect(s.checks).toEqual([]);
+    });
+
+    it("words that say every refund asks, over a cap that says it asks, are shown again with the count of 0 a day", async () => {
+      const cap = [{ tool: "refund_charge", over: "ask", limits: [{ ...EACH, over: "ask" }, { ...DAY, over: "refuse" }] }, { tool: "list_charges", over: "refuse" }];
+      const { s, rules, tap } = await setUp("refuse");
+      setFigures(s, 500, [dayTotal(5000)]);
+      rules("rules-1", cap, true, "Every refund asks you first. Refunds over €5 ask you, and are refused past €50 a day.");
+      const r = await tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
+      expect(String(r.answer)).toContain("the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks");
+      expect(s.checks).toEqual([]);
     });
 
     it("a stricter day's total is refused too, and the chat's read refuses it before the card is drawn", async () => {
@@ -2914,31 +3036,31 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       setFigures(s, 500, [dayTotal(2000)]);
       rules("rules-1", FIGURED);
       await w.call("GET", CHAT, undefined);
-      expect(String(w.told()?.answer)).toMatch(/^failed: the rules the owner agreed give "Refund a charge" 5000 as a day's total on sum\(amount\), and a Card covering it has 2000\. Draft it again with an aggregate \{quantity: "sum\(amount\)", window: "calendar_day", limit: 5000\} with no per/);
+      expect(String(w.told()?.answer)).toContain(MONEY_CARDS([REFUSED_CARD(500, 5000)]));
     });
 
     // Eval 43927756622 (Setup, run 1): refused once for a day's total on both Cards, Coach redrafted with an hour's €50 held
     // on the per-refund Card, beside the agreed €5 a refund held and €50 a day refused, and signed it. Never signed now,
-    // and Coach hears the one figure to drop and to change nothing else.
-    it("a limit the owner never agreed, in any window, is refused, and Coach hears to drop only that one", async () => {
+    // and Coach hears the refund's Cards as the rules give them, to draft as they are.
+    it("a limit the owner never agreed, in any window, is refused, and Coach hears the Cards the rules give", async () => {
       const split = [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over: "ask" }, DAY] }, { tool: "list_charges", over: "refuse" }];
       const cards = (held: unknown[]) => [
-        { id: "c1", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: held },
-        { id: "c1b", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
+        { id: "c1", subject: "refunds-x", domain: "gateway", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: held },
+        { id: "c1b", subject: "refunds-x", domain: "gateway", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
         { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }];
       const hour = await setUp("refuse");
       hour.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards([{ quantity: "sum(amount)", window: "rolling_1h", limit: 5000 }]) };
       hour.rules("rules-1", split);
       const r = await hour.tap();
       expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
-      expect(String(r.answer)).toMatch(/^failed: the draft gives "Refund a charge" a limit the owner never agreed: 5000 on sum\(amount\), per rolling_1h\. /);
-      expect(String(r.answer)).toContain("Draft it again without that one, and change nothing else: no new limit, Card or tool in its place.");
+      expect(String(r.answer)).toContain(MONEY_CARDS([REFUSED_CARD(undefined, 5000), HELD_CARD(500)]));
+      expect(String(r.answer)).not.toContain("carries each call's refused cap");
       expect(String(r.answer)).toContain(`${REFUSAL_CLOSED}`);
       expect(String(r.answer)).toContain(DRAW_AGAIN);
       expect(hour.s.checks).toEqual([]);
-      // The same Cards with only what was agreed: signed.
+      // The same Cards with only what was agreed, and KIFF's count on the held one: signed.
       const agreed = await setUp("refuse");
-      agreed.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards([]) };
+      agreed.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards([KIFFS_COUNT]) };
       agreed.rules("rules-1", split);
       expect(await agreed.tap()).toMatchObject({ outcome: "sign" });
     });
@@ -2948,8 +3070,8 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       const split = [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over: "ask" }, DAY] }, { tool: "list_charges", over: "refuse" }];
       const two = await setUp("refuse");
       two.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
-        { id: "c1", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] },
-        { id: "c1b", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
+        { id: "c1", subject: "refunds-x", domain: "gateway", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [KIFFS_COUNT] },
+        { id: "c1b", subject: "refunds-x", domain: "gateway", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
         { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }] };
       two.rules("rules-1", split);
       expect(await two.tap()).toMatchObject({ outcome: "sign" });
@@ -2957,8 +3079,8 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       setFigures(one.s, 500, [dayTotal(5000)]);
       one.rules("rules-1", split);
       const r = await one.tap();
-      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesOnExceed("Refund a charge") });
-      expect(String(r.answer)).toContain(`failed: the rules the owner agreed ask past one of "Refund a charge"'s limits and refuse past another, and the draft puts both on one Card, which has one on_exceed. Draft it again with each on its own Card`);
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
+      expect(String(r.answer)).toContain(MONEY_CARDS([REFUSED_CARD(undefined, 5000), HELD_CARD(500)]));
     });
 
     it("a figure the rules don't name is refused", async () => {
@@ -2968,7 +3090,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       extra.rules("rules-1", FIGURED);
       const r = await extra.tap();
       expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
-      expect(String(r.answer)).toMatch(/^failed: the draft gives "Refund a charge" a limit the owner never agreed: 100 on sum\(fee\), per calendar_day\. /);
+      expect(String(r.answer)).toContain(MONEY_CARDS([REFUSED_CARD(500, 5000)]));
     });
 
     // Eval 44765665210 (connect, invoices-3): the notice said "a draft invoice for each one", the rules and the Card held
@@ -3010,7 +3132,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       rules("rules-1", [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, limit: 5000 }, { ...DAY, limit: 50000 }] }, { tool: "list_charges", over: "refuse" }], true, "Refunds up to €50 each and €500 a day.");
       const r = await tap();
       expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
-      expect(String(r.answer)).toContain(`failed: the rules the owner agreed give "Refund a charge" 5000 as each call on sum(amount)`);
+      expect(String(r.answer)).toContain(MONEY_CARDS([REFUSED_CARD(5000, 50000)]));
       expect(s.checks).toEqual([]);
     });
   });

@@ -216,8 +216,14 @@ interface PushPlatform {
   /** Whether notifications are allowed, asking the person if they haven't been asked. */
   suspend fun allowed(): Boolean
 
+  /** Whether notifications are allowed now, asking nothing: the re-check when the person comes back from Settings. */
+  fun enabledNow(): Boolean = false
+
   /** This phone's push token; null when it can't be had. */
   suspend fun token(): String?
+
+  /** Takes every tafs notification still in the shade away: at sign-out, since a held call's alert names its taf and its ask. */
+  fun clearShown() {}
 }
 
 /** A build with no Firebase settings: alerts are off, and the app says so. */

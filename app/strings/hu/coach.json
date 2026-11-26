@@ -186,6 +186,7 @@
   "coach.tools.give": "Eszközök megadása a Coachnak",
   "coach.tools.giving": "Megadás…",
   "coach.tools.title": "A Coach eszközei",
+  "coach.tools.write_after": "Előbb hagyd jóvá a Coach eszközeit, utána írhatsz.",
   "coach.tools_eyebrow": "Eszközök",
   "coach.tools_not_given": "A Coach eszközei nem lettek megadva. {why}",
   "coach.tools_not_read": "A Coach eszközeit nem sikerült beolvasni. {why}",

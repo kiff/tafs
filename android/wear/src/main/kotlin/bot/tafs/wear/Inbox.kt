@@ -20,6 +20,11 @@ data class InboxItem(
   /** When the watch first saw it, for the order: newest first. */
   val at: Long,
   val read: Boolean = false,
+  /**
+   * A held call's end (ms), in memory only, never written to the Inbox file: past it, the line leaves on the watch's own clock.
+   * Null for an answer, from an older phone, or once read back from the file (the next Needs you read decides then).
+   */
+  val endsAt: Long? = null,
 ) {
   enum class Kind { ASK, HELD }
 
@@ -51,7 +56,7 @@ object InboxLines {
   /** An ended ask's line, as the watch keeps it: no amount ([bot.tafs.watchlink.Amounts]); none for a message to a taf. */
   fun of(ask: bot.tafs.watchlink.AskLine, at: Long): InboxItem? =
     if (!ask.ended || ask.tafChat) null
-    else InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, bot.tafs.watchlink.Amounts.strip(ask.line ?: ask.words), at)
+    else InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, Plain.of(bot.tafs.watchlink.Amounts.strip(ask.line ?: ask.words)), at)
 
   /**
    * The marks from tafs cloud (row 21): the lines dismissed on any watch go, and their ids join [dismissed]; the lines read on any
@@ -119,6 +124,7 @@ class KeptInboxStore(private val text: EncryptedText, legacy: android.content.Sh
     private const val DISMISSED = "dismissed"
 
     fun encode(items: List<InboxItem>): String = JSONArray().apply {
+      // Never a held call's end: it's used in memory, to drop the line on the watch's clock, and not kept (the Privacy page).
       for (i in items) put(JSONObject().put("id", i.id).put("kind", i.kind.name).put("title", i.title).put("line", i.line).put("at", i.at).put("read", i.read))
     }.toString()
 

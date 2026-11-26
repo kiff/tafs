@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Atbildi līdz %3$s. Nekas netiek nosūtīts, kamēr tu neapstiprini.</string>
     <string name="alert_answered">taf kādam atbildēja</string>
     <string name="alert_approve_once">Apstiprināt vienreiz…</string>
+    <string name="alert_blocked_body">Šī ierīce (%1$s) vairs nejautā, tāpēc tafs paziņojumi iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu.</string>
+    <string name="alert_blocked_body_android">Android vairs nejautā, tāpēc tafs paziņojumi tālruņa iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu, šajā tālrunī un pulkstenī. Pulkstenis savus atjauninājumus saņem jebkurā gadījumā.</string>
+    <string name="alert_blocked_body_watch">Tavs iPhone vairs nejautā, tāpēc tafs paziņojumi iestatījumos ir izslēgti. Ieslēdz tos tur, lai apstiprinājumi un atbildes tevi sasniegtu, šajā iPhone un pulkstenī. Pulkstenis savus atjauninājumus saņem jebkurā gadījumā.</string>
+    <string name="alert_blocked_title">Ieslēdz tafs paziņojumus</string>
     <string name="alert_by_email">Pa e-pastu</string>
     <string name="alert_example">Piemērs</string>
     <string name="alert_foot_cant_answer_holds">Paziņojumi tiek sūtīti tiem, kas drīkst atbildēt uz aizturētiem izsaukumiem. Tava loma šajā kontā to neļauj.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Šim tālrunim paziņojumi vēl nav ieslēgti. %1$s</string>
     <string name="alert_not_refused">Nav atteikts</string>
     <string name="alert_not_sent">Atbilde netika nosūtīta</string>
+    <string name="alert_now_on">Paziņojumi ir ieslēgti.</string>
     <string name="alert_on_this_device">Paziņojumi: šis %1$s</string>
+    <string name="alert_open_notification_settings">Atvērt paziņojumu iestatījumus</string>
+    <string name="alert_open_settings">Atvērt Iestatījumus</string>
     <string name="alert_open_tafs_answer_kiff_did">Atver tafs, lai atbildētu: KIFF nepateica, kuru tā versiju tu redzēji.</string>
     <string name="alert_open_tafs_answer_phone_can">Atver tafs, lai atbildētu: šis tālrunis nevar to parakstīt no paziņojuma.</string>
     <string name="alert_prompt">Saņem paziņojumu, kad taf gaida tevi</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Nav pieejams</string>
     <string name="alert_status_off">Izslēgts</string>
     <string name="alert_status_on">Ieslēgts</string>
+    <string name="alert_still_off">Paziņojumi joprojām ir izslēgti.</string>
     <string name="alert_still_on_after_sign_out_body">tafs nevarēja tos izslēgt (%1$s). Mēģini vēlreiz vai tomēr izrakstieties un iestatījumos izslēdz paziņojumus no tafs.</string>
     <string name="alert_still_on_after_sign_out_title">Šis %1$s joprojām var saņemt šī konta paziņojumus</string>
     <string name="alert_taf_needs_you">%1$s gaida tevi</string>
@@ -47,6 +55,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs nevarēja sazināties ar KIFF, lai to atteiktu. Atver tafs, lai atbildētu.</string>
+    <string name="alert_watch_first_body">Lai redzētu apstiprinājumus un atbildes kā paziņojumus šajā tālrunī un pulkstenī, ieslēdz tafs paziņojumus. Pulkstenis turpinās saņemt savus atjauninājumus, pat ja to nedarīsi.</string>
+    <string name="alert_watch_first_title">Tavs pulkstenis izmanto tafs</string>
     <string name="alert_what_alerts">Par ko tev paziņo</string>
     <string name="alert_with_sound">Ar skaņu</string>
     <string name="app_name">tafs</string>
@@ -879,6 +889,7 @@
     <string name="coach_tools_give">Dot Coach tā rīkus</string>
     <string name="coach_tools_giving">Nodod…</string>
     <string name="coach_tools_title">Coach rīki</string>
+    <string name="coach_tools_write_after">Vispirms apstiprini Coach rīkus, tad varēsi rakstīt.</string>
     <string name="coach_tools_eyebrow">Rīki</string>
     <string name="coach_tools_not_given">Coach rīki netika nodoti. %1$s</string>
     <string name="coach_tools_not_read">Neizdevās nolasīt Coach rīkus. %1$s</string>
@@ -2855,6 +2866,7 @@
     <string name="watch_ask">Jautāt tafs</string>
     <string name="watch_ask_needs_consent">Pirms jautā tafs, atļauj AI lietošanu tafs savā tālrunī.</string>
     <string name="watch_ask_not_on">Jautāšana no pulksteņa vēl nav ieslēgta.</string>
+    <string name="watch_ask_phone_sign_in">Lūgt tālrunim pierakstīt šo pulksteni</string>
     <string name="watch_ask_text_only">tafs saņem tavus vārdus kā tekstu, nekad tavu balsi.</string>
     <string name="watch_asking_phone">Jautā tālrunim…</string>
     <string name="watch_calendar_today">Šodienas kalendārs</string>
@@ -2866,6 +2878,7 @@
     <string name="watch_deleted_nothing_sent">Dzēsts. Nekas netika nosūtīts.</string>
     <string name="watch_didnt_catch">Nesadzirdēju. Pieskaries, lai mēģinātu vēlreiz.</string>
     <string name="watch_dismiss">Paslēpt</string>
+    <string name="watch_edit_words">Pieskaries tekstam, lai to mainītu</string>
     <string name="watch_glance_description">Cik daudz gaida tevi, nekad ne kas vai kurš.</string>
     <string name="watch_halt_all_q">Apturēt visus tavus taf?</string>
     <plurals name="watch_halt_now_count">
@@ -2883,6 +2896,7 @@
         <item quantity="one">%1$s aizturēts izsaukums gaida tevi</item>
         <item quantity="other">%1$s aizturēti izsaukumi gaida tevi</item>
     </plurals>
+    <string name="watch_held_channel">Aizturētie izsaukumi</string>
     <string name="watch_inbox_empty">Nekā jauna. Šeit nonāk Coach atbildes un tavu taf paziņojumi.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="zero">Iesūtnē nelasīti: %1$s</item>
@@ -2898,7 +2912,7 @@
     <string name="watch_menu">Izvēlne</string>
     <string name="watch_mic_needed">Lai jautātu balsī, atļauj tafs izmantot mikrofonu šajā pulkstenī.</string>
     <string name="watch_more_on_phone">Pārējais ir tavā tālrunī.</string>
-    <string name="watch_needs_lock">Lai atteiktu vai apturētu no šī pulksteņa, iestati tam ekrāna bloķēšanu un atbloķē to.</string>
+    <string name="watch_needs_lock">Lai sūtītu, atteiktu vai apturētu no šī pulksteņa, iestati tam ekrāna bloķēšanu un atbloķē to.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="zero">%1$s gaida tevi</item>
         <item quantity="one">%1$s gaida tevi</item>
@@ -2909,6 +2923,7 @@
     <string name="watch_nothing_sent_until">Nekas netiek nosūtīts, kamēr tu neapstiprini.</string>
     <string name="watch_nothing_waits">Nekas tevi negaida.</string>
     <string name="watch_open_on_phone">Atvērt tālrunī</string>
+    <string name="watch_opened_on_phone">Atvērts tavā tālrunī</string>
     <string name="watch_page_brief">Kopsavilkums</string>
     <string name="watch_page_inbox">Iesūtne</string>
     <string name="watch_paused_still_answers">Iepauzēts: tā grafiks ir izslēgts. Tas joprojām atbild uz to, ko tu sūti.</string>
@@ -2933,6 +2948,7 @@
     <string name="watch_recent_chats">Nesenās sarunas</string>
     <string name="watch_recording">Ieraksta</string>
     <string name="watch_recording_not_received">Ieraksts nesasniedza tālruni. Mēģini vēlreiz vai raksti.</string>
+    <string name="watch_refuse_on_phone">Nav atteikts. Atsaki to savā tālrunī.</string>
     <string name="watch_refused">Atteikts. Nekas netika nosūtīts.</string>
     <string name="watch_reply">Atbildēt</string>
     <string name="watch_rerecord">Ierakstīt vēlreiz</string>
@@ -2941,14 +2957,20 @@
     <string name="watch_resume_on_phone">Turpini tālrunī</string>
     <string name="watch_retry">Mēģināt vēlreiz</string>
     <string name="watch_review">Pārbaudīt pirms sūtīšanas</string>
+    <string name="watch_seconds_left">Atlikušas %1$s s</string>
     <string name="watch_sending">Sūta…</string>
     <string name="watch_sent">Nosūtīts</string>
     <string name="watch_settings_of">%1$s · iestatījumi</string>
+    <string name="watch_sign_in_allow">Atļaut</string>
+    <string name="watch_sign_in_denied">Nav pierakstīts. Šis pulkstenis paliek izrakstīts.</string>
+    <string name="watch_sign_in_deny">Noraidīt</string>
     <string name="watch_sign_in_on_phone">Vispirms pieraksties tafs savā tālrunī.</string>
+    <string name="watch_sign_in_watch_q">Pierakstīt šo pulksteni ar tavu kontu?</string>
     <string name="watch_sign_out_q">Izrakstīties šajā pulkstenī?</string>
     <string name="watch_sign_out_sub">Tālrunis paliek pierakstījies. Šis pulkstenis aizmirst tavus taf, sarunas un iesūtni.</string>
     <string name="watch_signed_in">Pierakstījies</string>
     <string name="watch_signed_out_here">Izrakstījies šajā pulkstenī. Tālrunis paliek pierakstījies.</string>
+    <string name="watch_stopped_at_limit">Apturēts pie %1$s ierobežojuma. Dzirdētais ir zemāk.</string>
     <string name="watch_swipe_settings">Pavelc pa kreisi, lai redzētu iestatījumus</string>
     <string name="watch_tap_start">Pieskaries “Sākt”, tad runā. Tavi vārdi parādās šeit, kamēr runā.</string>
     <string name="watch_timing">Klausīšanās %1$s ms · saņemšana %2$s ms · rezultāts %3$s ms</string>
@@ -2957,8 +2979,10 @@
     <string name="watch_type">Rakstīt</string>
     <string name="watch_type_hint">Raksti Coach…</string>
     <string name="watch_update_phone">Atjaunini tafs savā tālrunī, tad mēģini vēlreiz.</string>
+    <string name="watch_view_on_phone">Skatīt tālrunī</string>
     <string name="watch_view_only_phone">Šis tālrunis var tikai skatīt, tāpēc no pulksteņa nevar jautāt. Pieraksties tālrunī, kas var apstiprināt.</string>
     <string name="watch_voice_text_only">Coach saņem tavus vārdus kā tekstu, nekad tavu balsi.</string>
+    <string name="watch_waiting_for_phone">Gaida tavu tālruni…</string>
     <string name="watch_what_it_does">Ko tas dara</string>
     <plurals name="watch_working_count">
         <item quantity="zero">Strādā: %1$s</item>

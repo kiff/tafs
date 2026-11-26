@@ -28,6 +28,13 @@ shows none. One refused line per run: a run
 followed live already ends with its own line, with Retry (`ChatEnd.Failed`, which keeps the stream's run), so the thread's line
 for that same run isn't added; another run's still is. `contracts/conversation-failed.json`, tafs cloud's own answer, is read in
 the same test. iOS draws it by the same rules in a taf's chat (`TafsCloud.RunFailed`, `AppModel.chatItems`) and in Coach's (`AppModel.setupRunFailedLine`).
+**Try again under that line** only when tafs cloud says so: `failed.retry` is `true` (nothing the run did had an effect,
+tafs cloud's rule, never the app's), the code is one of the five it sends (`ai_unavailable`, `no_credits`,
+`ai_consent_required`, `timeout`, `failed`), and the run's own message (`<run>.in`, the person's, as plain words with no files
+and not a card's answer) is in the chat. Its label is tafs cloud's `retry_label`; with none, the app's Retry. Pressed, the
+message goes again as a new message, once: the button goes for that run (`AppState.failedRetry`, `AppModel.retryFailed`). Not
+while the chat is sending or at work. Without `retry`, or for a code it doesn't know, the line is words only. The same rule as
+Chrome's side panel (0.2.22); iOS follows.
 
 <p>
   <img src="screenshots/android/coach-card.png" width="180" alt="Coach: the header, the plan line, an answered approval and the rules card">
@@ -231,13 +238,19 @@ cd android
 ./gradlew :app:testDebugUnitTest      # the unit tests, against fake KIFF, tafs cloud, planque and Google Play
 ./gradlew :app:assembleDebug           # a debug build
 ./gradlew :app:connectedDebugAndroidTest   # the UI tests, on a running emulator or phone
+./gradlew :app:assembleRelease && play/check_release_starts.sh app/build/outputs/apk/release/app-release-unsigned.apk
+                                           # the minified release build starts and stays up
 ```
 
 Gradle needs a JDK 17 or later; Android Studio's own (`jbr`) does. The build uses the
 Android Gradle plugin 9.5 on Gradle 9.6.0, which the wrapper fetches and checks against its
 checksum; Android Studio needs to support that plugin version to open the project. On Windows,
 `gradlew.bat`. CI (`.github/workflows/android.yml`) runs the unit tests and the debug
-builds on every pull request that touches `android/`, and the UI tests on an emulator. The UI
+builds on every pull request that touches `android/`, and the UI tests on an emulator. After them, on the same
+emulator, it builds the release APK (minified by R8), signs it with the debug key, installs it and starts it
+(`play/check_release_starts.sh`), and fails if the app's process dies or the crash log names it: a debug build doesn't
+run R8, so only this catches code R8 removed that the app reaches by reflection at start (Android 144 closed at every
+launch that way). The UI
 tests run in a debug-only `TestHostActivity` (`createStableComposeRule`), which takes configuration
 changes in place: on a just-booted emulator the system settles after the first test starts, and an
 ordinary activity recreated then would drop the test's screen ("No compose hierarchies found").
@@ -410,6 +423,8 @@ couldn't be read (`card_unit_exceptions_notice`).
 they were on for that account (`ALERTS_WERE_ON`). Signing in to the same account again registers
 this phone again, with no new confirmation, while the account's alerts still reach tafs cloud;
 otherwise the app says once that they're off, with **Turn on**. Another account doesn't get them.
+Signing out also takes every tafs notification still in the shade away (`PushPlatform.clearShown`), since a held call's
+alert names its taf and what it asks.
 
 **Halt and Resume say what happened on the Halt screen** (`haltError`): a halt or resume that
 didn't go through says why there, and the screen never calls a connection by its service's name.
@@ -459,7 +474,7 @@ icons dark on the light ground and light on the dark one when the choice changes
 | `model/` | The app's own types and words: `Models` (`Taf`, `Card`, `HeldCall`, `RecordEntry`…), `Chat`, `Attachments`, `CardCheck` (the sample only), and one `…Words` object per feature, for words the backends don't send yet |
 | `signing/` | `KeystoreKeys` (the signing key and the approval key, in the Keystore), `DeviceSigner`, `BiometricAuthenticator` |
 | `push/` | Alerts through Firebase Cloud Messaging: `TafsMessagingService`, `AndroidPush`, `Alerts` |
-| `watch/` | The Wear OS watch's requests: `WearRelayService` and `WatchRelay` (docs/watch-wear.md); and tafs cloud's pushes for it, `watch_ask`, `watch_inbox` and `taf_chat` (for a taf chat the watch opened, `WatchChats`), which `TafsMessagingService` hands to an expedited WorkManager job (`WatchResultsWork`) that reads the ask or the Inbox's marks and keeps it for the watch as a Data Layer item (`WatchResults`; docs/watch-wear.md, Delivery). They read the app's one model, which `TafsApplication` owns: it lasts while the process does, so backing out of the app and opening it again comes back to what the screen held, where it used to start afresh |
+| `watch/` | The Wear OS watch's requests: `WearRelayService` and `WatchRelay` (docs/watch-wear.md); and tafs cloud's pushes for it, `watch_ask`, `watch_inbox` and `taf_chat` (for a taf chat the watch opened, `WatchChats`), which `TafsMessagingService` hands to an expedited WorkManager job (`WatchResultsWork`) that reads the ask or the Inbox's marks and keeps it for the watch as a Data Layer item (`WatchResults`; docs/watch-wear.md, Delivery). They read the app's one model, which `TafsApplication` owns: it lasts while the process does, so backing out of the app and opening it again comes back to what the screen held, where it used to start afresh. Every reply and kept item carries the sign-in's random account mark (`AppModel.watchMark`, made at sign-in, dropped at sign-out); at sign-out `WatchSignedOut` takes back what was kept for the watch and puts `kept/signed-out`, so the watch forgets the account even out of reach (docs/watch-wear.md, "One account's data never shows under another's") |
 | `billing/` | `Purchases` and `PlayBillingStore`: Google Play, behind the flag |
 | `files/` | `PhotoPrep`: a photo redrawn as a JPEG, with no metadata |
 | `voice/` | `Dictation` and `DeviceSpeech`: dictation, recognised on the phone |
@@ -775,7 +790,11 @@ and its line. Its tafs are those tafs cloud says are relevant now (`relevant_now
 a step, a knock, a run or a change in the last day), as the iPad's; every taf is on the Overview,
 behind the mark. From a tafs cloud that doesn't say yet, every taf. Home's label chips sit over the
 Overview's table on a tablet, as on the iPad, and filter it; filtered to a mission's label, its row
-and Log are there too. `TabletSidebarTest` holds this at the iPad's size and a phone's.
+and Log are there too. Under each taf the person manages, the Overview says who uses it, as the iPad's: "Support · 3 people",
+its groups' and people's names from KIFF's shares, then everyone counted once across them, or "Not shared"
+(`PeopleWords.usedBy`). Up to two lines, the count held together by no-break spaces (`peopleLine`), so a medium window
+moves "1 persona" down whole, never "1 per…". A taf whose shares aren't read yet has no line. `TabletSidebarTest` holds
+this at the iPad's size and a phone's.
 
 The tablet's screens at the iPad's size (1366 × 1024 dp), over the sample, to set beside the iPad's
 reference files, are drawn on the JVM by `TabletScreenshots` into `docs/screenshots/android/tablet/`
@@ -1047,8 +1066,11 @@ When Play's track has a newer tafs, Home says so in one line under the account's
 (`push/AppUpdates.kt`, Play's flexible in-app update): **Update** opens Play's own confirmation and downloads it in the
 background, the line says it's downloading, then **Restart** installs it and opens tafs again. Play is asked each
 time the app comes to the front; it decides what's newer and installs it, and the app decides no version. A build Play
-didn't install (a debug build, an emulator without Play) is never offered one. Test it on the internal track: install an
-older build from the track, publish a newer one, open tafs.
+didn't install (a debug build, an emulator without Play) is never offered one. **Restart** shows only while Play says the
+update is still there (`UPDATE_AVAILABLE`, or one already under way, with the download finished): a "downloaded" left over
+from an update Play no longer has offers nothing. When Restart can't install (nothing downloaded, Play's -7, or Play already
+up to date), the line follows Play's answer again, so it never stays on a Restart that does nothing. Test it on the internal
+track: install an older build from the track, publish a newer one, open tafs.
 
 ## Alerts
 
@@ -1062,6 +1084,18 @@ wasn't sent, silent. Whatever the kind, a locked phone or watch shows only **A t
 **Turning alerts on** (`AppModel.turnOnAlerts`) asks for the phone's notification permission, then points the account's KIFF
 alert target at tafs cloud: a setup call signed with this phone's device key, never the approval key, so there's no
 fingerprint (Android 1.27.2; before, one signed a message nothing sent or checked). As on iPhone and iPad.
+
+**When Android no longer asks** (the permission was declined before), Turn on alerts shows **Turn on alerts for tafs**: why it
+matters ("…so approvals and answers reach you, on this phone and on your watch. Your watch gets its updates either way.") and
+**Open notification settings**, which opens Android's notification settings for tafs itself
+(`ACTION_APP_NOTIFICATION_SETTINGS`), or Not now. Back in the app (`onResume`, `AppModel.recheckAlerts`), notifications allowed
+now turn alerts on with no other tap ("Alerts are on."); still off, it says so once ("Alerts are still off."). Before Android
+146 it was a bare "Not done · Allow notifications for tafs in Settings, then try again.", and the owner had to hunt for the
+switch (`AlertsPromptTest`).
+
+**"Your watch is using tafs"**, once per phone (`tafs.watch-alerts-offered`): the first time a watch uses tafs on a phone whose
+notifications are off, the same way to Settings, or Not now. It never shows again on that phone. The watch's own updates don't
+depend on it: a phone that serves a watch takes its background pushes with alerts off ([watch-wear.md](watch-wear.md), Delivery).
 
 ## Haptics
 
@@ -1748,6 +1782,34 @@ model. Where `LocalFiles` is null (a preview, a test), Account, a taf's page and
   link read with no bearer and over HTTPS only, Delete, a file gone), `FilesModelTest` (the stub's filters and pages, the groups, the days left at the account's midnight, names and
   previews cleaned, Delete asked first and gone for everyone), `FilesScreensTest` (the switch off, the entries, the list's
   views, a file, Delete's question, the tablet's two panes).
+
+## Deleting a conversation
+
+The person's own Coach conversations can be deleted for good from Previous conversations (`PreviousConversations`,
+`CoachChats.kt`), on tafs cloud's `DELETE /v1/tafs/{id}/chats/{session}` (docs/api.md). Archiving still takes one out of the
+list and keeps it; deleting is the way to erase it.
+
+- **Where:** a long press on a conversation asks about it by name, Archive (or, under Archived, Put back), and under that the
+  delete item. It opens a second question, again by name: the title, what goes and what stays, Delete and Cancel. Nothing is
+  deleted before that second yes.
+- **The words are tafs cloud's,** in the person's language: each chats-list read (`GET …/chats` and `…/chats/archived`) sends
+  `delete: {item, confirm_title, confirm_body, confirm_button, failed}`, kept in `AppState.coachDeleteWords` from the last read
+  that sent them, so `failed` is on hand when the network isn't. Any word tafs cloud doesn't send (an older cloud) is the app's
+  English stand-in (`DeleteChatWords`, listed in `app/strings/android_kept.json`); there are no keys of the app's own for them.
+- **What the app does with tafs cloud's answer** (`AppModel.deleteCoachChat`), deciding nothing itself:
+  - **200:** the conversation leaves both lists. The one on screen gives way to a new conversation, so its thread leaves the
+    phone and the watch's kept copy of Coach's chat is put empty (`WatchChats.changed`: a chat the watch was given that has left
+    the phone is put empty, once). Files opened from it are cleared from the phone's cache too (`openedFiles`, only a cache, so
+    all of it goes), so no copy outlives "deleted for good".
+  - **404** (never this person's, a job's thread, or already gone): it leaves the lists, with nothing said.
+  - **409** (its run is working or waits on a card): it stays, and the refusal's own `error` is shown; the stand-in only if it
+    has none.
+  - **Anything else, the network included:** it stays, with tafs cloud's `failed` line from the last read, or the stand-in.
+- **Not here yet:** a taf's own chat has no list of conversations on Android to delete from; the route serves it once there is
+  one. Chrome follows on its own.
+- Tests: `CoachConversationsTest` (each answer above, tafs cloud's words and each stand-in, the opened files' cache cleared only on a delete that went through), `WatchKeptPhoneTest` (the watch's
+  copy put empty once), and `CoachChatsMenuTest` on a device (asked again by name in tafs cloud's words, Cancel deletes
+  nothing).
 
 ## From your watch (W11)
 

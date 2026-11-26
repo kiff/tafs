@@ -57,6 +57,7 @@
     <string name="watch_ask">Հարցրեք tafs-ին</string>
     <string name="watch_ask_needs_consent">Նախքան tafs-ին հարցնելը, ձեր հեռախոսում tafs-ում թույլատրեք AI-ի օգտագործումը։</string>
     <string name="watch_ask_not_on">Ձեր ժամացույցից հարցնելը դեռ միացված չէ։</string>
+    <string name="watch_ask_phone_sign_in">Խնդրեք ձեր հեռախոսին մուտք գործել այս ժամացույցով</string>
     <string name="watch_ask_text_only">tafs-ը ձեր բառերը ստանում է որպես տեքստ, երբեք ձեր ձայնը։</string>
     <string name="watch_asking_phone">Հարցնում ենք ձեր հեռախոսին…</string>
     <string name="watch_calendar_today">Այսօրվա օրացույցը</string>
@@ -68,6 +69,7 @@
     <string name="watch_deleted_nothing_sent">Ջնջվեց։ Ոչինչ չուղարկվեց։</string>
     <string name="watch_didnt_catch">Չհասկացա։ Հպեք՝ նորից փորձելու համար։</string>
     <string name="watch_dismiss">Մերժել</string>
+    <string name="watch_edit_words">Հպեք տեքստին՝ այն փոխելու համար</string>
     <string name="watch_glance_description">Քանիսն են սպասում ձեզ, երբեք ինչը կամ ովքեր։</string>
     <string name="watch_halt_all_q">Կանգնեցնե՞լ ձեր բոլոր taf-երը։</string>
     <plurals name="watch_halt_now_count">
@@ -83,6 +85,7 @@
         <item quantity="one">%1$s պահված զանգ սպասում է ձեզ</item>
         <item quantity="other">%1$s պահված զանգ սպասում է ձեզ</item>
     </plurals>
+    <string name="watch_held_channel">Պահված զանգեր</string>
     <string name="watch_inbox_empty">Նոր ոչինչ չկա։ Coach-ի պատասխանները և ձեր taf-երի ծանուցումները հայտնվում են այստեղ։</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s չկարդացված մուտքայինում</item>
@@ -97,7 +100,7 @@
     <string name="watch_menu">Ընտրացանկ</string>
     <string name="watch_mic_needed">Ձայնով հարցնելու համար այս ժամացույցում թույլ տվեք tafs-ին օգտագործել խոսափողը։</string>
     <string name="watch_more_on_phone">Մնացածը ձեր հեռախոսում է։</string>
-    <string name="watch_needs_lock">Այս ժամացույցից մերժելու կամ կանգնեցնելու համար դրա վրա կարգավորեք էկրանի կողպում և ապակողպեք այն։</string>
+    <string name="watch_needs_lock">Այս ժամացույցից ուղարկելու, մերժելու կամ կանգնեցնելու համար դրա վրա կարգավորեք էկրանի կողպում և ապակողպեք այն։</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s-ը սպասում է ձեզ</item>
         <item quantity="other">%1$s-ը սպասում է ձեզ</item>
@@ -107,6 +110,7 @@
     <string name="watch_nothing_sent_until">Ոչինչ չի ուղարկվում, մինչև չհաստատեք։</string>
     <string name="watch_nothing_waits">Ոչինչ չի սպասում ձեզ։</string>
     <string name="watch_open_on_phone">Բացեք հեռախոսում</string>
+    <string name="watch_opened_on_phone">Բացվեց հեռախոսում</string>
     <string name="watch_page_brief">Ամփոփում</string>
     <string name="watch_page_inbox">Մուտքային</string>
     <string name="watch_paused_still_answers">Դադարեցված է․ նրա ժամանակացույցը անջատված է։ Այն դեռ պատասխանում է նրան, ինչ ուղարկում եք։</string>
@@ -130,6 +134,7 @@
     <string name="watch_recent_chats">Վերջին զրույցները</string>
     <string name="watch_recording">Ձայնագրվում է</string>
     <string name="watch_recording_not_received">Ձայնագրությունը չհասավ ձեր հեռախոսին։ Փորձեք նորից կամ մուտքագրեք։</string>
+    <string name="watch_refuse_on_phone">Չի մերժվել։ Մերժեք այն հեռախոսում։</string>
     <string name="watch_refused">Մերժված է։ Ոչինչ չուղարկվեց։</string>
     <string name="watch_reply">Պատասխանել</string>
     <string name="watch_rerecord">Նորից ձայնագրել</string>
@@ -138,14 +143,20 @@
     <string name="watch_resume_on_phone">Վերսկսեք ձեր հեռախոսով</string>
     <string name="watch_retry">Փորձեք նորից</string>
     <string name="watch_review">Ստուգեք ուղարկելուց առաջ</string>
+    <string name="watch_seconds_left">Մնաց %1$s վ</string>
     <string name="watch_sending">Ուղարկվում է…</string>
     <string name="watch_sent">Ուղարկվեց</string>
     <string name="watch_settings_of">%1$s · կարգավորումներ</string>
+    <string name="watch_sign_in_allow">Թույլատրել</string>
+    <string name="watch_sign_in_denied">Մուտք չի կատարվել։ Այս ժամացույցը մնում է ելքի վիճակում։</string>
+    <string name="watch_sign_in_deny">Մերժել</string>
     <string name="watch_sign_in_on_phone">Նախ մուտք գործեք tafs ձեր հեռախոսում։</string>
+    <string name="watch_sign_in_watch_q">Մուտք գործե՞լ այս ժամացույցով ձեր անունից</string>
     <string name="watch_sign_out_q">Դուրս գա՞լ այս ժամացույցից։</string>
     <string name="watch_sign_out_sub">Ձեր հեռախոսը մնում է մուտք գործած։ Այս ժամացույցը մոռանում է ձեր taf-երը, զրույցները և մուտքայինը։</string>
     <string name="watch_signed_in">Մուտք գործած է</string>
     <string name="watch_signed_out_here">Այս ժամացույցից դուրս եկաք։ Ձեր հեռախոսը մնում է մուտք գործած։</string>
+    <string name="watch_stopped_at_limit">Կանգնեց %1$s սահմանին։ Լսվածը ներքևում է։</string>
     <string name="watch_swipe_settings">Սահեցրեք ձախ՝ նրա կարգավորումների համար</string>
     <string name="watch_tap_start">Հպեք «Սկսել», ապա խոսեք։ Ձեր բառերը երևում են այստեղ խոսելիս։</string>
     <string name="watch_timing">Լսում %1$s մվ · անդորրագիր %2$s մվ · արդյունք %3$s մվ</string>
@@ -154,8 +165,10 @@
     <string name="watch_type">Մուտքագրեք</string>
     <string name="watch_type_hint">Գրեք Coach-ին…</string>
     <string name="watch_update_phone">Թարմացրեք tafs-ը ձեր հեռախոսում, ապա նորից փորձեք։</string>
+    <string name="watch_view_on_phone">Դիտեք հեռախոսում</string>
     <string name="watch_view_only_phone">Այս հեռախոսը կարող է միայն դիտել, ուստի ժամացույցից չեք կարող հարցնել։ Մուտք գործեք հեռախոսում, որը կարող է հաստատել։</string>
     <string name="watch_voice_text_only">Coach-ը ձեր բառերը ստանում է որպես տեքստ, երբեք ձեր ձայնը։</string>
+    <string name="watch_waiting_for_phone">Սպասում ենք ձեր հեռախոսին…</string>
     <string name="watch_what_it_does">Ինչ է անում</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s աշխատում է</item>

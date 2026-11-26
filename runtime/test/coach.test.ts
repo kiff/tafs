@@ -1187,6 +1187,32 @@ describe("Coach's tools step, at the end of a first Start", () => {
     // No biometric named and no count of confirmations, in any language: the phone knows what it asks for, and it asks once.
     for (const lang of LANGUAGES) expect(JSON.stringify(coachToolsStep(lang)).toLowerCase(), lang).not.toMatch(/fingerprint|face id|fingerabdruck|empreinte|huella|impronta|impressão digital|vingerafdruck|vingerafdruk|odcisk|twice|zweimal|deux fois|dos veces|due volte|duas vezes|twee keer|dwa razy/);
   });
+
+  // Shown = signed, as data (the Card step): each tool the step lists says its action, its Card, the Card's limit a day and
+  // whether past it the call asks, from COACH_CARDS as the draft signs them, so an app compares the plain list it shows
+  // with the signed body and refuses to ask for a signature when they differ.
+  it("gives each tool its action, Card, limit and asks, as the draft signs them, and lists every action the Cards grant", () => {
+    for (const lang of LANGUAGES) {
+      const tools = coachToolsStep(lang).groups.flatMap((g) => g.tools);
+      const signed = coachCardsDraft("setup").cards as Array<{ id: string; on_exceed: string; grants: Array<{ action: string }>; aggregates: Array<{ limit: number }> }>;
+      for (const t of tools) {
+        const card = signed.find((c) => c.id === t.card)!;
+        expect(card, `${lang} ${t.tool}`).toBeDefined();
+        expect(card.grants.map((g) => g.action), `${lang} ${t.tool}`).toContain(t.tool);
+        expect([t.limit, t.asks], `${lang} ${t.tool}`).toEqual([card.aggregates[0]!.limit, card.on_exceed === "owner"]);
+      }
+      expect(tools.map((t) => t.tool).sort(), lang).toEqual(signed.flatMap((c) => c.grants.map((g) => g.action)).sort());
+    }
+    const tools = coachToolsStep("en").groups.flatMap((g) => g.tools);
+    expect(tools.find((t) => t.tool === "taf_run")).toMatchObject({ card: "coach-reads", limit: 500, asks: false });
+    expect(tools.find((t) => t.tool === "version_install")).toMatchObject({ card: "coach-version-install", limit: 0, asks: true });
+    expect(tools.find((t) => t.tool === "taf_task")).toMatchObject({ card: "coach-taf-task", limit: 50, asks: true });
+    // A first start drafts every Card, so every tool is in its draft; a read with some Cards held marks only the missing ones.
+    expect(tools.every((t) => t.in_draft)).toBe(true);
+    const partial = coachToolsStep("en", { drafted: new Set(["coach-taf-results"]) }).groups.flatMap((g) => g.tools);
+    expect(partial.filter((t) => t.in_draft).map((t) => t.tool)).toEqual(["taf_results"]);
+    expect(coachToolsStep("en", { drafted: new Set() }).groups.flatMap((g) => g.tools).some((t) => t.in_draft)).toBe(false);
+  });
 });
 
 // The owner removed a Qonto taf, then a new Coach chat asked whether "no client invoices" on that account was

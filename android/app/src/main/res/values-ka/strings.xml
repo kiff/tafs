@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. უპასუხეთ ამ დრომდე: %3$s. არაფერი იგზავნება, სანამ არ დაამტკიცებთ.</string>
     <string name="alert_answered">taf-მა ვიღაცას უპასუხა</string>
     <string name="alert_approve_once">დაამტკიცეთ ერთხელ…</string>
+    <string name="alert_blocked_body">ეს მოწყობილობა (%1$s) აღარ გეკითხებათ, ამიტომ tafs-ის შეტყობინებები გამორთულია პარამეტრებში. ჩართეთ ისინი იქ, რომ დადასტურებები და პასუხები მოგივიდეთ.</string>
+    <string name="alert_blocked_body_android">Android აღარ გეკითხებათ, ამიტომ tafs-ის შეტყობინებები გამორთულია ტელეფონის პარამეტრებში. ჩართეთ ისინი იქ, რომ დადასტურებები და პასუხები მოგივიდეთ ამ ტელეფონზე და საათზე. საათი განახლებებს ნებისმიერ შემთხვევაში იღებს.</string>
+    <string name="alert_blocked_body_watch">თქვენი iPhone აღარ გეკითხებათ, ამიტომ tafs-ის შეტყობინებები გამორთულია პარამეტრებში. ჩართეთ ისინი იქ, რომ დადასტურებები და პასუხები მოგივიდეთ ამ iPhone-ზე და საათზე. საათი განახლებებს ნებისმიერ შემთხვევაში იღებს.</string>
+    <string name="alert_blocked_title">ჩართეთ tafs-ის შეტყობინებები</string>
     <string name="alert_by_email">ელფოსტით</string>
     <string name="alert_example">მაგალითი</string>
     <string name="alert_foot_cant_answer_holds">შეტყობინებები მიდის მათთან, ვისაც შეუძლია დაკავებულ ზარებზე პასუხი. ამ ანგარიშზე თქვენს როლს არ შეუძლია.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">ამ ტელეფონისთვის შეტყობინებები ჯერ ჩართული არ არის. %1$s</string>
     <string name="alert_not_refused">უარი არ ითქვა</string>
     <string name="alert_not_sent">პასუხი არ გაიგზავნა</string>
+    <string name="alert_now_on">შეტყობინებები ჩართულია.</string>
     <string name="alert_on_this_device">შეტყობინებები ამ მოწყობილობაზე (%1$s)</string>
+    <string name="alert_open_notification_settings">შეტყობინებების პარამეტრების გახსნა</string>
+    <string name="alert_open_settings">პარამეტრების გახსნა</string>
     <string name="alert_open_tafs_answer_kiff_did">გახსენით tafs, რომ უპასუხოთ: KIFF-მა არ თქვა, რომელი ვერსია ნახეთ.</string>
     <string name="alert_open_tafs_answer_phone_can">გახსენით tafs, რომ უპასუხოთ: ამ ტელეფონს შეტყობინებიდან ხელმოწერა არ შეუძლია.</string>
     <string name="alert_prompt">მიიღეთ შეტყობინება, როცა taf-ს თქვენი დახმარება სჭირდება</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">მიუწვდომელია</string>
     <string name="alert_status_off">გამორთულია</string>
     <string name="alert_status_on">ჩართულია</string>
+    <string name="alert_still_off">შეტყობინებები ჯერ კიდევ გამორთულია.</string>
     <string name="alert_still_on_after_sign_out_body">tafs-მა ვერ გამორთო ისინი (%1$s). სცადეთ ხელახლა, ან მაინც გადით და პარამეტრებში გამორთეთ tafs-ის შეტყობინებები.</string>
     <string name="alert_still_on_after_sign_out_title">ამ მოწყობილობას (%1$s) შეიძლება კვლავ მოუვიდეს ამ ანგარიშის შეტყობინებები</string>
     <string name="alert_taf_needs_you">%1$s-ს თქვენი დახმარება სჭირდება</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs-ს KIFF-თან დაკავშირება ვერ მოხერხდა უარის სათქმელად. გახსენით tafs, რომ უპასუხოთ.</string>
+    <string name="alert_watch_first_body">დადასტურებებისა და პასუხების შეტყობინებებად სანახავად ამ ტელეფონზე და საათზე, ჩართეთ tafs-ის შეტყობინებები. საათი განახლებებს მაინც მიიღებს, თუნდაც არ ჩართოთ.</string>
+    <string name="alert_watch_first_title">თქვენი საათი იყენებს tafs-ს</string>
     <string name="alert_what_alerts">რა გაცნობებთ</string>
     <string name="alert_with_sound">ხმით</string>
     <string name="app_name">tafs</string>
@@ -846,6 +856,7 @@
     <string name="coach_tools_give">მიეცით Coach-ს მისი ინსტრუმენტები</string>
     <string name="coach_tools_giving">ეძლევა…</string>
     <string name="coach_tools_title">Coach-ის ინსტრუმენტები</string>
+    <string name="coach_tools_write_after">ჯერ დაამტკიცეთ Coach-ის ინსტრუმენტები, შემდეგ შეძლებთ წერას.</string>
     <string name="coach_tools_eyebrow">ინსტრუმენტები</string>
     <string name="coach_tools_not_given">Coach-ის ინსტრუმენტები არ მიეცა. %1$s</string>
     <string name="coach_tools_not_read">Coach-ის ინსტრუმენტები ვერ წაიკითხა. %1$s</string>
@@ -2780,6 +2791,7 @@
     <string name="watch_ask">ჰკითხეთ tafs-ს</string>
     <string name="watch_ask_needs_consent">სანამ tafs-ს ჰკითხავთ, თქვენს ტელეფონზე tafs-ში ჩართეთ AI-ის გამოყენება.</string>
     <string name="watch_ask_not_on">თქვენი საათიდან კითხვა ჯერ ჩართული არ არის.</string>
+    <string name="watch_ask_phone_sign_in">სთხოვეთ ტელეფონს ამ საათში შესვლა</string>
     <string name="watch_ask_text_only">tafs თქვენს სიტყვებს იღებს ტექსტად, არასოდეს თქვენს ხმას.</string>
     <string name="watch_asking_phone">ვეკითხებით თქვენს ტელეფონს…</string>
     <string name="watch_calendar_today">დღევანდელი კალენდარი</string>
@@ -2791,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">წაიშალა. არაფერი გაიგზავნა.</string>
     <string name="watch_didnt_catch">ვერ გავიგე. შეეხეთ ხელახლა საცდელად.</string>
     <string name="watch_dismiss">უარყოფა</string>
+    <string name="watch_edit_words">შესაცვლელად შეეხეთ ტექსტს</string>
     <string name="watch_glance_description">რამდენი გელოდებათ, არასოდეს რა ან ვინ.</string>
     <string name="watch_halt_all_q">გაჩერდეს თქვენი ყველა taf?</string>
     <plurals name="watch_halt_now_count">
@@ -2806,6 +2819,7 @@
         <item quantity="one">%1$s დაკავებული ზარი გელოდებათ</item>
         <item quantity="other">%1$s დაკავებული ზარი გელოდებათ</item>
     </plurals>
+    <string name="watch_held_channel">დაკავებული ზარები</string>
     <string name="watch_inbox_empty">ახალი არაფერია. Coach-ის პასუხები და თქვენი taf-ების შეტყობინებები აქ ჩნდება.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s წაუკითხავი შემოსულებში</item>
@@ -2820,7 +2834,7 @@
     <string name="watch_menu">მენიუ</string>
     <string name="watch_mic_needed">ხმით სათხოვნელად ამ საათზე tafs-ს მიეცით მიკროფონის უფლება.</string>
     <string name="watch_more_on_phone">დანარჩენი თქვენს ტელეფონზეა.</string>
-    <string name="watch_needs_lock">ამ საათიდან უარის სათქმელად ან გასაჩერებლად დააყენეთ მასზე ეკრანის ჩაკეტვა და განბლოკეთ.</string>
+    <string name="watch_needs_lock">ამ საათიდან გასაგზავნად, უარის სათქმელად ან გასაჩერებლად დააყენეთ მასზე ეკრანის ჩაკეტვა და განბლოკეთ.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s გელოდებათ</item>
         <item quantity="other">%1$s გელოდებათ</item>
@@ -2830,6 +2844,7 @@
     <string name="watch_nothing_sent_until">არაფერი იგზავნება, სანამ არ დაამტკიცებთ.</string>
     <string name="watch_nothing_waits">არაფერი გელოდებათ.</string>
     <string name="watch_open_on_phone">გახსენით ტელეფონზე</string>
+    <string name="watch_opened_on_phone">გაიხსნა ტელეფონზე</string>
     <string name="watch_page_brief">მიმოხილვა</string>
     <string name="watch_page_inbox">შემოსულები</string>
     <string name="watch_paused_still_answers">დაპაუზებულია: მისი განრიგი გამორთულია. ის მაინც პასუხობს, რასაც გაუგზავნით.</string>
@@ -2853,6 +2868,7 @@
     <string name="watch_recent_chats">ბოლო ჩატები</string>
     <string name="watch_recording">იწერება</string>
     <string name="watch_recording_not_received">ჩანაწერი თქვენს ტელეფონამდე ვერ მივიდა. სცადეთ ხელახლა ან აკრიფეთ.</string>
+    <string name="watch_refuse_on_phone">არ უარყოფილა. უარყავით ტელეფონზე.</string>
     <string name="watch_refused">უარყოფილია. არაფერი გაიგზავნა.</string>
     <string name="watch_reply">პასუხი</string>
     <string name="watch_rerecord">ხელახლა ჩაწერა</string>
@@ -2861,14 +2877,20 @@
     <string name="watch_resume_on_phone">განაახლეთ თქვენს ტელეფონზე</string>
     <string name="watch_retry">სცადეთ ხელახლა</string>
     <string name="watch_review">შეამოწმეთ გაგზავნამდე</string>
+    <string name="watch_seconds_left">დარჩა %1$s წმ</string>
     <string name="watch_sending">იგზავნება…</string>
     <string name="watch_sent">გაიგზავნა</string>
     <string name="watch_settings_of">%1$s · პარამეტრები</string>
+    <string name="watch_sign_in_allow">დაშვება</string>
+    <string name="watch_sign_in_denied">შესვლა არ მოხდა. ეს საათი გამოსული რჩება.</string>
+    <string name="watch_sign_in_deny">უარყოფა</string>
     <string name="watch_sign_in_on_phone">ჯერ შედით tafs-ში თქვენს ტელეფონზე.</string>
+    <string name="watch_sign_in_watch_q">შევიდეს ეს საათი თქვენი სახელით?</string>
     <string name="watch_sign_out_q">გამოხვიდეთ ამ საათზე?</string>
     <string name="watch_sign_out_sub">თქვენი ტელეფონი შესული რჩება. ეს საათი ივიწყებს თქვენს taf-ებს, ჩატებს და შემოსულებს.</string>
     <string name="watch_signed_in">შესულია</string>
     <string name="watch_signed_out_here">ამ საათზე გამოხვედით. თქვენი ტელეფონი შესული რჩება.</string>
+    <string name="watch_stopped_at_limit">შეჩერდა %1$s ლიმიტზე. მოსმენილი ქვემოთაა.</string>
     <string name="watch_swipe_settings">გადაიტანეთ მარცხნივ მისი პარამეტრებისთვის</string>
     <string name="watch_tap_start">შეეხეთ „დაწყებას“, შემდეგ ისაუბრეთ. თქვენი სიტყვები აქ ჩანს საუბრისას.</string>
     <string name="watch_timing">მოსმენა %1$s მწ · ქვითარი %2$s მწ · შედეგი %3$s მწ</string>
@@ -2877,8 +2899,10 @@
     <string name="watch_type">აკრიფეთ</string>
     <string name="watch_type_hint">მისწერეთ Coach-ს…</string>
     <string name="watch_update_phone">განაახლეთ tafs თქვენს ტელეფონზე, შემდეგ სცადეთ ხელახლა.</string>
+    <string name="watch_view_on_phone">ნახეთ ტელეფონზე</string>
     <string name="watch_view_only_phone">ეს ტელეფონი მხოლოდ ნახვას ახერხებს, ამიტომ საათიდან ვერ ჰკითხავთ. შედით ტელეფონზე, რომელსაც დამტკიცება შეუძლია.</string>
     <string name="watch_voice_text_only">Coach თქვენს სიტყვებს იღებს ტექსტად, არასოდეს თქვენს ხმას.</string>
+    <string name="watch_waiting_for_phone">ველოდებით თქვენს ტელეფონს…</string>
     <string name="watch_what_it_does">რას აკეთებს</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s მუშაობს</item>

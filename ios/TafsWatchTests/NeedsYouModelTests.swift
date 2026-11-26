@@ -31,6 +31,128 @@ final class NeedsYouModelTests: XCTestCase {
         XCTAssertEqual(model.state, .loaded(page))
     }
 
+    /// Approve on your phone: the phone is asked to open the held call, by its id alone (with the account mark, as the person's
+    /// act); nothing is signed or answered, and nothing on the watch changes.
+    func testApproveOnYourPhoneSendsTheHoldsIDAlone() async {
+        let phone = Phone(WatchReply(.ok, needsYou: page))
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        await model.load()
+        phone.reply = WatchReply(.ok)
+        await model.approveOnPhone("ce_1")
+        XCTAssertEqual(phone.asked.last, WatchRequest(.openOnPhone, made: now, hold: "ce_1"))
+        XCTAssertTrue(WatchRequest.Kind.openOnPhone.carriesMark)
+        XCTAssertTrue(WatchRequest(.openOnPhone, made: now, hold: "ce_1").isComplete)
+        XCTAssertFalse(WatchRequest(.openOnPhone, made: now, hold: "ce_1", taf: "taf-1").isComplete, "a call or a chat, not both")
+        XCTAssertFalse(WatchRequest(.openOnPhone, made: now, hold: "not an id").isComplete)
+        let sent = String(decoding: WatchMessage.encode(phone.asked.last!), as: UTF8.self)
+        XCTAssertFalse(sent.contains("€") || sent.contains("480") || sent.contains("approve"), sent)
+        XCTAssertEqual(model.state, .loaded(page), "nothing on the watch changes")
+        XCTAssertEqual(model.answers, [:])
+    }
+
+    /// The phone's push of its held calls: a call on screen it no longer lists goes at once, with its Refuse; a new one is read
+    /// live, amount and all; an older push, or one with the app put away, changes nothing and reads nothing.
+    func testThePhonesPushTakesAnAnsweredCallOffTheScreen() async {
+        let two = WatchNeedsYou(count: 3, calls: [
+            .init(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00", reason: "Over €150.00 each", answerBy: "10:51"),
+            .init(id: "ce_2", taf: "Rae", what: "Refund order 4503, €90.00", reason: "Over €50.00 each", answerBy: "10:55"),
+        ], at: now)
+        let phone = Phone(WatchReply(.ok, needsYou: two))
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        await model.load()
+        let one = WatchNeedsYou(count: 2, calls: [two.calls[0]], at: now + 5)
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(WatchNeedsYou(count: 2, calls: [two.calls[1]], at: now - 5)), at: now - 5))
+        XCTAssertEqual(model.state, .loaded(two), "an older push changes nothing")
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(one), at: now + 5))
+        XCTAssertEqual(model.state, .loaded(one))
+        XCTAssertEqual(phone.asked.count, 1, "nothing read for a call that went")
+        let three = WatchNeedsYou(count: 3, calls: [two.calls[0], .init(id: "ce_3", taf: "Rae", what: "Refund order 4510, €75.00",
+                                                                          reason: "Over €50.00 each", answerBy: "11:02")], at: now + 9)
+        phone.reply = WatchReply(.ok, needsYou: three)
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(three), at: now + 9))
+        for _ in 0..<100 where phone.asked.count < 2 { await Task.yield() }
+        XCTAssertEqual(phone.asked.count, 2, "a new call is read live")
+        for _ in 0..<100 where model.state != .loaded(three) { await Task.yield() }
+        XCTAssertEqual(model.state, .loaded(three))
+        model.leave()
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(two), at: now + 20))
+        XCTAssertEqual(model.state, .loading)
+        XCTAssertEqual(phone.asked.count, 2, "put away: nothing read")
+    }
+
+    /// Row 28: once the phone answers that it opened the held call, "Opened on your phone" shows on that call for a moment;
+    /// not reached, nothing is said and the button stays.
+    func testApproveOnYourPhoneSaysItOpened() async {
+        WatchOpenedNotice.shared.reset()
+        defer { WatchOpenedNotice.shared.reset() }
+        let phone = Phone(nil)
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        await model.approveOnPhone("ce_1")
+        XCTAssertNil(WatchOpenedNotice.shared.key, "not reached: nothing said")
+        phone.reply = WatchReply(.notYet)
+        await model.approveOnPhone("ce_1")
+        XCTAssertNil(WatchOpenedNotice.shared.key, "an older phone: nothing said")
+        phone.reply = WatchReply(.ok)
+        await model.approveOnPhone("ce_1")
+        XCTAssertEqual(WatchOpenedNotice.shared.key, "ce_1", "on that call")
+    }
+
+    /// Needs you as shown leaves out a held call past its end on the watch's own clock, and its count, as the Inbox does,
+    /// before the phone's next push or read. A call with no end from an older phone stays.
+    func testAHeldCallPastItsEndIsntShownOrCounted() {
+        let page = WatchNeedsYou(count: 4, calls: [
+            .init(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00", reason: "Over €150.00 each", answerBy: "10:51", ends: now + 300),
+            .init(id: "ce_2", taf: "Rae", what: "Refund order 4503, €90.00", reason: "Over €50.00 each", answerBy: "10:55", ends: now + 600),
+            .init(id: "ce_3", taf: "Rae", what: "Refund order 4504, €70.00", reason: "Over €50.00 each", answerBy: "11:00"),
+        ], at: now)
+        XCTAssertEqual(NeedsYouModel.shown(page, now: now), page)
+        let later = NeedsYouModel.shown(page, now: now + 301)
+        XCTAssertEqual(later.calls.map(\.id), ["ce_2", "ce_3"])
+        XCTAssertEqual(later.count, 3)
+        XCTAssertEqual(NeedsYouModel.shown(page, now: now + 601).count, 2)
+    }
+
+    /// The ended hold leaves the model itself, so everything that reads it agrees: the list, the brief's Refuse,
+    /// `beyondBrief`, and Coach's home count (`WatchPage.unread`). The watch's clock, stepped past the end, drops it.
+    func testAnEndedHoldLeavesTheBriefAndTheCountsToo() async {
+        final class Clock { var now = Date(timeIntervalSinceReferenceDate: 813_667_500) }
+        let clock = Clock()
+        let start = clock.now
+        let page = WatchNeedsYou(count: 3, calls: [
+            .init(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00", reason: "Over €150.00 each", answerBy: "10:51",
+                  ends: start + 300),
+            .init(id: "ce_2", taf: "Rae", what: "Refund order 4503, €90.00", reason: "Over €50.00 each", answerBy: "10:55",
+                  ends: start + 600),
+        ], at: start)
+        let decision = WatchBrief.Decision(id: "d1", question: "Refund order 4502?", taf: "Rae", deadline: nil, urgent: false,
+                                           cantWait: nil, refKind: "hold", refID: "ce_1", holdID: "ce_1")
+        let brief = WatchBrief(title: "Your brief", when: nil, urgent: nil, decisions: [decision], more: nil, done: nil,
+                               doneCases: [], rest: nil)
+        final class Phones: PhoneAsking {
+            let page: WatchNeedsYou
+            let brief: WatchBrief
+            init(_ page: WatchNeedsYou, _ brief: WatchBrief) { self.page = page; self.brief = brief }
+            func ask(_ request: WatchRequest) async -> WatchReply? {
+                request.kind == .brief ? WatchReply(.ok, brief: brief) : WatchReply(.ok, needsYou: page)
+            }
+        }
+        // The real wait is an hour here: the test steps the clock and drops the ended hold itself.
+        let model = NeedsYouModel(phone: Phones(page, brief), clock: { clock.now }, lock: Unlocked(), briefOn: true,
+                                  sleep: { _ in try? await Task.sleep(nanoseconds: 3_600_000_000_000) })
+        await model.load()
+        XCTAssertTrue(model.refusable(decision))
+        XCTAssertEqual(model.beyondBrief, 2, "ce_2, and the one other thing that waits")
+        XCTAssertEqual(WatchPage.unread(model.state), 2)
+        clock.now = start + 301
+        model.dropEnded()
+        XCTAssertFalse(model.refusable(decision), "no Refuse on an ended hold, in the brief either")
+        XCTAssertEqual(model.beyondBrief, 2, "the ended hold's count went with it, so the rest is counted as before")
+        XCTAssertEqual(WatchPage.unread(model.state), 1)
+        guard case .loaded(let shown) = model.state else { return XCTFail() }
+        XCTAssertEqual(shown.calls.map(\.id), ["ce_2"])
+        XCTAssertEqual(shown.count, 2)
+    }
+
     func testThePhoneOutOfReachIsSaidAsSuch() async {
         let model = NeedsYouModel(phone: Phone(nil), clock: { self.now }, lock: Unlocked())
         await model.load()

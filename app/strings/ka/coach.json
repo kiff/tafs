@@ -186,6 +186,7 @@
   "coach.tools.give": "მიეცით Coach-ს მისი ინსტრუმენტები",
   "coach.tools.giving": "ეძლევა…",
   "coach.tools.title": "Coach-ის ინსტრუმენტები",
+  "coach.tools.write_after": "ჯერ დაამტკიცეთ Coach-ის ინსტრუმენტები, შემდეგ შეძლებთ წერას.",
   "coach.tools_eyebrow": "ინსტრუმენტები",
   "coach.tools_not_given": "Coach-ის ინსტრუმენტები არ მიეცა. {why}",
   "coach.tools_not_read": "Coach-ის ინსტრუმენტები ვერ წაიკითხა. {why}",

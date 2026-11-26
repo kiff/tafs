@@ -7,6 +7,7 @@ import bot.tafs.app.kiff.setupView
 import bot.tafs.app.kiff.phoneAlerts
 import bot.tafs.app.kiff.timeZones
 
+import bot.tafs.app.model.DeleteChatWords
 import bot.tafs.app.model.ErrorWords
 import bot.tafs.app.model.Words
 import bot.tafs.app.model.Unsent
@@ -146,6 +147,15 @@ private const val TRIAL_SUFFIX = "#trial"
 const val COACH_CHAT = "#coach"
 /** A taf's card that hands a setting to Coach: its words, and a button that opens Coach on the taf with them written in. */
 const val ASK_COACH = "ask_coach"
+
+/** The id of a failed run's line in a chat ([AppState.chatItems]): this, then the run's id. */
+const val FAILED_LINE = "failed|"
+
+/** The codes tafs cloud's `failed` carries (contracts/conversation-failed.json): Try again only ever shows for one of these. */
+val FAILED_RETRY_CODES = setOf("ai_unavailable", "no_credits", "ai_consent_required", "timeout", "failed")
+
+/** Try again under a failed run's line: the person's own words for [run], sent again; [label], tafs cloud's words for the button. */
+data class FailedRetry(val run: String, val text: String, val label: String?)
 
 /**
  * A card a taf's own chat draws: an `ask_coach` card, or the loop card (a `confirm` that carries `loop`), which a run that read one
@@ -353,6 +363,8 @@ data class AppState(
    * carries none. The owner reads that the turn didn't happen, never a chat that seems to be working or waiting on them.
    */
   val chatFailed: Map<String, bot.tafs.app.kiff.TafsCloud.RunFailed> = emptyMap(),
+  /** The failed run each chat's Try again was pressed for: pressed once, it sends once, and the button goes for that run. */
+  val chatFailedRetried: Map<String, String> = emptyMap(),
   /** The files picked for each chat's next message, as they go up (docs/attachments.md): by the chat's id. Sent with the message, then cleared. */
   val chatFiles: Map<String, List<PendingFile>> = emptyMap(),
   /** Why a file wasn't added, or couldn't be opened, by chat. */
@@ -477,6 +489,8 @@ data class AppState(
   /** Coach's past conversations, newest first, and the archived ones (kiff/tafs#97). */
   val coachChats: List<TafsCloud.Chat> = emptyList(),
   val coachArchived: List<TafsCloud.Chat> = emptyList(),
+  /** tafs cloud's words for deleting a conversation, from the last chats-list read that sent them; null until one has. */
+  val coachDeleteWords: TafsCloud.DeleteWords? = null,
   /** News of the tasks Coach handed tafs, until Coach reads it (kiff/tafs#206). */
   val coachLines: List<TafsCloud.CoachLine> = emptyList(),
   /** Coach was asked to open, from a screen without it: the tab screen opens it, then says so. */
@@ -610,6 +624,22 @@ data class AppState(
   val alertsReady: Boolean = false,
   /** Alerts were on for this account when this phone signed out, and didn't come back on with the sign-in: it says so once. */
   val alertsOffSinceSignOut: Boolean = false,
+  /**
+   * Alerts were asked for, but Android no longer asks for the notification permission (declined before): the guided dialog with
+   * Open notification settings, and a re-check when the person comes back ([recheckAlerts]).
+   */
+  val alertsBlocked: Boolean = false,
+  /** The one-time "Your watch is using tafs" prompt, shown the first time the watch uses tafs on a phone whose alerts are off. */
+  val watchAlertsOffer: Boolean = false,
+  /** The watch has used tafs in this sign-in: the phone keeps the taf list for it (`kept/tafs`) and takes its background pushes. */
+  val watchServed: Boolean = false,
+  /**
+   * A watch signed out on itself asks to be signed in again (watch row 18), by its ask id: "Sign this watch in as you?" waits for
+   * this phone's person, Allow or Deny, behind the phone's own lock. Nothing goes to the watch without Allow. Null: none waits.
+   */
+  val watchSignInAsk: String? = null,
+  /** The re-check's outcome, said once under the dialog's place: alerts on now, or still off. */
+  val alertsRecheckLine: String? = null,
   /**
    * Alerts were offered on this phone for this account already (answered, or turned on): the offer on a new taf's card shows once.
    * True until the session says otherwise, so it never shows for a session not read yet.
@@ -1049,7 +1079,25 @@ data class AppState(
     if (live != null && (live.run == null || live.run == failed.run)) return@let items
     // A chat with nothing in it (a new chat) had no run here to fail: the line belongs to the chat it came from.
     val after = items.maxOfOrNull { it.at }?.plusMillis(1) ?: return@let items
-    items + ChatItem.Message(ChatMessage(after, ChatMessage.From.taf, failed.words, "", serverId = "failed|" + failed.run))
+    items + ChatItem.Message(ChatMessage(after, ChatMessage.From.taf, failed.words, "", serverId = FAILED_LINE + failed.run))
+  }
+
+  /**
+   * Try again under a failed run's line ([chatItems]), or null for none. Only when tafs cloud says so (`failed.retry`), for a
+   * code it's known to send, and when the run's own message (`<run>.in`, the person's) is in the chat as plain words: it is sent
+   * again as a new message. Not once it was pressed for this run, nor while the chat is sending or at work. The app decides
+   * nothing about whether it's safe; tafs cloud does.
+   */
+  fun failedRetry(tafId: String): FailedRetry? {
+    val failed = chatFailed[tafId]?.takeIf { it.retry && it.code in FAILED_RETRY_CODES } ?: return null
+    if (chatFailedRetried[tafId] == failed.run || thinking(tafId)) return null
+    // Its line isn't drawn while a run followed live ends with its own (and its own Retry).
+    val live = chatEnded[tafId] as? ChatEnd.Failed
+    if (live != null && (live.run == null || live.run == failed.run)) return null
+    val own = chats[tafId].orEmpty().lastOrNull { it.from == ChatMessage.From.owner && it.serverId == failed.run + ".in" } ?: return null
+    // Words only: a message with files, or a card's answer, isn't the same message sent again as words.
+    if (own.attachments.isNotEmpty() || own.answers != null || own.text.isBlank()) return null
+    return FailedRetry(failed.run, own.text, failed.retryLabel)
   }
 
   /** The digest of [grant]'s profile as planque sends it now, or null for a grant with none. */
@@ -1192,7 +1240,7 @@ class AppModel(
     val key = signer.approvalPublicKeyDER
     if (keyed && key.isNotEmpty() && KiffClient.sameKey(secrets.load(APPROVAL_KEYED), key)) useApprovalKey()
     // Drawn at once, saying it is loading, not after the network: the owner never waits on a blank screen.
-    _state.update { it.copy(mode = Mode.kiff, ready = true, sessionHasKey = keyed, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0", alertsOffered = alertsOfferedOn(tenant)) }
+    _state.update { it.copy(mode = Mode.kiff, ready = true, sessionHasKey = keyed, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0", alertsOffered = alertsOfferedOn(tenant), watchServed = servesWatch()) }
     if (keyGone) lostApprovalKey()
     refresh()
     loadAIConsent(ask = true)
@@ -1468,6 +1516,8 @@ class AppModel(
    */
   suspend fun useSession(token: String, tenant: String? = null) {
     secrets.save(token, TOKEN)
+    // A new sign-in, a new mark for the watch: a watch that sees it change forgets what it kept of the earlier one.
+    secrets.save(newWatchMark(), WATCH_MARK)
     if (tenant != null) {
       secrets.save(tenant, TENANT)
       secrets.save("1", KEYED)
@@ -1498,7 +1548,7 @@ class AppModel(
     followers.values.forEach { it.cancel() }
     followers.clear()
     // Nothing of an earlier session or of the sample shows in this one.
-    _state.value = AppState(mode = Mode.kiff, ready = true, sessionHasKey = tenant != null, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0", alertsOffered = alertsOfferedOn(tenant))
+    _state.value = AppState(mode = Mode.kiff, ready = true, sessionHasKey = tenant != null, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0", alertsOffered = alertsOfferedOn(tenant), watchServed = servesWatch())
     // This sign-in, so a later one that overtook it while it read gets nothing of it: no alert registration, no notice.
     val generation = accountGeneration
     refresh()
@@ -1959,7 +2009,7 @@ class AppModel(
    * didn't end it, so a phone still signed in never goes without its alerts.
    */
   private suspend fun endSessionAtKiff(): Boolean {
-    val token = pushToken?.takeIf { alertsWanted() }
+    val token = registeredToken()
     val unregistered = token != null && runCatching { cloud.unregisterPush(token) }.isSuccess
     val ended = try {
       kiff.signOut()
@@ -1981,7 +2031,7 @@ class AppModel(
     // Signing out ends a drive at once (docs/drive.md, "When a drive ends").
     drive.stop("signed_out")
     // This phone stops getting the account's alerts, while the session can still say so.
-    if (tellKiff && _state.value.mode == Mode.kiff) pushToken?.let { token -> if (alertsWanted()) runCatching { cloud.unregisterPush(token) } }
+    if (tellKiff && _state.value.mode == Mode.kiff) registeredToken()?.let { token -> runCatching { cloud.unregisterPush(token) } }
     if (tellKiff && _state.value.mode == Mode.kiff) runCatching { kiff.signOut() }
     // Remembered for this account only: signing in to it again turns this phone's alerts back on, as they were.
     kiffTenant?.let { tenant ->
@@ -1989,10 +2039,18 @@ class AppModel(
     }
     secrets.delete(ALERTS_ON)
     secrets.delete(HANDOFF)
+    secrets.delete(BACKGROUND_PUSH)
+    secrets.delete(WATCH_SERVED)
     secrets.delete(TOKEN)
     secrets.delete(TENANT)
     secrets.delete(KEYED)
     secrets.delete(APPROVAL_KEYED)
+    // The watch forgets this account too, now or when it's next in reach.
+    val mark = secrets.load(WATCH_MARK)
+    secrets.delete(WATCH_MARK)
+    runCatching { watchSignedOut?.invoke(mark) }
+    // Nothing of the account stays in the shade either: a held call's alert names its taf and what it asks.
+    runCatching { push.clearShown() }
     forgetApprovalKey()
     kiff.token = null
     // KIFF ends this session's approval window at sign-out.
@@ -2370,16 +2428,16 @@ class AppModel(
   suspend fun loadCoachChats() {
     val cloudId = _state.value.coachCloudId ?: return
     val generation = accountGeneration
-    val chats = attempt { cloud.chats(cloudId) } ?: return
-    if (generation == accountGeneration) _state.update { it.copy(coachChats = chats) }
+    val read = attempt { cloud.chatsRead(cloudId) } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(coachChats = read.chats, coachDeleteWords = read.delete ?: it.coachDeleteWords) }
   }
 
   /** Reads the conversations the owner archived, under Archived. */
   suspend fun loadArchivedCoachChats() {
     val cloudId = _state.value.coachCloudId ?: return
     val generation = accountGeneration
-    val chats = attempt { cloud.archivedChats(cloudId) } ?: return
-    if (generation == accountGeneration) _state.update { it.copy(coachArchived = chats) }
+    val read = attempt { cloud.archivedChatsRead(cloudId) } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(coachArchived = read.chats, coachDeleteWords = read.delete ?: it.coachDeleteWords) }
   }
 
   /**
@@ -2419,6 +2477,40 @@ class AppModel(
     if (generation != accountGeneration) return false
     _state.update { s -> s.copy(coachArchived = s.coachArchived.filterNot { it.session == session }) }
     loadCoachChats()
+    return true
+  }
+
+  /**
+   * Deletes one of Coach's conversations for good, after the person confirmed it: it leaves both lists, and the one shown gives way
+   * to a new conversation, so the watch's copy of it is emptied too. tafs cloud decides whose it is: one it doesn't have (404:
+   * already gone, or never this person's) leaves the lists quietly. One still working or waiting on a card (409) stays, with the
+   * refusal's own words (its `error`). Any other failure keeps it, with the words the last chats-list read brought, so
+   * they're on hand with no network. The app's English stand-ins ([DeleteChatWords]) only where tafs cloud sent none.
+   */
+  suspend fun deleteCoachChat(session: String): Boolean {
+    val cloudId = _state.value.coachCloudId ?: return false
+    val generation = accountGeneration
+    try {
+      cloud.deleteChat(cloudId, session)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: CloudError) {
+      if (generation != accountGeneration) return false
+      when (e.status) {
+        404 -> {}
+        409 -> { fail(e.field("error") ?: DeleteChatWords.BUSY); return false }
+        else -> { fail(DeleteChatWords.of(_state.value.coachDeleteWords).failed); return false }
+      }
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail(DeleteChatWords.of(_state.value.coachDeleteWords).failed)
+      return false
+    }
+    if (generation != accountGeneration) return false
+    val shown = _state.value.coachChat == session
+    _state.update { s -> s.copy(coachChats = s.coachChats.filterNot { it.session == session }, coachArchived = s.coachArchived.filterNot { it.session == session }) }
+    // A file opened from it keeps a copy here, which would outlive "deleted for good": it's only a cache, so all of it goes.
+    openedFiles.deleteRecursively()
+    if (shown) newCoachChat()
     return true
   }
 
@@ -3061,6 +3153,116 @@ class AppModel(
   /** Alerts were turned on on this phone: only then is it registered at launch, so a phone that never asked is never alerted. */
   private fun alertsWanted(): Boolean = secrets.load(ALERTS_ON) == "1"
 
+  /** The watch has used tafs in this sign-in (a request, or a chat it opened): the phone serves it, whatever its alerts. */
+  private fun servesWatch(): Boolean = kiffTenant?.let { secrets.load(WATCH_SERVED) == it } == true
+
+
+  /**
+   * The watch used tafs (any request the relay takes): the first time in a sign-in, this phone registers for the watch's background
+   * pushes if its alerts are off ([syncBackgroundPush]), and, on a phone whose notifications are off, offers alerts once
+   * ("Your watch is using tafs"). Never a prompt the person has seen before on this phone.
+   */
+  fun watchUsed() {
+    val tenant = kiffTenant ?: return
+    if (_state.value.mode != Mode.kiff || secrets.load(WATCH_SERVED) == tenant) return
+    secrets.save(tenant, WATCH_SERVED)
+    _state.update { it.copy(watchServed = true) }
+    if (push.available && !alertsWanted() && !push.enabledNow() && secrets.load(WATCH_ALERTS_OFFERED) == null) {
+      secrets.save("1", WATCH_ALERTS_OFFERED)
+      _state.update { it.copy(watchAlertsOffer = true) }
+    }
+    viewModelScope.launch { syncPush() }
+  }
+
+  /**
+   * Registers this phone for background pushes only (`alerts: false`): a taf's chat, a watch request and the watch Inbox reach it
+   * with tafs closed, so its watch stays in step, and no alert ever shows. Only for a phone that serves a watch, with alerts off.
+   * It needs no notification permission: Firebase delivers data messages without it.
+   */
+  private suspend fun syncBackgroundPush() {
+    if (!servesWatch()) return
+    val token = pushToken ?: push.token()?.also { pushToken = it } ?: return
+    val generation = accountGeneration
+    attempt { cloud.registerPush(token, sound = false, alerts = false) } ?: return
+    if (generation == accountGeneration) secrets.save(token, BACKGROUND_PUSH)
+  }
+
+  /** The token to take back from tafs cloud at sign-out: one registered for alerts, or for the watch's background pushes. */
+  private fun registeredToken(): String? = pushToken?.takeIf { alertsWanted() } ?: secrets.load(BACKGROUND_PUSH)
+
+  /** "Your watch is using tafs", answered either way: it never shows again on this phone. */
+  fun dismissWatchAlertsOffer() = _state.update { it.copy(watchAlertsOffer = false) }
+
+  /** The guided dialog closed without going to Settings. */
+  fun dismissAlertsBlocked() = _state.update { it.copy(alertsBlocked = false) }
+
+  /** The person went to Settings from a dialog: the next [recheckAlerts] looks again. */
+  private var recheckOnReturn = false
+
+  /** Called as the person leaves for Android's notification settings from a dialog. */
+  fun leftForNotificationSettings() {
+    recheckOnReturn = true
+    _state.update { it.copy(alertsBlocked = false, watchAlertsOffer = false) }
+  }
+
+  /**
+   * Back in the app after Settings: notifications allowed now turn alerts on with no other tap ("Alerts are on."); still blocked,
+   * it says so once ("Alerts are still off."). Asks nothing.
+   */
+  suspend fun recheckAlerts() {
+    if (!recheckOnReturn) return
+    recheckOnReturn = false
+    if (!push.enabledNow()) {
+      _state.update { it.copy(alertsRecheckLine = Words.Alert.stillOff) }
+      return
+    }
+    val on = turnOnAlerts()
+    if (on) _state.update { it.copy(alertsRecheckLine = Words.Alert.nowOn) }
+    runCatching { loadPhoneAlerts() }
+  }
+
+  fun dismissAlertsRecheckLine() = _state.update { it.copy(alertsRecheckLine = null) }
+
+  /**
+   * The watch's account mark for this sign-in (docs/watch-wear.md, "What the watch keeps"): random, made at sign-in (or here, for
+   * a session from before marks) and dropped at sign-out, so it tells the watch only whether it's still the same sign-in. None
+   * while signed out or in the sample.
+   */
+  fun watchMark(): String? {
+    if (_state.value.mode != Mode.kiff || secrets.load(TOKEN) == null) return null
+    return secrets.load(WATCH_MARK) ?: newWatchMark().also { secrets.save(it, WATCH_MARK) }
+  }
+
+  /**
+   * Told at every sign-out, with the mark it dropped (none in the sample): the app passes it on to the watch at once
+   * ([bot.tafs.app.watch.WatchSignedOut]), so a watch out of reach forgets the account too. Never fails a sign-out.
+   */
+  var watchSignedOut: ((String?) -> Unit)? = null
+
+  /** A watch's sign-in ask arrived ([askWatchSignIn]): the app tells its person, with the app closed too. */
+  var watchSignInAsked: (() -> Unit)? = null
+
+  /** The person answered a watch's sign-in ask: the answer goes to the watch, for that ask alone, with the account mark. */
+  var watchSignInAnswered: ((ask: String, allowed: Boolean, mark: String?) -> Unit)? = null
+
+  /**
+   * A watch signed out on itself asks to be signed in again (watch row 18): asked of this phone's person, never answered by the
+   * phone alone. Signed out here, or in the sample, nothing is asked. The newest ask replaces one still waiting.
+   */
+  fun askWatchSignIn(ask: String): Boolean {
+    if (_state.value.mode != Mode.kiff) return false
+    _state.update { it.copy(watchSignInAsk = ask) }
+    runCatching { watchSignInAsked?.invoke() }
+    return true
+  }
+
+  /** Allow or Deny, the person's own tap: the watch hears it for that ask alone. Allow signs it in again, and it starts empty. */
+  fun answerWatchSignIn(allowed: Boolean) {
+    val ask = _state.value.watchSignInAsk ?: return
+    _state.update { it.copy(watchSignInAsk = null) }
+    runCatching { watchSignInAnswered?.invoke(ask, allowed, if (allowed) watchMark() else null) }
+  }
+
   private fun applyPush(status: PushStatus) {
     _state.update { it.copy(canAnswerHolds = status.answers, alertsReady = status.alerts && pendingHandoff() == null) }
   }
@@ -3227,6 +3429,8 @@ class AppModel(
       if (gen != accountGeneration) return
       secrets.save("0", ALERTS_ON)
       _state.update { it.copy(alertsReady = false, phoneAlerts = it.phoneAlerts?.copy(enabled = false)) }
+      // Alerts off doesn't take the watch's updates with them: a phone that serves a watch keeps its background pushes.
+      syncBackgroundPush()
     } catch (e: CancellationException) { throw e
     } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(phoneAlertsError = ErrorWords.of(e)) }
     } finally { if (gen == accountGeneration) _state.update { it.copy(phoneAlertsBusy = false) } }
@@ -3326,8 +3530,10 @@ class AppModel(
    * whether the account's alerts are set up. Only for a phone whose owner turned alerts on.
    */
   suspend fun syncPush() {
+    if (_state.value.mode != Mode.kiff || !push.available) return
+    // Alerts off: a phone that serves a watch still takes its background pushes, and only those (docs/watch-wear.md, Delivery).
+    if (!(alertsWanted() || pendingHandoff() != null)) return syncBackgroundPush()
     // A hand-off tafs cloud didn't take is the owner's yes already given: it's handed over again here, with no new confirmation.
-    if (_state.value.mode != Mode.kiff || !push.available || !(alertsWanted() || pendingHandoff() != null)) return
     val token = pushToken ?: push.token()?.also { pushToken = it } ?: return
     val generation = accountGeneration
     val handoff = pendingHandoff()
@@ -3366,7 +3572,8 @@ class AppModel(
     try {
       val generation = accountGeneration
       if (!push.allowed()) {
-        fail(Words.Alert.allowNotifications)
+        // Android no longer asks once declined: the guided dialog, with the way to the switch, not a bare "Not done".
+        _state.update { it.copy(alertsBlocked = true) }
         return false
       }
       val token = pushToken ?: push.token()?.also { pushToken = it }
@@ -3767,6 +3974,12 @@ class AppModel(
     }
     val draftRequest = start.draft ?: return false
     if (_state.value.startingCoach) return false
+    // Shown = signed (docs/coach.md, "Coach's tools step"): once tafs cloud sends the Card step, its plain list must be exactly
+    // what the draft signs ([bot.tafs.app.kiff.CardStepCheck]), whatever the screen drew. Otherwise nothing is signed.
+    if (start.words?.title?.isNotBlank() == true && !start.cardStepSigns) {
+      failed(VersionWords.OUT_OF_DATE_CARD)
+      return false
+    }
     // Approvals are set up here, at Start: a phone that signed in before it could approve registers its approval key now, and
     // nothing is signed unless KIFF holds it (the one signature over both requests is the approval key's).
     if (!sessionHasApprovalKey) registerApprovalKey()
@@ -3891,6 +4104,14 @@ class AppModel(
     // tafs cloud's batch or Cards changed since the step was drawn (more tools, another draft): nothing is signed. The step is
     // drawn again from this read, and the next Give signs exactly that.
     if (tools.toGive && (shown == null || !sameToolsToGive(shown, tools))) {
+      _state.update { it.copy(coachTools = tools, coachToolsError = VersionWords.OUT_OF_DATE_CARD) }
+      return false
+    }
+    // Shown = signed for a later approval of Coach's Cards: when tafs cloud marks which tools this draft carries (`in_draft`),
+    // those must be exactly what the draft signs ([bot.tafs.app.kiff.CardStepCheck]). Otherwise nothing is signed.
+    val draftBody = tools.card?.body
+    val step = tools.step
+    if (tools.toGive && draftBody != null && step != null && step.marksDraft && !bot.tafs.app.kiff.CardStepCheck.matches(step, draftBody, "")) {
       _state.update { it.copy(coachTools = tools, coachToolsError = VersionWords.OUT_OF_DATE_CARD) }
       return false
     }
@@ -6799,6 +7020,19 @@ class AppModel(
       // One that was tried and refused stays in the thread, marked not sent: it never comes back to the box as well.
       if (!deliverChat(text, tafId, withFiles) && _state.value.chatUnsent[tafId].orEmpty().none { it.message.text == text.trim() }) onNotSent(text)
     }
+  }
+
+  /**
+   * Try again under a failed run's line ([AppState.failedRetry]): the person's words for that run go again as a new message,
+   * once. The button goes as it's pressed, so a second tap finds nothing; not sent, the words stay, as any message's do.
+   */
+  fun retryFailed(tafId: String, onNotSent: (String) -> Unit) {
+    var again: FailedRetry? = null
+    _state.update { s ->
+      again = s.failedRetry(tafId)
+      again?.let { s.copy(chatFailedRetried = s.chatFailedRetried + (tafId to it.run)) } ?: s
+    }
+    again?.let { sendChat(it.text, tafId, false, onNotSent) }
   }
 
   /**
@@ -9985,6 +10219,20 @@ class AppModel(
     const val TENANT = "kiff.tenant"
     const val KEYED = "kiff.session-keyed"
     const val APPROVAL_KEYED = "kiff.session-approval-keyed"
+    /** The watch's account mark for this sign-in ([watchMark]). */
+    const val WATCH_MARK = "tafs.watch-mark"
+    /** The tenant whose sign-in the watch has used tafs in ([watchUsed]); cleared at sign-out. */
+    const val WATCH_SERVED = "tafs.watch-served"
+    /** The token this phone registered for background pushes only ([syncBackgroundPush]), so sign-out takes it back. */
+    const val BACKGROUND_PUSH = "tafs.background-push"
+    /** "Your watch is using tafs" was shown on this phone: once per phone, never again. */
+    const val WATCH_ALERTS_OFFERED = "tafs.watch-alerts-offered"
+
+    /** A new account mark: 16 random bytes, base64url, never derived from the account. */
+    fun newWatchMark(): String {
+      val bytes = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
+      return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+    }
 
     /** What the fingerprint prompt says when Approve again proves this phone holds its new key. */
     val RELINK_REASON get() = Words.SignIn.Relink.prompt

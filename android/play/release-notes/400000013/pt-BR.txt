@@ -1,0 +1,4 @@
+• Suas conversas com o Coach e seus tafs ficam no relógio e abrem na hora, com a mensagem mais recente embaixo.
+• As respostas chegam com uma notificação mesmo com o app fechado.
+• Envie mensagens no chat de um taf pelo relógio e leia uma resposta inteira com "Ler mais".
+• Sem mais "Tentar novamente": o relógio alcança o celular sozinho.

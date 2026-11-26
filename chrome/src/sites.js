@@ -10,11 +10,16 @@ export const CODE = Object.freeze({
   siteBlocked: "site_blocked",
 });
 
-const LOCAL_SUFFIXES = [".localhost", ".local", ".internal", ".home", ".lan", ".corp", ".intranet", ".arpa"];
+export const LOCAL_SUFFIXES = Object.freeze([".localhost", ".local", ".internal", ".home", ".lan", ".corp", ".intranet", ".arpa"]);
 const IDEOGRAPHIC_DOTS = /[。．｡]/g;
 
-/** Chrome's own pages and the Web Store: never, for any grant. */
-const ALWAYS_BLOCKED = ["chrome.google.com", "chromewebstore.google.com", "accounts.google.com", "myaccount.google.com", "passwords.google.com", "pay.google.com"];
+/**
+ * Never, for any grant: Chrome's own pages and the Web Store, Google's account and pay pages, and KIFF's own (kiff.dev and every
+ * subdomain: its Cards, connections, keys and approvals, and tafs's). A taf never drives the controls it's held by. The
+ * extension's own requests to KIFF, planque and tafs cloud aren't a tab's, so the fence, which holds only the run's tabs, never
+ * touches them.
+ */
+const ALWAYS_BLOCKED = ["chrome.google.com", "chromewebstore.google.com", "accounts.google.com", "myaccount.google.com", "passwords.google.com", "pay.google.com", "kiff.dev"];
 
 /**
  * Sensitive sites, blocked unless allowed one by one. Each entry is a site and its subdomains. The patterns catch what a
@@ -28,6 +33,8 @@ export const SENSITIVE = Object.freeze({
     "coinbase.com", "binance.com", "kraken.com", "metamask.io", "blockchain.com", "crypto.com", "ledger.com", "bitstamp.net",
     // payments and money accounts
     "paypal.com", "wise.com", "revolut.com", "n26.com", "venmo.com", "cash.app", "klarna.com", "payoneer.com",
+    // merchant consoles: where a business refunds, pays out and moves its money, outside any Card
+    "stripe.com", "paddle.com", "adyen.com", "squareup.com", "braintreegateway.com", "gocardless.com",
     // health
     "ameli.fr", "nhs.uk", "mychart.com", "healthcare.gov",
   ],
@@ -110,6 +117,42 @@ export function mailHost(host) {
 
 export function sensitive(host) {
   return SENSITIVE.sites.some((s) => within(host, s)) || SENSITIVE.labels.test(host);
+}
+
+/**
+ * `SENSITIVE.labels` as patterns Chrome's fence can hold on a request's address (declarativeNetRequest `regexFilter`s, RE2): the
+ * host, from just after `://`, has a label that names a bank, a government or a health account, exactly as `sensitive()` tests the
+ * host (a label ends at a dot, a hyphen, the port, the path or the end). Built from the label words of that one regex, so the two
+ * never drift; a test checks they agree. Chrome holds a pattern only within a small memory budget (one with every word is refused,
+ * `memoryLimitExceeded`), so the words are split over a few patterns, each well inside it; any one matching blocks.
+ * (`SENSITIVE.sites` go to the fence as domains: they match a site and its subdomains, as `within` does.)
+ */
+export const SENSITIVE_LABELS_URLS = (() => {
+  const words = /^\(\^\|\[\.-\]\)\((.*)\)\(\[\.-\]\|\$\)$/.exec(SENSITIVE.labels.source);
+  if (!words) throw new Error("SENSITIVE.labels changed shape: rebuild SENSITIVE_LABELS_URLS");
+  const pattern = (ws) => "^https?://(?:[^/?#:]*[.-])?(?:" + ws.join("|") + ")(?:[.:/?#-]|$)";
+  const chunks = [[]];
+  for (const w of words[1].split("|")) {
+    const last = chunks[chunks.length - 1];
+    if (last.length && pattern([...last, w]).length > 110) chunks.push([w]);
+    else last.push(w);
+  }
+  return Object.freeze(chunks.map(pattern));
+})();
+
+/** Chrome's own pages and the Web Store, which no grant opens: for the fence too. */
+export const NEVER_OPENED = Object.freeze([...ALWAYS_BLOCKED]);
+
+/**
+ * What Chrome's fence may let a run's tab reach, exactly as `refuseURL` would: `granted`, the grant's sites that name one site
+ * (`siteOK`), never a local name or an address; `allowed`, the sensitive sites the phone allowed by name, only those within a
+ * granted site (an allowance outside the grant reaches nothing, as in `refuseURL`).
+ */
+export function fenceDomains(sites, allowed = []) {
+  const clean = (s) => String(s || "").toLowerCase().replace(IDEOGRAPHIC_DOTS, ".").replace(/\.$/, "");
+  const granted = [...new Set((Array.isArray(sites) ? sites : []).filter((s) => siteOK(s)).map(clean))].filter((h) => h && !isAddress(h) && !local(h) && ![...h].some((c) => c.charCodeAt(0) > 0x7f));
+  const kept = [...new Set((Array.isArray(allowed) ? allowed : []).map(clean))].filter((h) => h && siteOK(h) && !isAddress(h) && !local(h) && granted.some((g) => within(h, g)));
+  return { granted, allowed: kept };
 }
 
 /**

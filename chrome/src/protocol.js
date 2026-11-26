@@ -90,9 +90,13 @@ export async function checkStep(message, { planqueKey, chromeId, nonces, now = D
  * and a result can't be replayed for another step with the same id. `page` is the page as read back, `error`
  * `{code, detail?}`; never both.
  */
-export async function result(privateKey, step, chromeId, { page = null, error = null, handed = false } = {}) {
-  // A hand-over is answered at once as "handed"; the person's own answer comes later, as its own message (hand.js).
-  const body = { id: step.id, nonce: typeof step.nonce === "string" ? step.nonce : null, chrome_id: chromeId, ok: !error, page, error, ...(handed ? { handed: true } : {}) };
+export async function result(privateKey, step, chromeId, { page = null, error = null, handed = false, pageDropped = null } = {}) {
+  // A hand-over is answered at once as "handed"; the person's own answer comes later, as its own message (hand.js). A step that
+  // ran but whose page fits the relay no way says so (`page_dropped`): it's done, and the taf reads again (relay.js).
+  const body = {
+    id: step.id, nonce: typeof step.nonce === "string" ? step.nonce : null, chrome_id: chromeId, ok: !error, page, error,
+    ...(handed ? { handed: true } : {}), ...(pageDropped ? { page_dropped: pageDropped } : {}),
+  };
   return { type: "result", ...body, sig: await sign(privateKey, LABEL.result, body) };
 }
 
@@ -173,4 +177,28 @@ export async function checkSites(step, pairing) {
   if (!Array.isArray(signed.sites) || typeof signed.sig !== "string") return false;
   if (!step.sites.every((s) => signed.sites.includes(s))) return false;
   return verify(pairing.phoneKey, LABEL.sites, { chrome_id: pairing.chromeId, grant: step.grant, sites: signed.sites }, signed.sig);
+}
+
+/**
+ * The sites the paired phone signed for [grants] on this Chrome, from what this extension can check itself: a connection a
+ * re-pairing carried (`pairing.carried`, inside what the phone signed at pairing), and a connection planque lists with its
+ * grant's `sites_signed` (the phone's `tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`, the same a run's first step
+ * carries), verified here. planque's own `sites` for a connection are never taken: a list without a valid signature adds nothing.
+ */
+export async function signedSitesOf(grants, connections, pairing) {
+  if (!pairing || !pairing.phoneKey || !Array.isArray(grants)) return [];
+  const out = new Set();
+  for (const grant of grants) {
+    if (typeof grant !== "string" || !grant) continue;
+    const carried = Array.isArray(pairing.carried) ? pairing.carried.find((e) => e && e.grant === grant) : null;
+    if (carried && Array.isArray(carried.sites)) for (const s of carried.sites) out.add(s);
+    for (const c of connections || []) {
+      const signed = c && c.grant === grant ? c.sites_signed : null;
+      if (!signed || !Array.isArray(signed.sites) || typeof signed.sig !== "string") continue;
+      if (await verify(pairing.phoneKey, LABEL.sites, { chrome_id: pairing.chromeId, grant, sites: signed.sites }, signed.sig)) {
+        for (const s of signed.sites) out.add(s);
+      }
+    }
+  }
+  return [...out].filter((s) => typeof s === "string");
 }

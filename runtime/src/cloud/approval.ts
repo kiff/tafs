@@ -1,4 +1,4 @@
-import { grantSuffix, kiffsOwnCount, KIFF_COUNT_A_DAY, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement, unpinnedConnection } from "./rules.js";
+import { grantSuffix, kiffsOwnCount, KIFF_COUNT_A_DAY, moneyCardsOff, type MoneyCard, type MoneyUnbuilt, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement, unpinnedConnection } from "./rules.js";
 import { noteSendingOutside, sendingProfileOf } from "./sends-outside.js";
 /**
  * An approval card's outcome is tafs cloud's to decide (kiff/tafs#413). The
@@ -71,7 +71,7 @@ export interface ApprovalGrant {
  * a read that didn't come back) wait for the owner's tap, as before.
  */
 export const REDRAFT_CODES: ReadonlySet<string> = new Set(["rules_unpinned", "no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount",
-  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed_figure", "rules_unagreed", "rules_required", "rules_unsaid"]);
+  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed_figure", "rules_unagreed", "rules_required", "rules_unsaid", "money_cards", "money_rules"]);
 /** The refusals Coach mends by having the owner agree to the rules first, then drafting again. */
 /**
  * Said with every refusal for rules not agreed: nothing waits for the owner until Coach shows the rules, so Coach shows
@@ -104,6 +104,14 @@ type CardsChecked = Decision | { waitsFor: string } | { draft: NonNullable<Await
 export const REFUSAL_CLOSED = "Refused by tafs cloud's check, not by the owner: this approval is closed and nothing waits for them.";
 export const DRAW_AGAIN = "Draft it again now and show a new approval.";
 export const AGREE_FIRST = "Show the rules for the owner to agree first, then draft it again and show a new approval.";
+/**
+ * What a held per-action limit's Card carries instead, said with a refusal that took its total away (count_on_amount on
+ * that Card, day_total_twice): KIFF refuses a Card with no total, so its one total is KIFF's own count (kiffsOwnCount),
+ * and the day's total goes once, on the refused Card. E2E 45557276812: told only to drop the count, then that the Card has
+ * no day's total, Coach drafted the held Card with none, KIFF refused it, and Coach told the owner KIFF couldn't hold
+ * "ask past €5 a refund, refuse past €50 a day", which the owner then changed to refuse past €5.
+ */
+export const KIFFS_OWN_TOTAL = `A held per-action limit's Card keeps one total, KIFF's own count, never the owner's: quantity "count", limit ${KIFF_COUNT_A_DAY}, window "calendar_day", no per. The day's total goes once, on the refused Card. Those two Cards hold the owner's rules as agreed: never tell them KIFF can't, and never ask them to change a rule for it.`;
 /** A count_on_amount refusal's: the count was never the owner's, so Coach drops it without asking them again. */
 export const COUNT_NEVER_A_RULE = "A count of calls on a tool with an amount limit is never one of the owner's rules: drop it without asking them.";
 
@@ -150,6 +158,12 @@ export function unagreedRefusal(notice: string, grant: ApprovalGrant, lang: Lang
 
 async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext, others: ApprovalGrant[] = [], combined = false): Promise<CardsChecked> {
   const W = approvalWords(ctx.lang);
+  // The conversation's rules are read once, for the money Cards and for the rules' own checks.
+  if (ctx.rulesAgreement) {
+    const read = ctx.rulesAgreement;
+    let once: Promise<RulesAgreement> | undefined;
+    ctx = { ...ctx, rulesAgreement: () => (once ??= read()) };
+  }
   const draft = await draftInfo(ctx.token, draftID, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now);
   if (!draft) return { outcome: "answered", answer: `failed: KIFF has no Card draft ${draftID} on this account`, note: `KIFF has no Card draft for this. Ask Coach for a new one.`, code: "no_draft" };
   // Its Card confirmed already: a real approval, signed earlier (another phone, or a tap before this one).
@@ -227,6 +241,10 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
     if (elsewhere) {
       return { outcome: "answered", answer: `failed: no Card covers "${elsewhere.tool}", which the taf's ${elsewhere.vendor} connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${elsewhere.tool}" on a Card too (a read goes on the reads' Card, which carries KIFF's count of ${READS_A_DAY.toLocaleString("en")} a day, not the owner's).`, note: W.uncovered(elsewhere.tool), code: "uncovered_elsewhere" };
     }
+    // A money tool's Cards are the ones its agreed rules give (rules.ts, cardsFromRules), before the checks below, which
+    // each name one thing to change: Coach hears the whole Cards at once, to draft as they are.
+    const money = await moneyChecked(grant, others, draft, ctx);
+    if (money) return money;
     // A limit for each item drafted as one lifetime count on the whole tool stops the taf after its first item
     // (Eval 43402441612: "one invoice per order, ever" signed as 1 create_invoice in the Card's life). Never signed.
     const capped = lifetimeCapOnWrite(grant, draft.cards);
@@ -246,7 +264,7 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
     // same amount on one tool make the stricter one decide past the limit, whatever was agreed. Never signed.
     const twice = dayTotalTwice(grant, draft.cards);
     if (twice) {
-      return { outcome: "answered", answer: `failed: the draft counts "${twice.tool}"'s ${twice.quantity} over a day on two Cards: ${twice.first.limit} on one whose on_exceed is "${twice.first.onExceed}", and ${twice.second.limit} on one whose on_exceed is "${twice.second.onExceed}". A day's total appears once, at the agreed amount, on the Card whose on_exceed is the agreed answer; a held per-action limit's Card has no day's total. Draft it again.`, note: W.dayTotalTwice(twice.tool), code: "day_total_twice" };
+      return { outcome: "answered", answer: `failed: the draft counts "${twice.tool}"'s ${twice.quantity} over a day on two Cards: ${twice.first.limit} on one whose on_exceed is "${twice.first.onExceed}", and ${twice.second.limit} on one whose on_exceed is "${twice.second.onExceed}". A day's total appears once, at the agreed amount, on the Card whose on_exceed is the agreed answer; a held per-action limit's Card has no day's total. ${KIFFS_OWN_TOTAL} Draft it again.`, note: W.dayTotalTwice(twice.tool), code: "day_total_twice" };
     }
     // A write with an amount limit is limited by its amounts, as agreed: a count of its calls beside them is a limit
     // nobody set (Evals 10 to 12: a refund Card also held past 1,000 refunds a day, so 1,001 one-cent refunds under the
@@ -256,7 +274,7 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
     const counted = countOnAmountWrite(grant, draft.cards);
     if (counted) {
       const each = counted.per ? ` for each ${counted.per}` : "";
-      return { outcome: "answered", answer: `failed: the draft counts "${counted.tool}"'s calls (${counted.limit} per ${counted.window}${each}) beside its amount limits. A write with an amount limit has only the agreed amounts, each call's and the day's total: no count of its calls. Draft it again without the count.`, note: W.countOnAmount(counted.tool), code: "count_on_amount" };
+      return { outcome: "answered", answer: `failed: the draft counts "${counted.tool}"'s calls (${counted.limit} per ${counted.window}${each}) beside its amount limits. A write with an amount limit has only the agreed amounts, each call's and the day's total: no count of its calls. Draft it again without the count.${counted.held ? ` ${KIFFS_OWN_TOTAL}` : ""}`, note: W.countOnAmount(counted.tool), code: "count_on_amount" };
     }
   }
   // What happens past each limit is what the owner agreed (rules.ts): the newest rules they agreed in this conversation,
@@ -267,6 +285,54 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
 }
 
 /**
+ * What a money tool's agreed rules lack for KIFF to sign Cards of them (cardsFromRules), said to Coach: only what the rules
+ * need, never that the owner can't have a rule (an Eval, 26 Nov: a refusal's "would let every call under it run unasked"
+ * became Coach telling the owner a cap that asks past it couldn't be set).
+ */
+export const MONEY_UNBUILT: Record<MoneyUnbuilt, string> = {
+  refused_total: "its refused limits have no total over a window, and KIFF needs one on every Card: the rules need a day's total that is refused",
+  held_bound: "its held Card would limit no amount, and KIFF needs every Card on a money tool to limit its amount: the rules need each call's limit on the amount",
+  held_total: "its held limits have no total, and no refused day's total on the amount stands beside them for KIFF's own count: the rules need a day's total on the amount",
+  count: "the rules count its calls, and a money tool is limited by its amounts: each call's and a day's total, no count of calls but 0 (every call asks)",
+  asks_unnamed: "its rule says its calls ask the owner, but no figure asks, so no Card can hold it: if every call asks, the rules need a count of 0 a calendar day that asks (count, 0, calendar_day, over ask); if none asks, the rule's over is refuse",
+  every_call_unheld: "the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks, so calls under its figures would run unasked: the rules need that count (count, 0, calendar_day, over ask), beside its refused figures, or words that say which calls ask",
+};
+
+/** Said with every money refusal: what a refusal names is what the rules need, never a rule the owner can't have. */
+export const MONEY_NEVER_CANT = "Never tell the owner a rule can't be set: this names only what the rules need for KIFF to sign them.";
+
+/** Whether a money tool's held Card carries its refused Card's cap on each call (cardsFromRules), said to Coach as such. */
+function copiedCap(cards: MoneyCard[]): boolean {
+  const caps = (on: "owner" | "refuse") => cards.filter((c) => c.on_exceed === on).flatMap((c) => c.grants[0].per_action_max ?? []);
+  return caps("owner").some((h) => caps("refuse").some((r) => r.quantity === h.quantity && r.max === h.max));
+}
+
+/**
+ * A money tool's Cards against the ones its agreed rules give (rules.ts, moneyCardsOff), with the rules the owner agreed
+ * in this conversation. Nothing to check with no conversation to read, or rules not agreed (rulesChecked answers those).
+ * A draft that differs is refused with the Cards to draft in its place, exactly; rules that give no Cards KIFF signs are
+ * shown again, with what they lack.
+ */
+async function moneyChecked(grant: ApprovalGrant, others: ApprovalGrant[], draft: { agent: string; cards?: unknown[] }, ctx: DecideContext): Promise<Decision & { code?: string } | undefined> {
+  if (!ctx.rulesAgreement) return undefined;
+  const W = approvalWords(ctx.lang);
+  let agreement: RulesAgreement | undefined;
+  try {
+    agreement = await ctx.rulesAgreement();
+  } catch {
+    agreement = undefined;
+  }
+  if (!agreement) return { outcome: "read_again", note: W.cardsUnread, code: "rules_unread" };
+  if (agreement.state !== "agreed") return undefined;
+  const off = moneyCardsOff([grant, ...others], draft.cards ?? [], agreement.rules, draft.agent, agreement.text);
+  if (!off) return undefined;
+  if ("unbuilt" in off) {
+    return { outcome: "answered", answer: `failed: "${off.tool}" moves money, and the rules the owner agreed give it no Cards KIFF signs: ${MONEY_UNBUILT[off.unbuilt]}. Ask the owner that one thing, show the rules again with it, and draft once they tap agree. ${MONEY_NEVER_CANT}`, note: W.rulesMissing(off.tool), code: "money_rules" };
+  }
+  return { outcome: "answered", answer: `failed: "${off.tool}" moves money, so its Cards are the ones the rules the owner agreed give, and the draft's differ. Draft it again with exactly these Cards in place of every Card covering "${off.action}", the other Cards as they are, and nothing else changed: ${JSON.stringify(off.cards)}.${copiedCap(off.cards) ? " The held Card carries each call's refused cap too: KIFF needs every Card on a money tool to limit its amount, and a call past it is refused." : ""} These are the owner's rules as agreed: never ask them to change a rule for it.`, note: W.rulesFigures(off.tool), code: "money_cards" };
+}
+
+/**
  * The first write tool of the connection that the draft's Cards limit by its amount (a per-call cap on a sum, or a
  * sum over any window) and also count by its calls (count, a limit above 0), on the same Card or another. A count of 0
  * (each call asks the owner, as on demand) is kept, as is a count on a read. A count per item is kept only in the
@@ -274,7 +340,7 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
  * resource_argument. KIFF's own count, the only total of a held Card, is never the owner's and is kept (kiffsOwnCount).
  * The tool is named as the connection titles it, with the count's limit, window and item.
  */
-export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; limit: number; window: string; per?: string } | undefined {
+export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; limit: number; window: string; per?: string; held?: true } | undefined {
   const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   const writes = (grant.request.tools ?? []).filter((t) => !t.read_only && !t.setup_reads);
   type Aggregate = { quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown };
@@ -283,24 +349,27 @@ export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { to
     const name = fold(t.name || t.tool);
     if (!name) continue;
     let amount = false;
-    let count: { limit: number; window: string; per?: string } | undefined;
+    let count: { limit: number; window: string; per?: string; held?: true } | undefined;
     const resource = fold((t as { resource_argument?: unknown }).resource_argument);
     // The owner's limit for each item, as the rules draft it: never another item, or a day's count per item.
     const owners = (a: Aggregate) => !!resource && fold(a.per) === resource && ["lifetime", "rolling_7d"].includes(fold(a.window));
     for (const raw of cards) {
-      const card = raw as { grants?: unknown; aggregates?: unknown };
+      const card = raw as { grants?: unknown; aggregates?: unknown; on_exceed?: unknown };
       const grants = (Array.isArray(card.grants) ? card.grants : []) as Grant[];
       const mine = grants.filter((g) => fold(g.action) === name);
       if (!mine.length) continue;
       const aggregates = (Array.isArray(card.aggregates) ? card.aggregates : []) as Aggregate[];
-      if (mine.some((g) => Array.isArray(g.per_action_max) && (g.per_action_max as Aggregate[]).some((m) => fold(m.quantity).startsWith("sum(")))) amount = true;
+      const eachCall = mine.some((g) => Array.isArray(g.per_action_max) && (g.per_action_max as Aggregate[]).some((m) => fold(m.quantity).startsWith("sum(")));
+      if (eachCall) amount = true;
+      // A held Card with each call's limit: the count in its place is KIFF's own, which Coach hears (KIFFS_OWN_TOTAL).
+      const held = eachCall && fold(card.on_exceed) !== "refuse" ? { held: true as const } : {};
       for (const a of aggregates) {
         if (kiffsOwnCount(cards, card, a)) continue;
         if (fold(a.quantity).startsWith("sum(")) amount = true;
         const limit = typeof a.limit === "number" ? a.limit : 0;
         if (count || fold(a.quantity) !== "count" || limit <= 0) continue;
-        if (!fold(a.per)) count = { limit, window: fold(a.window) || "window" };
-        else if (!owners(a)) count = { limit, window: fold(a.window) || "window", per: (a.per as string).trim() };
+        if (!fold(a.per)) count = { limit, window: fold(a.window) || "window", ...held };
+        else if (!owners(a)) count = { limit, window: fold(a.window) || "window", per: (a.per as string).trim(), ...held };
       }
     }
     if (amount && count) return { tool: t.title || t.name || t.tool || name, ...count };

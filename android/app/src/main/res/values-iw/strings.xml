@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. יש להשיב עד %3$s. שום דבר לא נשלח עד שתאשר.</string>
     <string name="alert_answered">taf השיב למישהו</string>
     <string name="alert_approve_once">אישור חד-פעמי…</string>
+    <string name="alert_blocked_body">ההתקן הזה (%1$s) כבר לא שואל, ולכן ההתראות של tafs כבויות בהגדרות. יש להפעיל אותן שם כדי שאישורים ותשובות יגיעו אליך.</string>
+    <string name="alert_blocked_body_android">Android כבר לא שואל, ולכן ההתראות של tafs כבויות בהגדרות הטלפון. יש להפעיל אותן שם כדי שאישורים ותשובות יגיעו אליך, בטלפון הזה ובשעון. השעון מקבל את העדכונים שלו בכל מקרה.</string>
+    <string name="alert_blocked_body_watch">ה-iPhone שלך כבר לא שואל, ולכן ההתראות של tafs כבויות בהגדרות. יש להפעיל אותן שם כדי שאישורים ותשובות יגיעו אליך, ב-iPhone הזה ובשעון. השעון מקבל את העדכונים שלו בכל מקרה.</string>
+    <string name="alert_blocked_title">הפעלת התראות של tafs</string>
     <string name="alert_by_email">בדוא״ל</string>
     <string name="alert_example">דוגמה</string>
     <string name="alert_foot_cant_answer_holds">ההתראות מגיעות לאנשים שיכולים להשיב על קריאות מוחזקות. התפקיד שלך בחשבון הזה לא יכול.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">ההתראות עדיין כבויות בטלפון הזה. %1$s</string>
     <string name="alert_not_refused">לא נדחה</string>
     <string name="alert_not_sent">תשובה לא נשלחה</string>
+    <string name="alert_now_on">ההתראות מופעלות.</string>
     <string name="alert_on_this_device">התראות בהתקן הזה (%1$s)</string>
+    <string name="alert_open_notification_settings">פתיחת הגדרות ההתראות</string>
+    <string name="alert_open_settings">פתיחת ההגדרות</string>
     <string name="alert_open_tafs_answer_kiff_did">יש לפתוח את tafs כדי להשיב: KIFF לא אמר איזו גרסה שלו ראית.</string>
     <string name="alert_open_tafs_answer_phone_can">יש לפתוח את tafs כדי להשיב: הטלפון הזה לא יכול לחתום על זה מתוך ההתראה.</string>
     <string name="alert_prompt">קבלת התראה כש-taf זקוק לך</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">לא זמין</string>
     <string name="alert_status_off">כבוי</string>
     <string name="alert_status_on">פעיל</string>
+    <string name="alert_still_off">ההתראות עדיין כבויות.</string>
     <string name="alert_still_on_after_sign_out_body">tafs לא הצליח לכבות אותן (%1$s). יש לנסות שוב, או לצאת בכל זאת ולכבות את ההתראות של tafs בהגדרות.</string>
     <string name="alert_still_on_after_sign_out_title">ייתכן שההתקן הזה (%1$s) עדיין יקבל את ההתראות של החשבון הזה</string>
     <string name="alert_taf_needs_you">%1$s זקוק לך</string>
@@ -47,6 +55,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs לא הצליח להגיע ל-KIFF כדי לדחות. יש לפתוח את tafs כדי להשיב.</string>
+    <string name="alert_watch_first_body">כדי לראות אישורים ותשובות כהתראות, בטלפון הזה ובשעון, יש להפעיל את ההתראות של tafs. השעון ימשיך לקבל את העדכונים שלו גם בלי זה.</string>
+    <string name="alert_watch_first_title">השעון שלך משתמש ב-tafs</string>
     <string name="alert_what_alerts">מה מתריע</string>
     <string name="alert_with_sound">עם צליל</string>
     <string name="app_name">tafs</string>
@@ -879,6 +889,7 @@
     <string name="coach_tools_give">מתן הכלים ל-Coach</string>
     <string name="coach_tools_giving">נותן…</string>
     <string name="coach_tools_title">הכלים של Coach</string>
+    <string name="coach_tools_write_after">יש לאשר קודם את הכלים של Coach, ואז אפשר לכתוב.</string>
     <string name="coach_tools_eyebrow">כלים</string>
     <string name="coach_tools_not_given">הכלים של Coach לא ניתנו. %1$s</string>
     <string name="coach_tools_not_read">לא ניתן היה לקרוא את הכלים של Coach. %1$s</string>
@@ -2855,6 +2866,7 @@
     <string name="watch_ask">שאלת tafs</string>
     <string name="watch_ask_needs_consent">לפני ששואלים את tafs, יש לאפשר בטלפון שימוש ב-AI ב-tafs.</string>
     <string name="watch_ask_not_on">שאילה מהשעון עדיין לא פעילה.</string>
+    <string name="watch_ask_phone_sign_in">לבקש מהטלפון לחבר את השעון הזה</string>
     <string name="watch_ask_text_only">tafs מקבל את המילים שלך כטקסט, אף פעם לא את הקול.</string>
     <string name="watch_asking_phone">שואל את הטלפון שלך…</string>
     <string name="watch_calendar_today">לוח השנה של היום</string>
@@ -2866,6 +2878,7 @@
     <string name="watch_deleted_nothing_sent">נמחק. שום דבר לא נשלח.</string>
     <string name="watch_didnt_catch">לא הובן. יש ללחוץ כדי לנסות שוב.</string>
     <string name="watch_dismiss">ביטול</string>
+    <string name="watch_edit_words">יש להקיש על הטקסט כדי לשנות אותו</string>
     <string name="watch_glance_description">כמה זקוקים לך, אף פעם לא מה או מי.</string>
     <string name="watch_halt_all_q">לעצור את כל ה-taf שלך?</string>
     <plurals name="watch_halt_now_count">
@@ -2883,6 +2896,7 @@
         <item quantity="two">שתי קריאות מוחזקות זקוקות לך</item>
         <item quantity="other">%1$s קריאות מוחזקות זקוקות לך</item>
     </plurals>
+    <string name="watch_held_channel">קריאות מוחזקות</string>
     <string name="watch_inbox_empty">אין חדש. התשובות של Coach וההתראות של ה-taf שלך מגיעות לכאן.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">אחד שלא נקרא בדואר נכנס</item>
@@ -2898,7 +2912,7 @@
     <string name="watch_menu">תפריט</string>
     <string name="watch_mic_needed">כדי לשאול בקול, יש לאפשר ל-tafs להשתמש במיקרופון בשעון הזה.</string>
     <string name="watch_more_on_phone">השאר בטלפון שלך.</string>
-    <string name="watch_needs_lock">כדי לדחות או לעצור מהשעון הזה, יש להגדיר בו נעילת מסך ולפתוח אותו.</string>
+    <string name="watch_needs_lock">כדי לשלוח, לדחות או לעצור מהשעון הזה, יש להגדיר בו נעילת מסך ולפתוח אותו.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">אחד זקוק לך</item>
         <item quantity="two">שניים זקוקים לך</item>
@@ -2909,6 +2923,7 @@
     <string name="watch_nothing_sent_until">שום דבר לא נשלח עד שתאשר.</string>
     <string name="watch_nothing_waits">שום דבר לא ממתין לך.</string>
     <string name="watch_open_on_phone">פתיחה בטלפון</string>
+    <string name="watch_opened_on_phone">נפתח בטלפון</string>
     <string name="watch_page_brief">סיכום</string>
     <string name="watch_page_inbox">דואר נכנס</string>
     <string name="watch_paused_still_answers">מושהה: התזמון שלו כבוי. הוא עדיין עונה למה שאתה שולח.</string>
@@ -2933,6 +2948,7 @@
     <string name="watch_recent_chats">שיחות אחרונות</string>
     <string name="watch_recording">מקליט</string>
     <string name="watch_recording_not_received">ההקלטה לא הגיעה לטלפון שלך. יש לנסות שוב, או להקליד במקום.</string>
+    <string name="watch_refuse_on_phone">לא נדחה. יש לדחות בטלפון.</string>
     <string name="watch_refused">נדחה. שום דבר לא נשלח.</string>
     <string name="watch_reply">מענה</string>
     <string name="watch_rerecord">הקלטה מחדש</string>
@@ -2941,14 +2957,20 @@
     <string name="watch_resume_on_phone">חידוש בטלפון</string>
     <string name="watch_retry">ניסיון חוזר</string>
     <string name="watch_review">בדיקה לפני שליחה</string>
+    <string name="watch_seconds_left">נותרו %1$s שנ׳</string>
     <string name="watch_sending">שולח…</string>
     <string name="watch_sent">נשלח</string>
     <string name="watch_settings_of">%1$s · הגדרות</string>
+    <string name="watch_sign_in_allow">לאפשר</string>
+    <string name="watch_sign_in_denied">לא בוצעה כניסה. השעון נשאר מנותק.</string>
+    <string name="watch_sign_in_deny">לדחות</string>
     <string name="watch_sign_in_on_phone">קודם יש להיכנס ל-tafs בטלפון שלך.</string>
+    <string name="watch_sign_in_watch_q">לחבר את השעון הזה בתור את/ה?</string>
     <string name="watch_sign_out_q">לצאת בשעון הזה?</string>
     <string name="watch_sign_out_sub">הטלפון שלך נשאר מחובר. השעון הזה שוכח את ה-taf, השיחות והדואר הנכנס שלך.</string>
     <string name="watch_signed_in">מחובר</string>
     <string name="watch_signed_out_here">יצאת בשעון הזה. הטלפון שלך נשאר מחובר.</string>
+    <string name="watch_stopped_at_limit">נעצר במגבלה של %1$s. מה שנשמע מופיע למטה.</string>
     <string name="watch_swipe_settings">החלקה ימינה להגדרות שלו</string>
     <string name="watch_tap_start">יש ללחוץ על «התחלה» ואז לדבר. המילים שלך מוצגות כאן תוך כדי דיבור.</string>
     <string name="watch_timing">האזנה %1$s אלפיות שנייה · קבלה %2$s אלפיות שנייה · תוצאה %3$s אלפיות שנייה</string>
@@ -2957,8 +2979,10 @@
     <string name="watch_type">הקלדה</string>
     <string name="watch_type_hint">כתיבה ל-Coach…</string>
     <string name="watch_update_phone">יש לעדכן את tafs בטלפון שלך ולנסות שוב.</string>
+    <string name="watch_view_on_phone">צפייה בטלפון</string>
     <string name="watch_view_only_phone">הטלפון הזה יכול רק להציג, ולכן אי אפשר לשאול מהשעון. יש להיכנס בטלפון שיכול לאשר.</string>
     <string name="watch_voice_text_only">Coach מקבל את המילים שלך כטקסט, אף פעם לא את הקול.</string>
+    <string name="watch_waiting_for_phone">ממתין לטלפון…</string>
     <string name="watch_what_it_does">מה הוא עושה</string>
     <plurals name="watch_working_count">
         <item quantity="one">אחד עובד</item>

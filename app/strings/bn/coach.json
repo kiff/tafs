@@ -186,6 +186,7 @@
   "coach.tools.give": "Coach-কে তার টুল দিন",
   "coach.tools.giving": "দেওয়া হচ্ছে…",
   "coach.tools.title": "Coach-এর টুল",
+  "coach.tools.write_after": "আগে Coach-এর টুল অনুমোদন করুন, তারপর লিখতে পারবেন।",
   "coach.tools_eyebrow": "টুল",
   "coach.tools_not_given": "Coach-এর টুল দেওয়া হয়নি। {why}",
   "coach.tools_not_read": "Coach-এর টুল পড়া যায়নি। {why}",

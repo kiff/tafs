@@ -133,6 +133,15 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   LinkConfirm { TafChatScreen(tafId, state, actions, modifier) }
 }
 
+/** Coach's box locked (docs/coach.md, "Coach's tools step"): the line that stands in its place, and what tapping it opens. */
+data class ComposerLock(val words: String, val open: (() -> Unit)? = null)
+
+/** Set by Coach's screen while its tools aren't approved yet; null everywhere else, where the box is drawn as ever. */
+val LocalComposerLock = androidx.compose.runtime.compositionLocalOf<ComposerLock?> { null }
+
+/** The locked box's line, for the screen tests. */
+const val COMPOSER_LOCKED = "composer_locked"
+
 @Composable
 private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, modifier: Modifier) {
   val taf = state.taf(tafId)
@@ -394,6 +403,17 @@ private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, m
                     onReport = if (state.mode == Mode.kiff) ({ reason, note -> actions.report(tafId, item.message, reason, note) }) else null,
                   )
                   if (lastAnswer[item.message.session] == i) ChatFiles(item.message.session)
+                  // A failed run's line: Try again, only when tafs cloud says it's safe (its `retry`), in its words. Once.
+                  state.failedRetry(tafId)?.takeIf { bot.tafs.app.app.FAILED_LINE + it.run == item.message.serverId }?.let { again ->
+                    Text(
+                      again.label ?: Words.Chat.retry,
+                      style = scaled(14, FontWeight.SemiBold, Theme.amberText),
+                      modifier = Modifier.testTag(FAILED_RETRY).tapping {
+                        pinOnSend(again.text)
+                        actions.retryFailed(tafId) { text -> unpin(); following = true; setDraft(text) }
+                      }.padding(vertical = 6.dp),
+                    )
+                  }
                   // Not sent: why, and Retry or Edit, under the words as written (kiff/tafs#476).
                   state.chatUnsent[tafId]?.firstOrNull { it.message == item.message }?.let { unsent ->
                     // Refused for a halt that still holds: Resume, behind the owner's confirmation, in Retry's place.
@@ -483,6 +503,21 @@ private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, m
 
     state.chatErrors[tafId]?.let { error ->
       Text(error, style = scaled(13, color = Theme.no), modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 4.dp))
+    }
+    // Coach takes no typing until its tools are approved (docs/coach.md, "Coach's tools step"): the box gives way to one line
+    // in tafs cloud's words, which opens the step where there is one to open.
+    // A lock never opens the box: with no words, it says the app's own line.
+    val lock = LocalComposerLock.current?.takeIf { tafId == COACH_CHAT }
+    if (lock != null) {
+      val words = lock.words.ifBlank { Words.Coach.Tools.writeAfter }
+      Text(
+        words,
+        style = scaled(14, color = if (lock.open != null) Theme.amberText else Theme.soft),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+          .let { m -> lock.open?.let { open -> m.tapping(onClickLabel = words, onClick = open) } ?: m }
+          .padding(horizontal = 16.dp, vertical = 12.dp).testTag(COMPOSER_LOCKED),
+      )
+      return@Column
     }
     val canAttach = state.canAttach(tafId)
     if (canAttach) FileTray(tafId, state, actions.files)
@@ -725,6 +760,8 @@ private fun MessageTime(message: ChatMessage) {
 }
 
 internal const val DAY_HEADER = "day-header"
+/** Try again under a failed run's line, for tests. */
+internal const val FAILED_RETRY = "failed-retry"
 internal const val MESSAGE_TIME = "message-time"
 
 /** A refused connection's lines, each as tafs cloud wrote it: the step's in the failure colour, then why and what to do next. */

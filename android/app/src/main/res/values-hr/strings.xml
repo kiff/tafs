@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Odgovorite do: %3$s. Ništa se ne šalje dok ne odobrite.</string>
     <string name="alert_answered">Taf je nekome odgovorio</string>
     <string name="alert_approve_once">Odobrite jednom…</string>
+    <string name="alert_blocked_body">Ovaj %1$s više ne pita, pa su obavijesti za tafs isključene u Postavkama. Uključite ih ondje kako bi odobrenja i odgovori stizali do vas.</string>
+    <string name="alert_blocked_body_android">Android više ne pita, pa su obavijesti za tafs isključene u postavkama telefona. Uključite ih ondje kako bi odobrenja i odgovori stizali do vas, na ovaj telefon i na sat. Sat ionako prima svoja ažuriranja.</string>
+    <string name="alert_blocked_body_watch">Vaš iPhone više ne pita, pa su obavijesti za tafs isključene u Postavkama. Uključite ih ondje kako bi odobrenja i odgovori stizali do vas, na ovaj iPhone i na sat. Sat ionako prima svoja ažuriranja.</string>
+    <string name="alert_blocked_title">Uključite obavijesti za tafs</string>
     <string name="alert_by_email">E-poštom</string>
     <string name="alert_example">Primjer</string>
     <string name="alert_foot_cant_answer_holds">Obavijesti idu ljudima koji smiju odgovarati na zadržane pozive. Vaša uloga na ovom računu ne smije.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Obavijesti još nisu uključene za ovaj telefon. %1$s</string>
     <string name="alert_not_refused">Nije odbijeno</string>
     <string name="alert_not_sent">Odgovor nije poslan</string>
+    <string name="alert_now_on">Obavijesti su uključene.</string>
     <string name="alert_on_this_device">Obavijesti na ovom uređaju (%1$s)</string>
+    <string name="alert_open_notification_settings">Otvori postavke obavijesti</string>
+    <string name="alert_open_settings">Otvori Postavke</string>
     <string name="alert_open_tafs_answer_kiff_did">Otvorite tafs da odgovorite: KIFF nije rekao koju ste verziju vidjeli.</string>
     <string name="alert_open_tafs_answer_phone_can">Otvorite tafs da odgovorite: ovaj telefon to ne može potpisati iz obavijesti.</string>
     <string name="alert_prompt">Primite obavijest kad taf treba vas</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Nedostupno</string>
     <string name="alert_status_off">Isključeno</string>
     <string name="alert_status_on">Uključeno</string>
+    <string name="alert_still_off">Obavijesti su i dalje isključene.</string>
     <string name="alert_still_on_after_sign_out_body">tafs ih nije mogao isključiti (%1$s). Pokušajte ponovno ili se svejedno odjavite i isključite obavijesti za tafs u Postavkama.</string>
     <string name="alert_still_on_after_sign_out_title">Ovaj uređaj (%1$s) možda i dalje prima obavijesti ovog računa</string>
     <string name="alert_taf_needs_you">Taf %1$s čeka vas</string>
@@ -47,6 +55,8 @@
         <item quantity="other">%1$s tafova ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs nije mogao doći do KIFF-a da to odbije. Otvorite tafs da odgovorite.</string>
+    <string name="alert_watch_first_body">Da biste odobrenja i odgovore vidjeli kao obavijesti, na ovom telefonu i na satu, uključite obavijesti za tafs. Sat će i dalje primati svoja ažuriranja i ako to ne učinite.</string>
+    <string name="alert_watch_first_title">Vaš sat koristi tafs</string>
     <string name="alert_what_alerts">Što vas obavještava</string>
     <string name="alert_with_sound">Sa zvukom</string>
     <string name="app_name">tafs</string>
@@ -879,6 +889,7 @@
     <string name="coach_tools_give">Dajte Coachu njegove alate</string>
     <string name="coach_tools_giving">Davanje…</string>
     <string name="coach_tools_title">Coachovi alati</string>
+    <string name="coach_tools_write_after">Najprije odobrite Coachove alate, zatim možete pisati.</string>
     <string name="coach_tools_eyebrow">Alati</string>
     <string name="coach_tools_not_given">Coachovi alati nisu dani. %1$s</string>
     <string name="coach_tools_not_read">Coachove alate nije bilo moguće pročitati. %1$s</string>
@@ -2855,6 +2866,7 @@
     <string name="watch_ask">Pitajte tafs</string>
     <string name="watch_ask_needs_consent">Prije nego što pitate tafs, dopustite upotrebu AI-ja u tafsu na telefonu.</string>
     <string name="watch_ask_not_on">Pitanja sa sata još nisu uključena.</string>
+    <string name="watch_ask_phone_sign_in">Zatražite od telefona da prijavi ovaj sat</string>
     <string name="watch_ask_text_only">tafs dobiva vaše riječi kao tekst, nikad vaš glas.</string>
     <string name="watch_asking_phone">Pitanje vašem telefonu…</string>
     <string name="watch_calendar_today">Današnji kalendar</string>
@@ -2866,6 +2878,7 @@
     <string name="watch_deleted_nothing_sent">Izbrisano. Ništa nije poslano.</string>
     <string name="watch_didnt_catch">Nisam razumio. Dodirnite da pokušate ponovno.</string>
     <string name="watch_dismiss">Odbacite</string>
+    <string name="watch_edit_words">Dodirnite tekst da biste ga promijenili</string>
     <string name="watch_glance_description">Koliko ih čeka vas, nikad što ni tko.</string>
     <string name="watch_halt_all_q">Blokirati sve vaše tafove?</string>
     <plurals name="watch_halt_now_count">
@@ -2883,6 +2896,7 @@
         <item quantity="few">%1$s zadržana poziva čekaju vas</item>
         <item quantity="other">%1$s zadržanih poziva čeka vas</item>
     </plurals>
+    <string name="watch_held_channel">Zadržani pozivi</string>
     <string name="watch_inbox_empty">Ništa novo. Ovdje stižu Coachovi odgovori i obavijesti vaših tafova.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Nepročitano u Pristiglima: %1$s</item>
@@ -2898,7 +2912,7 @@
     <string name="watch_menu">Izbornik</string>
     <string name="watch_mic_needed">Da pitate glasom, dopustite mikrofon za tafs na ovom satu.</string>
     <string name="watch_more_on_phone">Ostalo je na vašem telefonu.</string>
-    <string name="watch_needs_lock">Da odbijete ili blokirate s ovog sata, postavite na njemu zaključavanje zaslona i otključajte ga.</string>
+    <string name="watch_needs_lock">Da šaljete, odbijete ili blokirate s ovog sata, postavite na njemu zaključavanje zaslona i otključajte ga.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s čeka vas</item>
         <item quantity="few">%1$s čekaju vas</item>
@@ -2909,6 +2923,7 @@
     <string name="watch_nothing_sent_until">Ništa se ne šalje dok ne odobrite.</string>
     <string name="watch_nothing_waits">Ništa ne čeka vas.</string>
     <string name="watch_open_on_phone">Otvorite na telefonu</string>
+    <string name="watch_opened_on_phone">Otvoreno na telefonu</string>
     <string name="watch_page_brief">Sažetak</string>
     <string name="watch_page_inbox">Pristigle</string>
     <string name="watch_paused_still_answers">Pauzirano: njegov je raspored isključen. I dalje odgovara na ono što pošaljete.</string>
@@ -2933,6 +2948,7 @@
     <string name="watch_recent_chats">Nedavni razgovori</string>
     <string name="watch_recording">Snimanje</string>
     <string name="watch_recording_not_received">Snimka nije stigla do vašeg telefona. Pokušajte ponovno ili tipkajte.</string>
+    <string name="watch_refuse_on_phone">Nije odbijeno. Odbijte to na telefonu.</string>
     <string name="watch_refused">Odbijeno. Ništa nije poslano.</string>
     <string name="watch_reply">Odgovorite</string>
     <string name="watch_rerecord">Snimite ponovno</string>
@@ -2941,14 +2957,20 @@
     <string name="watch_resume_on_phone">Nastavite na telefonu</string>
     <string name="watch_retry">Pokušajte ponovno</string>
     <string name="watch_review">Provjerite prije slanja</string>
+    <string name="watch_seconds_left">Još %1$s s</string>
     <string name="watch_sending">Slanje…</string>
     <string name="watch_sent">Poslano</string>
     <string name="watch_settings_of">%1$s · postavke</string>
+    <string name="watch_sign_in_allow">Dopusti</string>
+    <string name="watch_sign_in_denied">Nije prijavljeno. Ovaj sat ostaje odjavljen.</string>
+    <string name="watch_sign_in_deny">Odbij</string>
     <string name="watch_sign_in_on_phone">Najprije se prijavite u tafs na telefonu.</string>
+    <string name="watch_sign_in_watch_q">Prijaviti ovaj sat kao vas?</string>
     <string name="watch_sign_out_q">Odjaviti se na ovom satu?</string>
     <string name="watch_sign_out_sub">Vaš telefon ostaje prijavljen. Ovaj sat zaboravlja vaše tafove, razgovore i pristigle.</string>
     <string name="watch_signed_in">Prijavljeni</string>
     <string name="watch_signed_out_here">Odjavljeni na ovom satu. Vaš telefon ostaje prijavljen.</string>
+    <string name="watch_stopped_at_limit">Zaustavljeno na ograničenju od %1$s. Što se čulo, nalazi se ispod.</string>
     <string name="watch_swipe_settings">Prijeđite ulijevo za njegove postavke</string>
     <string name="watch_tap_start">Dodirnite Pokrenite, zatim govorite. Vaše se riječi prikazuju ovdje dok govorite.</string>
     <string name="watch_timing">Slušanje %1$s ms · potvrda %2$s ms · rezultat %3$s ms</string>
@@ -2957,8 +2979,10 @@
     <string name="watch_type">Tipkajte</string>
     <string name="watch_type_hint">Napišite Coachu…</string>
     <string name="watch_update_phone">Ažurirajte tafs na telefonu, pa pokušajte ponovno.</string>
+    <string name="watch_view_on_phone">Pogledajte na telefonu</string>
     <string name="watch_view_only_phone">Ovaj telefon može samo pregledavati pa ne možete pitati sa sata. Prijavite se na telefonu koji može odobravati.</string>
     <string name="watch_voice_text_only">Coach dobiva vaše riječi kao tekst, nikad vaš glas.</string>
+    <string name="watch_waiting_for_phone">Čeka se vaš telefon…</string>
     <string name="watch_what_it_does">Što radi</string>
     <plurals name="watch_working_count">
         <item quantity="one">Radi: %1$s</item>

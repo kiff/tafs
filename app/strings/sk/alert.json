@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Odpovedzte do {zone}. Nič sa neodošle, kým neschválite.",
   "alert.answered": "Taf niekomu odpovedal",
   "alert.approve_once": "Schváliť raz…",
+  "alert.blocked.body": "Tento {device} sa už nepýta, takže upozornenia pre tafs sú v Nastaveniach vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili.",
+  "alert.blocked.body_android": "Android sa už nepýta, takže upozornenia pre tafs sú v nastaveniach telefónu vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili do tohto telefónu aj do hodiniek. Hodinky dostávajú aktualizácie tak či tak.",
+  "alert.blocked.body_watch": "Váš iPhone sa už nepýta, takže upozornenia pre tafs sú v Nastaveniach vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili do tohto iPhonu aj do hodiniek. Hodinky dostávajú aktualizácie tak či tak.",
+  "alert.blocked.title": "Zapnite upozornenia pre tafs",
   "alert.by_email": "E-mailom",
   "alert.example": "Príklad",
   "alert.foot.cant_answer_holds": "Upozornenia chodia ľuďom, ktorí smú odpovedať na pozdržané volania. Vaša rola v tomto účte nesmie.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Upozornenia zatiaľ nie sú pre tento telefón zapnuté. {why}",
   "alert.not_refused": "Neodmietnuté",
   "alert.not_sent": "Odpoveď sa neodoslala",
+  "alert.now_on": "Upozornenia sú zapnuté.",
   "alert.on_this_device": "Upozornenia na tomto zariadení ({device})",
+  "alert.open_notification_settings": "Otvoriť nastavenia upozornení",
+  "alert.open_settings": "Otvoriť Nastavenia",
   "alert.open_tafs_answer_kiff_did": "Otvorte tafs a odpovedzte: KIFF nepovedal, ktorú verziu ste videli.",
   "alert.open_tafs_answer_phone_can": "Otvorte tafs a odpovedzte: tento telefón to z upozornenia podpísať nevie.",
   "alert.prompt": "Dostávajte upozornenie, keď vás taf potrebuje",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Nie je dostupné",
   "alert.status.off": "Vypnuté",
   "alert.status.on": "Zapnuté",
+  "alert.still_off": "Upozornenia sú stále vypnuté.",
   "alert.still_on_after_sign_out.body": "tafs ich nedokázal vypnúť ({why}). Skúste to znova, alebo sa aj tak odhláste a vypnite upozornenia pre tafs v Nastaveniach.",
   "alert.still_on_after_sign_out.title": "Tento {device} môže naďalej dostávať upozornenia tohto účtu",
   "alert.taf_needs_you": "{taf} vás potrebuje",
@@ -44,6 +52,8 @@
     "other": "{count} tafov ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs sa nemohol spojiť s KIFF a odmietnuť to. Otvorte tafs a odpovedzte.",
+  "alert.watch_first.body": "Ak chcete vidieť schválenia a odpovede ako upozornenia v tomto telefóne aj v hodinkách, zapnite upozornenia pre tafs. Hodinky budú dostávať aktualizácie, aj keď to neurobíte.",
+  "alert.watch_first.title": "Vaše hodinky používajú tafs",
   "alert.what_alerts": "Na čo upozorňovať",
   "alert.with_sound": "So zvukom"
 }

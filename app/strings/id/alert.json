@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Jawab sebelum {zone}. Tidak ada yang dikirim sampai Anda menyetujui.",
   "alert.answered": "Sebuah taf menjawab seseorang",
   "alert.approve_once": "Setujui sekali…",
+  "alert.blocked.body": "{device} ini tidak lagi bertanya, jadi peringatan untuk tafs nonaktif di Pengaturan. Aktifkan di sana agar persetujuan dan jawaban sampai ke Anda.",
+  "alert.blocked.body_android": "Android tidak lagi bertanya, jadi peringatan untuk tafs nonaktif di pengaturan ponsel Anda. Aktifkan di sana agar persetujuan dan jawaban sampai ke Anda, di ponsel ini dan di jam tangan Anda. Jam tangan Anda tetap menerima pembaruannya.",
+  "alert.blocked.body_watch": "iPhone Anda tidak lagi bertanya, jadi peringatan untuk tafs nonaktif di Pengaturan. Aktifkan di sana agar persetujuan dan jawaban sampai ke Anda, di iPhone ini dan di jam tangan Anda. Jam tangan Anda tetap menerima pembaruannya.",
+  "alert.blocked.title": "Aktifkan peringatan untuk tafs",
   "alert.by_email": "Lewat email",
   "alert.example": "Contoh",
   "alert.foot.cant_answer_holds": "Peringatan dikirim ke orang yang boleh menjawab panggilan yang ditahan. Peran Anda di akun ini tidak bisa.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Peringatan belum aktif untuk ponsel ini. {why}",
   "alert.not_refused": "Tidak ditolak",
   "alert.not_sent": "Sebuah balasan tidak terkirim",
+  "alert.now_on": "Peringatan aktif.",
   "alert.on_this_device": "Peringatan di {device} ini",
+  "alert.open_notification_settings": "Buka pengaturan notifikasi",
+  "alert.open_settings": "Buka Pengaturan",
   "alert.open_tafs_answer_kiff_did": "Buka tafs untuk menjawabnya: KIFF tidak menyebutkan versi mana yang Anda lihat.",
   "alert.open_tafs_answer_phone_can": "Buka tafs untuk menjawabnya: ponsel ini tidak dapat menandatanganinya dari notifikasi.",
   "alert.prompt": "Dapatkan peringatan saat sebuah taf membutuhkan Anda",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Tidak tersedia",
   "alert.status.off": "Nonaktif",
   "alert.status.on": "Aktif",
+  "alert.still_off": "Peringatan masih nonaktif.",
   "alert.still_on_after_sign_out.body": "tafs tidak dapat menonaktifkannya ({why}). Coba lagi, atau tetap keluar dan nonaktifkan notifikasi untuk tafs di Pengaturan.",
   "alert.still_on_after_sign_out.title": "{device} ini mungkin masih menerima peringatan akun ini",
   "alert.taf_needs_you": "{taf} membutuhkan Anda",
@@ -42,6 +50,8 @@
     "other": "{count} taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs tidak dapat menghubungi KIFF untuk menolaknya. Buka tafs untuk menjawabnya.",
+  "alert.watch_first.body": "Untuk melihat persetujuan dan jawaban sebagai peringatan, di ponsel ini dan di jam tangan Anda, aktifkan peringatan untuk tafs. Jam tangan Anda tetap menerima pembaruannya meski Anda tidak mengaktifkannya.",
+  "alert.watch_first.title": "Jam tangan Anda memakai tafs",
   "alert.what_alerts": "Apa yang memperingatkan Anda",
   "alert.with_sound": "Dengan suara"
 }

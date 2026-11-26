@@ -227,6 +227,8 @@ the app in sample mode.
   - **the detail pane is the app's cream, edge to edge,** at every width and in split view: the
     Overview's centred 980-point column stretches to the pane, and every list in it (Connect apps, an app's
     connections, a connection, what a Card counted) hides its grey for `screenBackground`;
+  - **the Overview's table** shows who uses a taf under its name ("Support · 3 people") on up to two lines, the count held
+    together (`OverviewView.peopleLine`): a medium window moves "1 persona" down whole, never "1 per…".
   - **the Overview's Needs you** lists the held calls, then, when Needs you counts more (a Coach chat,
     a step, "Did this happen?", Card units, as tafs cloud's `needs_you.count` does), one line in its
     words that opens Needs you (`OverviewView.showsRest`). So "Needs you · 3" beside "No tafs yet"
@@ -690,6 +692,10 @@ The same rows as Android, from the same tafs cloud fields (`GET /v1/connect/apps
   in the header and every row. The App column gets its room first (200 points at least), so names read whole in
   portrait and landscape: the other three are 150, 130 and 230 points while there's room, then give way together
   down to 96, 84 and 180. A name is one line, cut at its end only as a last resort, never broken inside a word.
+- **The button beside or under (`BesideOrUnder`):** Connect, Sign in again or Ask Coach sits beside the words while they
+  keep room to read (110 points in the table's Status column, 150 on a phone), else under them at the trailing edge. So
+  a long label ("Volver a iniciar sesión", "Preguntar a Coach") never squeezes a status to a sliver or cuts an app's
+  name, on a phone, an iPad or a Mac.
 - **An app's name is tafs cloud's `name`, else its `title`** (`App.displayName`), with `subtitle` under it when sent,
   in a smaller, softer style on up to two lines: a reviewed entry reads as "Qonto", with "Invoicing: reads, and
   invoice drafts from quotes" under it; a managed app keeps its name ("Gmail") with nothing under it. Both are read
@@ -813,6 +819,87 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   drafted six Cards inside any step the person had just confirmed, and remembered that on the
   phone. That list, those Cards and that memory are gone. A held `version_install` of Coach's
   reads as an install once tafs cloud says the tools are given.
+
+## Deleting a conversation
+
+The person's own Coach conversations can be deleted for good from Previous conversations and from Archived
+(`SetupChatsList`, `ArchivedSetupChats` in `SetupChatView.swift`), on tafs cloud's `DELETE /v1/tafs/{id}/chats/{session}`
+([api.md](api.md)). Archive still takes one out of the list and keeps it; Delete erases it.
+
+- **Only in tafs cloud's words.** Each chats-list read (`GET …/chats` and `…/chats/archived`) sends
+  `delete: {item, confirm_title, confirm_body, confirm_button, failed}` in the person's language. The app keeps the last
+  complete set (`AppModel.chatDeleteWords`), so `failed` is on hand when the network isn't. It has no words of its own for
+  this: until a read brings all five lines, Delete isn't offered.
+- **Where:** a swipe on a conversation shows Archive (or Put back) and the delete item. That opens a question: the title,
+  the conversation's name, what goes and what stays, then Delete and Cancel. Nothing is deleted before that yes.
+- **What the app does with tafs cloud's answer** (`AppModel.deleteSetupChat`), deciding nothing itself:
+  - **200:** it leaves both lists, and the one on screen gives way to a new conversation. Attachments opened from chats
+    are a cache on the phone (`openedFiles`), so all of it goes, and no copy outlives "deleted for good".
+  - **404** (never this person's, or already gone): it leaves the lists, with nothing said.
+  - **409** (its run is working or waits on a card): it stays, with the refusal's own words.
+  - **Anything else, the network included:** it stays, with `failed` from the last read.
+- **The Apple Watch:** its kept Coach thread (`WatchThreads`, `"coach"`) can hold a phone conversation's turns: when the
+  watch's own requests are switched off, its words go to Coach's current chat. So after every delete that goes through,
+  the phone tells the watch to drop that kept copy (`WatchPush.forget`, `AppModel.forgetOnWatch`). The watch drops it at
+  once, with a screen open or not (`PhoneLink`, `WatchThreads.drop`), and Coach's screen there forgets what it drew. It's
+  only a cache, read again on the next visit. The watch's own conversations (watch requests) can't be deleted yet.
+- **Not here yet:** a taf's own chat (iOS lists no past conversations for one). The route serves it once there's a list.
+- Tests: `SetupTests.testDeletingAConversationForGood` (no words → no Delete, each answer above, the archived list, the
+  opened copy removed, the watch told once per delete that went through), `WatchThreadsTests.testADeleteOnThePhoneDropsThatThreadAlone`.
+
+## The Card step
+
+Coach's first approval signs its Cards: what it may do and how much a day. Before that signature, Start's screen is the Card
+step (tafs#2091's words, sent by tafs cloud in `start.words`, docs/coach.md). It's drawn only when every line of it came,
+the button for this device's way of approving included (`CoachStart.cardStep(face:)`). Anything missing, and Start's
+screen is as before.
+
+- **What it shows** (`SetupChatView.cardStepScreen`, `CardStepList`):
+  - the title, then what the approval allows, what always waits for the person, how it signs (a key kept on this device)
+    and how to stop it (Halt);
+  - the plain list: each group of Coach's tools, each tool with what it does and its limit a day;
+  - under "Exactly what you sign", folded, Coach's Cards in KIFF's own words, as signed;
+  - one button, the whole sentence for this phone's way, read when the step is drawn: "Approve with face" (Face ID) or
+    "Approve with fingerprint" (Touch ID). A device with neither, or with it off for tafs, gets no button at all
+    (`ApprovalGate` says what to set up instead), and Give signs and sends nothing (`giveCoachTools`): the approval key
+    needs Face ID or Touch ID, never the passcode.
+- **Shown = signed, failing closed** (`TafsCloud.CardStepCheck`). Each tool in the list carries what its Card signs: `tool`,
+  `card`, `limit` and `asks`. These are compared with the draft the button signs (`requests[draft].body.cards`). Each signed
+  Card is read on an allowlist:
+  - its `id`;
+  - `subject`, which must be the draft's own agent;
+  - `domain`, which must be `gateway`;
+  - `on_exceed`, `owner` or `refuse`, with a hold's `hold_expiry` only on `owner`;
+  - grants that name an `action` and nothing else;
+  - exactly one aggregate, a `count` a `calendar_day`, with a whole `limit`.
+
+  Anything else is a mismatch: a per-call cap, extra room, a measure, another window, a second aggregate, an environment or
+  resources, a Card or an action on one side only, a tool listed twice, or a limit or `asks` that differs. On a mismatch
+  there's no button, and the step says it changed (`Words.Version.outOfDateCard`).
+- **The tools batch signed with it** (`POST /v1/connections/batch`) is held to the step too (`CardStepCheck.batchMatches`).
+  Each connection must be one of the step's tools (its `name` the tool's), connected as Coach's own control server at this
+  app's tafs cloud: `url` and `audience` are both `/v1/mcp` on the address the app reads tafs cloud at (`AppModel.coachMCP`),
+  with `control: true` and `mode: verify`. Its keys are only those tafs cloud writes, with `read_only` and `replace` only
+  as true. Anything else, a tool twice, or an empty batch signs nothing. That holds at the first start (with the Cards'
+  check) and at a later approval once tafs cloud marks the step's data (`CoachTools.batchSigns`).
+- **Only what it showed is sent.** At the tap, before Face ID, the check runs again (`giveCoachTools`). After Face ID,
+  `startSetup` reads the start again and sends it only if its requests are byte for byte the ones shown and their list still
+  matches. Otherwise nothing is sent, and the step is drawn again from the new read.
+- **No typing until it's approved.** On the Card step, the message box isn't drawn: words handed over wait in the draft, and
+  tafs cloud's `locked` line (`card_step_locked`) stands in the box's place, or the app's own "Approve Coach's tools first,
+  then you can write." (`coach.tools.write_after`, `SetupChatView.cardStepLockedLine`) when none came: the box never opens
+  without a line. Once Coach exists, while its tools themselves are still to give (`tools.connect`), the box is one locked
+  line in tafs cloud's words (the step's `row`, or "Coach's tools" when none came) that opens the step
+  (`SetupChatView.lockedComposer`). That box stands in for the tools row above the chat, so the line is drawn once. When
+  only Cards for tools Coach gained since are missing, typing stays open.
+- **Later approvals of Coach's Cards** (the tools step, once Coach exists): the step lists every tool while the draft may
+  carry only the missing Cards. tafs cloud marks the ones it carries (`in_draft`), and only those are compared with the
+  draft, both ways, on the same allowlist (`CoachTools.draftSigns`). That check runs at Give, after the byte-for-byte
+  re-read and before Face ID, and a mismatch signs nothing. Coach's Cards in KIFF's own words come first, unfolded, and the
+  tools sit under the fold (`CoachToolsGiven.stepBody`). From a tafs cloud that doesn't mark them, KIFF's words are what's
+  shown as signed, as before.
+- Tests: `ContractTests.testTheCardStepReadsAsTafsCloudSendsItAndItsListIsWhatItSigns` (tafs cloud's own first-start answers, the pair and the draft alone, match on the allowlist), `CardStepTests`: the list matches the draft, a later approval compares only the tools `in_draft`, each change to a signed Card or to the list fails closed, and the
+  Card step shows only when every line came.
 
 ## The calendar
 

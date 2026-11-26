@@ -186,6 +186,7 @@
   "coach.tools.give": "Dát Coachovi jeho nástroje",
   "coach.tools.giving": "Předávám…",
   "coach.tools.title": "Nástroje Coache",
+  "coach.tools.write_after": "Nejdřív schvalte nástroje Coache, pak můžete psát.",
   "coach.tools_eyebrow": "Nástroje",
   "coach.tools_not_given": "Nástroje Coache se nepředaly. {why}",
   "coach.tools_not_read": "Nástroje Coache se nepodařilo načíst. {why}",

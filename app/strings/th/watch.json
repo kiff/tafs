@@ -7,6 +7,7 @@
   "watch.ask": "ถาม tafs",
   "watch.ask_needs_consent": "ก่อนถาม tafs ให้อนุญาตการใช้ AI ใน tafs บนโทรศัพท์ของคุณ",
   "watch.ask_not_on": "การถามจากนาฬิกาของคุณยังไม่เปิดใช้งาน",
+  "watch.ask_phone_sign_in": "ขอให้โทรศัพท์ลงชื่อเข้าใช้นาฬิกาเรือนนี้",
   "watch.ask_text_only": "tafs ได้รับถ้อยคำของคุณเป็นข้อความ ไม่เคยได้รับเสียงของคุณ",
   "watch.asking_phone": "กำลังถามโทรศัพท์ของคุณ…",
   "watch.calendar_today": "ปฏิทินวันนี้",
@@ -18,6 +19,7 @@
   "watch.deleted_nothing_sent": "ลบแล้ว ยังไม่ได้ส่งอะไร",
   "watch.didnt_catch": "ฟังไม่ทัน แตะเพื่อลองอีกครั้ง",
   "watch.dismiss": "ปิด",
+  "watch.edit_words": "แตะข้อความเพื่อแก้ไข",
   "watch.glance_description": "มีกี่เรื่องที่ต้องการคุณ ไม่บอกว่าอะไรหรือใคร",
   "watch.halt_all_q": "ระงับ taf ทั้งหมดของคุณหรือไม่",
   "watch.halt_now_count": {
@@ -31,6 +33,7 @@
   "watch.held_calls": {
     "other": "{count} การเรียกที่พักไว้ต้องการคุณ"
   },
+  "watch.held_channel": "การเรียกที่พักไว้",
   "watch.inbox_empty": "ไม่มีอะไรใหม่ คำตอบของ Coach และการแจ้งเตือนจาก taf ของคุณจะมาที่นี่",
   "watch.inbox_unread": {
     "other": "{count} ยังไม่ได้อ่านในกล่องข้อความ"
@@ -44,7 +47,7 @@
   "watch.menu": "เมนู",
   "watch.mic_needed": "หากต้องการถามด้วยเสียง ให้อนุญาตไมโครโฟนสำหรับ tafs บนนาฬิกาเรือนนี้",
   "watch.more_on_phone": "ที่เหลืออยู่บนโทรศัพท์ของคุณ",
-  "watch.needs_lock": "หากต้องการปฏิเสธหรือระงับจากนาฬิกาเรือนนี้ ให้ตั้งการล็อกหน้าจอและปลดล็อก",
+  "watch.needs_lock": "หากต้องการส่ง ปฏิเสธ หรือระงับจากนาฬิกาเรือนนี้ ให้ตั้งการล็อกหน้าจอและปลดล็อก",
   "watch.needs_you_count": {
     "other": "{count} เรื่องต้องการคุณ"
   },
@@ -53,6 +56,7 @@
   "watch.nothing_sent_until": "จะไม่มีอะไรถูกส่งจนกว่าคุณจะอนุมัติ",
   "watch.nothing_waits": "ไม่มีอะไรรอคุณอยู่",
   "watch.open_on_phone": "เปิดบนโทรศัพท์",
+  "watch.opened_on_phone": "เปิดบนโทรศัพท์แล้ว",
   "watch.page.brief": "สรุป",
   "watch.page.inbox": "กล่องข้อความ",
   "watch.paused_still_answers": "หยุดชั่วคราว: กำหนดการของมันปิดอยู่ มันยังตอบสิ่งที่คุณส่ง",
@@ -75,6 +79,7 @@
   "watch.recent_chats": "แชตล่าสุด",
   "watch.recording": "กำลังบันทึกเสียง",
   "watch.recording_not_received": "การบันทึกเสียงไปไม่ถึงโทรศัพท์ของคุณ ลองอีกครั้ง หรือพิมพ์แทน",
+  "watch.refuse_on_phone": "ยังไม่ได้ปฏิเสธ ปฏิเสธบนโทรศัพท์ของคุณ",
   "watch.refused": "ปฏิเสธแล้ว ยังไม่ได้ส่งอะไร",
   "watch.reply": "ตอบ",
   "watch.rerecord": "บันทึกใหม่",
@@ -83,14 +88,20 @@
   "watch.resume_on_phone": "ทำต่อบนโทรศัพท์ของคุณ",
   "watch.retry": "ลองอีกครั้ง",
   "watch.review": "ตรวจสอบก่อนส่ง",
+  "watch.seconds_left": "เหลือ {seconds} วิ",
   "watch.sending": "กำลังส่ง…",
   "watch.sent": "ส่งแล้ว",
   "watch.settings_of": "{taf} · การตั้งค่า",
+  "watch.sign_in_allow": "อนุญาต",
+  "watch.sign_in_denied": "ไม่ได้ลงชื่อเข้าใช้ นาฬิกาเรือนนี้ยังคงออกจากระบบอยู่",
+  "watch.sign_in_deny": "ปฏิเสธ",
   "watch.sign_in_on_phone": "เข้าสู่ระบบ tafs บนโทรศัพท์ของคุณก่อน",
+  "watch.sign_in_watch_q": "ลงชื่อเข้าใช้นาฬิกาเรือนนี้ในชื่อคุณไหม",
   "watch.sign_out_q": "ออกจากระบบบนนาฬิกาเรือนนี้หรือไม่",
   "watch.sign_out_sub": "โทรศัพท์ของคุณยังเข้าสู่ระบบอยู่ นาฬิกาเรือนนี้จะลืม taf แชต และกล่องข้อความของคุณ",
   "watch.signed_in": "เข้าสู่ระบบแล้ว",
   "watch.signed_out_here": "ออกจากระบบบนนาฬิกาเรือนนี้แล้ว โทรศัพท์ของคุณยังเข้าสู่ระบบอยู่",
+  "watch.stopped_at_limit": "หยุดที่ขีดจำกัด {limit} สิ่งที่ได้ยินอยู่ด้านล่าง",
   "watch.swipe_settings": "ปัดซ้ายเพื่อดูการตั้งค่าของมัน",
   "watch.tap_start": "แตะเริ่ม แล้วพูด ถ้อยคำของคุณจะแสดงที่นี่ขณะที่คุณพูด",
   "watch.timing": "ฟัง {listen} ms · ใบเสร็จ {receipt} ms · ผลลัพธ์ {result} ms",
@@ -99,8 +110,10 @@
   "watch.type": "พิมพ์",
   "watch.type_hint": "เขียนถึง Coach…",
   "watch.update_phone": "อัปเดต tafs บนโทรศัพท์ของคุณ แล้วลองอีกครั้ง",
+  "watch.view_on_phone": "ดูบนโทรศัพท์",
   "watch.view_only_phone": "โทรศัพท์เครื่องนี้ดูได้อย่างเดียว คุณจึงถามจากนาฬิกาไม่ได้ เข้าสู่ระบบบนโทรศัพท์ที่อนุมัติได้",
   "watch.voice_text_only": "Coach ได้รับถ้อยคำของคุณเป็นข้อความ ไม่เคยได้รับเสียงของคุณ",
+  "watch.waiting_for_phone": "กำลังรอโทรศัพท์ของคุณ…",
   "watch.what_it_does": "สิ่งที่มันทำ",
   "watch.working_count": {
     "other": "{count} กำลังทำงาน"

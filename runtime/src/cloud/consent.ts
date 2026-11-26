@@ -5,12 +5,18 @@
  * (`ai_consent_required`). The apps only draw the words and send the answer. A new `AI_CONSENT_VERSION` (the words
  * changed in substance) asks again.
  */
-import { AgentsError } from "./agents.js";
+import { type AISource, AgentsError } from "./agents.js";
 import type { CoachStore } from "./coach.js";
 import { type Lang, wordsIn } from "./words/index.js";
 
-/** The consent's version: raised when what's sent, or to whom, changes, so everyone is asked again. */
-export const AI_CONSENT_VERSION = "1";
+/**
+ * The consent's version: raised when what's sent, or to whom, changes, so everyone is asked again. "2": the words name
+ * Claude's maker and point to the subprocessors page for who runs it (Anthropic, or Amazon Web Services, Google Cloud or
+ * Microsoft Azure, one at a time) and where, deleting it within 30 days unless it's flagged or the law requires keeping
+ * it. Moving between providers already on that list
+ * is a configuration change, not a new consent; adding a provider to the list, or changing these words, raises it.
+ */
+export const AI_CONSENT_VERSION = "2";
 
 /** Kept for the account's life (the store's records expire; this one far off). */
 const CONSENT_KEPT_MS = 10 * 365 * 24 * 3600_000;
@@ -45,13 +51,29 @@ export async function aiConsentOf(store: CoachStore | undefined, tenant: string,
   return kept && !kept.withdrawn_at && kept.version === AI_CONSENT_VERSION && typeof kept.at === "string" ? { at: kept.at, version: kept.version } : undefined;
 }
 
-export function aiConsentView(consent: AIConsent | undefined, lang: Lang): AIConsentView {
+/**
+ * The consent's "Right now" line: the company kiff/agents runs turns on now, from kiff/agents itself, so it can't name
+ * another. None when it wasn't read, when a run may go to either of two (a fallback), or for a source with no line.
+ * Naming it is a fact the setting supplies, not new words: no version change.
+ */
+export function aiSourceLine(src: AISource | undefined, lang: Lang): string | undefined {
+  if (!src || src.fallback) return undefined;
   const w = wordsIn(lang);
+  if (src.source === "bedrock" && src.geo === "eu") return w.ai_consent_now_bedrock;
+  if (src.source === "anthropic") return w.ai_consent_now_anthropic;
+  return undefined;
+}
+
+/** What the apps draw. `now`, the "Right now" line (aiSourceLine), goes under the second line, which names who runs it. */
+export function aiConsentView(consent: AIConsent | undefined, lang: Lang, now?: string): AIConsentView {
+  const w = wordsIn(lang);
+  const lines = [...w.ai_consent_lines];
+  if (now) lines.splice(2, 0, now);
   return {
     given: consent !== undefined,
     ...(consent ? { at: consent.at } : {}),
     version: AI_CONSENT_VERSION,
-    words: { title: w.ai_consent_title, lines: [...w.ai_consent_lines], allow: w.ai_consent_allow, not_now: w.ai_consent_not_now,
+    words: { title: w.ai_consent_title, lines, allow: w.ai_consent_allow, not_now: w.ai_consent_not_now,
       withdraw: w.ai_consent_withdraw, given: w.ai_consent_given },
   };
 }
@@ -86,14 +108,20 @@ function history(kept: Kept | undefined): Kept["earlier"] {
 
 /*
  * Coach reading the page in front (docs/chrome.md, "Coach reads the page you're on"): a consent of its own, beside the AI
- * consent above, given and withdrawn in the Chrome extension, whose own screen says what goes to Anthropic and when. It
- * gates one thing only: a page sent with a message to Coach. Without it the page is dropped and never read, kept or
- * logged, and the message goes alone, on the AI consent as ever. Nothing else waits on it: no taf, no schedule. A new
- * PAGE_CONSENT_VERSION asks again.
+ * consent above, given and withdrawn in the Chrome extension, whose own screen says what goes to the AI model and when. It
+ * gates one thing only: a page sent with a message to Coach, or to a taf on one of its own sites. Without it the page is
+ * dropped and never read, kept or logged, and the message goes alone, on the AI consent as ever. Nothing else waits on
+ * it: no schedule. A new PAGE_CONSENT_VERSION asks again.
  */
 
-/** The page consent's version: raised when what's read from the page, or where it goes, changes. */
-export const PAGE_CONSENT_VERSION = "1";
+/**
+ * The page consent's version: raised when what's read from the page, or where it goes, changes. "2": a message to a
+ * taf carries the page too (Chrome 0.2.14, `chrome/src/pageconsent.js` in step), so everyone is asked again. It's raised
+ * when its words change, not when the company running the model does: its words name only "the Claude AI model", and the
+ * AI consent points to who may run it. A page only ever goes with a turn, and every turn needs the AI consent at its
+ * exact version (requireAIConsent), so no one's page reaches a company the AI consent doesn't cover.
+ */
+export const PAGE_CONSENT_VERSION = "2";
 
 /** Where one person's page consent is kept. */
 export const pageConsentKey = (tenant: string, subject: string) => `${tenant}#page-consent#${subject}`;

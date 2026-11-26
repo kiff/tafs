@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -272,29 +273,54 @@ private fun SignOutScreen(confirm: () -> Unit, cancel: () -> Unit) {
 
 /** Signed out on this watch: that the phone still is, and Sign in, which reads the phone again. Nothing else is drawn. */
 @Composable
-internal fun SignedOutHereScreen(act: Actions) {
+internal fun SignedOutHereScreen(act: Actions, signIn: WatchModel.SignInAsk? = null) {
   ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     line(Words.Watch.signedOutHere)
-    item { Button(onClick = act.signIn, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.SignIn.withPhone) } }
+    // Signing in again is asked of the phone's person (row 18): this watch alone never signs itself in.
+    when (signIn) {
+      WatchModel.SignInAsk.Waiting -> line(Words.Watch.waitingForPhone)
+      WatchModel.SignInAsk.Denied -> line(Words.Watch.signInDenied)
+      is WatchModel.SignInAsk.NotReached -> line(signIn.why.line)
+      null -> Unit
+    }
+    if (signIn != WatchModel.SignInAsk.Waiting) {
+      item { Button(onClick = act.signIn, modifier = Modifier.fillMaxWidth().testTag(ASK_PHONE_SIGN_IN), colors = neutralButton()) { Text(Words.Watch.askPhoneSignIn) } }
+    }
   }
 }
 
-/** [WatchSignIn] in the watch's private preferences: one flag, nothing of the account. */
+/** The signed-out screen's button, for the screen tests. */
+internal const val ASK_PHONE_SIGN_IN = "ask-phone-sign-in"
+
+
+/** [WatchSignIn] in the watch's private preferences: one flag, and the sign-in ask waiting on the phone; nothing of the account. */
 class PreferencesWatchSignIn(context: android.content.Context) : WatchSignIn {
   private val prefs = context.getSharedPreferences("tafs.sign_in", android.content.Context.MODE_PRIVATE)
 
   override fun signedOut(): Boolean = prefs.getBoolean(SIGNED_OUT, false)
 
   override fun signOut() {
-    prefs.edit().putBoolean(SIGNED_OUT, true).apply()
+    prefs.edit().putBoolean(SIGNED_OUT, true).remove(ASK).remove(ASKED_AT).apply()
   }
 
   override fun signIn() {
     prefs.edit().clear().apply()
   }
 
+  override fun asked(): Pair<String, Long>? = prefs.getString(ASK, null)?.let { it to prefs.getLong(ASKED_AT, 0) }
+
+  override fun ask(id: String, at: Long) {
+    prefs.edit().putString(ASK, id).putLong(ASKED_AT, at).apply()
+  }
+
+  override fun forgetAsk() {
+    prefs.edit().remove(ASK).remove(ASKED_AT).apply()
+  }
+
   private companion object {
     const val SIGNED_OUT = "signed_out"
+    const val ASK = "ask"
+    const val ASKED_AT = "asked_at"
   }
 }
 
@@ -305,4 +331,11 @@ interface WatchSignIn {
   fun signOut()
 
   fun signIn()
+
+  /** The sign-in ask waiting on the phone's person (row 18): its one-time id and when it was sent. */
+  fun asked(): Pair<String, Long>? = null
+
+  fun ask(id: String, at: Long) = Unit
+
+  fun forgetAsk() = Unit
 }

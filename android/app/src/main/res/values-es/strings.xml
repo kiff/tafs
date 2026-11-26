@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Responde antes de %3$s. No se envía nada hasta que apruebes.</string>
     <string name="alert_answered">Un taf respondió a alguien</string>
     <string name="alert_approve_once">Aprobar una vez…</string>
+    <string name="alert_blocked_body">Este %1$s ya no pregunta, así que las alertas de tafs están desactivadas en Ajustes. Actívalas ahí para que las aprobaciones y respuestas te lleguen.</string>
+    <string name="alert_blocked_body_android">Android ya no pregunta, así que las alertas de tafs están desactivadas en los ajustes del teléfono. Actívalas ahí para que las aprobaciones y respuestas te lleguen, en este teléfono y en tu reloj. Tu reloj recibe sus actualizaciones de todos modos.</string>
+    <string name="alert_blocked_body_watch">Tu iPhone ya no pregunta, así que las alertas de tafs están desactivadas en Ajustes. Actívalas ahí para que las aprobaciones y respuestas te lleguen, en este iPhone y en tu reloj. Tu reloj recibe sus actualizaciones de todos modos.</string>
+    <string name="alert_blocked_title">Activa las alertas de tafs</string>
     <string name="alert_by_email">Por correo</string>
     <string name="alert_example">Ejemplo</string>
     <string name="alert_foot_cant_answer_holds">Las alertas van a las personas que pueden responder a las llamadas retenidas. Tu rol en esta cuenta no puede.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Las alertas aún no están activadas en este teléfono. %1$s</string>
     <string name="alert_not_refused">No rechazada</string>
     <string name="alert_not_sent">Una respuesta no se envió</string>
+    <string name="alert_now_on">Las alertas están activadas.</string>
     <string name="alert_on_this_device">Alertas en este %1$s</string>
+    <string name="alert_open_notification_settings">Abrir ajustes de notificaciones</string>
+    <string name="alert_open_settings">Abrir Ajustes</string>
     <string name="alert_open_tafs_answer_kiff_did">Abre tafs para responder: KIFF no indicó qué versión viste.</string>
     <string name="alert_open_tafs_answer_phone_can">Abre tafs para responder: este teléfono no puede firmarla desde la notificación.</string>
     <string name="alert_prompt">Recibe una alerta cuando un taf te necesite</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">No disponible</string>
     <string name="alert_status_off">Desactivado</string>
     <string name="alert_status_on">Activado</string>
+    <string name="alert_still_off">Las alertas siguen desactivadas.</string>
     <string name="alert_still_on_after_sign_out_body">tafs no pudo desactivarlas (%1$s). Vuelve a intentarlo, o cierra sesión de todos modos y desactiva las notificaciones de tafs en Ajustes.</string>
     <string name="alert_still_on_after_sign_out_title">Este %1$s podría seguir recibiendo las alertas de esta cuenta</string>
     <string name="alert_taf_needs_you">%1$s te necesita</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs no pudo contactar con KIFF para rechazarla. Abre tafs para responder.</string>
+    <string name="alert_watch_first_body">Para ver las aprobaciones y respuestas como alertas, en este teléfono y en tu reloj, activa las alertas de tafs. Tu reloj seguirá recibiendo sus actualizaciones aunque no lo hagas.</string>
+    <string name="alert_watch_first_title">Tu reloj está usando tafs</string>
     <string name="alert_what_alerts">Qué te avisa</string>
     <string name="alert_with_sound">Con sonido</string>
     <string name="app_name">tafs</string>
@@ -846,6 +856,7 @@
     <string name="coach_tools_give">Dar a Coach sus herramientas</string>
     <string name="coach_tools_giving">Dando…</string>
     <string name="coach_tools_title">Herramientas de Coach</string>
+    <string name="coach_tools_write_after">Aprueba primero las herramientas de Coach y luego podrás escribir.</string>
     <string name="coach_tools_eyebrow">Herramientas</string>
     <string name="coach_tools_not_given">No se dieron las herramientas a Coach. %1$s</string>
     <string name="coach_tools_not_read">No se pudieron leer las herramientas de Coach. %1$s</string>
@@ -2780,6 +2791,7 @@
     <string name="watch_ask">Pedir a tafs</string>
     <string name="watch_ask_needs_consent">Antes de pedir algo a tafs, permite el uso de IA en tafs en tu teléfono.</string>
     <string name="watch_ask_not_on">Pedir desde el reloj aún no está activado.</string>
+    <string name="watch_ask_phone_sign_in">Pide a tu teléfono que inicie sesión en este reloj</string>
     <string name="watch_ask_text_only">tafs recibe tus palabras como texto, nunca tu voz.</string>
     <string name="watch_asking_phone">Preguntando a tu teléfono…</string>
     <string name="watch_calendar_today">Calendario de hoy</string>
@@ -2791,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Eliminado. No se envió nada.</string>
     <string name="watch_didnt_catch">No lo he entendido. Toca para volver a intentarlo.</string>
     <string name="watch_dismiss">Descartar</string>
+    <string name="watch_edit_words">Toca el texto para cambiarlo</string>
     <string name="watch_glance_description">Cuántos te necesitan, nunca qué ni quién.</string>
     <string name="watch_halt_all_q">¿Bloquear todos tus tafs?</string>
     <plurals name="watch_halt_now_count">
@@ -2806,6 +2819,7 @@
         <item quantity="one">%1$s llamada retenida te necesita</item>
         <item quantity="other">%1$s llamadas retenidas te necesitan</item>
     </plurals>
+    <string name="watch_held_channel">Llamadas retenidas</string>
     <string name="watch_inbox_empty">Nada nuevo. Aquí llegan las respuestas de Coach y los avisos de tus tafs.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s sin leer en la Bandeja</item>
@@ -2820,7 +2834,7 @@
     <string name="watch_menu">Menú</string>
     <string name="watch_mic_needed">Para pedir con la voz, permite el micrófono a tafs en este reloj.</string>
     <string name="watch_more_on_phone">El resto está en tu teléfono.</string>
-    <string name="watch_needs_lock">Para rechazar o bloquear desde este reloj, pon un bloqueo de pantalla y desbloquéalo.</string>
+    <string name="watch_needs_lock">Para enviar, rechazar o bloquear desde este reloj, pon un bloqueo de pantalla y desbloquéalo.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s te necesita</item>
         <item quantity="other">%1$s te necesitan</item>
@@ -2830,6 +2844,7 @@
     <string name="watch_nothing_sent_until">No se envía nada hasta que apruebes.</string>
     <string name="watch_nothing_waits">Nada te espera.</string>
     <string name="watch_open_on_phone">Abrir en el teléfono</string>
+    <string name="watch_opened_on_phone">Abierto en tu teléfono</string>
     <string name="watch_page_brief">Resumen</string>
     <string name="watch_page_inbox">Bandeja</string>
     <string name="watch_paused_still_answers">En pausa: su programación está detenida. Aun así responde a lo que envías.</string>
@@ -2853,6 +2868,7 @@
     <string name="watch_recent_chats">Chats recientes</string>
     <string name="watch_recording">Grabando</string>
     <string name="watch_recording_not_received">La grabación no llegó a tu teléfono. Vuelve a intentarlo o escribe.</string>
+    <string name="watch_refuse_on_phone">No se ha rechazado. Recházalo en tu teléfono.</string>
     <string name="watch_refused">Rechazada. No se envió nada.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_rerecord">Volver a grabar</string>
@@ -2861,14 +2877,20 @@
     <string name="watch_resume_on_phone">Reanudar en tu teléfono</string>
     <string name="watch_retry">Reintentar</string>
     <string name="watch_review">Revisa antes de enviar</string>
+    <string name="watch_seconds_left">Quedan %1$s s</string>
     <string name="watch_sending">Enviando…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_settings_of">%1$s · ajustes</string>
+    <string name="watch_sign_in_allow">Permitir</string>
+    <string name="watch_sign_in_denied">No se ha iniciado sesión. Este reloj sigue con la sesión cerrada.</string>
+    <string name="watch_sign_in_deny">Denegar</string>
     <string name="watch_sign_in_on_phone">Primero inicia sesión en tafs en tu teléfono.</string>
+    <string name="watch_sign_in_watch_q">¿Iniciar sesión en este reloj como tú?</string>
     <string name="watch_sign_out_q">¿Cerrar sesión en este reloj?</string>
     <string name="watch_sign_out_sub">Tu teléfono sigue con la sesión iniciada. Este reloj olvida tus tafs, chats y bandeja.</string>
     <string name="watch_signed_in">Sesión iniciada</string>
     <string name="watch_signed_out_here">Sesión cerrada en este reloj. Tu teléfono sigue con la sesión iniciada.</string>
+    <string name="watch_stopped_at_limit">Se detuvo en el límite de %1$s. Lo que se oyó está abajo.</string>
     <string name="watch_swipe_settings">Desliza a la izquierda para sus ajustes</string>
     <string name="watch_tap_start">Toca Empezar y habla. Tus palabras aparecen aquí mientras hablas.</string>
     <string name="watch_timing">Escucha %1$s ms · acuse %2$s ms · resultado %3$s ms</string>
@@ -2877,8 +2899,10 @@
     <string name="watch_type">Escribir</string>
     <string name="watch_type_hint">Escribe a Coach…</string>
     <string name="watch_update_phone">Actualiza tafs en tu teléfono y vuelve a intentarlo.</string>
+    <string name="watch_view_on_phone">Ver en el teléfono</string>
     <string name="watch_view_only_phone">Este teléfono solo puede ver, así que no puedes pedir desde el reloj. Inicia sesión en un teléfono que pueda aprobar.</string>
     <string name="watch_voice_text_only">Coach recibe tus palabras como texto, nunca tu voz.</string>
+    <string name="watch_waiting_for_phone">Esperando a tu teléfono…</string>
     <string name="watch_what_it_does">Qué hace</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s trabajando</item>

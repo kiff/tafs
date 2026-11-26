@@ -58,6 +58,8 @@ class CoachChatActions(
   val loadArchived: suspend () -> Unit = {},
   val archive: suspend (String) -> Boolean = { false },
   val unarchive: suspend (String) -> Boolean = { false },
+  /** Deletes a conversation for good, after the person confirmed it (tafs cloud decides whose it is). */
+  val delete: suspend (String) -> Boolean = { false },
   /** Gives Coach the tools tafs cloud says are still to give. */
   val giveTools: suspend () -> Boolean = { false },
   /** The tools step asked at the end of a first Start was put off: the one-line row opens it again. */
@@ -86,6 +88,10 @@ internal fun PreviousConversations(
   var archiving by remember { mutableStateOf<TafsCloud.Chat?>(null) }
   // An archived conversation to put back, asked by its title.
   var puttingBack by remember { mutableStateOf<TafsCloud.Chat?>(null) }
+  // The conversation the person asked to delete, waiting for the yes that can't be undone.
+  var deleting by remember { mutableStateOf<TafsCloud.Chat?>(null) }
+  // tafs cloud's words for it, from the last list read; the app's English stand-ins only where it sent none.
+  val deleteWords = bot.tafs.app.model.DeleteChatWords.of(state.coachDeleteWords)
   LaunchedEffect(archived) { if (archived) actions.loadArchived() else actions.load() }
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -133,6 +139,7 @@ internal fun PreviousConversations(
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           Text(chat.title.ifBlank { Words.Coach.Chats.untitled }, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 3, modifier = Modifier.testTag("archive.chat"))
           Text(Words.Coach.Chats.archiveBody)
+          DeleteLink(deleteWords.menu) { archiving = null; deleting = chat }
         }
       },
       confirmButton = {
@@ -149,6 +156,7 @@ internal fun PreviousConversations(
     DriveAlert(
       onDismissRequest = { puttingBack = null },
       title = { Text(chat.title.ifBlank { Words.Coach.Chats.untitled }, maxLines = 3, modifier = Modifier.testTag("archive.chat")) },
+      text = { DeleteLink(deleteWords.menu) { puttingBack = null; deleting = chat } },
       confirmButton = {
         TextButton({
           puttingBack = null
@@ -159,6 +167,37 @@ internal fun PreviousConversations(
       containerColor = Theme.panel,
     )
   }
+  deleting?.let { chat ->
+    DriveAlert(
+      onDismissRequest = { deleting = null },
+      title = { Text(deleteWords.title) },
+      // The chat it deletes, by its title, and what goes and what stays.
+      text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text(chat.title.ifBlank { Words.Coach.Chats.untitled }, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 3, modifier = Modifier.testTag("delete.chat"))
+          Text(deleteWords.body)
+        }
+      },
+      confirmButton = {
+        TextButton({
+          deleting = null
+          scope.launch { actions.delete(chat.session) }
+        }, modifier = Modifier.testTag("delete.confirm")) { Text(deleteWords.button, color = Theme.no) }
+      },
+      dismissButton = { TextButton({ deleting = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
+}
+
+/** Under Archive or Put back: the way on to deleting the conversation for good, which asks again before it does. */
+@Composable
+private fun DeleteLink(words: String, onClick: () -> Unit) {
+  Text(
+    words,
+    style = scaled(15, FontWeight.SemiBold, Theme.no),
+    modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(onClick = onClick).padding(top = 10.dp).testTag("delete.chat.open"),
+  )
 }
 
 /** One conversation: its title and when it last moved; a long press offers Archive, or Put back. */

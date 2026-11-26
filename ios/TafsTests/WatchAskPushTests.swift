@@ -22,11 +22,14 @@ final class WatchAskPushTests: XCTestCase {
         super.tearDown()
     }
 
+    /// What was handed to the watch, push by push.
+    private var relayed: [WatchPush] = []
+
     private func push(_ id: String, reply: WatchReply, phoneInUse: Bool = false) async -> (posted: [WatchCoachAnswer], reads: Int) {
         var posted: [WatchCoachAnswer] = []
         var reads = 0
         await WatchAskPush.handle(id, pushes: pushes, read: { _ in reads += 1; return reply }, now: { self.t },
-                                  phoneInUse: { phoneInUse }, post: { answer, ticket in
+                                  phoneInUse: { phoneInUse }, relay: { self.relayed.append($0) }, post: { answer, ticket in
                                       XCTAssertEqual(ticket.askID, id)
                                       posted.append(answer)
                                   })
@@ -94,6 +97,63 @@ final class WatchAskPushTests: XCTestCase {
         XCTAssertFalse(held.answering ?? true)
         let pushed = await push("ask_1", reply: held)
         XCTAssertEqual(pushed.posted.first?.approveOnPhone, true)
+    }
+
+    /// Kept and pushed (docs/watch-app.md): every change of a request this iPhone sent is handed to the watch, tafs open or
+    /// not, so the thread on the wrist moves with no read of its own. Never one this iPhone didn't send, or whose answer the
+    /// watch read.
+    func testEachChangeIsHandedToTheWatch() async {
+        pushes.sent("ask_1", at: t)
+        _ = await push("ask_1", reply: WatchReply(.ok, answering: true), phoneInUse: true)
+        _ = await push("ask_1", reply: WatchReply(.ok, coach: done, answering: false), phoneInUse: true)
+        XCTAssertEqual(relayed.map(\.kind), [.ask, .ask])
+        XCTAssertEqual(relayed.map(\.ask), ["ask_1", "ask_1"])
+        XCTAssertEqual(relayed.last?.reply?.coach, done)
+        XCTAssertEqual(relayed.last?.at, t)
+        relayed = []
+        _ = await push("ask_other", reply: WatchReply(.ok, coach: done, answering: false))
+        pushes.sent("ask_seen", at: t)
+        pushes.seen("ask_seen", now: t)
+        _ = await push("ask_seen", reply: WatchReply(.ok, coach: done, answering: false))
+        XCTAssertTrue(relayed.isEmpty)
+    }
+
+    /// The Inbox's marks, read once and handed on; a taf whose chat changed, by its id alone. Nothing without them.
+    func testTheInboxAndAChatAreHandedToTheWatch() async {
+        var handed: [WatchPush] = []
+        let marks = WatchInboxMarks(read: ["ce_1"], dismissed: ["ce_2"])
+        await WatchPushRelay.inbox(read: { WatchReply(.ok, marks: marks) }, now: t) { handed.append($0) }
+        await WatchPushRelay.inbox(read: { WatchReply(.failed) }, now: t) { handed.append($0) }
+        WatchPushRelay.chat("taf-1", now: t) { handed.append($0) }
+        WatchPushRelay.chat(nil, now: t) { handed.append($0) }
+        XCTAssertEqual(handed, [WatchPush(.inbox, reply: WatchReply(.ok, marks: marks), at: t), WatchPush(.chat, taf: "taf-1", at: t)])
+    }
+
+    /// The phone's held calls go to the watch as `WatchHolds`: no amount, no reason, no time in words. Once per change under a
+    /// mark: the same again isn't sent, an answered call is, and a new account's first read always is. A failed read sends nothing.
+    func testHeldCallsAreHandedToTheWatchWithoutTheirAmountOncePerChange() async {
+        WatchPushRelay.forgetHolds()
+        defer { WatchPushRelay.forgetHolds() }
+        var handed: [WatchPush] = []
+        let call = WatchNeedsYou.Call(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00", summary: "Refund order 4502",
+                                      reason: "Over €150.00 each", answerBy: "10:51", ends: t + 600)
+        let page = WatchNeedsYou(count: 2, calls: [call], at: t)
+        let none = WatchNeedsYou(count: 0, calls: [], at: t)
+        let (m1, m2) = (String(repeating: "a", count: 32), String(repeating: "b", count: 32))
+        await WatchPushRelay.needsYou(read: { page }, mark: m1, now: t) { handed.append($0) }
+        await WatchPushRelay.needsYou(read: { page }, mark: m1, now: t + 30) { handed.append($0) }
+        await WatchPushRelay.needsYou(read: { throw URLError(.notConnectedToInternet) }, mark: m1, now: t) { handed.append($0) }
+        await WatchPushRelay.needsYou(read: { none }, mark: m1, now: t + 60) { handed.append($0) }
+        await WatchPushRelay.needsYou(read: { none }, mark: m2, now: t + 90) { handed.append($0) }
+        XCTAssertEqual(handed, [WatchPush(.needsYou, holds: WatchHolds(page), at: t), WatchPush(.needsYou, holds: WatchHolds(none), at: t + 60),
+                                WatchPush(.needsYou, holds: WatchHolds(none), at: t + 90)])
+        XCTAssertEqual(handed[0].holds?.calls.first?.line, "Refund order 4502")
+        let json = String(decoding: WatchMessage.encode(handed[0]), as: UTF8.self)
+        XCTAssertFalse(json.contains("€") || json.contains("480") || json.contains("Over"), json)
+        // The app's own refresh reads again only when its held calls differ from the last read's.
+        XCTAssertTrue(WatchPushRelay.heldChanged(["ce_1"], read: {}))
+        XCTAssertFalse(WatchPushRelay.heldChanged(["ce_1"], read: {}))
+        XCTAssertTrue(WatchPushRelay.heldChanged([], read: {}))
     }
 
     /// W3's follow and a request it didn't keep (from before this build) post as before.

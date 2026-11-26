@@ -1,0 +1,21 @@
+{
+  "connections": [
+    {
+      "agent": "agt_wiki",
+      "grant": "grt_wiki",
+      "name": "Shop runs",
+      "sites": [
+        "wikipedia.org"
+      ],
+      "sites_signed": {
+        "sig": "s1gnedByThePhone_s1gnedByThePhone_s1gnedByThePhone_s1gnedByThePhone_s1gnedByThePhone_s",
+        "sites": [
+          "wikipedia.org"
+        ]
+      }
+    }
+  ],
+  "now": 0,
+  "sig": "\u003cplanque's signature\u003e",
+  "type": "welcome"
+}

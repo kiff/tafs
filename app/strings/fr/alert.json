@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}. Répondez avant {zone}. Rien n'est envoyé tant que vous n'approuvez pas.",
   "alert.answered": "Un taf a répondu à quelqu'un",
   "alert.approve_once": "Approuver une fois…",
+  "alert.blocked.body": "{device|This} ne pose plus la question, donc les alertes de tafs sont désactivées dans Réglages. Activez-les là pour que les approbations et les réponses vous parviennent.",
+  "alert.blocked.body_android": "Android ne pose plus la question, donc les alertes de tafs sont désactivées dans les réglages du téléphone. Activez-les là pour que les approbations et les réponses vous parviennent, sur ce téléphone et sur votre montre. Votre montre reçoit ses mises à jour de toute façon.",
+  "alert.blocked.body_watch": "Votre iPhone ne pose plus la question, donc les alertes de tafs sont désactivées dans Réglages. Activez-les là pour que les approbations et les réponses vous parviennent, sur cet iPhone et sur votre montre. Votre montre reçoit ses mises à jour de toute façon.",
+  "alert.blocked.title": "Activer les alertes de tafs",
   "alert.by_email": "Par e-mail",
   "alert.example": "Exemple",
   "alert.foot.cant_answer_holds": "Les alertes vont aux personnes qui peuvent répondre aux appels retenus. Votre rôle sur ce compte ne le peut pas.",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "Les alertes ne sont pas encore activées sur ce téléphone. {why}",
   "alert.not_refused": "Non refusé",
   "alert.not_sent": "Une réponse n'a pas été envoyée",
+  "alert.now_on": "Les alertes sont activées.",
   "alert.on_this_device": "Alertes sur {device|this}",
+  "alert.open_notification_settings": "Ouvrir les réglages des notifications",
+  "alert.open_settings": "Ouvrir Réglages",
   "alert.open_tafs_answer_kiff_did": "Ouvrez tafs pour y répondre : KIFF n'a pas indiqué quelle version vous avez vue.",
   "alert.open_tafs_answer_phone_can": "Ouvrez tafs pour y répondre : ce téléphone ne peut pas signer depuis la notification.",
   "alert.prompt": "Recevoir une alerte quand un taf vous attend",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "Non disponible",
   "alert.status.off": "Désactivé",
   "alert.status.on": "Activé",
+  "alert.still_off": "Les alertes sont toujours désactivées.",
   "alert.still_on_after_sign_out.body": "tafs n'a pas pu les désactiver ({why}). Réessayez, ou déconnectez-vous quand même et désactivez les notifications pour tafs dans Réglages.",
   "alert.still_on_after_sign_out.title": "{device|This} peut encore recevoir les alertes de ce compte",
   "alert.taf_needs_you": "{taf} vous attend",
@@ -43,6 +51,8 @@
     "other": "{count} tafs ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs n'a pas pu joindre KIFF pour le refuser. Ouvrez tafs pour y répondre.",
+  "alert.watch_first.body": "Pour voir les approbations et les réponses en alertes, sur ce téléphone et sur votre montre, activez les alertes de tafs. Votre montre continue de recevoir ses mises à jour même si vous ne le faites pas.",
+  "alert.watch_first.title": "Votre montre utilise tafs",
   "alert.what_alerts": "Ce qui vous alerte",
   "alert.with_sound": "Avec son"
 }

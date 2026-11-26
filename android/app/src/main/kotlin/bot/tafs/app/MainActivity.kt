@@ -161,6 +161,9 @@ class MainActivity : FragmentActivity() {
     androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).run {
       isAppearanceLightStatusBars = light; isAppearanceLightNavigationBars = light
     }
+    // The taf list kept for the watch follows the screen's changes too (a taf added or halted here), once the watch uses tafs.
+    app.watchTafs
+    app.watchNeedsYou
     // The prompt for approving shows on this activity while it is on screen.
     app.authenticator.attach(this)
     // So does Google Play's purchase sheet, where buying is on.
@@ -287,6 +290,8 @@ class MainActivity : FragmentActivity() {
 
   override fun onResume() {
     super.onResume()
+    // Back from Android's notification settings, where a dialog sent the person: alerts turn on if they're allowed now.
+    lifecycleScope.launch { app.model.recheckAlerts() }
     app.vendorSignIn.resumed(lifecycleScope)
     app.appSignInTab.resumed(lifecycleScope)
     // A newer tafs on the track is offered on Home; Play answers "none" for a build it didn't install.
@@ -432,6 +437,51 @@ fun RootView(model: AppModel) {
       text = { Text(Words.Settings.AlertsOff.text) },
       confirmButton = { TextButton({ model.dismissAlertsOff(); rootScope.launch { model.turnOnAlerts() } }) { Text(Words.Settings.AlertsOff.turnOn, color = Theme.amber) } },
       dismissButton = { TextButton(model::dismissAlertsOff) { Text(Words.Common.notNow, color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
+  // Alerts asked for, but Android no longer asks for notifications: why it matters, and the way straight to tafs's switch.
+  if (state.alertsBlocked && state.lastError == null) {
+    DriveAlert(
+      onDismissRequest = model::dismissAlertsBlocked,
+      title = { Text(Words.Alert.Blocked.title) },
+      text = { Text(Words.Alert.Blocked.bodyAndroid) },
+      confirmButton = {
+        TextButton({ model.leftForNotificationSettings(); openNotificationSettings(context) }) { Text(Words.Alert.openNotificationSettings, color = Theme.amber) }
+      },
+      dismissButton = { TextButton(model::dismissAlertsBlocked) { Text(Words.Common.notNow, color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
+  // The first time the watch uses tafs on a phone whose notifications are off: once per phone, with the same way to the switch.
+  if (state.watchAlertsOffer && !state.alertsBlocked && state.lastError == null) {
+    DriveAlert(
+      onDismissRequest = model::dismissWatchAlertsOffer,
+      title = { Text(Words.Alert.WatchFirst.title) },
+      text = { Text(Words.Alert.WatchFirst.body) },
+      confirmButton = {
+        TextButton({ model.leftForNotificationSettings(); openNotificationSettings(context) }) { Text(Words.Alert.openNotificationSettings, color = Theme.amber) }
+      },
+      dismissButton = { TextButton(model::dismissWatchAlertsOffer) { Text(Words.Common.notNow, color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
+  // A watch signed out on itself asks to be signed in again (row 18): this phone's person allows it or not, here, behind the lock.
+  if (state.watchSignInAsk != null && state.signedIn) {
+    DriveAlert(
+      onDismissRequest = {},
+      title = { Text(Words.Watch.signInWatchQ) },
+      confirmButton = { TextButton({ model.answerWatchSignIn(true) }) { Text(Words.Watch.signInAllow, color = Theme.amber) } },
+      dismissButton = { TextButton({ model.answerWatchSignIn(false) }) { Text(Words.Watch.signInDeny, color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
+  // Back from Settings: alerts on now, or still off, said once.
+  state.alertsRecheckLine?.let { line ->
+    DriveAlert(
+      onDismissRequest = model::dismissAlertsRecheckLine,
+      text = { Text(line) },
+      confirmButton = { TextButton(model::dismissAlertsRecheckLine) { Text(Words.Common.ok, color = Theme.amber) } },
       containerColor = Theme.panel,
     )
   }
@@ -663,6 +713,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
       stopChat = model::stopChat,
       connectAgain = model::startConnectAgain,
       retryUnsent = model::retryUnsent,
+      retryFailed = model::retryFailed,
       editUnsent = model::editUnsent,
       deleteUnsent = model::deleteUnsent,
       resumeHalt = model::resumeHalt,
@@ -827,7 +878,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
   }
   val coachChats = remember(model) { CoachChatActions(
     newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
-    loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
+    loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat, delete = model::deleteCoachChat,
     giveTools = model::giveCoachTools, notNowTools = model::notNowCoachTools,
   ) }
   // What's open beside a tablet's sidebar, highlighted in it.
@@ -983,6 +1034,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
                   state, loadReport = model::loadReport, onOpenCalendar = null,
                   onMissionLog = if (state.mode == Mode.kiff) ({ m -> coachOpen = false; trialTaf = null; missionOpen = m.id }) else null,
                   onNeedsYou = { onTab(Tab.NeedsYou) },
+                  people = people,
                 ) { overviewOpen = false; openTaf = it }
                 else -> home()
               }
@@ -1329,3 +1381,18 @@ val COACH: String get() = Words.Coach.title
 /** From this width the Tafs tab shows the list beside what's open, as iOS on an iPad: a tablet either way up, or a large phone on its side. */
 private const val WIDE_DP = 720
 
+/** Android's notification settings for tafs itself, where its switch is: no hunting through Settings. */
+internal fun openNotificationSettings(context: android.content.Context) {
+  val intent = Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+    .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+  runCatching { context.startActivity(intent) }.onFailure {
+    // A phone without that screen: the app's own details page, which has the Notifications row.
+    runCatching {
+      context.startActivity(
+        Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.fromParts("package", context.packageName, null))
+          .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+      )
+    }
+  }
+}

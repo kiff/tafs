@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s・%2$s。%3$sまでに回答してください。承認するまで何も送信されません。</string>
     <string name="alert_answered">tafが誰かに回答しました</string>
     <string name="alert_approve_once">1回だけ承認…</string>
+    <string name="alert_blocked_body">この%1$sではもう確認されないため、設定でtafsの通知がオフになっています。承認や回答が届くよう、そこで通知をオンにしてください。</string>
+    <string name="alert_blocked_body_android">Androidはもう確認しないため、スマートフォンの設定でtafsの通知がオフになっています。承認や回答がこのスマートフォンとウォッチに届くよう、そこで通知をオンにしてください。ウォッチはどちらの場合も更新を受け取ります。</string>
+    <string name="alert_blocked_body_watch">iPhoneではもう確認されないため、設定でtafsの通知がオフになっています。承認や回答がこのiPhoneとウォッチに届くよう、そこで通知をオンにしてください。ウォッチはどちらの場合も更新を受け取ります。</string>
+    <string name="alert_blocked_title">tafsの通知をオンにする</string>
     <string name="alert_by_email">メールで</string>
     <string name="alert_example">例</string>
     <string name="alert_foot_cant_answer_holds">通知は、保留中の呼び出しに回答できる人に届きます。このアカウントでのあなたの役割では回答できません。</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">このスマートフォンではまだ通知がオンになっていません。%1$s</string>
     <string name="alert_not_refused">拒否されていません</string>
     <string name="alert_not_sent">返信は送信されませんでした</string>
+    <string name="alert_now_on">通知はオンです。</string>
     <string name="alert_on_this_device">この%1$sの通知</string>
+    <string name="alert_open_notification_settings">通知設定を開く</string>
+    <string name="alert_open_settings">設定を開く</string>
     <string name="alert_open_tafs_answer_kiff_did">tafsを開いて回答してください：KIFFは、あなたが見たバージョンを伝えませんでした。</string>
     <string name="alert_open_tafs_answer_phone_can">tafsを開いて回答してください：このスマートフォンは通知から署名できません。</string>
     <string name="alert_prompt">tafがあなたを必要としたときに通知を受け取る</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">利用不可</string>
     <string name="alert_status_off">オフ</string>
     <string name="alert_status_on">オン</string>
+    <string name="alert_still_off">通知はまだオフです。</string>
     <string name="alert_still_on_after_sign_out_body">tafsは通知をオフにできませんでした（%1$s）。もう一度試すか、このままサインアウトして、設定でtafsの通知をオフにしてください。</string>
     <string name="alert_still_on_after_sign_out_title">この%1$sには、まだこのアカウントの通知が届く可能性があります</string>
     <string name="alert_taf_needs_you">%1$sがあなたを必要としています</string>
@@ -45,6 +53,8 @@
         <item quantity="other">taf %1$s個 ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafsは拒否するためにKIFFに接続できませんでした。tafsを開いて回答してください。</string>
+    <string name="alert_watch_first_body">承認や回答をこのスマートフォンとウォッチで通知として受け取るには、tafsの通知をオンにしてください。オンにしなくても、ウォッチは更新を受け取り続けます。</string>
+    <string name="alert_watch_first_title">ウォッチがtafsを使っています</string>
     <string name="alert_what_alerts">通知する内容</string>
     <string name="alert_with_sound">音あり</string>
     <string name="app_name">tafs</string>
@@ -813,6 +823,7 @@
     <string name="coach_tools_give">Coachにツールを渡す</string>
     <string name="coach_tools_giving">渡しています…</string>
     <string name="coach_tools_title">Coachのツール</string>
+    <string name="coach_tools_write_after">先にCoachのツールを承認してください。その後、書き込めます。</string>
     <string name="coach_tools_eyebrow">ツール</string>
     <string name="coach_tools_not_given">Coachのツールは渡されませんでした。%1$s</string>
     <string name="coach_tools_not_read">Coachのツールを読み込めませんでした。%1$s</string>
@@ -2705,6 +2716,7 @@
     <string name="watch_ask">tafsに質問</string>
     <string name="watch_ask_needs_consent">tafsに質問する前に、スマートフォンのtafsでAIの使用を許可してください。</string>
     <string name="watch_ask_not_on">ウォッチからの質問はまだオンになっていません。</string>
+    <string name="watch_ask_phone_sign_in">スマートフォンにこのウォッチへのサインインを依頼</string>
     <string name="watch_ask_text_only">tafsに届くのはあなたの言葉のテキストだけで、声は届きません。</string>
     <string name="watch_asking_phone">スマートフォンに問い合わせています…</string>
     <string name="watch_calendar_today">今日のカレンダー</string>
@@ -2716,6 +2728,7 @@
     <string name="watch_deleted_nothing_sent">削除しました。何も送信されていません。</string>
     <string name="watch_didnt_catch">聞き取れませんでした。タップしてもう一度お試しください。</string>
     <string name="watch_dismiss">閉じる</string>
+    <string name="watch_edit_words">文字をタップすると変更できます</string>
     <string name="watch_glance_description">要確認の件数だけを表示し、内容や相手は表示しません。</string>
     <string name="watch_halt_all_q">すべてのtafを遮断しますか？</string>
     <plurals name="watch_halt_now_count">
@@ -2729,6 +2742,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">保留中の呼び出し%1$s件が確認を待っています</item>
     </plurals>
+    <string name="watch_held_channel">保留中の呼び出し</string>
     <string name="watch_inbox_empty">新着はありません。Coachの返信とtafの通知がここに届きます。</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">受信トレイに未読%1$s件</item>
@@ -2742,7 +2756,7 @@
     <string name="watch_menu">メニュー</string>
     <string name="watch_mic_needed">音声で質問するには、このウォッチでtafsのマイク使用を許可してください。</string>
     <string name="watch_more_on_phone">残りはスマートフォンにあります。</string>
-    <string name="watch_needs_lock">このウォッチから拒否や遮断をするには、画面ロックを設定してロックを解除してください。</string>
+    <string name="watch_needs_lock">このウォッチから送信、拒否、遮断をするには、画面ロックを設定してロックを解除してください。</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">要確認%1$s件</item>
     </plurals>
@@ -2751,6 +2765,7 @@
     <string name="watch_nothing_sent_until">承認するまで何も送信されません。</string>
     <string name="watch_nothing_waits">待機中の項目はありません。</string>
     <string name="watch_open_on_phone">スマートフォンで開く</string>
+    <string name="watch_opened_on_phone">スマートフォンで開きました</string>
     <string name="watch_page_brief">ブリーフィング</string>
     <string name="watch_page_inbox">受信トレイ</string>
     <string name="watch_paused_still_answers">一時停止中：スケジュールはオフです。送ったメッセージには引き続き答えます。</string>
@@ -2773,6 +2788,7 @@
     <string name="watch_recent_chats">最近のチャット</string>
     <string name="watch_recording">録音中</string>
     <string name="watch_recording_not_received">録音がスマートフォンに届きませんでした。もう一度お試しいただくか、入力してください。</string>
+    <string name="watch_refuse_on_phone">拒否されていません。スマートフォンで拒否してください。</string>
     <string name="watch_refused">拒否しました。何も送信されていません。</string>
     <string name="watch_reply">返信</string>
     <string name="watch_rerecord">録音し直す</string>
@@ -2781,14 +2797,20 @@
     <string name="watch_resume_on_phone">スマートフォンで再開してください</string>
     <string name="watch_retry">再試行</string>
     <string name="watch_review">送信前に確認</string>
+    <string name="watch_seconds_left">残り%1$s秒</string>
     <string name="watch_sending">送信しています…</string>
     <string name="watch_sent">送信済み</string>
     <string name="watch_settings_of">%1$s・設定</string>
+    <string name="watch_sign_in_allow">許可</string>
+    <string name="watch_sign_in_denied">サインインしていません。このウォッチはサインアウトしたままです。</string>
+    <string name="watch_sign_in_deny">拒否</string>
     <string name="watch_sign_in_on_phone">先にスマートフォンでtafsにサインインしてください。</string>
+    <string name="watch_sign_in_watch_q">このウォッチにあなたとしてサインインしますか？</string>
     <string name="watch_sign_out_q">このウォッチでサインアウトしますか？</string>
     <string name="watch_sign_out_sub">スマートフォンはサインインしたままです。このウォッチはtafs、チャット、受信トレイを消去します。</string>
     <string name="watch_signed_in">サインイン済み</string>
     <string name="watch_signed_out_here">このウォッチでサインアウトしました。スマートフォンはサインインしたままです。</string>
+    <string name="watch_stopped_at_limit">上限の%1$sで停止しました。聞き取った内容は下にあります。</string>
     <string name="watch_swipe_settings">左にスワイプして設定を表示</string>
     <string name="watch_tap_start">「開始」をタップしてから話してください。話している間、言葉がここに表示されます。</string>
     <string name="watch_timing">聞き取り %1$sms・領収書 %2$sms・結果 %3$sms</string>
@@ -2797,8 +2819,10 @@
     <string name="watch_type">入力</string>
     <string name="watch_type_hint">Coachに書く…</string>
     <string name="watch_update_phone">スマートフォンのtafsをアップデートしてから、もう一度お試しください。</string>
+    <string name="watch_view_on_phone">スマートフォンで表示</string>
     <string name="watch_view_only_phone">このスマートフォンは表示のみのため、ウォッチから質問できません。承認できるスマートフォンでサインインしてください。</string>
     <string name="watch_voice_text_only">Coachに届くのはあなたの言葉のテキストだけで、声は届きません。</string>
+    <string name="watch_waiting_for_phone">スマートフォンを待っています…</string>
     <string name="watch_what_it_does">できること</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s件作業中</item>

@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s۔ %3$s تک جواب دیں۔ آپ کے منظور کرنے تک کچھ نہیں بھیجا جاتا۔</string>
     <string name="alert_answered">کسی taf نے کسی کو جواب دیا</string>
     <string name="alert_approve_once">ایک بار منظور کریں…</string>
+    <string name="alert_blocked_body">یہ %1$s اب نہیں پوچھتا، اس لیے سیٹنگز میں tafs کے الرٹس بند ہیں۔ انہیں وہاں چالو کریں تاکہ منظوریاں اور جوابات آپ تک پہنچیں۔</string>
+    <string name="alert_blocked_body_android">Android اب نہیں پوچھتا، اس لیے آپ کے فون کی سیٹنگز میں tafs کے الرٹس بند ہیں۔ انہیں وہاں چالو کریں تاکہ منظوریاں اور جوابات اس فون اور آپ کی گھڑی پر پہنچیں۔ آپ کی گھڑی کو اپڈیٹس ہر صورت ملتے ہیں۔</string>
+    <string name="alert_blocked_body_watch">آپ کا iPhone اب نہیں پوچھتا، اس لیے سیٹنگز میں tafs کے الرٹس بند ہیں۔ انہیں وہاں چالو کریں تاکہ منظوریاں اور جوابات اس iPhone اور آپ کی گھڑی پر پہنچیں۔ آپ کی گھڑی کو اپڈیٹس ہر صورت ملتے ہیں۔</string>
+    <string name="alert_blocked_title">tafs کے الرٹس چالو کریں</string>
     <string name="alert_by_email">ای میل سے</string>
     <string name="alert_example">مثال</string>
     <string name="alert_foot_cant_answer_holds">الرٹس ان لوگوں کو جاتے ہیں جو روکی گئی کالز کا جواب دے سکتے ہیں۔ اس اکاؤنٹ میں آپ کا کردار نہیں دے سکتا۔</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">اس فون کے لیے الرٹس ابھی آن نہیں ہیں۔ %1$s</string>
     <string name="alert_not_refused">مسترد نہیں ہوا</string>
     <string name="alert_not_sent">جواب نہیں بھیجا گیا</string>
+    <string name="alert_now_on">الرٹس چالو ہیں۔</string>
     <string name="alert_on_this_device">اس %1$s پر الرٹس</string>
+    <string name="alert_open_notification_settings">اطلاع کی سیٹنگز کھولیں</string>
+    <string name="alert_open_settings">سیٹنگز کھولیں</string>
     <string name="alert_open_tafs_answer_kiff_did">جواب دینے کے لیے tafs کھولیں: KIFF نے نہیں بتایا کہ آپ نے اس کا کون سا ورژن دیکھا۔</string>
     <string name="alert_open_tafs_answer_phone_can">جواب دینے کے لیے tafs کھولیں: یہ فون اسے اطلاع سے دستخط نہیں کر سکتا۔</string>
     <string name="alert_prompt">جب کسی taf کو آپ کی ضرورت ہو تو الرٹ پائیں</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">دستیاب نہیں</string>
     <string name="alert_status_off">بند</string>
     <string name="alert_status_on">آن</string>
+    <string name="alert_still_off">الرٹس ابھی بھی بند ہیں۔</string>
     <string name="alert_still_on_after_sign_out_body">tafs انہیں بند نہیں کر سکا (%1$s)۔ دوبارہ کوشش کریں، یا پھر بھی سائن آؤٹ کریں اور سیٹنگز میں tafs کی اطلاعات بند کریں۔</string>
     <string name="alert_still_on_after_sign_out_title">اس %1$s پر اب بھی اس اکاؤنٹ کے الرٹس آ سکتے ہیں</string>
     <string name="alert_taf_needs_you">%1$s کو آپ کی ضرورت ہے</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s taf ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs مسترد کرنے کے لیے KIFF تک نہیں پہنچ سکا۔ جواب دینے کے لیے tafs کھولیں۔</string>
+    <string name="alert_watch_first_body">اس فون اور اپنی گھڑی پر منظوریاں اور جوابات الرٹس کے طور پر دیکھنے کے لیے tafs کے الرٹس چالو کریں۔ چالو نہ کریں تب بھی آپ کی گھڑی کو اپڈیٹس ملتے رہیں گے۔</string>
+    <string name="alert_watch_first_title">آپ کی گھڑی tafs استعمال کر رہی ہے</string>
     <string name="alert_what_alerts">آپ کو کیا الرٹ کرتا ہے</string>
     <string name="alert_with_sound">آواز کے ساتھ</string>
     <string name="app_name">tafs</string>
@@ -846,6 +856,7 @@
     <string name="coach_tools_give">Coach کو اس کے ٹولز دیں</string>
     <string name="coach_tools_giving">دیا جا رہا ہے…</string>
     <string name="coach_tools_title">Coach کے ٹولز</string>
+    <string name="coach_tools_write_after">پہلے Coach کے ٹولز منظور کریں، پھر آپ لکھ سکتے ہیں۔</string>
     <string name="coach_tools_eyebrow">ٹولز</string>
     <string name="coach_tools_not_given">Coach کے ٹولز نہیں دیے گئے۔ %1$s</string>
     <string name="coach_tools_not_read">Coach کے ٹولز پڑھے نہیں جا سکے۔ %1$s</string>
@@ -2780,6 +2791,7 @@
     <string name="watch_ask">tafs سے پوچھیں</string>
     <string name="watch_ask_needs_consent">tafs سے پوچھنے سے پہلے اپنے فون پر tafs میں AI کے استعمال کی اجازت دیں۔</string>
     <string name="watch_ask_not_on">گھڑی سے پوچھنا ابھی چالو نہیں۔</string>
+    <string name="watch_ask_phone_sign_in">اپنے فون سے کہیں کہ اس گھڑی میں سائن ان کرے</string>
     <string name="watch_ask_text_only">tafs کو آپ کے الفاظ متن کے طور پر ملتے ہیں، آپ کی آواز کبھی نہیں۔</string>
     <string name="watch_asking_phone">آپ کے فون سے پوچھا جا رہا ہے…</string>
     <string name="watch_calendar_today">آج کا کیلنڈر</string>
@@ -2791,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">حذف ہو گیا۔ کچھ نہیں بھیجا گیا۔</string>
     <string name="watch_didnt_catch">سمجھ نہیں آیا۔ دوبارہ کوشش کے لیے ٹیپ کریں۔</string>
     <string name="watch_dismiss">ہٹائیں</string>
+    <string name="watch_edit_words">بدلنے کے لیے متن پر ٹیپ کریں</string>
     <string name="watch_glance_description">کتنوں کو آپ کی ضرورت ہے، کیا یا کون نہیں۔</string>
     <string name="watch_halt_all_q">اپنے تمام tafs کو halt کریں؟</string>
     <plurals name="watch_halt_now_count">
@@ -2806,6 +2819,7 @@
         <item quantity="one">%1$s روکی گئی کال کو آپ کی ضرورت ہے</item>
         <item quantity="other">%1$s روکی گئی کالوں کو آپ کی ضرورت ہے</item>
     </plurals>
+    <string name="watch_held_channel">روکی گئی کالیں</string>
     <string name="watch_inbox_empty">کچھ نیا نہیں۔ Coach کے جوابات اور آپ کے tafs کے الرٹس یہاں آتے ہیں۔</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">ان باکس میں %1$s نہ پڑھا ہوا</item>
@@ -2820,7 +2834,7 @@
     <string name="watch_menu">مینو</string>
     <string name="watch_mic_needed">آواز سے پوچھنے کے لیے اس گھڑی پر tafs کے لیے مائیکروفون کی اجازت دیں۔</string>
     <string name="watch_more_on_phone">باقی آپ کے فون پر ہے۔</string>
-    <string name="watch_needs_lock">اس گھڑی سے مسترد یا halt کرنے کے لیے اس پر اسکرین لاک لگائیں اور اسے کھولیں۔</string>
+    <string name="watch_needs_lock">اس گھڑی سے بھیجنے، مسترد کرنے یا روکنے کے لیے اس پر اسکرین لاک لگائیں اور اسے کھولیں۔</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s کو آپ کی ضرورت ہے</item>
         <item quantity="other">%1$s کو آپ کی ضرورت ہے</item>
@@ -2830,6 +2844,7 @@
     <string name="watch_nothing_sent_until">جب تک آپ منظور نہ کریں کچھ نہیں بھیجا جاتا۔</string>
     <string name="watch_nothing_waits">کچھ آپ کا منتظر نہیں۔</string>
     <string name="watch_open_on_phone">فون پر کھولیں</string>
+    <string name="watch_opened_on_phone">فون پر کھل گیا</string>
     <string name="watch_page_brief">بریف</string>
     <string name="watch_page_inbox">ان باکس</string>
     <string name="watch_paused_still_answers">رکا ہوا: اس کا شیڈول بند ہے۔ آپ جو بھیجیں اس کا جواب پھر بھی دیتا ہے۔</string>
@@ -2853,6 +2868,7 @@
     <string name="watch_recent_chats">حالیہ چیٹس</string>
     <string name="watch_recording">ریکارڈنگ</string>
     <string name="watch_recording_not_received">ریکارڈنگ آپ کے فون تک نہیں پہنچی۔ دوبارہ کوشش کریں، یا ٹائپ کریں۔</string>
+    <string name="watch_refuse_on_phone">مسترد نہیں ہوا۔ اپنے فون پر مسترد کریں۔</string>
     <string name="watch_refused">مسترد۔ کچھ نہیں بھیجا گیا۔</string>
     <string name="watch_reply">جواب دیں</string>
     <string name="watch_rerecord">دوبارہ ریکارڈ کریں</string>
@@ -2861,14 +2877,20 @@
     <string name="watch_resume_on_phone">اپنے فون پر دوبارہ چلائیں</string>
     <string name="watch_retry">دوبارہ کوشش</string>
     <string name="watch_review">بھیجنے سے پہلے جانچیں</string>
+    <string name="watch_seconds_left">%1$s سیکنڈ باقی</string>
     <string name="watch_sending">بھیجا جا رہا ہے…</string>
     <string name="watch_sent">بھیج دیا</string>
     <string name="watch_settings_of">%1$s · ترتیبات</string>
+    <string name="watch_sign_in_allow">اجازت دیں</string>
+    <string name="watch_sign_in_denied">سائن ان نہیں ہوا۔ یہ گھڑی سائن آؤٹ ہی رہے گی۔</string>
+    <string name="watch_sign_in_deny">انکار کریں</string>
     <string name="watch_sign_in_on_phone">پہلے اپنے فون پر tafs میں سائن اِن کریں۔</string>
+    <string name="watch_sign_in_watch_q">اس گھڑی میں آپ کے نام سے سائن ان کریں؟</string>
     <string name="watch_sign_out_q">اس گھڑی پر سائن آؤٹ کریں؟</string>
     <string name="watch_sign_out_sub">آپ کا فون سائن اِن رہتا ہے۔ یہ گھڑی آپ کے tafs، چیٹس اور ان باکس بھول جاتی ہے۔</string>
     <string name="watch_signed_in">سائن اِن ہے</string>
     <string name="watch_signed_out_here">اس گھڑی پر سائن آؤٹ ہو گیا۔ آپ کا فون سائن اِن رہتا ہے۔</string>
+    <string name="watch_stopped_at_limit">%1$s کی حد پر رک گیا۔ جو سنا گیا وہ نیچے ہے۔</string>
     <string name="watch_swipe_settings">اس کی ترتیبات کے لیے بائیں سوائپ کریں</string>
     <string name="watch_tap_start">شروع پر ٹیپ کریں، پھر بولیں۔ بولتے وقت آپ کے الفاظ یہاں دکھائی دیتے ہیں۔</string>
     <string name="watch_timing">سننا %1$s ms · رسید %2$s ms · نتیجہ %3$s ms</string>
@@ -2877,8 +2899,10 @@
     <string name="watch_type">ٹائپ کریں</string>
     <string name="watch_type_hint">Coach کو لکھیں…</string>
     <string name="watch_update_phone">اپنے فون پر tafs اپ ڈیٹ کریں، پھر دوبارہ کوشش کریں۔</string>
+    <string name="watch_view_on_phone">فون پر دیکھیں</string>
     <string name="watch_view_only_phone">یہ فون صرف دیکھ سکتا ہے، اس لیے آپ گھڑی سے پوچھ نہیں سکتے۔ ایسے فون پر سائن اِن کریں جو منظور کر سکتا ہو۔</string>
     <string name="watch_voice_text_only">Coach کو آپ کے الفاظ متن کے طور پر ملتے ہیں، آپ کی آواز کبھی نہیں۔</string>
+    <string name="watch_waiting_for_phone">آپ کے فون کا انتظار…</string>
     <string name="watch_what_it_does">یہ کیا کرتا ہے</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s کام کر رہا ہے</item>

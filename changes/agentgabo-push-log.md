@@ -1,0 +1,1 @@
+Each silent push to a person's phones (a taf's chat, a watch request, the watch Inbox) is logged with what changed, the phone's platform and how it went: sent, gone or failed. It never logs a token, an id, the person or the account.

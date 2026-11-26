@@ -123,12 +123,28 @@ fun CoachScreen(
         val shaping = state.coachCloudId != null && state.planqueReady && width >= WIDE_COACH
         Row(Modifier.fillMaxSize()) {
           Column(Modifier.weight(1f).fillMaxHeight()) {
+            val biometry = LocalBiometry.current
+            val start = state.coachStart
+            val tools = state.coachTools
+            // Coach's box, locked until its tools are approved (docs/coach.md, "Coach's tools step").
+            val lock = when {
+              // The Card step is on screen: nothing is typed to Coach until it's approved, and tafs cloud's line says so (or the
+              // app's own, when none came).
+              state.coachCloudId == null && start != null && start.cardStep(biometry) ->
+                ComposerLock(start.words?.locked?.ifBlank { null } ?: Words.Coach.Tools.writeAfter)
+              // Coach exists but its tools themselves are still to give: one locked line, which opens the step (tafs cloud's `row`,
+              // or the row's own title, as on the iPhone). When only Cards for newer tools are missing, typing stays open.
+              state.coachCloudId != null && tools != null && tools.toGive && tools.connect != null ->
+                ComposerLock(tools.step?.row?.ifBlank { null } ?: Words.Coach.Tools.title) { toolsOpen = true }
+              else -> null
+            }
             // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
             // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
             if (state.coachCloudId == null) StartNote(state, chats, wide = width >= WIDE_COACH)
             else androidx.compose.animation.AnimatedVisibility(visible = !folded && !keyboard) {
               Column {
-                CoachToolsRow(state) { toolsOpen = true }
+                // The box locked with the step's own line stands in for the row: the same line isn't drawn twice.
+                if (lock == null) CoachToolsRow(state) { toolsOpen = true }
                 // Beside the conversation, the plan is in the panel.
                 if (!shaping) CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
               }
@@ -137,7 +153,9 @@ fun CoachScreen(
             if (state.coachCloudId != null && state.chats[COACH_CHAT].isNullOrEmpty() && coachFirst(state)) {
               bot.tafs.app.design.Illustrated(Modifier.padding(top = 12.dp), height = 150.dp) { bot.tafs.app.design.CoachStartArt(it) }
             }
-            TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f).nestedScroll(folding))
+            androidx.compose.runtime.CompositionLocalProvider(LocalComposerLock provides lock) {
+              TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f).nestedScroll(folding))
+            }
           }
           if (shaping) {
             Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
@@ -268,6 +286,11 @@ private fun StartNote(state: AppState, chats: CoachChatActions, wide: Boolean) {
  */
 @Composable
 private fun StartScreen(state: AppState, start: bot.tafs.app.kiff.CoachStart, chats: CoachChatActions) {
+  val biometry = LocalBiometry.current
+  if (start.cardStep(biometry)) {
+    CardStepScreen(state, start, chats, biometry)
+    return
+  }
   val scope = rememberCoroutineScope()
   var folded by remember { mutableStateOf(true) }
   val words = start.words
@@ -313,6 +336,69 @@ private fun StartScreen(state: AppState, start: bot.tafs.app.kiff.CoachStart, ch
     (state.coachToolsError ?: state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }
+
+/**
+ * The Card step before Coach's first fingerprint (docs/coach.md, "Coach's tools step"), every word tafs cloud's: the title, what
+ * the approval allows, what always waits for the person, how it signs and how to stop it; Coach's tools in plain groups, each with
+ * what it does and its limit a day; Coach's Cards in KIFF's own words, as signed, folded under "Exactly what you sign"; and one
+ * button with the whole sentence for this phone's way of approving. The button is there only when the list is exactly what the
+ * draft signs ([bot.tafs.app.kiff.CardStepCheck]): otherwise the step says it changed, and asks for no signature.
+ */
+@Composable
+private fun CardStepScreen(state: AppState, start: bot.tafs.app.kiff.CoachStart, chats: CoachChatActions, biometry: String) {
+  val scope = rememberCoroutineScope()
+  var folded by remember { mutableStateOf(true) }
+  val words = start.words ?: return
+  val tools = start.tools
+  Column(
+    Modifier.fillMaxWidth().heightIn(max = 420.dp).verticalScroll(androidx.compose.foundation.rememberScrollState())
+      .padding(horizontal = 16.dp, vertical = 8.dp).testTag(CARD_STEP),
+    verticalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    Text(words.title, style = scaled(20, FontWeight.SemiBold, Theme.ink))
+    listOf(words.lines.allows, words.lines.asks, words.lines.sign, words.lines.stop).forEach {
+      Text(it, style = scaled(14, color = Theme.soft))
+    }
+    // Coach's tools in plain words: each group, each tool with what it does and its limit.
+    tools.step?.groups?.forEach { g ->
+      Text(g.name, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.padding(top = 4.dp))
+      g.tools.forEach { t ->
+        Text(t.name, style = scaled(13, FontWeight.SemiBold, Theme.ink))
+        if (t.does.isNotBlank()) Text(t.does, style = scaled(13, color = Theme.soft))
+      }
+    }
+    // Exactly what the fingerprint signs: the Cards in KIFF's own words, folded.
+    Text(
+      words.exact + if (folded) " ⌄" else " ⌃",
+      style = scaled(13, FontWeight.SemiBold, Theme.amberText),
+      modifier = Modifier.heightIn(min = 44.dp).tapping { folded = !folded }.padding(vertical = 10.dp).testTag(CARD_STEP_EXACT),
+    )
+    if (!folded) tools.card?.let { card ->
+      card.cardTitle?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink)) }
+      card.words.forEach { (title, lines) ->
+        if (title.isNotEmpty()) Text(title, style = scaled(13, FontWeight.SemiBold, Theme.ink))
+        lines.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
+      }
+    }
+    if (start.cardStepSigns) {
+      bot.tafs.app.design.PrimaryButton(
+        if (state.startingCoach) Words.Common.starting else words.give(biometry),
+        { scope.launch { chats.giveTools() } },
+        enabled = !state.startingCoach, modifier = Modifier.confirms().testTag(CARD_STEP_GIVE),
+      )
+    } else {
+      // Shown = signed failed: no signature is asked for what the list doesn't match.
+      Text(bot.tafs.app.model.VersionWords.OUT_OF_DATE_CARD, style = scaled(13, color = Theme.no), modifier = Modifier.testTag(CARD_STEP_CHANGED))
+    }
+    (state.coachToolsError ?: state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
+  }
+}
+
+/** The Card step's parts, for the screen tests. */
+const val CARD_STEP = "card_step"
+const val CARD_STEP_EXACT = "card_step_exact"
+const val CARD_STEP_GIVE = "card_step_give"
+const val CARD_STEP_CHANGED = "card_step_changed"
 
 /** Before Coach is started on this account, on a phone that can't approve yet: what it is for, and why it can't start. */
 @Composable

@@ -1,0 +1,1 @@
+- **Apple Watch: "Opened on your phone" after View on phone or Approve on your phone.** Once your iPhone has opened the chat or the held call, the watch says so for a moment, so you know to look at the phone. See [the Apple Watch app](docs/watch-app.md).

@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}。請於{zone}前回覆。在您核准之前不會傳送任何內容。",
   "alert.answered": "有 taf 回覆了某人",
   "alert.approve_once": "核准一次…",
+  "alert.blocked.body": "這部{device}不會再詢問，因此 tafs 的通知在「設定」中為關閉。請在那裡開啟，讓核准與回答傳到您手上。",
+  "alert.blocked.body_android": "Android 不會再詢問，因此 tafs 的通知在手機設定中為關閉。請在那裡開啟，讓核准與回答傳到這部手機和您的手錶。無論如何，手錶都會收到更新。",
+  "alert.blocked.body_watch": "您的 iPhone 不會再詢問，因此 tafs 的通知在「設定」中為關閉。請在那裡開啟，讓核准與回答傳到這部 iPhone 和您的手錶。無論如何，手錶都會收到更新。",
+  "alert.blocked.title": "開啟 tafs 的通知",
   "alert.by_email": "透過電子郵件",
   "alert.example": "範例",
   "alert.foot.cant_answer_holds": "通知會傳給可回覆已保留呼叫的人。您在此帳號中的角色無法這麼做。",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "這部手機的通知尚未開啟。{why}",
   "alert.not_refused": "尚未拒絕",
   "alert.not_sent": "有一則回覆未傳送",
+  "alert.now_on": "通知已開啟。",
   "alert.on_this_device": "這部{device}上的通知",
+  "alert.open_notification_settings": "開啟通知設定",
+  "alert.open_settings": "開啟「設定」",
   "alert.open_tafs_answer_kiff_did": "請開啟 tafs 回覆：KIFF 未說明您看到的是哪個版本。",
   "alert.open_tafs_answer_phone_can": "請開啟 tafs 回覆：這部手機無法從通知中簽署。",
   "alert.prompt": "當 taf 需要您時收到通知",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "無法使用",
   "alert.status.off": "關閉",
   "alert.status.on": "開啟",
+  "alert.still_off": "通知仍為關閉。",
   "alert.still_on_after_sign_out.body": "tafs 無法關閉通知（{why}）。請再試一次，或仍然登出，然後在「設定」中關閉 tafs 的通知。",
   "alert.still_on_after_sign_out.title": "這部{device}可能仍會收到此帳號的通知",
   "alert.taf_needs_you": "{taf} 需要您",
@@ -42,6 +50,8 @@
     "other": "{count} 個 taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs 無法連線至 KIFF 進行拒絕。請開啟 tafs 回覆。",
+  "alert.watch_first.body": "若要在這部手機和手錶上以通知查看核准與回答，請開啟 tafs 的通知。即使不開啟，手錶仍會持續收到更新。",
+  "alert.watch_first.title": "您的手錶正在使用 tafs",
   "alert.what_alerts": "哪些事項會通知您",
   "alert.with_sound": "有聲音"
 }

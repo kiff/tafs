@@ -57,6 +57,7 @@
     <string name="watch_ask">Pyesni tafs</string>
     <string name="watch_ask_needs_consent">Para se të pyesni tafs, lejoni përdorimin e AI në tafs në telefonin tuaj.</string>
     <string name="watch_ask_not_on">Pyetja nga ora juaj ende nuk është aktive.</string>
+    <string name="watch_ask_phone_sign_in">Kërkoji telefonit ta lidhë këtë orë</string>
     <string name="watch_ask_text_only">tafs i merr fjalët tuaja si tekst, kurrë zërin.</string>
     <string name="watch_asking_phone">Po pyetet telefoni juaj…</string>
     <string name="watch_calendar_today">Kalendari i sotëm</string>
@@ -68,6 +69,7 @@
     <string name="watch_deleted_nothing_sent">U fshi. Asgjë nuk u dërgua.</string>
     <string name="watch_didnt_catch">Nuk e kapa. Prekni për të provuar sërish.</string>
     <string name="watch_dismiss">Hidheni poshtë</string>
+    <string name="watch_edit_words">Prekni tekstin për ta ndryshuar</string>
     <string name="watch_glance_description">Sa ju presin, kurrë çfarë apo kush.</string>
     <string name="watch_halt_all_q">Të bllokohen të gjithë tafs-et tuaj?</string>
     <plurals name="watch_halt_now_count">
@@ -83,6 +85,7 @@
         <item quantity="one">%1$s thirrje e mbajtur ju pret</item>
         <item quantity="other">%1$s thirrje të mbajtura ju presin</item>
     </plurals>
+    <string name="watch_held_channel">Thirrje të mbajtura</string>
     <string name="watch_inbox_empty">Asgjë e re. Përgjigjet e Coach dhe njoftimet e tafs-eve tuaj vijnë këtu.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s e palexuar në Kutinë hyrëse</item>
@@ -97,7 +100,7 @@
     <string name="watch_menu">Menuja</string>
     <string name="watch_mic_needed">Për të pyetur me zë, lejoni mikrofonin për tafs në këtë orë.</string>
     <string name="watch_more_on_phone">Pjesa tjetër është në telefonin tuaj.</string>
-    <string name="watch_needs_lock">Për të refuzuar ose bllokuar nga kjo orë, vendosni një kyçje ekrani në të dhe zhbllokojeni.</string>
+    <string name="watch_needs_lock">Për të dërguar, refuzuar ose bllokuar nga kjo orë, vendosni një kyçje ekrani në të dhe zhbllokojeni.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s ju pret</item>
         <item quantity="other">%1$s ju presin</item>
@@ -107,6 +110,7 @@
     <string name="watch_nothing_sent_until">Asgjë nuk dërgohet derisa të miratoni.</string>
     <string name="watch_nothing_waits">Asgjë nuk ju pret.</string>
     <string name="watch_open_on_phone">Hapni në telefon</string>
+    <string name="watch_opened_on_phone">U hap në telefon</string>
     <string name="watch_page_brief">Përmbledhja</string>
     <string name="watch_page_inbox">Kutia hyrëse</string>
     <string name="watch_paused_still_answers">Pezulluar: orari i tij është joaktiv. Ende u përgjigjet atyre që dërgoni.</string>
@@ -130,6 +134,7 @@
     <string name="watch_recent_chats">Bisedat e fundit</string>
     <string name="watch_recording">Po regjistron</string>
     <string name="watch_recording_not_received">Regjistrimi nuk arriti te telefoni juaj. Provoni sërish, ose shkruani në vend të kësaj.</string>
+    <string name="watch_refuse_on_phone">Nuk u refuzua. Refuzojeni në telefon.</string>
     <string name="watch_refused">Refuzuar. Asgjë nuk u dërgua.</string>
     <string name="watch_reply">Përgjigjuni</string>
     <string name="watch_rerecord">Regjistroni sërish</string>
@@ -138,14 +143,20 @@
     <string name="watch_resume_on_phone">Vazhdoni në telefonin tuaj</string>
     <string name="watch_retry">Provoni sërish</string>
     <string name="watch_review">Kontrolloni para dërgimit</string>
+    <string name="watch_seconds_left">Edhe %1$s s</string>
     <string name="watch_sending">Po dërgohet…</string>
     <string name="watch_sent">U dërgua</string>
     <string name="watch_settings_of">%1$s · cilësimet</string>
+    <string name="watch_sign_in_allow">Lejo</string>
+    <string name="watch_sign_in_denied">Nuk u lidh. Kjo orë mbetet e shkëputur.</string>
+    <string name="watch_sign_in_deny">Refuzo</string>
     <string name="watch_sign_in_on_phone">Së pari hyni në tafs në telefonin tuaj.</string>
+    <string name="watch_sign_in_watch_q">Ta lidhësh këtë orë si ti?</string>
     <string name="watch_sign_out_q">Të dilni nga kjo orë?</string>
     <string name="watch_sign_out_sub">Telefoni juaj mbetet i hyrë. Kjo orë harron tafs-et, bisedat dhe kutinë tuaj hyrëse.</string>
     <string name="watch_signed_in">I hyrë</string>
     <string name="watch_signed_out_here">Dolët nga kjo orë. Telefoni juaj mbetet i hyrë.</string>
+    <string name="watch_stopped_at_limit">U ndal te kufiri prej %1$s. Ajo që u dëgjua është më poshtë.</string>
     <string name="watch_swipe_settings">Rrëshqitni majtas për cilësimet e tij</string>
     <string name="watch_tap_start">Prekni Fillo, pastaj flisni. Fjalët tuaja shfaqen këtu ndërsa flisni.</string>
     <string name="watch_timing">Dëgjimi %1$s ms · dëftesa %2$s ms · rezultati %3$s ms</string>
@@ -154,8 +165,10 @@
     <string name="watch_type">Shkruani</string>
     <string name="watch_type_hint">Shkruajini Coach…</string>
     <string name="watch_update_phone">Përditësoni tafs në telefonin tuaj, pastaj provoni sërish.</string>
+    <string name="watch_view_on_phone">Shihni në telefon</string>
     <string name="watch_view_only_phone">Ky telefon mund vetëm të shikojë, ndaj nuk mund të pyesni nga ora. Hyni në një telefon që mund të miratojë.</string>
     <string name="watch_voice_text_only">Coach i merr fjalët tuaja si tekst, kurrë zërin.</string>
+    <string name="watch_waiting_for_phone">Në pritje të telefonit…</string>
     <string name="watch_what_it_does">Çfarë bën</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s po punon</item>

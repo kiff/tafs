@@ -70,7 +70,7 @@ test("italic, code, headings, bullets and line breaks; a mark never closed and s
 test("blocks: a blank line ends a paragraph or a list, and an item's indented next line stays in it", () => {
   assert.deepEqual(blocks("a\nb\n\nc"), [{ type: "p", lines: ["a", "b"] }, { type: "p", lines: ["c"] }]);
   assert.deepEqual(blocks("- one\n  more\n- two\nafter"), [{ type: "ul", items: ["one more", "two"] }, { type: "p", lines: ["after"] }]);
-  assert.deepEqual(blocks("1) a\n2) b"), [{ type: "ol", items: ["a", "b"] }]);
+  assert.deepEqual(blocks("1) a\n2) b"), [{ type: "ol", items: ["a", "b"], numbers: [1, 2] }]);
   assert.deepEqual(blocks(""), []);
 });
 
@@ -103,4 +103,52 @@ test("an answer full of [ stays quick: no copy of the rest of the text at each o
   assert.deepEqual(inline("[a](b c [d](https://e.example/)").at(-1), { text: "d", link: "https://e.example/" });
   // Links are still found anywhere in a long answer.
   assert.deepEqual(inline("a ".repeat(5_000) + "[w](https://a.example/)").at(-1), { text: "w", link: "https://a.example/" });
+});
+
+// Chrome 0.2.24: the phones' rules (docs/chat.md; `MarkdownText` on Android and iOS).
+test("as the phones: a numbered item keeps its own number, • is a bullet, and a rule draws nothing", () => {
+  assert.deepEqual(blocks("3. c\n4. d"), [{ type: "ol", items: ["c", "d"], numbers: [3, 4] }]);
+  const li = render(fakeDoc(), "3. c").children[0].children[0];
+  assert.equal(li.value, 3, "drawn with its number, not from 1");
+  assert.deepEqual(blocks("• one\n• two"), [{ type: "ul", items: ["one", "two"] }]);
+  assert.deepEqual(blocks("above\n\n---\n\nbelow"), [{ type: "p", lines: ["above"] }, { type: "p", lines: ["below"] }]);
+  assert.deepEqual(blocks("***"), []);
+  assert.deepEqual(blocks("1234. not a list"), [{ type: "p", lines: ["1234. not a list"] }], "at most three digits, as the phones");
+});
+
+test("a code block is kept as written, text only, and a fence never closed holds the rest", () => {
+  assert.deepEqual(blocks("Run:\n```\n  npm test\n<b>x</b>\n```\nDone."), [
+    { type: "p", lines: ["Run:"] },
+    { type: "code", text: "  npm test\n<b>x</b>" },
+    { type: "p", lines: ["Done."] },
+  ]);
+  assert.equal(show(render(fakeDoc(), "```js\n**not bold**\n```")), "<pre><code>**not bold**</code></pre>");
+  assert.deepEqual(blocks("```\na\nb"), [{ type: "code", text: "a\nb" }]);
+});
+
+test("a table is a header, its |---| line and its rows, a column of numbers to the right; anything less is text", () => {
+  const text = "Payments:\n| Who | Amount |\n|---|---:|\n| Rae | 20.00 USD |\n| **Kim** | 5 |\nAfter.";
+  const b = blocks(text);
+  assert.deepEqual(b[0], { type: "p", lines: ["Payments:"] });
+  assert.deepEqual(b[1], { type: "table", rows: [["Who", "Amount"], ["Rae", "20.00 USD"], ["**Kim**", "5"]], numeric: [false, true] });
+  assert.equal(
+    show(render(fakeDoc(), "| Who | Amount |\n|---|---|\n| **Kim** | 5 |")),
+    "<div.tableWrap><table><tr><th>Who</th><th.num>Amount</th></tr><tr><td><strong>Kim</strong></td><td.num>5</td></tr></table></div>",
+  );
+  assert.deepEqual(blocks("| a | b |\nno rule"), [{ type: "p", lines: ["| a | b |", "no rule"] }], "no rule line: text as written");
+  assert.deepEqual(blocks("| a \\| b | c |\n|-|-|")[0].rows, [["a | b", "c"]], "an escaped pipe stays in its cell");
+  assert.equal(show(render(fakeDoc(), '| <img src=x> | b |\n|-|-|')), "<div.tableWrap><table><tr><th><img src=x></th><th>b</th></tr></table></div>", "a cell is text too");
+});
+
+test("_italic_ as the phones read it, never inside a word; a backslash writes a mark as itself", () => {
+  assert.deepEqual(inline("_soon_ please"), [{ text: "soon", italic: true }, { text: " please" }]);
+  assert.deepEqual(inline("snake_case_name"), [{ text: "snake_case_name" }]);
+  assert.deepEqual(inline("\\*not italic\\*"), [{ text: "*not italic*" }]);
+  assert.deepEqual(inline("a \\[b](c)"), [{ text: "a [b](c)" }], "an escaped bracket is no link");
+  assert.deepEqual(inline("*a *b*"), [{ text: "a *b", italic: true }], "a mark after a space doesn't close");
+  // Many marks that never close: each is looked for once, not again from every mark.
+  const text = "*a ".repeat(100_000);
+  const start = Date.now();
+  assert.deepEqual(inline(text), [{ text }]);
+  assert.ok(Date.now() - start < 2_000, "linear, not quadratic");
 });

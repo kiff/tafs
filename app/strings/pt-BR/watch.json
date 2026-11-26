@@ -1,11 +1,13 @@
 {
   "watch.approve_on_phone": "Aprove no celular",
   "watch.ask_needs_consent": "Antes de pedir ao tafs, autorize o uso de IA no tafs no celular.",
+  "watch.ask_phone_sign_in": "Peça ao seu celular para conectar este relógio",
   "watch.asking_phone": "Perguntando ao celular…",
   "watch.check_phone": "Verifique a conexão do celular",
   "watch.check_phone_sub": "Precisa de você está aberto lá. Aprove a chamada lá.",
   "watch.check_phone_title": "Veja o celular",
   "watch.coach_needs_consent": "Antes de falar com o Coach, permita o uso de IA no tafs no celular.",
+  "watch.edit_words": "Toque no texto para alterá-lo",
   "watch.glance_description": "Quantos precisam de você, nunca o quê nem quem.",
   "watch.halting": "Bloqueando {taf}…",
   "watch.halting_all": "Bloqueando todos os seus tafs…",
@@ -13,12 +15,13 @@
     "one": "{count} chamada retida precisa de você",
     "other": "{count} chamadas retidas precisam de você"
   },
+  "watch.held_channel": "Chamadas retidas",
   "watch.its_settings": "Suas configurações",
   "watch.kept_to_send": "Guardado neste relógio. É enviado quando o celular voltar a estar ao alcance.",
   "watch.linking": "Vinculando o tafs. Mantenha o celular por perto e conectado.",
   "watch.listening": "Ouvindo",
   "watch.more_on_phone": "O resto está no celular.",
-  "watch.needs_lock": "Para recusar ou bloquear a partir deste relógio, defina um bloqueio de tela e desbloqueie-o.",
+  "watch.needs_lock": "Para enviar, recusar ou bloquear a partir deste relógio, defina um bloqueio de tela e desbloqueie-o.",
   "watch.needs_you_count": {
     "one": "{count} precisa de você",
     "other": "{count} precisam de você"
@@ -26,6 +29,7 @@
   "watch.no_offline_speech": "O celular não consegue converter sozinho a voz em texto neste idioma. Escreva em vez disso.",
   "watch.nothing_waits": "Nada espera por você.",
   "watch.open_on_phone": "Abrir no celular",
+  "watch.opened_on_phone": "Aberto no seu celular",
   "watch.phone_could_not_reach_cloud": "O celular não conseguiu acessar o tafs cloud. Tente novamente.",
   "watch.phone_link_failed": "Não foi possível se comunicar com o celular. Tente novamente.",
   "watch.phone_no_answer": "O celular não respondeu a tempo. Tente novamente.",
@@ -33,10 +37,15 @@
   "watch.phone_not_reachable": "O celular não está ao alcance. Aproxime-o e tente novamente.",
   "watch.recording": "Gravando",
   "watch.recording_not_received": "A gravação não chegou ao celular. Tente novamente ou digite.",
+  "watch.refuse_on_phone": "Não foi recusado. Recuse no seu celular.",
   "watch.resume_on_phone": "Retomar no celular",
   "watch.sending": "Enviando…",
   "watch.settings_of": "{taf} · configurações",
+  "watch.sign_in_allow": "Permitir",
+  "watch.sign_in_denied": "Não conectado. Este relógio continua desconectado.",
+  "watch.sign_in_deny": "Recusar",
   "watch.sign_in_on_phone": "Primeiro, entre no tafs no celular.",
+  "watch.sign_in_watch_q": "Conectar este relógio com a sua conta?",
   "watch.sign_out_q": "Sair deste relógio?",
   "watch.sign_out_sub": "O celular continua conectado à sua conta. Este relógio esquece os seus tafs, chats e Caixa de entrada.",
   "watch.signed_in": "Conectado",
@@ -46,5 +55,6 @@
   "watch.transcribing": "O celular está convertendo isso em texto…",
   "watch.trust": "Este relógio não guarda senhas nem chaves e não aprova nada: o que precisa do seu sim espera pelo celular. Os seus tafs só fazem o que os seus Cards permitem.",
   "watch.update_phone": "Atualize o tafs no celular e tente novamente.",
-  "watch.view_only_phone": "Este celular só pode ver, por isso não pode pedir a partir do relógio. Entre em um celular que possa aprovar."
+  "watch.view_only_phone": "Este celular só pode ver, por isso não pode pedir a partir do relógio. Entre em um celular que possa aprovar.",
+  "watch.waiting_for_phone": "Aguardando seu celular…"
 }

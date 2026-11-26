@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Odpovedzte do %3$s. Nič sa neodošle, kým neschválite.</string>
     <string name="alert_answered">Taf niekomu odpovedal</string>
     <string name="alert_approve_once">Schváliť raz…</string>
+    <string name="alert_blocked_body">Tento %1$s sa už nepýta, takže upozornenia pre tafs sú v Nastaveniach vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili.</string>
+    <string name="alert_blocked_body_android">Android sa už nepýta, takže upozornenia pre tafs sú v nastaveniach telefónu vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili do tohto telefónu aj do hodiniek. Hodinky dostávajú aktualizácie tak či tak.</string>
+    <string name="alert_blocked_body_watch">Váš iPhone sa už nepýta, takže upozornenia pre tafs sú v Nastaveniach vypnuté. Zapnite ich tam, aby vám schválenia a odpovede chodili do tohto iPhonu aj do hodiniek. Hodinky dostávajú aktualizácie tak či tak.</string>
+    <string name="alert_blocked_title">Zapnite upozornenia pre tafs</string>
     <string name="alert_by_email">E-mailom</string>
     <string name="alert_example">Príklad</string>
     <string name="alert_foot_cant_answer_holds">Upozornenia chodia ľuďom, ktorí smú odpovedať na pozdržané volania. Vaša rola v tomto účte nesmie.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Upozornenia zatiaľ nie sú pre tento telefón zapnuté. %1$s</string>
     <string name="alert_not_refused">Neodmietnuté</string>
     <string name="alert_not_sent">Odpoveď sa neodoslala</string>
+    <string name="alert_now_on">Upozornenia sú zapnuté.</string>
     <string name="alert_on_this_device">Upozornenia na tomto zariadení (%1$s)</string>
+    <string name="alert_open_notification_settings">Otvoriť nastavenia upozornení</string>
+    <string name="alert_open_settings">Otvoriť Nastavenia</string>
     <string name="alert_open_tafs_answer_kiff_did">Otvorte tafs a odpovedzte: KIFF nepovedal, ktorú verziu ste videli.</string>
     <string name="alert_open_tafs_answer_phone_can">Otvorte tafs a odpovedzte: tento telefón to z upozornenia podpísať nevie.</string>
     <string name="alert_prompt">Dostávajte upozornenie, keď vás taf potrebuje</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Nie je dostupné</string>
     <string name="alert_status_off">Vypnuté</string>
     <string name="alert_status_on">Zapnuté</string>
+    <string name="alert_still_off">Upozornenia sú stále vypnuté.</string>
     <string name="alert_still_on_after_sign_out_body">tafs ich nedokázal vypnúť (%1$s). Skúste to znova, alebo sa aj tak odhláste a vypnite upozornenia pre tafs v Nastaveniach.</string>
     <string name="alert_still_on_after_sign_out_title">Tento %1$s môže naďalej dostávať upozornenia tohto účtu</string>
     <string name="alert_taf_needs_you">%1$s vás potrebuje</string>
@@ -47,6 +55,8 @@
         <item quantity="other">%1$s tafov ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs sa nemohol spojiť s KIFF a odmietnuť to. Otvorte tafs a odpovedzte.</string>
+    <string name="alert_watch_first_body">Ak chcete vidieť schválenia a odpovede ako upozornenia v tomto telefóne aj v hodinkách, zapnite upozornenia pre tafs. Hodinky budú dostávať aktualizácie, aj keď to neurobíte.</string>
+    <string name="alert_watch_first_title">Vaše hodinky používajú tafs</string>
     <string name="alert_what_alerts">Na čo upozorňovať</string>
     <string name="alert_with_sound">So zvukom</string>
     <string name="app_name">tafs</string>
@@ -879,6 +889,7 @@
     <string name="coach_tools_give">Dať Coachovi jeho nástroje</string>
     <string name="coach_tools_giving">Odovzdávam…</string>
     <string name="coach_tools_title">Nástroje Coacha</string>
+    <string name="coach_tools_write_after">Najprv schváľte nástroje Coacha, potom môžete písať.</string>
     <string name="coach_tools_eyebrow">Nástroje</string>
     <string name="coach_tools_not_given">Nástroje Coacha sa neodovzdali. %1$s</string>
     <string name="coach_tools_not_read">Nástroje Coacha sa nepodarilo načítať. %1$s</string>
@@ -2855,6 +2866,7 @@
     <string name="watch_ask">Opýtať sa tafs</string>
     <string name="watch_ask_needs_consent">Kým sa opýtate tafs, povoľte v tafs v telefóne používanie AI.</string>
     <string name="watch_ask_not_on">Pýtanie z hodiniek zatiaľ nie je zapnuté.</string>
+    <string name="watch_ask_phone_sign_in">Požiadajte telefón, aby prihlásil tieto hodinky</string>
     <string name="watch_ask_text_only">tafs dostane vaše slová ako text, nikdy váš hlas.</string>
     <string name="watch_asking_phone">Pýtam sa telefónu…</string>
     <string name="watch_calendar_today">Dnešný kalendár</string>
@@ -2866,6 +2878,7 @@
     <string name="watch_deleted_nothing_sent">Odstránené. Nič sa neodoslalo.</string>
     <string name="watch_didnt_catch">Nerozumel som. Ťuknutím to skúsite znova.</string>
     <string name="watch_dismiss">Zavrieť</string>
+    <string name="watch_edit_words">Ťuknutím na text ho zmeníte</string>
     <string name="watch_glance_description">Koľko ich na vás čaká, nikdy čo ani kto.</string>
     <string name="watch_halt_all_q">Zastaviť všetky vaše tafy?</string>
     <plurals name="watch_halt_now_count">
@@ -2883,6 +2896,7 @@
         <item quantity="few">%1$s pozdržané volania čakajú na vás</item>
         <item quantity="other">%1$s pozdržaných volaní čaká na vás</item>
     </plurals>
+    <string name="watch_held_channel">Pozdržané volania</string>
     <string name="watch_inbox_empty">Nič nové. Sem chodia odpovede Coacha a upozornenia vašich tafov.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s neprečítaná v Doručených</item>
@@ -2898,7 +2912,7 @@
     <string name="watch_menu">Ponuka</string>
     <string name="watch_mic_needed">Ak sa chcete pýtať hlasom, povoľte tafs na týchto hodinkách mikrofón.</string>
     <string name="watch_more_on_phone">Zvyšok je v telefóne.</string>
-    <string name="watch_needs_lock">Ak chcete z týchto hodiniek odmietať alebo zastavovať, nastavte na nich zámku obrazovky a odomknite ich.</string>
+    <string name="watch_needs_lock">Ak chcete z týchto hodiniek odosielať, odmietať alebo zastavovať, nastavte na nich zámku obrazovky a odomknite ich.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s čaká na vás</item>
         <item quantity="few">%1$s čakajú na vás</item>
@@ -2909,6 +2923,7 @@
     <string name="watch_nothing_sent_until">Nič sa neodošle, kým neschválite.</string>
     <string name="watch_nothing_waits">Nič na vás nečaká.</string>
     <string name="watch_open_on_phone">Otvoriť v telefóne</string>
+    <string name="watch_opened_on_phone">Otvorené v telefóne</string>
     <string name="watch_page_brief">Prehľad</string>
     <string name="watch_page_inbox">Doručené</string>
     <string name="watch_paused_still_answers">Pozastavené: jeho plán je vypnutý. Na to, čo pošlete, stále odpovedá.</string>
@@ -2933,6 +2948,7 @@
     <string name="watch_recent_chats">Nedávne chaty</string>
     <string name="watch_recording">Nahrávam</string>
     <string name="watch_recording_not_received">Nahrávka sa do telefónu nedostala. Skúste to znova, alebo to napíšte.</string>
+    <string name="watch_refuse_on_phone">Neodmietnuté. Odmietnite to v telefóne.</string>
     <string name="watch_refused">Odmietnuté. Nič sa neodoslalo.</string>
     <string name="watch_reply">Odpovedať</string>
     <string name="watch_rerecord">Nahrať znova</string>
@@ -2941,14 +2957,20 @@
     <string name="watch_resume_on_phone">Obnovte v telefóne</string>
     <string name="watch_retry">Skúsiť znova</string>
     <string name="watch_review">Skontrolovať pred odoslaním</string>
+    <string name="watch_seconds_left">Zostáva %1$s s</string>
     <string name="watch_sending">Odosielam…</string>
     <string name="watch_sent">Odoslané</string>
     <string name="watch_settings_of">%1$s · nastavenia</string>
+    <string name="watch_sign_in_allow">Povoliť</string>
+    <string name="watch_sign_in_denied">Neprihlásené. Tieto hodinky zostávajú odhlásené.</string>
+    <string name="watch_sign_in_deny">Zamietnuť</string>
     <string name="watch_sign_in_on_phone">Najprv sa v telefóne prihláste do tafs.</string>
+    <string name="watch_sign_in_watch_q">Prihlásiť tieto hodinky ako vás?</string>
     <string name="watch_sign_out_q">Odhlásiť sa na týchto hodinkách?</string>
     <string name="watch_sign_out_sub">Telefón zostane prihlásený. Tieto hodinky zabudnú vaše tafy, chaty a Doručené.</string>
     <string name="watch_signed_in">Prihlásené</string>
     <string name="watch_signed_out_here">Odhlásené na týchto hodinkách. Telefón zostáva prihlásený.</string>
+    <string name="watch_stopped_at_limit">Zastavené na limite %1$s. Čo bolo počuť, je nižšie.</string>
     <string name="watch_swipe_settings">Potiahnite doľava pre jeho nastavenia</string>
     <string name="watch_tap_start">Ťuknite na Štart a hovorte. Vaše slová sa tu zobrazujú, ako hovoríte.</string>
     <string name="watch_timing">Počúvanie %1$s ms · potvrdenie %2$s ms · výsledok %3$s ms</string>
@@ -2957,8 +2979,10 @@
     <string name="watch_type">Napísať</string>
     <string name="watch_type_hint">Napíšte Coachovi…</string>
     <string name="watch_update_phone">Aktualizujte tafs v telefóne a skúste to znova.</string>
+    <string name="watch_view_on_phone">Zobraziť v telefóne</string>
     <string name="watch_view_only_phone">Tento telefón môže len prezerať, takže sa z hodiniek pýtať nemôžete. Prihláste sa v telefóne, ktorý môže schvaľovať.</string>
     <string name="watch_voice_text_only">Coach dostane vaše slová ako text, nikdy váš hlas.</string>
+    <string name="watch_waiting_for_phone">Čaká sa na telefón…</string>
     <string name="watch_what_it_does">Čo robí</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s pracuje</item>

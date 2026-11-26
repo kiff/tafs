@@ -1,7 +1,7 @@
 // The service worker (docs/chrome.md): it keeps the pairing, connects to planque when paired, and runs what planque sends
 // through the runner. It wakes on an alarm while it sleeps, connects, and lets the connection drop when no run is on.
 
-import { asideTab, readForCoach } from "./asideread.js";
+import { asideTab, readForCoach, offTafSites } from "./asideread.js";
 import { allowedHere, pageForSend, PAGE_CONSENT_VERSION } from "./pageconsent.js";
 import { config } from "./config.js";
 import { indexedStore, profileId, forgetSavedSignIns } from "./store.js";
@@ -11,7 +11,9 @@ import { parseCode, offer, checkConfirmation, postOffer } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay, MAX_RESULT_BYTES } from "./relay.js";
 import { tafsHere } from "./coachchat.js";
+import { signedSitesOf } from "./protocol.js";
 import { Coach, reusing } from "./coach.js";
+import { withBegan } from "./chatrow.js";
 import { ensureSubscription, subscriptionOf, pushMessage } from "./push.js";
 import { HandAnswers, handMessage } from "./hand.js";
 import { RunStates, runStateMessage } from "./runstate.js";
@@ -61,6 +63,12 @@ async function sendRunStates(only) {
   }
 }
 
+// The tabs the bar or the signs were drawn in since a worker started (Runner.noteDrawn): ids alone, kept for the session, so a
+// worker that starts again sweeps those tabs and no other.
+const drawnStore = {
+  get: async () => (await chrome.storage.session.get("drawnTabs")).drawnTabs || [],
+  set: (ids) => chrome.storage.session.set({ drawnTabs: ids }),
+};
 const doneStore = {
   get: async () => (await chrome.storage.session.get("doneTabs")).doneTabs || {},
   set: (done) => chrome.storage.session.set({ doneTabs: done }),
@@ -74,7 +82,7 @@ const panel = {
   isOpen: (windowId) => panels.isOpen(windowId),
   off: () => asideOff(),
 };
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, shots, panel, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}), onRunState: (s) => runStates.add(s).then((added) => added && sendRunStates(s.run)).catch(() => {}) });
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing, doneStore, drawnStore, shots, panel, onHandAnswer: (a) => handAnswers.add(a).then(() => sendHands(a.hand)).catch(() => {}), onRunState: (s) => runStates.add(s).then((added) => added && sendRunStates(s.run)).catch(() => {}) });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(),
@@ -269,16 +277,27 @@ async function tafsOfThisChrome(fresh = false, working = null) {
   return tafsHere(connections, tafs, working);
 }
 
+/** The sites the paired phone signed for taf [taf]'s connections in this Chrome (protocol.signedSitesOf): never planque's list. */
+async function tafSites(taf) {
+  const one = (await tafsOfThisChrome()).find((t) => t.id === taf);
+  return one ? signedSitesOf(one.grants, (relay && relay.connections) || [], kept.pairing) : [];
+}
+
 async function onlyHere(taf) {
   if (!(await tafsOfThisChrome()).some((t) => t.id === taf)) throw Object.assign(new Error("not a taf of this Chrome"), { code: "not_here" });
 }
 
-// The floating bar follows the tab in front of each window, and a page that loads again draws it again.
+// The floating bar follows the tab in front of each window, and a page that loads again draws it again; so does a run's own
+// tab, for its glow (signs.js), in front or not.
 chrome.tabs.onActivated.addListener(() => runner.queueBars());
 chrome.windows.onFocusChanged.addListener(() => runner.queueBars());
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
-  if (change.status === "complete" && tab && tab.active) runner.queueBars();
+  if (change.status === "complete" && tab && (tab.active || runner.runOfTab(id))) runner.queueBars();
 });
+
+// A worker that starts again holds no run (they're forgotten as it stops), so no page should still say a taf works there:
+// the bar and the signs go from the tabs an earlier worker drew them in, and only those (Runner.sweepDrawn).
+runner.sweepDrawn().catch(() => {});
 
 // Coach reads the page in front (docs/chrome.md, "Coach reads the page you're on"): on the person's send, the tab in front
 // of the panel's own window, once, through aside.js; never on a timer, never another tab, never a site the gate refuses.
@@ -288,13 +307,28 @@ async function asideOff() {
   return ((await chrome.storage.local.get(ASIDE_OFF))[ASIDE_OFF] || []).filter((h) => typeof h === "string");
 }
 
-async function asideStatus(tabId, windowId) {
-  const { host, why } = await asideTab(chrome, tabId, windowId, await asideOff());
-  return { host, why };
+/** The page in front, for the panel's line and its consent screen; for a taf ([taf]), also whether it's on the taf's own sites. */
+async function asideStatus(tabId, windowId, taf = null) {
+  const { tab, host, why } = await asideTab(chrome, tabId, windowId, await asideOff());
+  if (why || !taf || !(await tafsOfThisChrome()).some((t) => t.id === taf)) return { host, why };
+  return { host, why: offTafSites(tab && tab.url, await tafSites(taf)) };
 }
 
-async function asideRead(tabId, windowId) {
-  return readForCoach(chrome, tabId, windowId, await asideOff());
+async function asideRead(tabId, windowId, within = null) {
+  return readForCoach(chrome, tabId, windowId, await asideOff(), within);
+}
+
+/**
+ * Why the page didn't go, as the panel says it under the message: with no consent, the tab wasn't read, so what's in front is
+ * looked at by its address alone (asideStatus, nothing injected): a page that couldn't have gone anyway (Chrome's own, a
+ * sensitive site, one switched off, off the taf's sites) says that instead, and only a page that could have gone says the
+ * consent is missing.
+ */
+async function whyNotSent(page, tabId, windowId, taf = null) {
+  if (page.why !== "consent") return page;
+  const s = await asideStatus(tabId, windowId, taf).catch(() => null);
+  if (!s) return page;
+  return s.why ? { ...page, why: s.why, host: s.host } : { ...page, host: s.host };
 }
 
 // Coach reads the page in front only with the person's page consent (pageconsent.js), checked before the tab is touched.
@@ -325,6 +359,23 @@ async function pageWithdraw() {
   await indexedStore.set(PAGE_CONSENT, null);
   await (await coach()).withdrawPage().catch(() => {});
   return { allowed: false };
+}
+
+/**
+ * The Coach chats begun in this Chrome (`chatrow.js` `withBegan`), kept with the pairing in its own store, so unpairing wipes
+ * them. tafs cloud lists a run's chat here too when the run worked in this Chrome, read-only; this list tells them apart, so
+ * the panel offers Send again and Edit and send only where a message from here goes. A chat begun here before this list was
+ * kept joins it at its next message from here.
+ */
+const COACH_BEGAN = "coach_began";
+
+async function coachBegan() {
+  const list = await indexedStore.get(COACH_BEGAN).catch(() => null);
+  return Array.isArray(list) ? list : [];
+}
+
+async function rememberBegan(session) {
+  await indexedStore.set(COACH_BEGAN, withBegan(await coachBegan(), session));
 }
 
 /** "Not on this site": the person's own list of hosts Coach never reads, kept in this Chrome only. */
@@ -362,7 +413,10 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     go_to_run: async () => runner.goTo(String(m.run)),
     coach_thread: async () => {
       claimKiff().catch(() => {});
-      return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };
+      const session = typeof m.session === "string" ? m.session : null;
+      const thread = await (await coach()).thread(session);
+      // Whether this Chrome began the chat (it sent into it, `coachBegan`): only there do Send again and Edit and send go.
+      return { thread: thread && { ...thread, began: session ? (await coachBegan()).includes(session) : true } };
     },
     coach_chats: async () => ({ chats: await (await coach()).chats() }),
     coach_archived: async () => ({ chats: await (await coach()).archivedChats() }),
@@ -384,9 +438,19 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     },
     // A send from the panel marks the run tafs cloud starts for it (its answer's `run`), with the panel's window and the tab in
     // front: that run, and no other, may work in that tab (panels.js).
+    // The page in front goes with it as with Coach's (docs/chrome.md, "A taf works where you are"): the same consent, the same
+    // gate and masked read, only with words, and only on the taf's own sites as the paired phone signed them for its
+    // connections here; off them, nothing of the page is read, and the answer says why.
     taf_send: async () => {
       await onlyHere(m.taf);
-      return { sent: await panels.sent(m.windowId, m.tabId, (await coach()).sendToTaf(m.taf, m.words, m.clientID, m.attachments)) };
+      const alone = m.alone === true || !String(m.words || "").trim();
+      const page = await whyNotSent(await pageForSend({ alone, consent: pageConsentReady, read: async () => asideRead(m.tabId, m.windowId, await tafSites(m.taf)) }), m.tabId, m.windowId, m.taf);
+      return {
+        sent: await panels.sent(m.windowId, m.tabId, (await coach()).sendToTaf(m.taf, m.words, m.clientID, m.attachments, page.page)),
+        reading: page.page ? page.host : null,
+        notReading: page.why || null,
+        host: page.host || null,
+      };
     },
     // A file the person picked in the panel, declared as the session (Coach's when no taf is named): the answer says where the
     // panel uploads its bytes itself (attach.js). Only a taf of this Chrome, as for its chat.
@@ -399,14 +463,28 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       // never when they chose to send the words alone.
       // Files alone go without the page: a page goes only with words.
       const alone = m.alone === true || !String(m.words || "").trim();
-      const page = await pageForSend({ alone, consent: pageConsentReady, read: () => asideRead(m.tabId, m.windowId) });
+      const page = await whyNotSent(await pageForSend({ alone, consent: pageConsentReady, read: () => asideRead(m.tabId, m.windowId) }), m.tabId, m.windowId);
+      const sent = await panels.sent(m.windowId, m.tabId, (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page, attachments: m.attachments }));
+      // tafs cloud takes the panel's message only into a chat this Chrome began, or a new one: the chat it went into is one.
+      if (sent && typeof sent.session === "string") await rememberBegan(sent.session).catch(() => {});
       return {
-        sent: await panels.sent(m.windowId, m.tabId, (await coach()).send(m.words, { clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true, page: page.page, attachments: m.attachments })),
+        sent,
         reading: page.page ? page.host : null,
         notReading: page.why || null,
+        host: page.host || null,
       };
     },
-    aside_status: async () => ({ ...(await asideStatus(m.tabId, m.windowId)), consent: await pageConsentReady() }),
+    // Report this answer (docs/chat.md, "Reporting an answer"): Coach's, or a taf's of this Chrome, with the chat's session.
+    // How it went comes back as the answer, never as an error: tafs cloud's words for a refusal, and its status.
+    report: async () => {
+      if (m.taf) await onlyHere(m.taf);
+      try {
+        return { report: await (await coach()).report(m.taf || null, String(m.message || ""), { reason: m.reason, note: m.note, session: m.session }) };
+      } catch (e) {
+        return { failed: { status: (e && e.status) || 0, ...(e && e.words ? { words: e.words } : {}) } };
+      }
+    },
+    aside_status: async () => ({ ...(await asideStatus(m.tabId, m.windowId, typeof m.taf === "string" ? m.taf : null)), consent: await pageConsentReady() }),
     page_allow: async () => pageAllow(),
     page_withdraw: async () => pageWithdraw(),
     aside_site: async () => asideSwitch(String(m.host || ""), m.off === true),

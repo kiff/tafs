@@ -49,6 +49,7 @@ struct TafChatPage: View {
     @State private var recording = false
 
     var body: some View {
+        ScrollViewReader { proxy in
         List {
             if let line = taf.line {
                 Text(line)
@@ -61,13 +62,14 @@ struct TafChatPage: View {
             let days = chat.history.map(\.at) + chat.turns.map(\.at)
             ForEach(Array(chat.history.enumerated()), id: \.element.id) { i, line in
                 if ChatTime.startsDay(days, at: i, calendar: chat.calendar) { WatchChatDay(date: line.at, calendar: chat.calendar) }
-                TafChatLineRow(line: line, zone: chat.zone)
+                TafChatLineRow(line: line, zone: chat.zone, viewOnPhone: { Task { await chat.openOnPhone() } },
+                               readMore: { Task { await chat.readMoreLine(line.id) } }, whole: chat.whole[line.id])
             }
             ForEach(Array(chat.turns.enumerated()), id: \.element.id) { i, turn in
                 if ChatTime.startsDay(days, at: chat.history.count + i, calendar: chat.calendar) { WatchChatDay(date: turn.at, calendar: chat.calendar) }
-                TafTurnRow(turn: turn, taf: taf.name, whole: chat.whole[turn.id], zone: chat.zone) {
-                    Task { await chat.readMore(turn.id) }
-                }
+                TafTurnRow(turn: turn, taf: taf.name, whole: chat.whole[turn.id], zone: chat.zone,
+                           readMore: { Task { await chat.readMore(turn.id) } },
+                           viewOnPhone: { Task { await chat.openOnPhone() } })
             }
             switch TafChatSend.of(taf) {
             case .halted:
@@ -83,21 +85,29 @@ struct TafChatPage: View {
                         .foregroundStyle(WatchLook.held)
                         .listRowBackground(Color.clear)
                 }
-                Button {
+                // Right under the newest message: the microphone and the keyboard (the owner's call 4).
+                ThreadInput(speak: Words.Chat.messageTaf(taf: taf.name), listen: {
                     // The watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
                     if WatchVoice.on, chat.listensFirst {
                         recording = true
                     } else {
                         Task { if await WatchDictation.talk(to: chat) { asking = true } }
                     }
-                } label: {
-                    Label(Words.Chat.messageTaf(taf: taf.name), systemImage: "mic.fill")
-                        .font(.headline)
-                }
+                }, typed: { words in
+                    chat.review(words)
+                    if chat.reviewing { asking = true }
+                })
             }
+            Color.clear.frame(height: 1).listRowBackground(Color.clear).id(WatchThread.newest)
         }
         .defaultScrollAnchor(.bottom)
-        .task { await chat.loadHistory() }
+        // Opens on the newest message, and stays there as messages come in (the owner's calls 2 and 3).
+        .onChange(of: WatchThread.shape(chat)) { _, _ in proxy.scrollTo(WatchThread.newest, anchor: .bottom) }
+        }
+        .task {
+            chat.reopen()
+            await chat.loadHistory()
+        }
         .sheet(isPresented: $asking) {
             CoachAsk(model: chat, title: Words.Chat.messageTaf(taf: taf.name), answerer: taf.name)
         }
@@ -120,17 +130,45 @@ struct WatchChatDay: View {
     }
 }
 
-/// A turn from before this visit: yours orange on the right, the taf's green on the left, the rest on the phone if cut.
+/// A turn from before this visit: yours orange on the right, the taf's green on the left. A taf's cut line has Read more in a
+/// taf's chat (row 10, one tap, read then and shown in place), with View on phone still under it; else the rest is on the phone.
 struct TafChatLineRow: View {
     let line: WatchChatLine
     var zone: TimeZone = .current
+    var viewOnPhone: () -> Void = {}
+    /// Read more on this line, where the chat can read it (a taf's); none in Coach's, whose lines are this watch's own.
+    var readMore: (() -> Void)? = nil
+    var whole: CoachModel.Whole? = nil
 
     var body: some View {
+        if line.mine && !line.more {
+            MineBubble(said: line.text, at: line.at, zone: zone)
+                .listRowBackground(Color.clear)
+        } else {
+            bubble
+        }
+    }
+
+    private var bubble: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(verbatim: line.text)
+            Text(verbatim: Self.shown(line, whole: whole))
                 .font(.footnote)
             if line.more {
-                Text(Words.Watch.moreOnPhone).font(.caption2).foregroundStyle(.secondary)
+                switch Self.foot(line, whole: whole, canRead: readMore != nil) {
+                case .readMore?:
+                    Button(Words.Watch.readMore) { readMore?() }
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(WatchLook.coach)
+                        .buttonStyle(.plain)
+                    ViewOnPhone(open: viewOnPhone)
+                case .reading?:
+                    ProgressView().frame(width: 14, height: 14)
+                case .onPhone?:
+                    Text(Words.Watch.moreOnPhone).font(.caption2).foregroundStyle(.secondary)
+                    ViewOnPhone(open: viewOnPhone)
+                case nil:
+                    ViewOnPhone(open: viewOnPhone)
+                }
             }
             // When it was sent (row 44, C), small, under its words.
             Text(ChatTime.time(line.at, zone: zone)).font(.caption2).monospacedDigit().opacity(0.75)
@@ -144,6 +182,26 @@ struct TafChatLineRow: View {
     }
 }
 
+extension TafChatLineRow {
+    /// The line's words as shown: the whole once Read more has it, else its first part.
+    static func shown(_ line: WatchChatLine, whole: CoachModel.Whole?) -> String {
+        if case .read(let all)? = whole { return all.text }
+        return line.text
+    }
+
+    /// Under a cut line: Read more (a taf's line, where the chat can read it, not read yet), the wait, "The rest is on your
+    /// phone." where it couldn't be read or can't be, or nothing more once it's whole.
+    static func foot(_ line: WatchChatLine, whole: CoachModel.Whole?, canRead: Bool) -> TafTurnRow.Foot? {
+        guard line.more else { return nil }
+        switch whole {
+        case .read?: return nil
+        case .reading?: return .reading
+        case .onPhone?: return .onPhone
+        case nil: return canRead && !line.mine ? .readMore : .onPhone
+        }
+    }
+}
+
 /// One turn of a taf's chat: your words, then the taf's answer in green. A long answer shows its first part with Read more,
 /// and the tap opens the whole answer in place, read only then (the owner's 01:10); if it can't be read, the rest is on the
 /// phone.
@@ -153,20 +211,11 @@ struct TafTurnRow: View {
     let whole: CoachModel.Whole?
     var zone: TimeZone = .current
     let readMore: () -> Void
+    var viewOnPhone: () -> Void = {}
 
     var body: some View {
         VStack(spacing: 4) {
-            Text(ChatTime.time(turn.at, zone: zone))
-                .font(.caption2)
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-            Text(verbatim: turn.said)
-                .font(.footnote)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .foregroundStyle(WatchLook.onMineGround)
-                .background(WatchLook.mineGround, in: RoundedRectangle(cornerRadius: 12))
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            MineBubble(said: turn.said, at: turn.at, zone: zone)
             tafSide
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -176,9 +225,8 @@ struct TafTurnRow: View {
     @ViewBuilder private var tafSide: some View {
         switch turn.answer {
         case .sent:
-            Label(Words.Watch.sent, systemImage: "checkmark")
-                .font(.caption2)
-                .foregroundStyle(WatchLook.done)
+            // The ✓ under the bubble says it went; nothing more until the taf starts.
+            EmptyView()
         case .answering:
             HStack(spacing: 4) {
                 ProgressView().frame(width: 14, height: 14)
@@ -196,6 +244,7 @@ struct TafTurnRow: View {
                     Label(Words.Watch.approveOnPhone, systemImage: "iphone")
                         .font(.caption2)
                         .foregroundStyle(WatchLook.held)
+                    ViewOnPhone(open: viewOnPhone)
                 }
                 switch Self.foot(answer, whole: whole) {
                 case .readMore:
@@ -207,6 +256,7 @@ struct TafTurnRow: View {
                     ProgressView().frame(width: 14, height: 14)
                 case .onPhone:
                     Text(Words.Watch.moreOnPhone).font(.caption2).foregroundStyle(.secondary)
+                    if answer?.approveOnPhone != true { ViewOnPhone(open: viewOnPhone) }
                 case nil:
                     EmptyView()
                 }
@@ -240,5 +290,137 @@ struct TafTurnRow: View {
             guard let answer else { return .onPhone }
             return answer.more ? .readMore : nil
         }
+    }
+}
+
+/// Your own message in a thread (the owner's call 4, as a messaging app draws it): the words in a bubble on the right, and
+/// under it, small, when it went and ✓, so a message sent from the watch reads as sent where it sits.
+struct MineBubble: View {
+    let said: String
+    let at: Date
+    var zone: TimeZone = .current
+    var lineLimit: Int? = nil
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 2) {
+            Text(verbatim: said)
+                .font(.footnote)
+                .lineLimit(lineLimit)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .foregroundStyle(WatchLook.onMineGround)
+                .background(WatchLook.mineGround, in: RoundedRectangle(cornerRadius: 12))
+            HStack(spacing: 2) {
+                Text(ChatTime.time(at, zone: zone)).monospacedDigit()
+                Image(systemName: "checkmark").accessibilityLabel(Words.Watch.sent)
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+}
+
+/// View on phone, inline where the rest of an answer is (the owner's call 5): the phone opens the chat (`CoachModel.openOnPhone`).
+/// Once the phone says it opened it, "Opened on your phone" for a moment (row 28, as Wear OS's confirmation).
+struct ViewOnPhone: View {
+    let open: () -> Void
+    @ObservedObject private var notice = WatchOpenedNotice.shared
+
+    var body: some View {
+        if notice.key == WatchOpenedNotice.chat {
+            Label(Words.Watch.openedOnPhone, systemImage: "checkmark")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(WatchLook.coach)
+        } else {
+            Button(action: open) {
+                Label(Words.Watch.viewOnPhone, systemImage: "iphone")
+                    .font(.caption2.weight(.semibold))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(WatchLook.coach)
+        }
+    }
+}
+
+/// Row 28: "Opened on your phone" for a moment, once the phone answers that it opened what the watch asked for (View on phone
+/// for a chat, Approve on your phone for a held call). Nothing on the phone or the watch changes; it only says so. Not reached,
+/// nothing is said, and the button stays to tap again.
+@MainActor
+final class WatchOpenedNotice: ObservableObject {
+    static let shared = WatchOpenedNotice()
+    /// The key View on phone shows it for: a chat, Coach's or the taf's on screen.
+    static let chat = "chat"
+    /// How long it shows.
+    static let showFor: TimeInterval = 3
+
+    /// What it shows for: `chat`, or a held call's id; none once it's gone.
+    @Published private(set) var key: String?
+    private var clear: Task<Void, Never>?
+
+    /// The phone's answer to an open: `ok` shows it for `key`; anything else, nothing.
+    func heard(_ reply: WatchReply?, for key: String) {
+        guard reply?.outcome == .ok else { return }
+        self.key = key
+        clear?.cancel()
+        clear = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(Self.showFor * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.key = nil
+        }
+    }
+
+    /// For the tests: nothing showing.
+    func reset() {
+        clear?.cancel()
+        key = nil
+    }
+}
+
+/// Under the newest message (the owner's call 4): the microphone and the keyboard, side by side, round. The keyboard's words
+/// open Check before sending, as the microphone's do.
+struct ThreadInput: View {
+    /// What VoiceOver says for the microphone: "Ask Coach", or "Message <taf>".
+    let speak: String
+    let listen: () -> Void
+    let typed: (String) -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: listen) {
+                Image(systemName: "mic.fill")
+                    .font(.title3)
+                    .frame(width: 44, height: 44)
+                    .background(WatchLook.send, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(speak)
+            TextFieldLink(prompt: Text(Words.Watch.typeHint)) {
+                Image(systemName: "keyboard")
+                    .font(.title3)
+                    .frame(width: 44, height: 44)
+                    .background(Color.gray.opacity(0.35), in: Circle())
+            } onSubmit: { words in
+                typed(words)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Words.Watch.type)
+        }
+        .frame(maxWidth: .infinity)
+        .listRowBackground(Color.clear)
+    }
+}
+
+/// Keeping a thread on its newest message (the owner's calls 2 and 3).
+@MainActor
+enum WatchThread {
+    /// The id of the thread's last row, under the microphone and the keyboard.
+    static let newest = "thread.newest"
+
+    /// What changes when a message comes in or an answer moves on: how many lines, and the newest turn's state.
+    static func shape(_ chat: CoachModel) -> [String] {
+        var shape = ["\(chat.history.count)", "\(chat.turns.count)"]
+        if let last = chat.turns.last { shape.append("\(last.answer)") }
+        return shape
     }
 }

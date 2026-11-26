@@ -6,6 +6,10 @@
   "alert.answer_nothing_sent_until_you": "{what} · {why}। {zone} सम्म जवाफ दिनुहोस्। तपाईंले स्वीकृत नगरेसम्म केही पठाइँदैन।",
   "alert.answered": "एउटा taf ले कसैलाई जवाफ दियो",
   "alert.approve_once": "एक पटक स्वीकृत गर्नुहोस्…",
+  "alert.blocked.body": "यो {device} ले अब सोध्दैन, त्यसैले सेटिङमा tafs को सूचना बन्द छ। स्वीकृति र जवाफ तपाईंसम्म आइपुगून् भनेर त्यहाँ खोल्नुहोस्।",
+  "alert.blocked.body_android": "Android ले अब सोध्दैन, त्यसैले तपाईंको फोनको सेटिङमा tafs को सूचना बन्द छ। स्वीकृति र जवाफ यो फोन र तपाईंको घडीमा आइपुगून् भनेर त्यहाँ खोल्नुहोस्। तपाईंको घडीले जसरी पनि अपडेट पाउँछ।",
+  "alert.blocked.body_watch": "तपाईंको iPhone ले अब सोध्दैन, त्यसैले सेटिङमा tafs को सूचना बन्द छ। स्वीकृति र जवाफ यो iPhone र तपाईंको घडीमा आइपुगून् भनेर त्यहाँ खोल्नुहोस्। तपाईंको घडीले जसरी पनि अपडेट पाउँछ।",
+  "alert.blocked.title": "tafs को सूचना खोल्नुहोस्",
   "alert.by_email": "इमेलबाट",
   "alert.example": "उदाहरण",
   "alert.foot.cant_answer_holds": "सूचनाहरू रोकिएका कलको जवाफ दिन पाउने व्यक्तिहरूलाई जान्छन्। यस खातामा तपाईंको भूमिकाले पाउँदैन।",
@@ -21,7 +25,10 @@
   "alert.not_on_for_phone": "यो फोनका लागि सूचनाहरू अहिलेसम्म खुलेका छैनन्। {why}",
   "alert.not_refused": "अस्वीकार गरिएन",
   "alert.not_sent": "जवाफ पठाइएन",
+  "alert.now_on": "सूचना खुला छ।",
   "alert.on_this_device": "यो {device} मा सूचनाहरू",
+  "alert.open_notification_settings": "सूचना सेटिङ खोल्नुहोस्",
+  "alert.open_settings": "सेटिङ खोल्नुहोस्",
   "alert.open_tafs_answer_kiff_did": "जवाफ दिन tafs खोल्नुहोस्: तपाईंले यसको कुन संस्करण देख्नुभयो KIFF ले भनेन।",
   "alert.open_tafs_answer_phone_can": "जवाफ दिन tafs खोल्नुहोस्: यो फोनले सूचनाबाट हस्ताक्षर गर्न सक्दैन।",
   "alert.prompt": "कुनै taf लाई तपाईं चाहिँदा सूचना पाउनुहोस्",
@@ -35,6 +42,7 @@
   "alert.status.not_available": "उपलब्ध छैन",
   "alert.status.off": "बन्द",
   "alert.status.on": "खुला",
+  "alert.still_off": "सूचना अझै बन्द छ।",
   "alert.still_on_after_sign_out.body": "tafs ले तिनलाई बन्द गर्न सकेन ({why})। फेरि प्रयास गर्नुहोस्, वा जे भए पनि साइन आउट गरेर सेटिङमा tafs का सूचनाहरू बन्द गर्नुहोस्।",
   "alert.still_on_after_sign_out.title": "यो {device} मा अझै यस खाताका सूचनाहरू आउन सक्छन्",
   "alert.taf_needs_you": "{taf} ले तपाईंलाई पर्खिरहेको छ",
@@ -43,6 +51,8 @@
     "other": "{count} taf ›"
   },
   "alert.tafs_could_not_reach_kiff": "tafs ले अस्वीकार गर्न KIFF सम्म पुग्न सकेन। जवाफ दिन tafs खोल्नुहोस्।",
+  "alert.watch_first.body": "स्वीकृति र जवाफलाई यो फोन र तपाईंको घडीमा सूचनाको रूपमा हेर्न tafs को सूचना खोल्नुहोस्। नखोले पनि तपाईंको घडीले अपडेट पाइरहनेछ।",
+  "alert.watch_first.title": "तपाईंको घडीले tafs प्रयोग गर्दैछ",
   "alert.what_alerts": "तपाईंलाई के जानकारी दिने",
   "alert.with_sound": "आवाजसहित"
 }

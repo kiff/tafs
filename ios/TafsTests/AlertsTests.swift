@@ -1,4 +1,5 @@
 import XCTest
+import UserNotifications
 @testable import Tafs
 
 /// Alerts that reach a closed app: the phone points the account's KIFF alert target at
@@ -248,6 +249,88 @@ final class AlertsTests: XCTestCase {
         StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":false,"alerts":true}"#)
         await model.pushTokenArrived(token)
         XCTAssertEqual(model.canAnswerHolds, false)
+    }
+
+    /// Row 13, as Android's: alerts off on a phone that serves a watch, tafs cloud keeps its token for background pushes only
+    /// (`alerts: false`, with no alert target), so the watch's threads still move. Alerts off with no watch: nothing is sent.
+    /// Turning alerts off on such a phone leaves it registered that way.
+    func testAlertsOffOnAPhoneThatServesAWatchKeepsBackgroundPushesOnly() async throws {
+        let model = model()
+        model.servesWatch = { true }
+        // This phone has never had alerts on for the account.
+        StubProtocol.responses["GET /v1/push"] = (200, #"{"enabled":false,"sound":true,"kinds":[],"answering":{"title":"Answered tafs","tafs":[]}}"#)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":true,"alerts":false}"#)
+        await signedIn(model)
+        await model.pushTokenArrived(token)
+        let push = try XCTUnwrap(sent("POST", "cloud.test", "/v1/push").last, "registered for its watch's silent pushes")
+        XCTAssertEqual(body(push)["alerts"] as? Bool, false)
+        XCTAssertEqual(body(push)["device_token"] as? String, "ab01ff")
+        XCTAssertNil(body(push)["alert_target"], "a background-only phone takes no alert target")
+        XCTAssertEqual(model.alertsReady, false, "alerts stay off")
+
+        // No watch: nothing is registered.
+        let none = self.model()
+        none.servesWatch = { false }
+        StubProtocol.responses["GET /v1/push"] = (200, #"{"enabled":false,"sound":true,"kinds":[],"answering":{"title":"Answered tafs","tafs":[]}}"#)
+        await signedIn(none)
+        StubProtocol.sent = []
+        await none.pushTokenArrived(token)
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/push").isEmpty)
+        UserDefaults.standard.removeObject(forKey: "alerts.enabled|t1")
+    }
+
+    /// Notifications refused before: iOS no longer asks, so Turn on alerts says so, with the way to tafs's own switch, rather
+    /// than a line to act on alone. Back from Settings, whether alerts are on now is said once, and they're turned on when they
+    /// may be.
+    func testBlockedNotificationsLeadToSettingsAndAreCheckedOnReturn() async throws {
+        let model = model()
+        await signedIn(model)
+        var status = UNAuthorizationStatus.denied
+        var opened = 0
+        model.notificationAuthorization = { status }
+        model.openNotificationSettings = { opened += 1 }
+        model.lastError = nil
+        let on = await model.turnOnAlerts()
+        XCTAssertFalse(on)
+        XCTAssertEqual(model.alertsPrompt, .blocked)
+        XCTAssertNil(model.lastError, "the prompt, not a line")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/alert-targets").isEmpty, "nothing set up while blocked")
+
+        model.goToNotificationSettings()
+        XCTAssertNil(model.alertsPrompt)
+        XCTAssertEqual(opened, 1)
+        // Back, still off.
+        await model.checkAlertsOnReturn()
+        XCTAssertEqual(model.alertsRecheck, Words.Alert.stillOff)
+
+        // Again, and this time turned on in Settings: said, and alerts are turned on.
+        model.alertsRecheck = nil
+        model.goToNotificationSettings()
+        status = .authorized
+        StubProtocol.responses["POST /v1/me/alert-targets"] = (201, #"{"id":"at_1","signing_secret":"whsec_abc"}"#)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":true,"alerts":true}"#)
+        await model.checkAlertsOnReturn()
+        XCTAssertEqual(model.alertsRecheck, Words.Alert.nowOn)
+        XCTAssertEqual(model.alertsReady, true)
+        UserDefaults.standard.removeObject(forKey: "alerts.enabled|t1")
+    }
+
+    /// Once the watch has used tafs, a phone with alerts off says once what alerts would do; never again after that.
+    func testTheWatchPromptShowsOncePerPhone() async {
+        let model = model()
+        await signedIn(model)
+        UserDefaults.standard.removeObject(forKey: AppModel.watchPromptShownKey)
+        UserDefaults.standard.removeObject(forKey: AppModel.watchUsedKey)
+        await model.checkAlertsOnReturn()
+        XCTAssertNil(model.alertsPrompt, "no watch has used tafs")
+        UserDefaults.standard.set(true, forKey: AppModel.watchUsedKey)
+        await model.checkAlertsOnReturn()
+        XCTAssertEqual(model.alertsPrompt, .watchFirst)
+        model.alertsPrompt = nil
+        await model.checkAlertsOnReturn()
+        XCTAssertNil(model.alertsPrompt, "once per phone")
+        UserDefaults.standard.removeObject(forKey: AppModel.watchPromptShownKey)
+        UserDefaults.standard.removeObject(forKey: AppModel.watchUsedKey)
     }
 
     func testOffUnregistersThePhoneAndRefreshDoesNotRegisterItAgain() async throws {

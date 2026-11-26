@@ -33,10 +33,10 @@ android {
     // Its own band under the phone's package (docs/watch-wear.md, Versions): Play wants every versionCode on the listing unique
     // across the phone's and the watch's builds, and the phone counts up by one from 1, so the watch counts up by one from
     // 400,000,001 and the two never meet.
-    versionCode = 400_000_012
+    versionCode = 400_000_015
     // "-test": an internal build for a test on a real watch, with the timing readout (below). A build for production has a
     // plain name, so it never shows it.
-    versionName = "0.4.7"
+    versionName = "0.4.10"
   }
 
   buildTypes {
@@ -65,11 +65,9 @@ android {
       // keeps no recording (docs/watch-wear.md, "What the watch keeps").
       val audio = defaultConfig.versionName.orEmpty().endsWith("-test") || System.getenv("TAFS_WATCH_AUDIO") == "1"
       buildConfigField("boolean", "KEEP_AUDIO", audio.toString())
-      // Coach's conversation kept on the watch across opens: only in a test version ("-test") or with TAFS_WATCH_THREADS=1, until
-      // the owner's yes and the Privacy page's line (as the Apple Watch's kept threads). Off, the conversation lives in memory
-      // while the app runs, and what the watch keeps is as before (docs/watch-wear.md, "What the watch keeps").
-      val threads = defaultConfig.versionName.orEmpty().endsWith("-test") || System.getenv("TAFS_WATCH_THREADS") == "1"
-      buildConfigField("boolean", "KEEP_THREADS", threads.toString())
+      // The chats kept on the watch across opens (docs/watch-wear.md, "What the watch keeps"): on in every release build from
+      // 0.4.8, with the owner's yes and the Privacy page's line for watch threads (as the Apple Watch's kept threads).
+      buildConfigField("boolean", "KEEP_THREADS", "true")
       if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
       isMinifyEnabled = true
       isShrinkResources = true

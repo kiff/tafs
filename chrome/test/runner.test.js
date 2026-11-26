@@ -1,6 +1,8 @@
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
-import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS, TURN_QUIET_MS } from "../src/runner.js";
+import { Runner, RUN_IDLE_MS, PAUSED_IDLE_MS, OUTLINE_MS, TURN_QUIET_MS, FENCE_RULES } from "../src/runner.js";
+import { SENSITIVE, SENSITIVE_LABELS_URLS, NEVER_OPENED, LOCAL_SUFFIXES, refuseURL, fenceDomains } from "../src/sites.js";
 import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
 import { Panels, joinFront, MARK_MS } from "../src/panels.js";
 
@@ -28,7 +30,7 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
     groupsMap: groups,
     setAct: (a) => (actAnswer = a),
     setNextTab: (n) => (nextTab = n),
-    webNavigation: { onBeforeNavigate: on("before"), onCommitted: on("committed"), onCreatedNavigationTarget: on("created") },
+    webNavigation: { onBeforeNavigate: on("before"), onCommitted: on("committed"), onCreatedNavigationTarget: on("created"), onErrorOccurred: on("error") },
     tabs: {
       onRemoved: on("removed"),
       query: async () => {
@@ -48,6 +50,8 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
       },
       remove: async (id) => calls.push(["tabs.remove", id]),
       goBack: async (id) => calls.push(["tabs.goBack", id]),
+      goForward: async (id) => calls.push(["tabs.goForward", id]),
+      reload: async (id) => calls.push(["tabs.reload", id]),
       ungroup: async (ids) => {
         calls.push(["tabs.ungroup", ids]);
         for (const t of [].concat(ids)) groups.delete(t);
@@ -80,13 +84,17 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
     declarativeNetRequest: { updateSessionRules: async (o) => calls.push(["dnr", o]) },
     scripting: {
       executeScript: async (o) => {
-        calls.push(["executeScript", o.files ? o.files.join(",") : o.world || "isolated", o.target.tabId]);
-        if (o.files || o.world === "MAIN") return [{}];
         const src = String(o.func);
+        // The signs (signs.js) are drawn on their own: "signs", so a test that counts what ran in the page can leave them out.
+        const signs = (o.files && o.files.join(",") === "src/signs.js") || (!o.files && src.includes("TafsSigns") && !src.includes("TafsPage"));
+        calls.push(["executeScript", signs ? "signs" : o.files ? o.files.join(",") : o.world || "isolated", o.target.tabId]);
+        if (o.files || o.world === "MAIN") return [{}];
         if (src.includes("TafsPage.read")) {
           calls.push(["page", "read"]);
           return [{ result: pageFor(tabs.get(o.target.tabId)) }];
         }
+        // A page with the signs loaded points where it's asked (page.js `aim`); a test that wants an aim to fail says so itself.
+        if (src.includes("TafsPage.aim")) return [{ result: { ok: true } }];
         if (src.includes("TafsPage.act")) {
           calls.push(["page", "act start"]);
           if (c.gate) await c.gate;
@@ -101,12 +109,30 @@ function fakeChrome({ page = null, ownerWindow = null, groupFails = false, creat
 }
 
 const sleep = async () => {};
+// What ran in a page, the signs (signs.js) left out: they're drawn, never read or acted.
+const ranInPage = (x) => x[0] === "executeScript" && x[1] !== "signs";
 
 function step(extra) {
   return { id: "op", run: "run_1", taf: "Rae", grant: "g_1", sites: ["shop.example"], sites_signed: SHOP, op: "open", url: "https://shop.example/", ...extra };
 }
 
 const runner = (c) => new Runner({ chrome: c, sleep, paired: () => paired });
+
+/** A tab's fence rule ids, from the first one Chrome was given: FENCE_RULES of them, one per place in `Runner.fence`. */
+const fenceIdsFrom = (ids) => Array.from({ length: FENCE_RULES }, (_, i) => Math.min(...ids) + i);
+
+/** The fence Chrome is given for a tab, as [action, requestDomains or regexFilter or null], by priority then id. */
+const fenceShape = (rules) => rules.slice().sort((a, b) => a.priority - b.priority || a.id - b.id).map((x) => [x.priority, x.action.type, x.condition.requestDomains || x.condition.regexFilter || null]);
+const FENCE = (granted, allowed = []) => [
+  [1, "block", null],
+  ...(granted.length ? [[2, "allow", granted]] : []),
+  [3, "block", [...SENSITIVE.sites]],
+  ...SENSITIVE_LABELS_URLS.map((p) => [3, "block", p]),
+  ...(allowed.length ? [[4, "allow", allowed]] : []),
+  [5, "block", [...NEVER_OPENED]],
+  [5, "block", "^http://"],
+  [5, "block", "^https?://[^/?#]*@"],
+];
 
 test("a run opens in a background window of its own, grouped and named, and reads the page", async () => {
   const c = fakeChrome();
@@ -116,8 +142,8 @@ test("a run opens in a background window of its own, grouped and named, and read
   const win = c.calls.find((x) => x[0] === "windows.create");
   assert.equal(win[1].focused, false, "never in front of the owner's window");
   assert.ok(c.calls.some((x) => x[0] === "tabGroups.update" && x[2].title === "tafs · Rae"));
-  assert.ok(c.calls.some((x) => x[0] === "executeScript" && x[1] === "MAIN"), "the dialog guard goes in");
-  assert.ok(c.calls.some((x) => x[0] === "executeScript" && x[1] === "src/mask.js,src/page.js"));
+  assert.ok(c.calls.some((x) => ranInPage(x) && x[1] === "MAIN"), "the dialog guard goes in");
+  assert.ok(c.calls.some((x) => ranInPage(x) && x[1] === "src/mask.js,src/signs.js,src/page.js"));
 });
 
 test("the runner never lists the owner's tabs", async () => {
@@ -147,6 +173,8 @@ test("a navigation in a run's tab that leaves its sites is stopped, and a pop-up
   const r = runner(c);
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
+  // The run's own act heads off its sites (the person's own address is theirs: the fence's stop gives them the tab, below).
+  r.runs.get("run_1").stepping = tab;
   c.listeners.before({ tabId: tab, frameId: 0, url: "https://evil.example/steal" });
   assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "about:blank"));
   c.listeners.created({ sourceTabId: tab, tabId: 555, url: "https://evil.example/" });
@@ -160,25 +188,79 @@ test("an act needs the read it was planned from, and the guard holds before the 
   const r = runner(c);
   const opened = await r.handle(step());
   assert.equal((await r.handle(step({ op: "act", read_id: "rd_unknown", act: { kind: "click", ref: "c1" } }))).error.code, "page_changed");
-  const before = c.calls.filter((x) => x[0] === "executeScript").length;
+  const before = c.calls.filter((x) => ranInPage(x)).length;
   assert.equal((await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "click", ref: "c2" } }))).error.code, "payment_step");
-  assert.equal(c.calls.filter((x) => x[0] === "executeScript").length, before, "nothing ran in the page");
+  assert.equal(c.calls.filter((x) => ranInPage(x)).length, before, "nothing ran in the page");
   assert.equal((await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "fill", ref: "f1", sealed: "sec_1" } }))).error.code, "secret_field", "the extension keeps no saved sign-in to fill");
 });
 
-test("back goes where the tab was and reads the page there; nothing runs in the page before it", async () => {
+/** The page [url] committed in tab [tab], as Chrome says it once a navigation lands. */
+const commit = (c, tab, url) => {
+  c.tabsMap.set(tab, url);
+  c.listeners.committed({ tabId: tab, frameId: 0, url });
+};
+
+/** A page the run's own act took tab [tab] to: committed while the act waits for it (`stepping`), as Chrome says it then. */
+const runCommit = (r, c, tab, url, run = "run_1") => {
+  const held = r.runs.get(run);
+  held.stepping = tab;
+  commit(c, tab, url);
+  held.stepping = null;
+};
+
+test("back goes to the page before the run's last in its own tab and reads it there; nothing runs in the page before it", async () => {
   const c = fakeChrome();
   const r = runner(c);
-  const opened = await r.handle(step());
-  const scripts = c.calls.filter((x) => x[0] === "executeScript").length;
-  const out = await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "back" } }));
-  assert.ok(out.page, "the page after is read");
+  await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
+  runCommit(r, c, tab, "https://shop.example/");
+  // The taf's own click took the tab to a second page.
+  runCommit(r, c, tab, "https://shop.example/p2");
+  const opened = await r.handle(step({ id: "op2", op: "read" }));
+  // Chrome's back lands where it should.
+  c.tabs.goBack = async (id) => {
+    c.calls.push(["tabs.goBack", id]);
+    c.tabsMap.set(id, "https://shop.example/");
+  };
+  const scripts = c.calls.filter((x) => ranInPage(x)).length;
+  const out = await r.handle(step({ id: "op3", op: "act", read_id: opened.page.read_id, act: { kind: "back" } }));
+  assert.ok(out.page, JSON.stringify(out));
+  assert.equal(out.page.url, "https://shop.example/");
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.goBack"), [["tabs.goBack", tab]]);
-  const ran = c.calls.slice(c.calls.findIndex((x) => x[0] === "tabs.goBack")).filter((x) => x[0] === "executeScript").length;
-  assert.equal(c.calls.filter((x) => x[0] === "executeScript").length - scripts, ran, "only the read after, no act in the page");
-  assert.equal((await r.handle(step({ op: "act", read_id: out.page.read_id, act: { kind: "back", ref: "c1" } }))).error.code, "bad_step");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/" && c.calls.indexOf(x) > c.calls.findIndex((y) => y[0] === "tabs.goBack")), "nothing loaded: Chrome's back was right");
+  const ran = c.calls.slice(c.calls.findIndex((x) => x[0] === "tabs.goBack")).filter((x) => ranInPage(x)).length;
+  assert.equal(c.calls.filter((x) => ranInPage(x)).length - scripts, ran, "only the read after, no act in the page");
+  assert.equal((await r.handle(step({ id: "op4", op: "act", read_id: out.page.read_id, act: { kind: "back", ref: "c1" } }))).error.code, "bad_step");
+  // Back at the run's first page there: nothing before it is the run's.
+  assert.equal((await r.handle(step({ id: "op5", op: "act", read_id: out.page.read_id, act: { kind: "back" } }))).error.code, "no_back");
 });
+
+// The harness's finding: after the taf's own click, Chrome's back does nothing (no person's gesture made that entry) and the step
+// still answered ok.
+test("in a run's own tab, a back Chrome skips loads the page before the taf's click instead; with none before, no_back", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  const first = await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  assert.equal((await r.handle(step({ id: "op1", op: "act", read_id: first.page.read_id, act: { kind: "back" } }))).error.code, "no_back", "nothing before the run's first page");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.goBack"), "nothing moved");
+  runCommit(r, c, tab, "https://shop.example/");
+  runCommit(r, c, tab, "https://shop.example/p2");
+  const read = await r.handle(step({ id: "op2", op: "read" }));
+  // Chrome's back goes nowhere: the tab still shows p2.
+  const before = c.calls.length;
+  const out = await r.handle(step({ id: "op3", op: "act", read_id: read.page.read_id, act: { kind: "back" } }));
+  assert.ok(out.page, JSON.stringify(out));
+  assert.equal(out.page.url, "https://shop.example/", "the page before the click");
+  const now = c.calls.slice(before);
+  const back = now.findIndex((x) => x[0] === "tabs.goBack");
+  const load = now.findIndex((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "https://shop.example/");
+  assert.ok(back >= 0 && load > back, "Chrome's back first, then the page loaded");
+  // Its own commit of the page it went back to isn't a new page of the run's: one more back has nothing before it.
+  runCommit(r, c, tab, "https://shop.example/");
+  assert.equal((await r.handle(step({ id: "op4", op: "act", read_id: out.page.read_id, act: { kind: "back" } }))).error.code, "no_back");
+});
+
 
 test("the panel's head goes to a live run's tab and focuses its window; nothing else, and no run it doesn't hold", async () => {
   const c = fakeChrome();
@@ -187,7 +269,8 @@ test("the panel's head goes to a live run's tab and focuses its window; nothing 
   const tab = [...c.tabsMap.keys()][0];
   const before = c.calls.length;
   assert.deepEqual(await r.goTo("run_1"), {});
-  const made = c.calls.slice(before);
+  // The signs a run's own sync draws (signs.js) aren't the head's doing.
+  const made = c.calls.slice(before).filter((x) => !(x[0] === "executeScript" && x[1] === "signs"));
   assert.deepEqual(made.find((x) => x[0] === "tabs.update"), ["tabs.update", tab, { active: true }]);
   assert.ok(made.every((x) => x[0] === "tabs.update" || x[0] === "windows.update"), "no read, no act");
   assert.deepEqual(await r.goTo("run_9"), { error: "no_run" });
@@ -383,17 +466,16 @@ test("a run's tab is fenced by Chrome's own rules before it loads: only its site
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
   const [, rules] = c.calls.find((x) => x[0] === "dnr");
-  const byPriority = Object.fromEntries(rules.addRules.map((x) => [x.priority, x]));
-  assert.deepEqual(byPriority[1].condition, { tabIds: [tab], resourceTypes: ["main_frame", "sub_frame"] });
-  assert.equal(byPriority[1].action.type, "block");
-  assert.deepEqual(byPriority[2].condition.requestDomains, ["shop.example"]);
-  assert.equal(byPriority[2].action.type, "allow");
-  assert.equal(byPriority[3].condition.regexFilter, "^http://");
+  assert.deepEqual(fenceShape(rules.addRules), FENCE(["shop.example"]));
+  for (const x of rules.addRules) {
+    assert.deepEqual(x.condition.tabIds, [tab]);
+    assert.deepEqual(x.condition.resourceTypes, ["main_frame", "sub_frame"]);
+  }
   const fenced = c.calls.findIndex((x) => x[0] === "dnr");
   const loaded = c.calls.findIndex((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/");
   assert.ok(fenced < loaded, "fenced before the run's page loads");
   await r.stop("run_1");
-  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, rules.addRules.map((x) => x.id));
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, fenceIdsFrom(rules.addRules.map((x) => x.id)));
 });
 
 test("a run's sites are the phone's signed list for the grant, never planque's word, and never grow", async () => {
@@ -460,11 +542,12 @@ test("a run's steps never overlap: the next waits for the one running", async ()
   c.gate = null;
 });
 
-test("a page Chrome restores from its cache off the run's sites is sent to a blank page and recorded", async () => {
+test("a page off the run's sites that the run's own work commits in its own tab is sent to a blank page and recorded", async () => {
   const c = fakeChrome();
   const r = runner(c);
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
+  r.runs.get("run_1").stepping = tab;
   c.listeners.committed({ tabId: tab, frameId: 0, url: "https://evil.example/restored" });
   assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "about:blank"));
   assert.equal(r.state()[0].steps.at(-1).error, "site_not_listed");
@@ -472,11 +555,29 @@ test("a page Chrome restores from its cache off the run's sites is sent to a bla
   assert.equal(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url === "about:blank").length, 1, "only the main frame");
 });
 
+// The person's own Back in the run's own tab restores a page off its sites from Chrome's cache: it's their move, so the tab is theirs,
+// as it is, with nothing sent to a blank page.
+test("a page Chrome restores from its cache off the run's sites on the person's Back gives the run's own tab to them, unmoved", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  const before = c.calls.length;
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "https://evil.example/restored", transitionType: "link", transitionQualifiers: ["forward_back"] });
+  await new Promise((done) => setTimeout(done, 0));
+  assert.ok(!c.calls.slice(before).some((x) => x[0] === "tabs.update" && x[2].url), "nothing loaded in their tab");
+  assert.equal(r.tabRun.has(tab), false, "the run forgets it");
+  assert.ok(!r.state()[0].steps.some((x) => x.op === "navigate"), "the person's move is none of the run's steps");
+  assert.equal(r.state()[0].site, "shop.example", "its site is still the run's page's");
+  assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
+});
+
 test("the run's own blank page is never refused: no loop, and the page the step opens loads", async () => {
   const c = fakeChrome();
   const r = runner(c);
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
+  r.runs.get("run_1").stepping = tab; // the run's own work, as an act waiting for its page
   const blanks = () => c.calls.filter((x) => x[0] === "tabs.update" && x[2].url === "about:blank").length;
   const before = blanks();
   // The window opens on about:blank, and a refused move is sent there: neither is a move to refuse.
@@ -522,9 +623,9 @@ test("on a checkout page a taf clicks nothing, and a dialog the page raised stop
   const r = runner(c);
   const opened = await r.handle(step({ url: "https://shop.example/basket" }));
   assert.deepEqual(opened.page.checkout, checkout, "the checkout goes up as read");
-  const before = c.calls.filter((x) => x[0] === "executeScript").length;
+  const before = c.calls.filter((x) => ranInPage(x)).length;
   assert.equal((await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }))).error.code, "payment_step", "even a control that doesn't pay");
-  assert.equal(c.calls.filter((x) => x[0] === "executeScript").length, before, "nothing ran in the page");
+  assert.equal(c.calls.filter((x) => ranInPage(x)).length, before, "nothing ran in the page");
   // A dialog the page raised: the next act is refused by the page, the code goes up as it is, and it counts as a failure.
   const d = fakeChrome({ page: { read_id: "rd_y", url: "https://shop.example/", title: "t", text: "", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [], dialog: { kind: "confirm", text: "Delete everything?" } } });
   const r2 = runner(d);
@@ -623,13 +724,13 @@ test("a fenced tab's rule ids are small whatever the tab id is, a rule's id neve
   await r.handle(step());
   c.setNextTab(1_900_000_000);
   await r.handle(step({ run: "run_2", id: "op2" }));
-  assert.equal(added.length, 6);
+  assert.equal(added.length, 2 * (FENCE_RULES - 1), "a tab's rules but the allowance's, with no sensitive site allowed (FENCE_RULES ids kept for each)");
   assert.ok(added.every((id) => Number.isInteger(id) && id >= 1 && id <= 2 ** 31 - 1), "every rule id is a valid int32");
-  assert.equal(new Set(added).size, 6, "no id repeated across two tabs");
+  assert.equal(new Set(added).size, 2 * (FENCE_RULES - 1), "no id repeated across two tabs");
   const removals = c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules);
   assert.deepEqual(removals[0][1].removeRuleIds, [77, 78], "rules an earlier service worker left are cleared first");
   await r.stop("run_1");
-  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, added.slice(0, 3), "its own rules, not the other run's");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, fenceIdsFrom(added.slice(0, FENCE_RULES - 1)), "its own rules, not the other run's");
 });
 
 test("a window that can't be set up (the fence refuses) is closed, not left open and blank, and the step says why", async () => {
@@ -932,7 +1033,7 @@ test("a taf keeps only its latest finished run's tabs: its next run closes the e
   await r.stop("run_1");
   assert.deepEqual(removed(), [], "the finished run's tabs stay");
   // Another taf's run: the first taf's tabs are not its to close.
-  await r.handle(step({ run: "run_b", id: "opb", taf: "Sam" }));
+  await r.handle(step({ run: "run_b", id: "opb", taf: "Sam", grant: "g_2", sites_signed: await signedSites(["shop.example"], "g_2") }));
   assert.deepEqual(removed(), [], "another taf's tabs stay");
   await r.stop("run_b");
   // The first taf runs again: its earlier tabs close as the new one opens, and nothing of Sam's.
@@ -941,7 +1042,7 @@ test("a taf keeps only its latest finished run's tabs: its next run closes the e
   assert.equal(Object.keys(stored.done).length, 1, "only Sam's is kept now");
   // A new worker finds what was kept.
   const d = new Runner({ chrome: c, sleep, paired: () => paired, doneStore });
-  await d.closeDone("Sam");
+  await d.closeDone("grant:g_2");
   assert.equal(removed().length, 2, "a restarted worker closes what the last one kept");
   r.done = null; // this runner read the store before the other one closed Sam's
   await r.stop("run_3");
@@ -995,7 +1096,7 @@ test("a person watching each run of a taf doesn't collect one done group per run
   }
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]), [], "nothing the person is looking at closes");
   assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.ungroup").flatMap((x) => x[1]), tabs.slice(0, 2), "the two earlier runs' tabs leave their groups");
-  assert.deepEqual(Object.keys(await r.doneTabs()), ["Rae"], "only the latest run is kept as the taf's");
+  assert.deepEqual(Object.keys(await r.doneTabs()), ["grant:g_1"], "only the latest run is kept as the taf's, by its grant");
 });
 
 test("unpairing closes a kept tab the person has moved too", async () => {
@@ -1021,7 +1122,7 @@ test("while a run lives, the tab in front of each window shows the bar, for its 
     if (src.includes("TafsBar.hide")) bars.push(["hide", o.target.tabId]);
     return exec(o);
   };
-  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired, say: (key, sub) => (key === "working" ? sub[0] + " is working" : key === "bar_paused" ? sub[0] + " is paused" : "") });
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired, say: (key, sub) => (key === "working" ? sub[0] + " is working" : key === "working_here" ? sub[0] + " is working here" : key === "bar_paused" ? sub[0] + " is paused" : "") });
   await r.handle(step());
   const runTab = [...c.tabsMap.keys()][0];
   // Three windows: the run's (its tab in front), the person's on a page of their own, and one on Chrome's own page.
@@ -1030,7 +1131,7 @@ test("while a run lives, the tab in front of each window shows the bar, for its 
   bars.length = 0;
   await r.queueBars();
   const shown = bars.filter((b) => b[0] === "show");
-  assert.deepEqual(shown.map((b) => [b[1], b[2].run, b[2].here, b[2].words]), [[runTab, "run_1", true, "Rae is working"], [501, "run_1", false, "Rae is working"]]);
+  assert.deepEqual(shown.map((b) => [b[1], b[2].run, b[2].here, b[2].words]), [[runTab, "run_1", true, "Rae is working here"], [501, "run_1", false, "Rae is working"]], "where it works, it says so");
   assert.ok(!bars.some((b) => b[1] === 502), "Chrome's own pages are left alone");
   assert.deepEqual(shown[0][2].labels, { go: "Go to its tab", pause: "Pause", resume: "Resume", stop: "Stop" });
   // Paused: the bar says so, and offers Resume.
@@ -1092,7 +1193,7 @@ test("an act on a ref is outlined first, after its picture, for a moment; back a
   const run = c.scripting.executeScript;
   c.scripting.executeScript = async (o) => {
     const src = String(o.func || "");
-    if (src.includes("TafsPage.outline")) {
+    if (src.includes("TafsPage.aim")) {
       order.push(["outline", ...o.args]);
       return [{ result: { ok: true } }];
     }
@@ -1105,7 +1206,7 @@ test("an act on a ref is outlined first, after its picture, for a moment; back a
   const opened = await r.handle(step());
   assert.ok(opened.page, JSON.stringify(opened));
   await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "click", ref: "c1" } }));
-  assert.deepEqual(order, [["picture"], ["outline", "c1", opened.page.read_id], ["act", "click"]]);
+  assert.deepEqual(order, [["picture"], ["outline", "c1", opened.page.read_id, ""], ["act", "click"]], "the pointer goes to it, outlined, after the picture");
   assert.ok(waited.includes(OUTLINE_MS), "a moment to see it");
   order.length = 0;
   const now = r.runs.get("run_1").pages.keys();
@@ -1122,8 +1223,9 @@ test("a Pause, the person's own input or a Stop while the outline shows holds th
     const exec = c.scripting.executeScript;
     c.scripting.executeScript = async (o) => {
       const src = String(o.func || "");
-      if (src.includes("TafsPage.outline")) return [{ result: { ok: true } }];
+      if (src.includes("TafsPage.aim")) return [{ result: { ok: true } }];
       if (src.includes("TafsPage.unoutline")) order.push("unoutline");
+      if (src.includes("TafsSigns.off")) order.push("signs off");
       if (src.includes("TafsPage.act")) order.push("act");
       return exec(o);
     };
@@ -1139,6 +1241,66 @@ test("a Pause, the person's own input or a Stop while the outline shows holds th
     assert.equal(out.error && out.error.code, code, what);
     assert.ok(!order.includes("act"), what + ": the page's act is never called");
     if (what !== "stop") assert.ok(order.includes("unoutline"), what + ": the outline is taken away");
+    assert.ok(order.includes("signs off"), what + ": the glow and the pointer go with it");
+  }
+});
+
+test("a worker that starts again sweeps the bar and signs only from tabs drawn in before, never a tab no run touched", async () => {
+  // A first worker draws in its run's tab; the list of drawn tabs is kept (storage.session in the extension).
+  let kept = [];
+  const drawnStore = { get: async () => kept, set: async (ids) => { kept = ids; } };
+  const c1 = fakeChrome();
+  const r1 = new Runner({ chrome: c1, sleep, paired: () => paired, drawnStore });
+  await r1.handle(step());
+  const runTab = r1.runs.get("run_1").tab;
+  assert.ok(kept.includes(runTab), "the run's tab is kept as drawn in: " + JSON.stringify(kept));
+  // A tab the person has open (a bank, say) that no run touched is never in the list.
+  const theirs = 777;
+  assert.ok(!kept.includes(theirs));
+  // A new worker: it holds no run, and sweeps the kept tabs alone.
+  const c2 = fakeChrome();
+  const swept = [];
+  const exec = c2.scripting.executeScript;
+  c2.scripting.executeScript = async (o) => {
+    swept.push(o.target.tabId);
+    return exec(o);
+  };
+  const r2 = new Runner({ chrome: c2, sleep, paired: () => paired, drawnStore });
+  const before = [...kept];
+  await r2.sweepDrawn();
+  assert.deepEqual([...new Set(swept)].sort(), [...before].sort(), "only kept tabs are reached");
+  assert.ok(swept.includes(runTab), "the earlier run's tab is swept");
+  assert.ok(!swept.includes(theirs), "a tab never drawn in gets nothing run in it");
+  assert.deepEqual(kept, [], "the list is emptied after the sweep");
+  // With nothing kept, a sweep runs nothing in any page.
+  swept.length = 0;
+  await r2.sweepDrawn();
+  assert.deepEqual(swept, []);
+});
+
+test("an act whose pointer can't aim is refused, failing closed: the page's act is never called", async () => {
+  // Without the aim there's no check that the act lands where the pointer is (`sameSpot`): a missing TafsSigns, a page
+  // that doesn't answer, or an aim refused in its own words all hold the act.
+  for (const [aimed, code] of [[null, "page_unresponsive"], [{ ok: false }, "page_unresponsive"], [{ ok: false, code: "page_changed" }, "page_changed"], ["throw", "page_unresponsive"]]) {
+    const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [] } });
+    const order = [];
+    const exec = c.scripting.executeScript;
+    c.scripting.executeScript = async (o) => {
+      const src = String(o.func || "");
+      if (src.includes("TafsPage.aim")) {
+        if (aimed === "throw") throw new Error("no TafsSigns");
+        return [{ result: aimed }];
+      }
+      if (src.includes("TafsSigns.off")) order.push("signs off");
+      if (src.includes("TafsPage.act")) order.push("act");
+      return exec(o);
+    };
+    const r = new Runner({ chrome: c, paired: () => paired, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()) });
+    await r.handle(step());
+    const out = await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }));
+    assert.equal(out.error && out.error.code, code, JSON.stringify(aimed));
+    assert.ok(!order.includes("act"), JSON.stringify(aimed) + ": the page's act is never called");
+    assert.ok(order.includes("signs off"), JSON.stringify(aimed) + ": the signs go");
   }
 });
 
@@ -1310,7 +1472,7 @@ function panelPort(windowId) {
  */
 async function joining({ tab = {}, consent = true, off = [], mark = true, clock = { at: 1_000_000 }, page = null } = {}) {
   const c = fakeChrome({ ownerWindow: OWNER_WINDOW, page });
-  const theirs = { id: THEIRS, windowId: 3, active: true, incognito: false, pinned: false, groupId: -1, url: "https://shop.example/basket", ...tab };
+  const theirs = { id: THEIRS, windowId: 3, active: true, incognito: false, pinned: false, groupId: -1, url: "https://shop.example/", ...tab };
   c.tabsMap.set(THEIRS, theirs.url);
   c.looked = []; // every tab the runner asked Chrome about
   const get = c.tabs.get;
@@ -1353,16 +1515,17 @@ test("a run the person started from the side panel works in the tab in front: it
   const grouped = c.calls.findIndex((x) => x[0] === "tabs.group");
   assert.ok(fenced >= 0 && fenced < grouped, "fenced before anything else");
   assert.deepEqual(c.calls[grouped][1], { tabIds: [THEIRS], createProperties: { windowId: 3 } });
-  assert.deepEqual(c.calls.find((x) => x[0] === "tabs.update" && x[2].url), ["tabs.update", THEIRS, { url: "https://shop.example/", active: true }], "Chrome follows the action");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url), "read where it is, never loaded again");
+  assert.deepEqual(c.calls.find((x) => x[0] === "tabs.update"), ["tabs.update", THEIRS, { active: true }], "Chrome follows the action");
   assert.ok(!c.calls.some((x) => x[0] === "windows.update"), "never raises or focuses a window");
   // What's read goes through the same read as any run's tab: mask.js and page.js, then TafsPage.read, in that tab.
-  assert.ok(c.calls.some((x) => x[0] === "executeScript" && x[1] === "src/mask.js,src/page.js" && x[2] === THEIRS));
+  assert.ok(c.calls.some((x) => ranInPage(x) && x[1] === "src/mask.js,src/signs.js,src/page.js" && x[2] === THEIRS));
   assert.ok(c.calls.some((x) => x[0] === "page" && x[1] === "read"));
   assert.deepEqual(r.state()[0].tabs, [THEIRS]);
 });
 
 test("the tab in front already at the asked address is read in place, not loaded again", async () => {
-  const { c, r } = await joining({ tab: { url: "https://shop.example/" } });
+  const { c, r } = await joining();
   assert.ok((await r.handle(started())).page);
   assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url), "not loaded again");
   assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].active === true));
@@ -1443,9 +1606,10 @@ test("a navigation in a joined tab that leaves its sites is stopped, and a pop-u
   const { c, r } = await joining();
   await r.handle(started());
   const rules = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules;
-  assert.deepEqual(rules.map((x) => [x.action.type, x.condition.tabIds, x.condition.requestDomains || x.condition.regexFilter || null]), [["block", [THEIRS], null], ["allow", [THEIRS], ["shop.example"]], ["block", [THEIRS], "^http://"]], "the same fence as a run's own tab");
+  assert.deepEqual(fenceShape(rules), FENCE(["shop.example"]), "the same fence as a run's own tab");
+  assert.ok(rules.every((x) => x.condition.tabIds.join() === String(THEIRS)));
   c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://evil.example/steal" });
-  assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url === "about:blank"));
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url), "the fence blocks it; the person's page stays");
   c.listeners.created({ sourceTabId: THEIRS, tabId: 555, url: "https://evil.example/" });
   assert.ok(c.calls.some((x) => x[0] === "tabs.remove" && x[1] === 555));
   c.listeners.created({ sourceTabId: THEIRS, tabId: 556, url: "https://shop.example/help" });
@@ -1460,10 +1624,10 @@ test("every step checks the joined tab again: a page it may no longer show is re
   const first = await r.handle(started());
   // The person switched the site off in the panel since.
   off.push("shop.example");
-  const scripts = c.calls.filter((x) => x[0] === "executeScript").length;
+  const scripts = c.calls.filter((x) => ranInPage(x)).length;
   assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "site_blocked");
   assert.equal((await r.handle(started({ id: "op3", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }))).error.code, "site_blocked");
-  assert.equal(c.calls.filter((x) => x[0] === "executeScript").length, scripts, "nothing ran in their tab");
+  assert.equal(c.calls.filter((x) => ranInPage(x)).length, scripts, "nothing ran in their tab");
   // The person's tab moved off the run's sites (a page the fence let through before the grant changed, say): refused too.
   off.length = 0;
   c.tabsMap.set(THEIRS, "https://elsewhere.example/");
@@ -1495,7 +1659,7 @@ test("Stop hands the tab back: out of the group, unfenced, forgotten by the run,
   const rules = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules.map((x) => x.id);
   await r.stop("run_1", false, "person");
   assert.ok(c.calls.some((x) => x[0] === "tabs.ungroup" && x[1].includes(THEIRS)), "1. it leaves the group");
-  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).at(-1)[1].removeRuleIds, rules, "2. its fence rules go");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).at(-1)[1].removeRuleIds, fenceIdsFrom(rules), "2. its fence rules go");
   assert.equal(r.tabRun.has(THEIRS), false, "3. the run forgets it");
   assert.ok(c.calls.some((x) => x[0] === "bar.hide" && x[1] === THEIRS), "4. its bar goes");
   assert.ok(!c.calls.some((x) => x[0] === "tabs.remove"), "5. it stays open");
@@ -1505,7 +1669,7 @@ test("Stop hands the tab back: out of the group, unfenced, forgotten by the run,
   c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/" });
   r.ownerInput(THEIRS);
   assert.deepEqual(c.calls.slice(before), [], "the late step, their navigation and their input are theirs again");
-  assert.deepEqual(await r.doneTabs(), { Rae: { tabs: [], window: null, group: 7 } }, "not kept as the taf's");
+  assert.deepEqual(await r.doneTabs(), { "grant:g_1": { name: "Rae", tabs: [], window: null, group: 7 } }, "not kept as the taf's");
 });
 
 test("a joined tab is never closed by the extension: not at unpairing, an idle end, the turn over, the close step, planque's stop, nor the taf's next run", async () => {
@@ -1562,7 +1726,7 @@ test("one group per taf per window: the taf's done group there works again, and 
   // A group worked in again is no consent for the tabs left in it: the old one is the run's no more, and nothing runs there.
   assert.equal(r.tabRun.has(old), false);
   assert.deepEqual(r.state().find((x) => x.id === "run_2").tabs, [THEIRS]);
-  assert.ok(!made.some((x) => x[0] === "executeScript" && x[2] === old), "nothing runs in the old tab");
+  assert.ok(!made.some((x) => ranInPage(x) && x[2] === old), "nothing runs in the old tab");
   assert.ok(made.some((x) => x[0] === "tabs.remove" && x[1].includes(old)), "the old tab, still where its run left it, closes as before");
 });
 
@@ -1571,7 +1735,9 @@ test("Chrome follows the run only while the panel is open in its window", async 
   await r.handle(started());
   port.close();
   await r.handle(started({ id: "op2", url: "https://shop.example/next" }));
-  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url).at(-1), ["tabs.update", THEIRS, { url: "https://shop.example/next" }], "the panel closed: no tab is brought to the front");
+  const own = r.runs.get("run_1").tab;
+  assert.notEqual(own, THEIRS, "an open elsewhere goes to a tab of the run's own");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url).at(-1), ["tabs.update", own, { url: "https://shop.example/next" }], "the panel closed: no tab is brought to the front");
 });
 
 // The security read (02:30): planque reuses a taf's run for its next call whatever agent run makes it, so a schedule or a phone
@@ -1587,7 +1753,7 @@ test("a step of another agent run never works in the person's joined tab: it goe
     assert.equal(r.runs.get("run_1").joined.size, 0, "given back");
     assert.equal(r.tabRun.has(THEIRS), false, "forgotten");
     // Only the bar's hide reaches their tab: no page script, no read, no act.
-    assert.ok(!now.some((x) => x[0] === "executeScript" && x[2] === THEIRS && x[1] !== "isolated"), "no page script in their tab");
+    assert.ok(!now.some((x) => ranInPage(x) && x[2] === THEIRS && x[1] !== "isolated"), "no page script in their tab");
     assert.ok(!now.some((x) => x[0] === "page"), "nothing read or acted on");
     assert.ok(!now.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(THEIRS)), "still open");
     if (!Object.keys(other).length) {
@@ -1601,4 +1767,1011 @@ test("a step of another agent run never works in the person's joined tab: it goe
   assert.ok(opened.page, "opened in a tab of its own");
   assert.notEqual(r.runs.get("run_1").tab, THEIRS);
   assert.equal(r.runs.get("run_1").joined.size, 0);
+});
+
+// The owner's 0.2.13 walk-through: a taf asked to read "this page" opened the site's home first, and the person's own article was
+// navigated away. The person's tab is read where it is, and never sent elsewhere.
+test("an open elsewhere never navigates the person's joined tab", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "joined, read in place");
+  const out = await r.handle(started({ id: "op2", url: "https://shop.example/other" }));
+  assert.ok(out.page, JSON.stringify(out));
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url), "no tabs.update with a url on their tab, ever");
+  assert.equal(c.tabsMap.get(THEIRS), "https://shop.example/", "their tab still shows its page");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(THEIRS)), "nor closed");
+});
+
+test("the open goes to a tab of the run's own in the same group", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  await r.handle(started({ id: "op2", url: "https://shop.example/other" }));
+  const own = r.runs.get("run_1").tab;
+  assert.notEqual(own, THEIRS);
+  assert.deepEqual(c.calls.find((x) => x[0] === "tabs.create")[1], { windowId: 3, url: "about:blank", active: false });
+  const fenced = c.calls.findIndex((x) => x[0] === "dnr" && x[1].addRules && x[1].addRules[0].condition.tabIds[0] === own);
+  const loaded = c.calls.findIndex((x) => x[0] === "tabs.update" && x[1] === own && x[2].url);
+  assert.ok(fenced >= 0 && fenced < loaded, "fenced before it loads");
+  assert.ok(c.calls.some((x) => x[0] === "tabs.group" && x[1].groupId === 7 && x[1].tabIds[0] === own), "in the run's group");
+  assert.deepEqual(c.calls[loaded], ["tabs.update", own, { url: "https://shop.example/other", active: true }], "Chrome follows to it, as before");
+  // A read now reads the run's own tab; their tab is still the run's, read again only by an open of its own address.
+  const scripts = c.calls.filter((x) => ranInPage(x) && x[2] === THEIRS).length;
+  assert.ok((await r.handle(started({ id: "op3", op: "read" }))).page);
+  assert.equal(c.calls.filter((x) => ranInPage(x) && x[2] === THEIRS).length, scripts, "the read is the run's own tab's");
+});
+
+test("an open of the joined tab's own address reads it in place, even from a tab of the run's own", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  // A read of the joined tab reads it where it is.
+  const read = await r.handle(started({ id: "op_r", op: "read" }));
+  assert.ok(read.page);
+  assert.ok(c.calls.some((x) => ranInPage(x) && x[1] === "src/mask.js,src/signs.js,src/page.js" && x[2] === THEIRS));
+  await r.handle(started({ id: "op2", url: "https://shop.example/other" }));
+  assert.notEqual(r.runs.get("run_1").tab, THEIRS);
+  const before = c.calls.length;
+  const back = await r.handle(started({ id: "op3", url: "https://shop.example/" }));
+  assert.ok(back.page, JSON.stringify(back));
+  assert.equal(r.runs.get("run_1").tab, THEIRS, "the run is back on their tab");
+  const now = c.calls.slice(before);
+  assert.ok(!now.some((x) => x[0] === "tabs.update" && x[2].url), "nothing loaded again");
+  assert.ok(now.some((x) => x[0] === "page" && x[1] === "read"));
+  assert.ok(!now.some((x) => x[0] === "tabs.create"), "no further tab");
+});
+
+test("a first open of another address than the tab in front shows joins nothing: the run opens its own tab, theirs is untouched", async () => {
+  const { c, r } = await joining({ tab: { url: "https://shop.example/basket" } });
+  const out = await r.handle(started());
+  assert.ok(out.page);
+  assert.deepEqual(touched(c, THEIRS), [], "their tab isn't the run's, and nothing is done to it");
+  assert.equal(r.runs.get("run_1").joined.size, 0);
+  assert.deepEqual(c.calls.find((x) => x[0] === "tabs.create")[1], { windowId: 3, url: "about:blank", active: false });
+  assert.equal(c.tabsMap.get(THEIRS), "https://shop.example/basket");
+});
+
+// The owner's walk-through: two cards for one taf, the older paused, the newer working, each with its own Resume or Pause.
+test("a newer run of the taf ends an older run of it the person paused, as their Stop would; the newer takes nothing of it", async () => {
+  const said = [];
+  const { c, r } = await joining();
+  r.onRunState = (s) => said.push(s);
+  await r.handle(started());
+  r.pause("run_1");
+  // A schedule's run of the same taf (no agent_run): the paused run ends first, its tab handed back.
+  const before = c.calls.length;
+  const out = await r.handle(step({ run: "run_2", id: "op2" }));
+  assert.ok(out.page);
+  const old = r.runs.get("run_1");
+  assert.equal(old.stopped, true);
+  assert.deepEqual(old.steps.at(-1).by, "newer_run");
+  assert.deepEqual(said.map((s) => [s.run, s.state]), [["run_1", "paused"], ["run_1", "stopped"]], "planque hears it stopped");
+  const now = c.calls.slice(before);
+  const ungrouped = now.findIndex((x) => x[0] === "tabs.ungroup" && x[1].includes(THEIRS));
+  const made = now.findIndex((x) => x[0] === "tabs.create");
+  assert.ok(ungrouped >= 0 && ungrouped < made, "handed back before the newer run's first step");
+  assert.ok(now.some((x) => x[0] === "bar.hide" && x[1] === THEIRS), "its bar goes");
+  assert.ok(!now.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(THEIRS)), "still open");
+  assert.equal(r.tabRun.has(THEIRS), false, "forgotten");
+  const fresh = r.runs.get("run_2");
+  assert.equal(fresh.joined.size, 0, "the newer run doesn't inherit their tab");
+  assert.ok(![...fresh.tabs].includes(THEIRS));
+  assert.equal(fresh.agentRun, null, "nor the panel's mark");
+  assert.ok(!now.some((x) => ranInPage(x) && x[2] === THEIRS && x[1] !== "isolated"), "nothing runs in their tab");
+});
+
+test("a newer run leaves an older run of the taf that's working, and a paused run of another taf or another grant", async () => {
+  for (const [what, older, newer] of [
+    ["working", {}, {}],
+    ["another taf, paused", { pause: true }, { taf: "Bo" }],
+    ["another grant of a same-named taf, paused", { pause: true }, { grant: "g_2", sites_signed: await signedSites(["shop.example"], "g_2") }],
+  ]) {
+    const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+    const r = new Runner({ chrome: c, sleep, paired: () => paired });
+    await r.handle(step());
+    if (older.pause) r.pause("run_1");
+    await r.handle(step({ run: "run_2", id: "op2", ...newer }));
+    assert.equal(r.runs.get("run_1").stopped, false, what);
+    assert.ok(!r.runs.get("run_1").steps.some((s) => s.op === "stop"), what);
+  }
+});
+
+test("a joined tab still at the page it joined at has no back: no_back, and nothing moves", async () => {
+  const { c, r } = await joining();
+  const first = await r.handle(started());
+  const before = c.calls.length;
+  assert.equal((await r.handle(started({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "back" } }))).error.code, "no_back");
+  assert.ok(!c.calls.slice(before).some((x) => x[0] === "tabs.goBack" || (x[0] === "tabs.update" && x[2].url)), "the person's tab isn't moved");
+});
+
+// The security read: a back past the joined page must never let the taf read what the person had before, nor a page off the sites.
+test("the person closing a run's tab takes its fence rules with it, even once the run has let it go", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  const ids = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules.map((x) => x.id);
+  // A pop-up on its sites: fenced too.
+  c.listeners.created({ sourceTabId: tab, tabId: 556, url: "https://shop.example/help" });
+  await new Promise((go) => setImmediate(go));
+  const popup = c.calls.filter((x) => x[0] === "dnr" && x[1].addRules).at(-1)[1].addRules.map((x) => x.id);
+  c.listeners.removed(556);
+  await new Promise((go) => setImmediate(go));
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).at(-1)[1].removeRuleIds, fenceIdsFrom(popup), "the pop-up's rules go when it closes");
+  // Their last tab closed: its rules go, and the run ends as their Stop.
+  c.listeners.removed(tab);
+  await new Promise((go) => setImmediate(go));
+  assert.ok(c.calls.some((x) => x[0] === "dnr" && !x[1].addRules && x[1].removeRuleIds.join() === fenceIdsFrom(ids).join()), "its rules are removed");
+  assert.equal(r.fenceIds.size, 0, "no fence left");
+  assert.equal(r.runs.get("run_1").stopped, true);
+});
+
+test("unpairing removes every fence rule, those the runner knows and any left in Chrome", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  let rules = [];
+  c.declarativeNetRequest.getSessionRules = async () => rules;
+  c.declarativeNetRequest.updateSessionRules = async (o) => {
+    c.calls.push(["dnr", o]);
+    rules = rules.filter((x) => !(o.removeRuleIds || []).includes(x.id)).concat((o.addRules || []).map((x) => ({ id: x.id })));
+  };
+  const r = runner(c);
+  await r.handle(step());
+  // A rule Chrome kept that the runner lost track of (the leak the harness found).
+  rules.push({ id: 900 });
+  await r.stopAll();
+  assert.deepEqual(rules, [], "no session rule left");
+  assert.equal(r.fenceIds.size, 0);
+});
+
+test("a fence Chrome won't install fails closed: a further tab closes before it loads, a pop-up closes, and the person's tab is never moved", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  const update = c.declarativeNetRequest.updateSessionRules;
+  c.declarativeNetRequest.updateSessionRules = async (o) => {
+    if (o.addRules) throw new Error("rule limit reached");
+    return update(o);
+  };
+  const out = await r.handle(started({ id: "op2", url: "https://shop.example/other" }));
+  assert.equal(out.error && out.error.code, "browser_unavailable");
+  const made = c.calls.find((x) => x[0] === "tabs.create");
+  assert.ok(made, "a tab of the run's own was made");
+  const own = c.calls.filter((x) => x[0] === "tabs.remove").map((x) => [].concat(x[1])).flat();
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/other"), "nothing loaded unfenced");
+  assert.ok(own.length === 1 && own[0] !== THEIRS, "the unfenced blank tab closes; theirs never");
+  assert.equal(r.runs.get("run_1").tab, THEIRS, "the run is still on their tab");
+  assert.equal(c.tabsMap.get(THEIRS), "https://shop.example/");
+  // A pop-up the fence can't hold closes.
+  c.listeners.created({ sourceTabId: THEIRS, tabId: 557, url: "https://shop.example/help" });
+  await new Promise((go) => setImmediate(go));
+  assert.ok(c.calls.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(557)));
+  assert.equal(r.tabRun.has(557), false);
+});
+
+// The harness's finding: giving the person's tab back emptied the run's group, Chrome ended it, and the next open failed
+// (browser_unavailable) naming a group that was gone.
+test("after the person's tab goes back, the run's next open makes its group again and goes on", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  const dead = new Set();
+  const group = c.tabs.group;
+  c.tabs.group = async (o) => {
+    if (o.groupId != null && dead.has(o.groupId)) {
+      c.calls.push(["tabs.group", o]);
+      throw new Error("No group with id: " + o.groupId);
+    }
+    if (o.groupId == null) {
+      c.calls.push(["tabs.group", o]);
+      for (const t of o.tabIds) c.groupsMap.set(t, 8);
+      return 8;
+    }
+    return group(o);
+  };
+  // A step of another agent run: their tab goes back, the group empties, Chrome ends it.
+  await r.handle(started({ id: "op2", op: "read", agent_run: undefined }));
+  dead.add(7);
+  const out = await r.handle(started({ id: "op3", agent_run: undefined, url: "https://shop.example/other" }));
+  assert.ok(out.page, JSON.stringify(out));
+  const run = r.runs.get("run_1");
+  assert.equal(run.groupId, 8, "a new group");
+  assert.ok(c.calls.some((x) => x[0] === "tabGroups.update" && x[1] === 8 && x[2].title === "tafs · Rae" && x[2].color === "orange"), "named and coloured as the run's");
+  assert.equal(run.stopped, false);
+});
+
+test("a navigation in a joined tab off the run's sites is blocked by the fence and the person's page stays: never about:blank", async () => {
+  const { c, r } = await joining();
+  await r.handle(started());
+  c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://evil.example/steal" });
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === THEIRS && x[2].url), "no tabs.update with a url on their tab");
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "a blocked request leaves the tab the run's");
+  assert.ok(!r.runs.get("run_1").steps.some((x) => x.op === "navigate"), "not recorded here: a block in the run's own act is recorded once, by onErrorOccurred");
+});
+
+// The security read: a page off the run's sites that commits in a joined tab is mostly the person's own Back from Chrome's cache.
+// Moving the tab (a goBack) would take their tab another step: it's given back to them as it is.
+test("a joined tab that commits a page off the run's sites is given back as it is, never moved, and the run's next step there is page_changed", async () => {
+  for (const [what, extra] of [["the person's own Back (from Chrome's cache)", { transitionQualifiers: ["forward_back"] }], ["any other commit", {}]]) {
+    const { c, r } = await joining({ page: PLAIN });
+    const first = await r.handle(started());
+    const before = c.calls.length;
+    c.tabsMap.set(THEIRS, "https://elsewhere.example/");
+    c.listeners.committed({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/", transitionType: "link", ...extra });
+    await new Promise((go) => setImmediate(go));
+    const now = c.calls.slice(before);
+    assert.ok(!now.some((x) => x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || (x[0] === "tabs.update" && x[2].url)), what + ": their tab isn't moved");
+    assert.ok(!now.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(THEIRS)), what + ": nor closed");
+    const run = r.runs.get("run_1");
+    assert.equal(run.joined.has(THEIRS), false, what + ": given back");
+    assert.equal(r.tabRun.has(THEIRS), false, what + ": forgotten");
+    assert.ok(now.some((x) => x[0] === "tabs.ungroup" && x[1].includes(THEIRS)), what + ": out of the group");
+    assert.ok(now.some((x) => x[0] === "bar.hide" && x[1] === THEIRS), what + ": its bar goes");
+    assert.ok(now.some((x) => x[0] === "dnr" && !x[1].addRules), what + ": its fence goes");
+    assert.equal(r.fenceIds.has(THEIRS), false, what);
+    assert.ok(!run.steps.some((x) => x.op === "navigate"), what + ": the person's move is none of the run's steps");
+    assert.equal(run.site, "shop.example", what + ": its site is still the run's page's");
+    // The run's next step is never in their tab: they moved it, so nothing of that page is the run's.
+    const after = c.calls.length;
+    assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "given_back", what + ": a read");
+    assert.equal((await r.handle(started({ id: "op3", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }))).error.code, "given_back", what + ": an act");
+    assert.ok(!c.calls.slice(after).some((x) => x[0] === "page" || (ranInPage(x) && x[2] === THEIRS)), what + ": nothing runs in their tab");
+  }
+});
+
+// The run's own `back` that Chrome takes off the sites in a joined tab is put right by that back, not given back.
+// The security read: a worker restart left a joined tab fenced until the next run's first fence.
+test("a runner made over rules a stopped worker left removes them all, and a fence added right after it survives", async () => {
+  const c = fakeChrome();
+  let rules = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 400 }];
+  c.declarativeNetRequest.getSessionRules = async () => {
+    await new Promise((go) => setTimeout(go, 10));
+    return rules;
+  };
+  c.declarativeNetRequest.updateSessionRules = async (o) => {
+    c.calls.push(["dnr", o]);
+    rules = rules.filter((x) => !(o.removeRuleIds || []).includes(x.id)).concat((o.addRules || []).map((x) => ({ id: x.id })));
+  };
+  const r = runner(c);
+  // A step at once, before the sweep has answered.
+  const out = await r.handle(step());
+  assert.ok(out.page, JSON.stringify(out));
+  const added = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules.map((x) => x.id);
+  assert.deepEqual(rules.map((x) => x.id).sort((a, b) => a - b), [...added].sort((a, b) => a - b), "the leftovers are gone, the fresh fence stays");
+  const sweep = c.calls.findIndex((x) => x[0] === "dnr" && !x[1].addRules);
+  const fence = c.calls.findIndex((x) => x[0] === "dnr" && x[1].addRules);
+  assert.ok(sweep >= 0 && sweep < fence, "the sweep before the fence");
+  assert.deepEqual(c.calls[sweep][1].removeRuleIds.sort((a, b) => a - b), [1, 2, 3, 400]);
+});
+
+// The security read: only the run's own work goes on a joined tab's trail.
+test("the panel hears a stopped run without its tabs at once", async () => {
+  const seen = [];
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, onChange: (s) => seen.push(s) });
+  await r.handle(step());
+  await r.stop("run_1", false, "person");
+  const last = seen.at(-1).find((x) => x.id === "run_1");
+  assert.equal(last.stopped, true);
+  assert.deepEqual(last.tabs, [], "no tabs listed for it");
+  assert.equal(last.tab, null);
+});
+
+/** A joined tab, with the run's act on its sites done (the hub's link, say, during the act's own wait), at "/p2". */
+async function joinedAfterClick() {
+  const j = await joining({ page: PLAIN });
+  const first = await j.r.handle(started());
+  // The act's click commits its page while the act waits for it: the run's own work.
+  j.c.setAct({ ok: true });
+  const exec = j.c.scripting.executeScript;
+  j.c.scripting.executeScript = async (o) => {
+    const out = await exec(o);
+    if (String(o.func || "").includes("TafsPage.act")) {
+      j.c.tabsMap.set(THEIRS, "https://shop.example/p2");
+      j.c.listeners.committed({ tabId: THEIRS, frameId: 0, url: "https://shop.example/p2", transitionType: "link", transitionQualifiers: [] });
+    }
+    return out;
+  };
+  const clicked = await j.r.handle(started({ id: "op_click", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }));
+  j.c.scripting.executeScript = exec;
+  return { ...j, first, clicked };
+}
+
+test("the run's own act in a joined tab may take it to another page on its sites: the tab stays the run's, and that page is read", async () => {
+  const { r, clicked } = await joinedAfterClick();
+  assert.ok(clicked.page, JSON.stringify(clicked));
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), true);
+  assert.deepEqual(r.runs.get("run_1").trail.get(THEIRS), ["https://shop.example/", "https://shop.example/p2"]);
+  assert.ok((await r.handle(started({ id: "op_r", op: "read" }))).page);
+});
+
+test("the taf's back in a joined tab is always no_back, and nothing moves, even after its own click", async () => {
+  const { c, r, clicked } = await joinedAfterClick();
+  const before = c.calls.length;
+  assert.equal((await r.handle(started({ id: "op_b", op: "act", read_id: clicked.page.read_id, act: { kind: "back" } }))).error.code, "no_back");
+  const now = c.calls.slice(before);
+  assert.ok(!now.some((x) => x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || (x[0] === "tabs.update" && x[2].url)), "the person's tab isn't moved");
+  assert.ok(!now.some((x) => x[0] === "page"), "nothing read");
+  assert.equal(c.tabsMap.get(THEIRS), "https://shop.example/p2");
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "still the run's");
+});
+
+// The harness's finding in real Chrome: the person's own Back to their earlier page, on the run's sites, was taken as the run's work.
+for (const [what, move] of [
+  ["their Back, on the run's sites", { url: "https://shop.example/theirs-before", transitionType: "link", transitionQualifiers: ["forward_back"] }],
+  ["an address they typed", { url: "https://shop.example/typed", transitionType: "typed", transitionQualifiers: ["from_address_bar"] }],
+  ["their own click (no act of the run's under way)", { url: "https://shop.example/their-click", transitionType: "link", transitionQualifiers: [] }],
+  ["a reload", { url: "https://shop.example/", transitionType: "reload", transitionQualifiers: [] }],
+]) {
+  test(`the person's own move in a joined tab gives it back at once, unread: ${what}; the run's next read and act are given_back`, async () => {
+    const { c, r } = await joining({ page: PLAIN });
+    const first = await r.handle(started());
+    const before = c.calls.length;
+    c.tabsMap.set(THEIRS, move.url);
+    c.listeners.committed({ tabId: THEIRS, frameId: 0, ...move });
+    await new Promise((go) => setImmediate(go));
+    const run = r.runs.get("run_1");
+    assert.equal(run.joined.has(THEIRS), false, "given back");
+    assert.equal(r.tabRun.has(THEIRS), false, "forgotten");
+    assert.equal(r.fenceIds.has(THEIRS), false, "unfenced");
+    assert.equal(run.trail.has(THEIRS), false, "never on the run's trail");
+    assert.ok(c.calls.slice(before).some((x) => x[0] === "tabs.ungroup" && x[1].includes(THEIRS)), "out of the group");
+    assert.ok(!c.calls.slice(before).some((x) => x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || (x[0] === "tabs.update" && x[2].url)), "never moved");
+    const after = c.calls.length;
+    assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "given_back");
+    assert.equal((await r.handle(started({ id: "op3", op: "act", read_id: first.page.read_id, act: { kind: "fill", ref: "f1", value: "x" } }))).error.code, "given_back");
+    assert.ok(!c.calls.slice(after).some((x) => x[0] === "page" || (ranInPage(x) && x[2] === THEIRS)), "nothing read, nothing acted");
+    // An open goes on in a tab of the run's own.
+    const opened = await r.handle(started({ id: "op4", url: "https://shop.example/other" }));
+    assert.ok(opened.page, JSON.stringify(opened));
+    assert.notEqual(r.runs.get("run_1").tab, THEIRS);
+  });
+}
+
+test("the person's Back while the run's act waits for its page is still theirs: given back, and the act answers given_back", async () => {
+  const { c, r, first } = await (async () => {
+    const j = await joining({ page: PLAIN });
+    return { ...j, first: await j.r.handle(started()) };
+  })();
+  const exec = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    const out = await exec(o);
+    if (String(o.func || "").includes("TafsPage.act")) {
+      // In the act's wait, the person presses Back to their earlier page, on the run's sites.
+      c.tabsMap.set(THEIRS, "https://shop.example/theirs-before");
+      c.listeners.committed({ tabId: THEIRS, frameId: 0, url: "https://shop.example/theirs-before", transitionType: "link", transitionQualifiers: ["forward_back"] });
+    }
+    return out;
+  };
+  const before = c.calls.length;
+  const out = await r.handle(started({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }));
+  assert.equal(out.error && out.error.code, "given_back");
+  assert.equal(out.page, undefined, "nothing read");
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), false, "given back");
+  assert.ok(!c.calls.slice(before).some((x) => x[0] === "page" && x[1] === "read"));
+  assert.equal(r.runs.get("run_1").trail.has(THEIRS), false);
+});
+
+test("a page the person goes to in a joined tab while the run is paused gives it back: never read after Resume", async () => {
+  const { c, r } = await joining({ page: PLAIN });
+  await r.handle(started());
+  r.ownerInput(THEIRS);
+  commit(c, THEIRS, "https://shop.example/their-own");
+  r.resume("run_1");
+  const before = c.calls.length;
+  assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "given_back");
+  assert.ok(!c.calls.slice(before).some((x) => x[0] === "page" || (ranInPage(x) && x[2] === THEIRS)), "nothing read");
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), false, "given back");
+});
+
+// The harness's finding: the person's Back to a page off the run's sites is a new request the fence blocks (Chrome's error page,
+// net::ERR_BLOCKED_BY_CLIENT, nothing committed), so the tab stayed the run's. Since 0.2.17 the tab is given back on that error page
+// and nothing is asked for again: a navigation the page starts by itself after a step looks the same, and must never be sent by the
+// extension. Their own next try loads, as the tab is no longer fenced.
+test("a navigation the fence blocks in a joined tab outside a step gives the tab back on Chrome's block page; nothing is asked again", async () => {
+  for (const [what, shown] of [
+    ["Chrome's error page at the blocked address", "https://elsewhere.example/account"],
+    ["their tab still on the joined page", "https://shop.example/"],
+  ]) {
+    const { c, r } = await joining({ page: PLAIN });
+    await r.handle(started());
+    const rules = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1].addRules.map((x) => x.id);
+    const before = c.calls.length;
+    c.tabsMap.set(THEIRS, shown);
+    c.listeners.error({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/account?leak=v", error: "net::ERR_BLOCKED_BY_CLIENT" });
+    await new Promise((go) => setTimeout(go, 5));
+    const now = c.calls.slice(before);
+    assert.ok(now.some((x) => x[0] === "dnr" && !x[1].addRules && x[1].removeRuleIds.join() === fenceIdsFrom(rules).join()), what + ": unfenced");
+    assert.ok(!now.some((x) => x[0] === "tabs.reload" || x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || (x[0] === "tabs.update" && x[2].url)), what + ": the extension asks for nothing, and moves nothing");
+    assert.equal(r.runs.get("run_1").joined.has(THEIRS), false, what + ": given back");
+    assert.equal(r.tabRun.has(THEIRS), false, what);
+    assert.ok(!r.runs.get("run_1").steps.some((x) => x.op === "navigate"), what + ": the person's move is none of the run's steps");
+    assert.equal(r.runs.get("run_1").site, "shop.example", what + ": its site is still the run's page's");
+    assert.equal((await r.handle(started({ id: "op2", op: "read" }))).error.code, "given_back", what);
+    // Their own next try is theirs: nothing of the extension's answers it, and no rule holds the tab.
+    const later = c.calls.length;
+    c.tabsMap.set(THEIRS, "https://elsewhere.example/account");
+    c.listeners.before({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/account" });
+    c.listeners.committed({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/account", transitionType: "typed", transitionQualifiers: [] });
+    await new Promise((go) => setTimeout(go, 5));
+    assert.deepEqual(c.calls.slice(later), [], what + ": their tab is theirs");
+    assert.equal(r.fenceIds.has(THEIRS), false, what + ": no rule holds it");
+  }
+});
+
+test("an off-site navigation the fence blocks during the run's act in a joined tab: the act is site_not_listed, and the tab is given back unmoved", async () => {
+  const { c, r } = await joining({ page: PLAIN });
+  const first = await r.handle(started());
+  const exec = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    const out = await exec(o);
+    if (String(o.func || "").includes("TafsPage.act")) c.listeners.error({ tabId: THEIRS, frameId: 0, url: "https://elsewhere.example/form", error: "net::ERR_BLOCKED_BY_CLIENT" });
+    return out;
+  };
+  const before = c.calls.length;
+  const out = await r.handle(started({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }));
+  assert.equal(out.error && out.error.code, "site_not_listed");
+  await new Promise((go) => setTimeout(go, 5));
+  const now = c.calls.slice(before);
+  assert.ok(!now.some((x) => x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || x[0] === "tabs.reload" || (x[0] === "tabs.update" && x[2].url)), "nothing moves it, nothing loads the blocked address");
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), false, "given back");
+  assert.ok(!now.some((x) => x[0] === "page" && x[1] === "read"), "nothing read");
+});
+
+// The harness's finding: an off-site click or submit in a joined tab made Chrome commit its own error page there, as a new entry.
+test("an act the page says would leave the run's sites is refused before it fires, recorded, and the tab stays the run's where it was", async () => {
+  const { c, r } = await joining({ page: PLAIN });
+  const first = await r.handle(started());
+  const seen = [];
+  const exec = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    if (String(o.func || "").includes("TafsPage.act")) seen.push(o.args);
+    return exec(o);
+  };
+  c.setAct({ ok: false, code: "site_not_listed", url: "https://elsewhere.example/ask" });
+  const out = await r.handle(started({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "c1" } }));
+  assert.equal(out.error && out.error.code, "site_not_listed");
+  assert.deepEqual(seen[0][2], { fence: { granted: ["shop.example"], allowed: [], sensitive: [...SENSITIVE.sites], labels: SENSITIVE.labels.source, never: [...NEVER_OPENED], local: [...LOCAL_SUFFIXES] } }, "the page is given what the run's fence lets through");
+  assert.ok(r.runs.get("run_1").steps.some((x) => x.op === "navigate" && x.url === "https://elsewhere.example/ask" && x.error === "site_not_listed"), "recorded as a refused move");
+  assert.equal(r.runs.get("run_1").joined.has(THEIRS), true, "still the run's");
+  assert.equal(c.tabsMap.get(THEIRS), "https://shop.example/");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.goBack" || (x[0] === "tabs.update" && x[1] === THEIRS && x[2].url)));
+  // A tab of the run's own is left to the fence: the page isn't given the sites.
+  c.setAct({ ok: true });
+  await r.handle(started({ id: "op3", url: "https://shop.example/other" }));
+  const own = await r.handle(started({ id: "op4", op: "read" }));
+  await r.handle(started({ id: "op5", op: "act", read_id: own.page.read_id, act: { kind: "click", ref: "c1" } }));
+  assert.equal(seen.at(-1)[2], null);
+});
+
+test("the page's own check: a link or a form's submit off the run's sites, by its resolved address; a javascript: link is a control", () => {
+  // The rule page.js holds (headsTo, onSites), as sites.js reads a host: https, and the site itself or under it.
+  const src = readFileSync(new URL("../src/page.js", import.meta.url), "utf8");
+  for (const piece of ['function headsTo(el, a)', 'el.closest("a[href]")', 'el.hasAttribute("formaction") ? el.formAction : form.action', 'a.kind === "press" && a.value === "Enter"', 'u.protocol === "https:" || u.protocol === "http:" ? u : null', 'url.protocol !== "https:"', 'host === s || host.endsWith("." + s)', 'if (why) return { ok: false, code: why, url: bare(to.href) }']) {
+    assert.ok(src.includes(piece), piece);
+  }
+  // It runs before any act touches the page: after the secret-field refusal, before the switch that clicks or submits.
+  const check = src.indexOf("const to = headsTo(el, a)");
+  assert.ok(check > src.indexOf('code: "secret_field" }') && check < src.indexOf("switch (a.kind)", check), "checked before the act");
+});
+
+// The run's own tabs, as the end-to-end harness found them: the person's own move in one (an address typed, their Back) was taken
+// for the run's, and the run's next read read their page. Only the run's own work moves a tab of the run's; any other move makes
+// it the person's, as a joined tab already was.
+const pause0 = () => new Promise((done) => setTimeout(done, 0));
+const reads = (c) => c.calls.filter((x) => x[0] === "page" && x[1] === "read").length;
+
+for (const [what, move] of [
+  ["an address they typed", { transitionType: "typed", transitionQualifiers: ["from_address_bar"] }],
+  ["their Back", { transitionType: "link", transitionQualifiers: ["forward_back"] }],
+  ["their Forward", { transitionType: "link", transitionQualifiers: ["forward_back", "from_address_bar"] }],
+  ["a reload", { transitionType: "reload", transitionQualifiers: [] }],
+]) {
+  test(`${what} in the run's own tab, on its sites, gives the tab to the person: unmoved, unread, given_back, and the next open takes a fresh tab`, async () => {
+    const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+    const r = runner(c);
+    await r.handle(step());
+    const tab = r.runs.get("run_1").tab;
+    const before = c.calls.length;
+    const read = reads(c);
+    c.tabsMap.set(tab, "https://shop.example/account");
+    c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/account", ...move });
+    await pause0();
+    const now = c.calls.slice(before);
+    assert.ok(!now.some((x) => (x[0] === "tabs.update" && x[2].url) || x[0] === "tabs.remove" || x[0] === "tabs.goBack" || x[0] === "tabs.reload"), "nothing moves or closes their tab");
+    assert.ok(now.some((x) => x[0] === "tabs.ungroup" && [].concat(x[1]).includes(tab)), "it leaves the run's group");
+    assert.ok(now.some((x) => x[0] === "dnr" && (x[1].removeRuleIds || []).length), "its fence goes");
+    assert.equal(r.tabRun.has(tab), false, "the run forgets it");
+    for (const [op, extra] of [["read", {}], ["act", { read_id: "rd_any", act: { kind: "click", ref: "c1" } }], ["hand", { read_id: "rd_any", hand: { words: "Sign in" } }]]) {
+      assert.equal((await r.handle(step({ id: "op_" + op, op, ...extra }))).error.code, "given_back", op);
+    }
+    assert.equal(reads(c), read, "nothing of their page is read");
+    assert.ok(!c.calls.slice(before).some((x) => x[0] === "page" && x[1] === "act start"), "nothing acts in it");
+    // The run's next page: a fresh tab of its own, never theirs again.
+    const opened = await r.handle(step({ id: "op_open", url: "https://shop.example/cart" }));
+    assert.ok(opened.page, JSON.stringify(opened));
+    const fresh = r.runs.get("run_1").tab;
+    assert.notEqual(fresh, tab, "a tab of its own");
+    assert.ok(c.calls.some((x) => x[0] === "tabs.create" && x[1].url === "about:blank"), "made fresh");
+    assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url && c.calls.indexOf(x) > before), "their tab never loaded again");
+    assert.equal(opened.page.url, "https://shop.example/cart");
+  });
+}
+
+test("the person's click in the run's own tab pauses the run, and the page it opens makes the tab theirs", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  r.ownerInput(tab);
+  c.tabsMap.set(tab, "https://shop.example/orders");
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/orders", transitionType: "link", transitionQualifiers: [] });
+  await pause0();
+  assert.equal(r.tabRun.has(tab), false, "theirs now");
+  r.resume("run_1");
+  assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
+});
+
+test("a commit the run didn't ask for in its own tab (a page's own redirect, a late one) is the person's too", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  c.tabsMap.set(tab, "https://shop.example/elsewhere");
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/elsewhere", transitionType: "link", transitionQualifiers: ["client_redirect"] });
+  await pause0();
+  assert.equal(r.tabRun.has(tab), false);
+  assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
+});
+
+test("the run's own open, act and back in its own tab stay the run's: the redirect while it loads, the act's page, a back Chrome marks forward_back", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  // The open's own redirect commits while it loads.
+  const update = c.tabs.update;
+  c.tabs.update = async (id, props) => {
+    await update(id, props);
+    if (props.url && props.url !== "about:blank") {
+      const to = props.url.endsWith("/start") ? "https://shop.example/home" : props.url;
+      c.tabsMap.set(id, to);
+      c.listeners.committed({ tabId: id, frameId: 0, url: to, transitionType: "link", transitionQualifiers: to === props.url ? [] : ["server_redirect"] });
+    }
+  };
+  const first = await r.handle(step({ url: "https://shop.example/start" }));
+  assert.ok(first.page, JSON.stringify(first));
+  const tab = r.runs.get("run_1").tab;
+  assert.equal(r.tabRun.get(tab), "run_1", "still the run's after its redirect");
+  // The act's click takes it to p2, committed while the act waits for its page.
+  let clicked = false;
+  const exec = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    const out = await exec(o);
+    if (String(o.func || "").includes("TafsPage.act")) clicked = true;
+    return out;
+  };
+  const tabsGet = c.tabs.get;
+  c.tabs.get = async (id) => {
+    if (id === tab && clicked) {
+      clicked = false;
+      c.tabsMap.set(tab, "https://shop.example/p2");
+      c.listeners.committed({ tabId: tab, frameId: 0, url: "https://shop.example/p2", transitionType: "link", transitionQualifiers: [] });
+    }
+    return tabsGet(id);
+  };
+  const acted = await r.handle(step({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "fill", ref: "f1", value: "a@b.example" } }));
+  assert.ok(acted.page, JSON.stringify(acted));
+  assert.equal(r.tabRun.get(tab), "run_1", "still the run's after its act");
+  // Its back: Chrome's goBack commits with forward_back, while the back is the run's.
+  c.tabs.goBack = async (id) => {
+    c.calls.push(["tabs.goBack", id]);
+    c.tabsMap.set(id, "https://shop.example/home");
+    c.listeners.committed({ tabId: id, frameId: 0, url: "https://shop.example/home", transitionType: "link", transitionQualifiers: ["forward_back"] });
+  };
+  const back = await r.handle(step({ id: "op3", op: "act", read_id: acted.page.read_id, act: { kind: "back" } }));
+  assert.ok(back.page, JSON.stringify(back));
+  assert.equal(back.page.url, "https://shop.example/home");
+  assert.equal(r.tabRun.get(tab), "run_1", "still the run's after its back");
+});
+
+test("a page the run's page opens (a pop-up) is the run's for its first page; the person's move there afterwards makes it theirs", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  c.listeners.created({ sourceTabId: tab, tabId: 555, url: "https://shop.example/popup" });
+  c.tabsMap.set(555, "https://shop.example/popup");
+  c.listeners.committed({ tabId: 555, frameId: 0, url: "https://shop.example/popup", transitionType: "link", transitionQualifiers: [] });
+  await pause0();
+  assert.equal(r.tabRun.get(555), "run_1", "its first page is the run's");
+  c.listeners.committed({ tabId: 555, frameId: 0, url: "https://shop.example/other", transitionType: "typed", transitionQualifiers: [] });
+  await pause0();
+  assert.equal(r.tabRun.has(555), false, "then the person's");
+  assert.equal(r.tabRun.get(tab), "run_1", "the run's own tab is unchanged");
+});
+
+test("a navigation the fence blocks in the run's own tab outside a step gives the tab to them on Chrome's block page; nothing is asked again", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  c.listeners.before({ tabId: tab, frameId: 0, url: "https://news.example/" });
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "about:blank"), "their tab is never sent to a blank page");
+  const blockedAt = c.calls.length;
+  c.listeners.error({ tabId: tab, frameId: 0, url: "https://news.example/", error: "net::ERR_BLOCKED_BY_CLIENT" });
+  await pause0();
+  await pause0();
+  assert.equal(r.tabRun.has(tab), false, "theirs now");
+  assert.ok(!r.state()[0].steps.some((x) => x.op === "navigate"), "the person's move is none of the run's steps");
+  assert.equal(r.state()[0].site, "shop.example", "its site is still the run's page's");
+  assert.equal(r.fenceIds.has(tab), false, "no fence rule left on their tab");
+  assert.ok(c.calls.some((x) => x[0] === "dnr" && (x[1].removeRuleIds || []).length), "unfenced");
+  assert.ok(!c.calls.slice(blockedAt).some((x) => x[0] === "tabs.reload" || x[0] === "tabs.goBack" || (x[0] === "tabs.update" && x[1] === tab && x[2].url)), "the extension asks for nothing again: their own next try loads");
+  assert.ok(c.calls.some((x) => x[0] === "tabs.ungroup" && [].concat(x[1]).includes(tab)), "out of the run's group");
+  assert.equal((await r.handle(step({ id: "op2", op: "read" }))).error.code, "given_back");
+  const opened = await r.handle(step({ id: "op3", url: "https://shop.example/cart" }));
+  assert.ok(opened.page, JSON.stringify(opened));
+  assert.notEqual(r.runs.get("run_1").tab, tab, "the next open takes a fresh tab of its own");
+});
+
+test("a navigation the fence stops while the run's own act waits in its own tab is not the person's", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const r = runner(c);
+  await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  r.runs.get("run_1").stepping = tab;
+  c.listeners.error({ tabId: tab, frameId: 0, url: "https://news.example/", error: "net::ERR_BLOCKED_BY_CLIENT" });
+  await pause0();
+  assert.equal(r.tabRun.get(tab), "run_1", "still the run's");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url === "https://news.example/"), "nothing re-asked");
+});
+
+// Two tafs with one name under two grants (two connections, each a taf of its own): the second never closes, joins or works in the
+// first's kept tabs or its "· done" group.
+test("two tafs named Rae under two grants never share or close each other's kept tabs or groups", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  c.tabGroups.get = async (id) => ({ id, windowId: 3 });
+  const r = runner(c);
+  await r.handle(step());
+  const first = r.runs.get("run_1").tab;
+  await r.stop("run_1");
+  assert.deepEqual(Object.keys(await r.doneTabs()), ["grant:g_1"]);
+  let made = 7;
+  const group = c.tabs.group;
+  c.tabs.group = async (o) => (o.groupId != null ? group(o) : (made++, group({ ...o, groupId: made })));
+  const before = c.calls.length;
+  await r.handle(step({ run: "run_2", id: "op2", grant: "g_2", sites_signed: await signedSites(["shop.example"], "g_2") }));
+  const second = r.runs.get("run_2").tab;
+  const now = c.calls.slice(before);
+  assert.ok(!now.some((x) => x[0] === "tabs.remove"), "the first Rae's kept tab stays");
+  assert.ok(!now.some((x) => x[0] === "tabs.group" && x[1].groupId === 7), "never put in the first Rae's group");
+  assert.ok(!touched(c, first).some((x) => c.calls.indexOf(x) >= before), "nothing of the second Rae's touches the first's tab");
+  assert.equal(r.tabRun.has(first), false, "the second never reads or acts in the first's tab");
+  await r.stop("run_2");
+  assert.deepEqual(Object.keys(await r.doneTabs()).sort(), ["grant:g_1", "grant:g_2"], "each kept under its own grant");
+  // The first Rae again: its own kept tab closes, never the second's.
+  const at = c.calls.length;
+  await r.handle(step({ run: "run_3", id: "op3" }));
+  const removed = c.calls.slice(at).filter((x) => x[0] === "tabs.remove").flatMap((x) => x[1]);
+  assert.ok(removed.includes(first) && !removed.includes(second), JSON.stringify(removed));
+});
+
+test("a person's tab in another same-named taf's done group is never joined", async () => {
+  const { c, r } = await joining();
+  c.tabGroups.get = async (id) => ({ id, windowId: 3 });
+  // The other Rae (grant g_2) finished a run whose done group (5) now holds the person's front tab.
+  r.done = { "grant:g_2": { name: "Rae", tabs: [], window: null, group: 5 } };
+  c.groupsMap.set(THEIRS, 5);
+  const out = await r.handle(started());
+  assert.ok(out.page, JSON.stringify(out));
+  assert.equal(r.runs.get("run_1").joined.size, 0, "not joined");
+  assert.notEqual(r.runs.get("run_1").tab, THEIRS, "a tab of its own");
+});
+
+test("an entry kept before 0.2.16 under the taf's name alone is never matched to a run, and unpairing still closes it", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  c.tabGroups.get = async (id) => ({ id, windowId: 3 });
+  c.tabsMap.set(77, "https://shop.example/old");
+  const stored = { done: { Rae: { tabs: [{ id: 77, url: "https://shop.example/old" }], window: null, group: 9 } } };
+  const doneStore = { get: async () => JSON.parse(JSON.stringify(stored.done)), set: async (d) => (stored.done = JSON.parse(JSON.stringify(d))) };
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, doneStore });
+  await r.handle(step());
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.remove"), "its tab isn't the new run's to close");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.group" && x[1].groupId === 9), "nor its group the new run's");
+  assert.ok(c.calls.some((x) => x[0] === "tabGroups.update" && x[1] === 9 && x[2].title === "tafs · Rae · done"), "still greyed under its name");
+  await r.stopAll();
+  assert.ok(c.calls.some((x) => x[0] === "tabs.remove" && [].concat(x[1]).includes(77)), "unpairing closes it");
+});
+
+// A page of the run's sites that, a moment after the taf's act returned, sends itself off the run's sites (a delayed redirect, a
+// refresh) with what the taf filled: the fence stops it, and the extension never asks for that address itself, in a tab of the run's
+// own or in one of the person's it joined (0.2.17). Nothing tells such a navigation from the person's own, so neither is re-asked.
+const FIELD = { read_id: "rd_f", url: "https://shop.example/", title: "t", text: "", fields: [{ ref: "f1", label: "Name", kind: "text" }], controls: [{ ref: "c1", label: "Save" }], links: [] };
+for (const where of ["own", "joined"]) {
+  test(`a navigation the page starts by itself off the run's sites after a step (${where} tab) is never sent by the extension`, async () => {
+    const { c, r, tab, go } = where === "own"
+      ? await (async () => {
+          const c = fakeChrome({ ownerWindow: OWNER_WINDOW, page: FIELD });
+          const r = runner(c);
+          const first = await r.handle(step());
+          return { c, r, tab: r.runs.get("run_1").tab, go: (extra) => step(extra), first };
+        })()
+      : await (async () => {
+          const { c, r } = await joining({ page: FIELD });
+          await r.handle(started());
+          return { c, r, tab: THEIRS, go: (extra) => started(extra) };
+        })();
+    const read = await r.handle(go({ id: "op_r", op: "read" }));
+    const filled = await r.handle(go({ id: "op_f", op: "act", read_id: read.page.read_id, act: { kind: "fill", ref: "f1", value: "secret-value-1" } }));
+    assert.ok(filled.page, JSON.stringify(filled));
+    // The step has returned. The page now leaves by itself, carrying the value.
+    const leak = "https://elsewhere.example/?leak=secret-value-1";
+    const before = c.calls.length;
+    c.listeners.before({ tabId: tab, frameId: 0, url: leak });
+    c.listeners.error({ tabId: tab, frameId: 0, url: leak, error: "net::ERR_BLOCKED_BY_CLIENT" });
+    await new Promise((done) => setTimeout(done, 5));
+    const now = c.calls.slice(before);
+    assert.ok(!now.some((x) => x[0] === "tabs.reload" || x[0] === "tabs.goBack" || x[0] === "tabs.goForward" || (x[0] === "tabs.update" && x[2].url)), "the extension asks for nothing");
+    assert.ok(!JSON.stringify(now).includes("secret-value-1"), "the value is in nothing the extension did");
+    assert.equal(r.tabRun.has(tab), false, "the tab is given back");
+    assert.equal(r.fenceIds.has(tab), false, "unfenced");
+    assert.equal((await r.handle(go({ id: "op_n", op: "read" }))).error.code, "given_back");
+  });
+}
+
+// A move the person made is never one of the run's steps, and the run's site is only ever its own page's: the panel's card and
+// site line once showed the person's destination ("Stopped a move to other.test"), from their own blocked address or Back (0.2.17).
+for (const where of ["own", "joined"]) {
+  for (const [what, events] of [
+    ["an address they typed off the sites", (c, tab) => {
+      c.listeners.before({ tabId: tab, frameId: 0, url: "https://other.example/typed" });
+      c.listeners.error({ tabId: tab, frameId: 0, url: "https://other.example/typed", error: "net::ERR_BLOCKED_BY_CLIENT" });
+    }],
+    ["their Back off the sites", (c, tab) => {
+      c.listeners.before({ tabId: tab, frameId: 0, url: "https://other.example/before" });
+      c.listeners.error({ tabId: tab, frameId: 0, url: "https://other.example/before", error: "net::ERR_BLOCKED_BY_CLIENT" });
+    }],
+    ["their Back to a page Chrome kept off the sites", (c, tab) => {
+      c.tabsMap.set(tab, "https://other.example/kept");
+      c.listeners.committed({ tabId: tab, frameId: 0, url: "https://other.example/kept", transitionType: "link", transitionQualifiers: ["forward_back"] });
+    }],
+  ]) {
+    test(`${what}, in a ${where} tab, is no step of the run's, and the run's site stays its own page's`, async () => {
+      const { c, r, tab } = where === "own"
+        ? await (async () => {
+            const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+            const r = runner(c);
+            await r.handle(step());
+            return { c, r, tab: r.runs.get("run_1").tab };
+          })()
+        : await (async () => {
+            const { c, r } = await joining();
+            await r.handle(started());
+            return { c, r, tab: THEIRS };
+          })();
+      const steps = r.runs.get("run_1").steps.length;
+      events(c, tab);
+      await new Promise((done) => setTimeout(done, 5));
+      const run = r.state()[0];
+      assert.equal(run.steps.length, steps, "nothing recorded: " + JSON.stringify(run.steps.slice(steps)));
+      assert.equal(run.site, "shop.example");
+      assert.equal(r.tabRun.has(tab), false, "the tab is theirs");
+    });
+  }
+}
+
+test("a block during the run's own act is the run's refused move, recorded once, and the run's site stays its own page's", async () => {
+  for (const where of ["own", "joined"]) {
+    const { c, r, tab } = where === "own"
+      ? await (async () => {
+          const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+          const r = runner(c);
+          await r.handle(step());
+          return { c, r, tab: r.runs.get("run_1").tab };
+        })()
+      : await (async () => {
+          const { c, r } = await joining();
+          await r.handle(started());
+          return { c, r, tab: THEIRS };
+        })();
+    const run = r.runs.get("run_1");
+    run.stepping = tab;
+    c.listeners.before({ tabId: tab, frameId: 0, url: "https://other.example/x" });
+    c.listeners.error({ tabId: tab, frameId: 0, url: "https://other.example/x", error: "net::ERR_BLOCKED_BY_CLIENT" });
+    await new Promise((done) => setTimeout(done, 5));
+    const refused = run.steps.filter((x) => x.op === "navigate" && x.error === "site_not_listed");
+    assert.deepEqual(refused.map((x) => x.url), ["https://other.example/x"], where + ": recorded once");
+    assert.equal(run.site, "shop.example", where + ": the run's site isn't where its page tried to go");
+  }
+});
+
+// Chrome's fence says what refuseURL says (0.2.19). A small evaluator of declarativeNetRequest's rules, as Chrome applies them to a
+// tab's page request: the matching rule of highest priority wins, an allow beating a block at the same priority; requestDomains
+// match a domain and its subdomains; a regexFilter is tried on the whole address, case-insensitively (RE2's syntax here is a subset
+// JavaScript reads the same). The address is the one Chrome sends: lower case, its host in xn-- form.
+function dnrAllows(rules, tabId, raw) {
+  let u;
+  try {
+    u = new URL(raw);
+  } catch {
+    return false;
+  }
+  const host = u.hostname.toLowerCase().replace(/\.$/, "");
+  const matches = (r) => {
+    const c = r.condition;
+    if (c.tabIds && !c.tabIds.includes(tabId)) return false;
+    if (c.resourceTypes && !c.resourceTypes.includes("main_frame")) return false;
+    if (c.requestDomains && !c.requestDomains.some((d) => host === d || host.endsWith("." + d))) return false;
+    if (c.regexFilter && !new RegExp(c.regexFilter, "i").test(u.href)) return false;
+    return true;
+  };
+  const hit = rules.filter(matches).sort((a, b) => b.priority - a.priority || (a.action.type === "allow" ? -1 : 1))[0];
+  return !!hit && hit.action.type === "allow";
+}
+
+const FENCE_GRANTS = [
+  [["example.com"], []],
+  [["example.com"], ["bank.example.com"]],
+  [["google.com"], []],
+  [["github.io", "co.uk", "shop.test"], []],
+  [["paypal.com"], []],
+  [["paypal.com"], ["paypal.com"]],
+  [["127.0.0.1", "localhost", "printer.local", "shop.test"], []],
+  [["shop.test"], ["bank.other.test", "paypal.com"]],
+  [["shop.test", "bank.shop.test"], []],
+];
+const FENCE_URLS = [
+  "https://example.com/", "https://www.example.com/a?b=c#d", "https://bank.example.com/?from=link", "https://sub.bank.example.com/",
+  "https://my-bank.example.com/", "https://BANK.Example.com/", "https://ebank.example.com/", "https://banking.example.com/",
+  "https://bankrupt.example.com/", "https://banks.example.com/", "https://bank.example.com:8443/x", "https://gov.example.com/",
+  "https://example.com.bank.evil/", "https://bank.example.com.other.test/", "http://example.com/", "http://bank.example.com/",
+  "https://accounts.google.com/", "https://www.google.com/", "https://mail.google.com/", "https://pay.google.com/",
+  "https://x.github.io/", "https://foo.co.uk/", "https://shop.test/", "https://bank.shop.test/", "https://www.bank.shop.test/",
+  "https://bänk.shop.test/", "https://xn--bnk-sna.shop.test/", "https://www.paypal.com/", "https://paypal.com/",
+  "https://notpaypal.com/", "https://127.0.0.1/", "https://localhost/", "https://printer.local/", "https://bank.other.test/",
+  "https://shop.test.:443/", "https://shop.test/a/bank/b",
+  // Full addresses: user info, ports, a sensitive word only in the path, query or fragment, case, a trailing dot.
+  "https://x@bank.shop.test/", "https://x:y@shop.test/", "https://shop.test@bank.test/", "https://x@shop.test/", "https://x@example.com/",
+  "https://bank.shop.test:443/", "https://shop.test/?q=bank.", "https://shop.test/#bank.", "https://shop.test/bank.", "https://shop.test/?next=https://bank.test/",
+  "https://SHOP.TEST/Bank", "https://BANK.SHOP.TEST/", "https://bank.shop.test./", "https://x@bank.example.com/", "https://u:p@accounts.google.com/",
+];
+
+test("Chrome's fence and refuseURL give the same answer for every address, grant and allowance", async () => {
+  for (const [sites, allowed] of FENCE_GRANTS) {
+    const c = fakeChrome();
+    const r = runner(c);
+    await r.ruleIds(5); // the runner's first fence ids, as Runner.fence takes them
+    await r.fence({ sites, allowed }, 5);
+    const rules = c.calls.filter((x) => x[0] === "dnr" && x[1].addRules).at(-1)[1].addRules;
+    for (const url of FENCE_URLS) {
+      const js = refuseURL(url, sites, allowed) === null;
+      assert.equal(dnrAllows(rules, 5, url), js, `${url} under ${JSON.stringify(sites)} allowing ${JSON.stringify(allowed)}: refuseURL says ${js ? "go" : JSON.stringify(refuseURL(url, sites, allowed))}`);
+    }
+  }
+});
+
+test("the fence's label pattern and sensitive() agree on every host", async () => {
+  const { sensitive } = await import("../src/sites.js");
+  const hosts = ["bank.test", "my-bank.example.com", "bank-of.example", "x.bank", "banking", "ebank.com", "bankrupt.com", "banks.com", "a.gov.uk", "gov",
+    "governor.com", "irs.gov", "first-irs.example", "creditunion.example", "credit-union.example", "credit--union.example", "sante.fr", "santé.fr",
+    "xn--sant-epa.fr", "health.example", "healthy.example", "x.medicaid", "news.test", "example.com", "b-a-n-k.com", "bank1.com"];
+  const res = SENSITIVE_LABELS_URLS.map((p) => new RegExp(p, "i"));
+  const re = { test: (u) => res.some((x) => x.test(u)) };
+  for (const h of hosts) {
+    const host = new URL("https://" + h + "/").hostname;
+    const labelled = SENSITIVE.labels.test(host);
+    assert.equal(re.test("https://" + host + "?q=1"), labelled, host + " with a query");
+    assert.equal(re.test("https://" + host + "/x"), labelled, host);
+    assert.equal(re.test("https://" + host + ":8443/"), labelled, host + " with a port");
+    assert.equal(re.test("https://" + host), labelled, host + " with no path");
+    if (labelled) assert.equal(sensitive(host), true);
+  }
+});
+
+test("a sensitive-site pattern Chrome can't hold fails the fence: the run's tab is closed before it loads", async () => {
+  const c = fakeChrome();
+  c.declarativeNetRequest.isRegexSupported = async () => ({ isSupported: false, reason: "memoryLimitExceeded" });
+  const r = runner(c);
+  const out = await r.handle(step());
+  assert.ok(out.error, JSON.stringify(out));
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/"), "nothing of the run's loads");
+  assert.ok(!c.calls.some((x) => x[0] === "dnr" && x[1].addRules), "no fence half made");
+  assert.equal(r.runs.get("run_1") && r.runs.get("run_1").tabs.size || 0, 0, "no tab left the run's, unfenced");
+});
+
+test("a fence holds FENCE_RULES ids a tab, all of them go with the tab and at unpairing, and an allowance adds its rule", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step({ sensitive_allowed: undefined }));
+  const tab = r.runs.get("run_1").tab;
+  const first = c.calls.find((x) => x[0] === "dnr" && x[1].addRules)[1];
+  assert.deepEqual(first.removeRuleIds, fenceIdsFrom(first.addRules.map((x) => x.id)), "every id of the tab's is cleared first");
+  assert.equal(first.addRules.length, FENCE_RULES - 1, "no allowance, no rule for it");
+  await r.fence({ sites: ["example.com"], allowed: ["bank.example.com"] }, tab);
+  const second = c.calls.filter((x) => x[0] === "dnr" && x[1].addRules).at(-1)[1];
+  assert.equal(second.addRules.length, FENCE_RULES);
+  assert.deepEqual(second.addRules.find((x) => x.priority === 4).condition.requestDomains, ["bank.example.com"]);
+  await r.stopAll();
+  const removed = c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules).flatMap((x) => x[1].removeRuleIds);
+  for (const id of fenceIdsFrom(first.addRules.map((x) => x.id))) assert.ok(removed.includes(id), "rule " + id + " removed");
+});
+
+test("a taf's act that heads for a sensitive site in its own tab is site_blocked, answered and recorded so", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW, page: { read_id: "rd_b", url: "https://shop.example/", title: "t", text: "", fields: [], controls: [], links: [{ ref: "l1", label: "Bank", href: "https://bank.shop.example/?from=link" }] } });
+  const r = runner(c);
+  const first = await r.handle(step());
+  const tab = r.runs.get("run_1").tab;
+  const exec = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    const out = await exec(o);
+    // The click starts its navigation: the backstop sees it, and the fence stops it.
+    if (String(o.func || "").includes("TafsPage.act")) c.listeners.before({ tabId: tab, frameId: 0, url: "https://bank.shop.example/?from=link" });
+    return out;
+  };
+  const out = await r.handle(step({ id: "op2", op: "act", read_id: first.page.read_id, act: { kind: "click", ref: "l1" } }));
+  assert.equal(out.error && out.error.code, "site_blocked", JSON.stringify(out));
+  const refused = r.runs.get("run_1").steps.filter((x) => x.op === "navigate");
+  assert.deepEqual(refused.map((x) => [x.url, x.error]), [["https://bank.shop.example/", "site_blocked"]]);
+});
+
+
+// The signs on the page (signs.js, 0.2.23): the glow on the tab a run works in while it works, the pointer with its words.
+function watchSigns(c) {
+  const seen = [];
+  const exec = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    const src = String(o.func || "");
+    if (src.includes("TafsSigns.working")) seen.push(["working", o.target.tabId, ...(o.args || [])]);
+    if (src.includes("TafsSigns.off")) seen.push(["off", o.target.tabId]);
+    if (src.includes("TafsPage.aim")) seen.push(["aim", o.target.tabId, ...o.args]);
+    return exec(o);
+  };
+  return seen;
+}
+
+test("the glow is on the tab the run works in while it works: a pause takes it away, Resume brings it back, the end takes it for good", async () => {
+  const c = fakeChrome({ ownerWindow: OWNER_WINDOW });
+  const seen = watchSigns(c);
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  await r.queueBars();
+  assert.ok(seen.some((x) => x[0] === "working" && x[1] === tab), "working: the glow");
+  seen.length = 0;
+  r.pause("run_1");
+  await r.queueBars();
+  assert.deepEqual(seen.filter((x) => x[1] === tab).map((x) => x[0]), ["off"], "paused: every sign goes, none comes back");
+  seen.length = 0;
+  r.resume("run_1");
+  await r.queueBars();
+  assert.ok(seen.some((x) => x[0] === "working" && x[1] === tab), "resumed: the glow again");
+  seen.length = 0;
+  await r.stop("run_1");
+  await r.queueBars();
+  assert.ok(seen.some((x) => x[0] === "off" && x[1] === tab), "stopped: gone");
+  assert.ok(!seen.some((x) => x[0] === "working"), "and never back");
+});
+
+test("a tab the person takes back loses every sign at once, and none is drawn there again", async () => {
+  const { c, r } = await joining({ page: PLAIN });
+  const seen = watchSigns(c);
+  await r.handle(started());
+  await r.queueBars();
+  assert.ok(seen.some((x) => x[0] === "working" && x[1] === THEIRS), "their tab glows while the run works in it");
+  r.ownerInput(THEIRS);
+  seen.length = 0;
+  commit(c, THEIRS, "https://shop.example/their-own");
+  await new Promise((go) => setTimeout(go, 5));
+  r.resume("run_1");
+  await r.queueBars();
+  await r.handle(started({ id: "op2", op: "read" }));
+  await r.queueBars();
+  assert.ok(seen.some((x) => x[0] === "off" && x[1] === THEIRS), "taken back: the signs go");
+  assert.ok(!seen.some((x) => (x[0] === "working" || x[0] === "aim") && x[1] === THEIRS), "and are never drawn there again");
+});
+
+test("the pointer's words are the step's own: Reading on a read, Clicking on a click, none for a kind it has no word for", async () => {
+  const c = fakeChrome({ page: PLAIN });
+  const seen = watchSigns(c);
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired, say: (key) => (key.startsWith("pointer_") ? "<" + key + ">" : "") });
+  const opened = await r.handle(step());
+  assert.ok(seen.some((x) => x[0] === "working" && x[2] === "<pointer_read>"), "a read says it reads");
+  await r.handle(step({ id: "op2", op: "act", read_id: opened.page.read_id, act: { kind: "click", ref: "c1" } }));
+  assert.deepEqual(seen.find((x) => x[0] === "aim").slice(2), ["c1", opened.page.read_id, "<pointer_click>"]);
+  assert.equal(r.pointerWords("fill"), "<pointer_fill>");
+  assert.equal(r.pointerWords("back"), "", "back names no element and has no word");
 });

@@ -186,6 +186,7 @@
   "coach.tools.give": "Coach को उसके टूल दें",
   "coach.tools.giving": "दिया जा रहा है…",
   "coach.tools.title": "Coach के टूल",
+  "coach.tools.write_after": "पहले Coach के टूल मंज़ूर करें, फिर आप लिख सकते हैं।",
   "coach.tools_eyebrow": "टूल",
   "coach.tools_not_given": "Coach के टूल नहीं दिए गए। {why}",
   "coach.tools_not_read": "Coach के टूल पढ़े नहीं जा सके। {why}",

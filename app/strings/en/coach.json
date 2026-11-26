@@ -186,6 +186,7 @@
   "coach.tools.give": "Give Coach its tools",
   "coach.tools.giving": "Giving…",
   "coach.tools.title": "Coach's tools",
+  "coach.tools.write_after": "Approve Coach's tools first, then you can write.",
   "coach.tools_eyebrow": "Tools",
   "coach.tools_not_given": "Coach's tools weren't given. {why}",
   "coach.tools_not_read": "Couldn't read Coach's tools. {why}",

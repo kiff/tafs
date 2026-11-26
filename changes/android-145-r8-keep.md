@@ -1,0 +1,1 @@
+- **Android 145 (1.49.2) for Play's internal track:** tafs opens again. 1.49.1 closed at every launch: R8 had removed the constructor WorkManager uses to make its database, so `proguard-rules.pro` now keeps it. Wear OS stays 0.4.8.

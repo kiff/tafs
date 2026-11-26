@@ -1,0 +1,1 @@
+- **CI starts the release build:** after the UI tests, Android's CI builds the minified release APK, installs it on the same emulator and starts it, and fails if the app doesn't stay up. A debug build doesn't run R8, so this is what catches a launch crash like 1.49.1's before a release.

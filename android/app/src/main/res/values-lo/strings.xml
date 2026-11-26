@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. ຕອບກ່ອນ %3$s. ບໍ່ມີຫຍັງຖືກສົ່ງຈົນກວ່າທ່ານຈະອະນຸມັດ.</string>
     <string name="alert_answered">taf ຕອບຄົນໜຶ່ງ</string>
     <string name="alert_approve_once">ອະນຸມັດຄັ້ງດຽວ…</string>
+    <string name="alert_blocked_body">%1$s ນີ້ບໍ່ຖາມອີກແລ້ວ, ສະນັ້ນການແຈ້ງເຕືອນສຳລັບ tafs ຖືກປິດໃນການຕັ້ງຄ່າ. ເປີດມັນຢູ່ບ່ອນນັ້ນ ເພື່ອໃຫ້ການອະນຸມັດ ແລະ ຄຳຕອບມາຮອດທ່ານ.</string>
+    <string name="alert_blocked_body_android">Android ບໍ່ຖາມອີກແລ້ວ, ສະນັ້ນການແຈ້ງເຕືອນສຳລັບ tafs ຖືກປິດໃນການຕັ້ງຄ່າໂທລະສັບຂອງທ່ານ. ເປີດມັນຢູ່ບ່ອນນັ້ນ ເພື່ອໃຫ້ການອະນຸມັດ ແລະ ຄຳຕອບມາຮອດທ່ານ, ໃນໂທລະສັບນີ້ ແລະ ໃນໂມງຂອງທ່ານ. ໂມງຂອງທ່ານຍັງໄດ້ຮັບການອັບເດດຢູ່ດີ.</string>
+    <string name="alert_blocked_body_watch">iPhone ຂອງທ່ານບໍ່ຖາມອີກແລ້ວ, ສະນັ້ນການແຈ້ງເຕືອນສຳລັບ tafs ຖືກປິດໃນການຕັ້ງຄ່າ. ເປີດມັນຢູ່ບ່ອນນັ້ນ ເພື່ອໃຫ້ການອະນຸມັດ ແລະ ຄຳຕອບມາຮອດທ່ານ, ໃນ iPhone ນີ້ ແລະ ໃນໂມງຂອງທ່ານ. ໂມງຂອງທ່ານຍັງໄດ້ຮັບການອັບເດດຢູ່ດີ.</string>
+    <string name="alert_blocked_title">ເປີດການແຈ້ງເຕືອນສຳລັບ tafs</string>
     <string name="alert_by_email">ທາງອີເມວ</string>
     <string name="alert_example">ຕົວຢ່າງ</string>
     <string name="alert_foot_cant_answer_holds">ການແຈ້ງເຕືອນໄປຫາຄົນທີ່ຕອບການໂທທີ່ຖືກພັກໄວ້ໄດ້. ບົດບາດຂອງທ່ານໃນບັນຊີນີ້ບໍ່ໄດ້.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">ການແຈ້ງເຕືອນຍັງບໍ່ໄດ້ເປີດສຳລັບໂທລະສັບນີ້. %1$s</string>
     <string name="alert_not_refused">ບໍ່ໄດ້ປະຕິເສດ</string>
     <string name="alert_not_sent">ຄຳຕອບບໍ່ໄດ້ຖືກສົ່ງ</string>
+    <string name="alert_now_on">ການແຈ້ງເຕືອນເປີດຢູ່.</string>
     <string name="alert_on_this_device">ການແຈ້ງເຕືອນໃນ %1$s ນີ້</string>
+    <string name="alert_open_notification_settings">ເປີດການຕັ້ງຄ່າການແຈ້ງເຕືອນ</string>
+    <string name="alert_open_settings">ເປີດການຕັ້ງຄ່າ</string>
     <string name="alert_open_tafs_answer_kiff_did">ເປີດ tafs ເພື່ອຕອບ: KIFF ບໍ່ໄດ້ບອກວ່າທ່ານເຫັນເວີຊັນໃດຂອງມັນ.</string>
     <string name="alert_open_tafs_answer_phone_can">ເປີດ tafs ເພື່ອຕອບ: ໂທລະສັບນີ້ລົງລາຍເຊັນຈາກການແຈ້ງເຕືອນບໍ່ໄດ້.</string>
     <string name="alert_prompt">ຮັບການແຈ້ງເຕືອນເມື່ອ taf ຕ້ອງການທ່ານ</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">ບໍ່ມີ</string>
     <string name="alert_status_off">ປິດ</string>
     <string name="alert_status_on">ເປີດ</string>
+    <string name="alert_still_off">ການແຈ້ງເຕືອນຍັງປິດຢູ່.</string>
     <string name="alert_still_on_after_sign_out_body">tafs ປິດມັນບໍ່ໄດ້ (%1$s). ລອງໃໝ່ ຫຼື ອອກຈາກລະບົບເລີຍ ແລ້ວປິດການແຈ້ງເຕືອນສຳລັບ tafs ໃນການຕັ້ງຄ່າ.</string>
     <string name="alert_still_on_after_sign_out_title">%1$s ນີ້ອາດຍັງໄດ້ຮັບການແຈ້ງເຕືອນຂອງບັນຊີນີ້</string>
     <string name="alert_taf_needs_you">%1$s ຕ້ອງການທ່ານ</string>
@@ -45,6 +53,8 @@
         <item quantity="other">taf %1$s ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs ຕິດຕໍ່ KIFF ເພື່ອປະຕິເສດບໍ່ໄດ້. ເປີດ tafs ເພື່ອຕອບ.</string>
+    <string name="alert_watch_first_body">ເພື່ອເບິ່ງການອະນຸມັດ ແລະ ຄຳຕອບເປັນການແຈ້ງເຕືອນ, ໃນໂທລະສັບນີ້ ແລະ ໃນໂມງຂອງທ່ານ, ໃຫ້ເປີດການແຈ້ງເຕືອນສຳລັບ tafs. ໂມງຂອງທ່ານຍັງຈະໄດ້ຮັບການອັບເດດ ເຖິງທ່ານບໍ່ເປີດກໍຕາມ.</string>
+    <string name="alert_watch_first_title">ໂມງຂອງທ່ານກຳລັງໃຊ້ tafs</string>
     <string name="alert_what_alerts">ສິ່ງທີ່ແຈ້ງເຕືອນທ່ານ</string>
     <string name="alert_with_sound">ມີສຽງ</string>
     <string name="app_name">tafs</string>
@@ -813,6 +823,7 @@
     <string name="coach_tools_give">ໃຫ້ Coach ມີເຄື່ອງມືຂອງມັນ</string>
     <string name="coach_tools_giving">ກຳລັງໃຫ້…</string>
     <string name="coach_tools_title">ເຄື່ອງມືຂອງ Coach</string>
+    <string name="coach_tools_write_after">ອະນຸມັດເຄື່ອງມືຂອງ Coach ກ່ອນ, ຈາກນັ້ນທ່ານຈຶ່ງຂຽນໄດ້.</string>
     <string name="coach_tools_eyebrow">ເຄື່ອງມື</string>
     <string name="coach_tools_not_given">ບໍ່ໄດ້ໃຫ້ເຄື່ອງມືຂອງ Coach. %1$s</string>
     <string name="coach_tools_not_read">ອ່ານເຄື່ອງມືຂອງ Coach ບໍ່ໄດ້. %1$s</string>
@@ -2705,6 +2716,7 @@
     <string name="watch_ask">ຖາມ tafs</string>
     <string name="watch_ask_needs_consent">ກ່ອນຖາມ tafs ໃຫ້ອະນຸຍາດການໃຊ້ AI ໃນ tafs ໃນໂທລະສັບຂອງທ່ານ.</string>
     <string name="watch_ask_not_on">ການຖາມຈາກໂມງຂອງທ່ານຍັງບໍ່ໄດ້ເປີດ.</string>
+    <string name="watch_ask_phone_sign_in">ຂໍໃຫ້ໂທລະສັບຂອງທ່ານເຂົ້າສູ່ລະບົບໂມງນີ້</string>
     <string name="watch_ask_text_only">tafs ໄດ້ຮັບຄຳເວົ້າຂອງທ່ານເປັນຂໍ້ຄວາມ, ບໍ່ເຄີຍເປັນສຽງ.</string>
     <string name="watch_asking_phone">ກຳລັງຖາມໂທລະສັບຂອງທ່ານ…</string>
     <string name="watch_calendar_today">ປະຕິທິນມື້ນີ້</string>
@@ -2716,6 +2728,7 @@
     <string name="watch_deleted_nothing_sent">ລຶບແລ້ວ. ບໍ່ມີຫຍັງຖືກສົ່ງ.</string>
     <string name="watch_didnt_catch">ຟັງບໍ່ທັນ. ແຕະເພື່ອລອງໃໝ່.</string>
     <string name="watch_dismiss">ປິດ</string>
+    <string name="watch_edit_words">ແຕະຂໍ້ຄວາມເພື່ອແກ້ໄຂ</string>
     <string name="watch_glance_description">ມີຈັກອັນທີ່ຕ້ອງການທ່ານ, ບໍ່ເຄີຍບອກວ່າຫຍັງ ຫຼື ໃຜ.</string>
     <string name="watch_halt_all_q">ຢຸດທຸກ taf ຂອງທ່ານບໍ?</string>
     <plurals name="watch_halt_now_count">
@@ -2729,6 +2742,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">ການໂທທີ່ພັກໄວ້ %1$s ຕ້ອງການທ່ານ</item>
     </plurals>
+    <string name="watch_held_channel">ການໂທທີ່ພັກໄວ້</string>
     <string name="watch_inbox_empty">ບໍ່ມີຫຍັງໃໝ່. ຄຳຕອບຂອງ Coach ແລະ ການແຈ້ງເຕືອນຈາກ taf ຂອງທ່ານມາຮອດບ່ອນນີ້.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">ຍັງບໍ່ໄດ້ອ່ານ %1$s ໃນກ່ອງຂໍ້ຄວາມ</item>
@@ -2742,7 +2756,7 @@
     <string name="watch_menu">ເມນູ</string>
     <string name="watch_mic_needed">ເພື່ອຖາມດ້ວຍສຽງ ໃຫ້ອະນຸຍາດໄມໂຄຣໂຟນສຳລັບ tafs ໃນໂມງນີ້.</string>
     <string name="watch_more_on_phone">ສ່ວນທີ່ເຫຼືອຢູ່ໃນໂທລະສັບຂອງທ່ານ.</string>
-    <string name="watch_needs_lock">ເພື່ອປະຕິເສດ ຫຼື ຢຸດຈາກໂມງນີ້ ໃຫ້ຕັ້ງການລັອກໜ້າຈໍໃນມັນ ແລ້ວປົດລັອກ.</string>
+    <string name="watch_needs_lock">ເພື່ອສົ່ງ, ປະຕິເສດ ຫຼື ຢຸດຈາກໂມງນີ້ ໃຫ້ຕັ້ງການລັອກໜ້າຈໍໃນມັນ ແລ້ວປົດລັອກ.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">%1$s ຕ້ອງການທ່ານ</item>
     </plurals>
@@ -2751,6 +2765,7 @@
     <string name="watch_nothing_sent_until">ບໍ່ມີຫຍັງຖືກສົ່ງຈົນກວ່າທ່ານຈະອະນຸມັດ.</string>
     <string name="watch_nothing_waits">ບໍ່ມີຫຍັງລໍຖ້າທ່ານ.</string>
     <string name="watch_open_on_phone">ເປີດໃນໂທລະສັບ</string>
+    <string name="watch_opened_on_phone">ເປີດຢູ່ໂທລະສັບແລ້ວ</string>
     <string name="watch_page_brief">ບົດສະຫຼຸບ</string>
     <string name="watch_page_inbox">ກ່ອງຂໍ້ຄວາມ</string>
     <string name="watch_paused_still_answers">ຢຸດຊົ່ວຄາວ: ຕາຕະລາງຂອງມັນປິດ. ມັນຍັງຕອບສິ່ງທີ່ທ່ານສົ່ງ.</string>
@@ -2773,6 +2788,7 @@
     <string name="watch_recent_chats">ການສົນທະນາຫຼ້າສຸດ</string>
     <string name="watch_recording">ກຳລັງບັນທຶກ</string>
     <string name="watch_recording_not_received">ການບັນທຶກບໍ່ເຖິງໂທລະສັບຂອງທ່ານ. ລອງໃໝ່ ຫຼື ພິມແທນ.</string>
+    <string name="watch_refuse_on_phone">ຍັງບໍ່ໄດ້ປະຕິເສດ. ປະຕິເສດຢູ່ໂທລະສັບຂອງທ່ານ.</string>
     <string name="watch_refused">ປະຕິເສດແລ້ວ. ບໍ່ມີຫຍັງຖືກສົ່ງ.</string>
     <string name="watch_reply">ຕອບ</string>
     <string name="watch_rerecord">ບັນທຶກໃໝ່</string>
@@ -2781,14 +2797,20 @@
     <string name="watch_resume_on_phone">ສືບຕໍ່ໃນໂທລະສັບຂອງທ່ານ</string>
     <string name="watch_retry">ລອງໃໝ່</string>
     <string name="watch_review">ກວດກ່ອນສົ່ງ</string>
+    <string name="watch_seconds_left">ເຫຼືອ %1$s ວິ</string>
     <string name="watch_sending">ກຳລັງສົ່ງ…</string>
     <string name="watch_sent">ສົ່ງແລ້ວ</string>
     <string name="watch_settings_of">%1$s · ການຕັ້ງຄ່າ</string>
+    <string name="watch_sign_in_allow">ອະນຸຍາດ</string>
+    <string name="watch_sign_in_denied">ບໍ່ໄດ້ເຂົ້າສູ່ລະບົບ. ໂມງນີ້ຍັງອອກຈາກລະບົບຢູ່.</string>
+    <string name="watch_sign_in_deny">ປະຕິເສດ</string>
     <string name="watch_sign_in_on_phone">ເຂົ້າສູ່ລະບົບ tafs ໃນໂທລະສັບຂອງທ່ານກ່ອນ.</string>
+    <string name="watch_sign_in_watch_q">ເຂົ້າສູ່ລະບົບໂມງນີ້ໃນນາມທ່ານບໍ?</string>
     <string name="watch_sign_out_q">ອອກຈາກລະບົບໃນໂມງນີ້ບໍ?</string>
     <string name="watch_sign_out_sub">ໂທລະສັບຂອງທ່ານຍັງເຂົ້າສູ່ລະບົບຢູ່. ໂມງນີ້ລືມ taf, ການສົນທະນາ ແລະ ກ່ອງຂໍ້ຄວາມຂອງທ່ານ.</string>
     <string name="watch_signed_in">ເຂົ້າສູ່ລະບົບແລ້ວ</string>
     <string name="watch_signed_out_here">ອອກຈາກລະບົບໃນໂມງນີ້ແລ້ວ. ໂທລະສັບຂອງທ່ານຍັງເຂົ້າສູ່ລະບົບຢູ່.</string>
+    <string name="watch_stopped_at_limit">ຢຸດທີ່ຂີດຈຳກັດ %1$s. ສິ່ງທີ່ໄດ້ຍິນຢູ່ລຸ່ມນີ້.</string>
     <string name="watch_swipe_settings">ປັດຊ້າຍເພື່ອເບິ່ງການຕັ້ງຄ່າຂອງມັນ</string>
     <string name="watch_tap_start">ແຕະ ເລີ່ມ ແລ້ວເວົ້າ. ຄຳເວົ້າຂອງທ່ານສະແດງຢູ່ທີ່ນີ້ໃນຂະນະທີ່ທ່ານເວົ້າ.</string>
     <string name="watch_timing">ຟັງ %1$s ms · ໃບຮັບເງິນ %2$s ms · ຜົນ %3$s ms</string>
@@ -2797,8 +2819,10 @@
     <string name="watch_type">ພິມ</string>
     <string name="watch_type_hint">ຂຽນຫາ Coach…</string>
     <string name="watch_update_phone">ອັບເດດ tafs ໃນໂທລະສັບຂອງທ່ານ ແລ້ວລອງໃໝ່.</string>
+    <string name="watch_view_on_phone">ເບິ່ງໃນໂທລະສັບ</string>
     <string name="watch_view_only_phone">ໂທລະສັບນີ້ເບິ່ງໄດ້ຢ່າງດຽວ ສະນັ້ນທ່ານຖາມຈາກໂມງບໍ່ໄດ້. ເຂົ້າສູ່ລະບົບໃນໂທລະສັບທີ່ອະນຸມັດໄດ້.</string>
     <string name="watch_voice_text_only">Coach ໄດ້ຮັບຄຳເວົ້າຂອງທ່ານເປັນຂໍ້ຄວາມ, ບໍ່ເຄີຍເປັນສຽງ.</string>
+    <string name="watch_waiting_for_phone">ກຳລັງລໍໂທລະສັບຂອງທ່ານ…</string>
     <string name="watch_what_it_does">ມັນເຮັດຫຍັງ</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s ກຳລັງເຮັດວຽກ</item>

@@ -7,6 +7,9 @@ import { CLOSE, Nonces, checkStep, checkWelcome, clockOffset, hello, result } fr
 import { randomId } from "./crypto.js";
 
 const PING_MS = 20_000;
+/** Steps whose effect has happened by the time they answer: never answered as a failure for their page's size. */
+const EFFECT_OPS = new Set(["act", "hand"]);
+
 /** The relay carries at most 128 KB a message: a result above this is answered `page_too_large` instead. */
 export const MAX_RESULT_BYTES = 120 * 1024;
 
@@ -64,7 +67,11 @@ export function readConnections(list) {
   for (const c of list) {
     if (!c || typeof c.grant !== "string" || typeof c.agent !== "string" || !c.agent || typeof c.name !== "string") continue;
     const sites = Array.isArray(c.sites) ? c.sites.filter((x) => typeof x === "string").slice(0, 100) : [];
-    out.push({ grant: c.grant, agent: c.agent, name: c.name.slice(0, 80), sites });
+    // The phone's signature over the grant's sites, when planque relays it: kept as it came, to be verified where it's used
+    // (protocol.signedSitesOf), never taken on its word.
+    const s = c.sites_signed;
+    const signed = s && Array.isArray(s.sites) && s.sites.length <= 100 && s.sites.every((x) => typeof x === "string") && typeof s.sig === "string" ? { sites_signed: { sites: s.sites, sig: s.sig } } : {};
+    out.push({ grant: c.grant, agent: c.agent, name: c.name.slice(0, 80), sites, ...signed });
     if (out.length === 50) break;
   }
   return out;
@@ -216,16 +223,16 @@ export class Relay {
     }
     if (m.type === "step") {
       const checked = await checkStep(m, { planqueKey: this.config.planqueKey, chromeId: pairing.chromeId, nonces: this.nonces, now: this.now(), offset: this.offset ?? null });
-      if (checked.why) {
-        // Not run, and said so only when it carries an id we can answer: an unsigned message gets no signed answer.
-        const id = m.step && typeof m.step.id === "string" ? m.step.id : null;
-        if (id) this.send(await result(keys.privateKey, { id, nonce: m.step.nonce }, pairing.chromeId, { error: { code: "bad_step", detail: checked.why } }));
-        return;
-      }
+      // A step that doesn't verify (not planque's signature, not for this Chrome, expired, replayed, malformed) is dropped: not
+      // run, and given no answer at all. This extension's key never signs over an id and a nonce it can't trust, so a forged step
+      // gets nothing signed back. A verified step the runner refuses (a bad act, a site off the run's) keeps its signed refusal.
+      if (checked.why) return;
       const out = await this.runner.handle(checked.step);
       let answer = await result(keys.privateKey, checked.step, pairing.chromeId, out);
-      // Too large: the page is cut until it fits, and says what was cut. An act that ran is never answered as a failure
-      // (a taf told its click failed may click Submit again); only a page that fits no way is `page_too_large`.
+      // Too large: the page is cut until it fits, and says what was cut. A step whose effect already happened (an act, its
+      // back included, or a hand-over) is never answered as a failure, or a taf told its click failed may click Submit again:
+      // it's answered done, with no page and `page_dropped`, and the taf reads again. Only an open or a read, which changed
+      // nothing a second try would repeat, is `page_too_large`.
       if (bytesOf(answer) > MAX_RESULT_BYTES && out && out.page) {
         for (const page of cutPages(out.page)) {
           answer = await result(keys.privateKey, checked.step, pairing.chromeId, { ...out, page });
@@ -233,7 +240,10 @@ export class Relay {
         }
       }
       if (bytesOf(answer) > MAX_RESULT_BYTES) {
-        answer = await result(keys.privateKey, checked.step, pairing.chromeId, { error: { code: "page_too_large", detail: "the answer is over " + MAX_RESULT_BYTES + " bytes" } });
+        const ran = out && !out.error && EFFECT_OPS.has(checked.step.op);
+        answer = ran
+          ? await result(keys.privateKey, checked.step, pairing.chromeId, { ...out, page: null, pageDropped: "page_too_large" })
+          : await result(keys.privateKey, checked.step, pairing.chromeId, { error: { code: "page_too_large", detail: "the answer is over " + MAX_RESULT_BYTES + " bytes" } });
       }
       this.send(answer);
       return;

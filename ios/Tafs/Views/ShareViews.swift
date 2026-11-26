@@ -371,7 +371,8 @@ struct OverviewView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
                         let who = usedBy(taf)
-                        if !who.isEmpty { Text(who).scaledFont(12).foregroundColor(Theme.dim).oneLineUnlessLarge() }
+                        // Two lines at most, so a medium window ends on "1 persona", never "1 per…" (`peopleLine`).
+                        if !who.isEmpty { Text(who).scaledFont(12).foregroundColor(Theme.dim).lineLimit(2).fixedSize(horizontal: false, vertical: true) }
                         TafLabels(taf: taf)
                     }
                 }
@@ -407,7 +408,13 @@ struct OverviewView: View {
                 names.append(model.person(subject)?.label ?? subject); people.insert(subject)
             }
         }
-        return names.joined(separator: ", ") + " · " + Words.People.count(count: people.count)
+        return Self.peopleLine(names: names, count: people.count)
+    }
+
+    /// "Support · 3 people": the count held together by no-break spaces, so a narrow column moves "3 people" (or "1 persona")
+    /// to the next line whole, never splitting or cutting it.
+    static func peopleLine(names: [String], count: Int) -> String {
+        names.joined(separator: ", ") + " · " + Words.People.count(count: count).replacingOccurrences(of: " ", with: "\u{00A0}")
     }
 
     /// "300 US$ left today of 300 US$", from the Card in front, as its page says it: its money,

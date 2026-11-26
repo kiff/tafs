@@ -2,6 +2,7 @@ package bot.tafs.app
 
 import android.app.Application
 import android.content.pm.ApplicationInfo
+import kotlinx.coroutines.launch
 import bot.tafs.app.billing.NoPlayStore
 import bot.tafs.app.billing.PlayBillingStore
 import bot.tafs.app.billing.Purchases
@@ -101,7 +102,59 @@ class TafsApplication : Application() {
       bot.tafs.app.app.SampleStore(java.io.File(filesDir, "sample.json")), signer, kiff, cloud, secrets, deviceName = deviceName,
       push = push, planque = planque, vendorSignIn = vendorSignIn, appSignInTab = appSignInTab, purchases = purchases, playBilling = playBilling,
       openedFiles = java.io.File(cacheDir, "attachments"),
+    ).also { model ->
+      // Signed out: the watch forgets the account, now or when it's next in reach (docs/watch-wear.md, "What the watch keeps").
+      model.watchSignedOut = { mark ->
+        watchChats.forget()
+        watchTafs.forget()
+        watchNeedsYou.forget()
+        background.launch { bot.tafs.app.watch.WatchSignedOut.of(this@TafsApplication).tell(mark) }
+      }
+      // A watch signed out on itself asks to be signed in again (row 18): the person is told, with the app closed too; the
+      // question itself is asked in the app, behind the phone's lock, never in the notification.
+      model.watchSignInAsked = { watchSignInNotice() }
+      // Their answer goes to the watch, for that ask alone.
+      model.watchSignInAnswered = { ask, allowed, mark ->
+        runCatching { getSystemService(android.app.NotificationManager::class.java)?.cancel(WATCH_SIGN_IN_TAG, 1) }
+        background.launch {
+          runCatching {
+            bot.tafs.app.watch.DataLayerKeep(this@TafsApplication).put(
+              bot.tafs.watchlink.WatchLink.KEPT_SIGN_IN,
+              bot.tafs.watchlink.WatchLink.encodeKept(bot.tafs.watchlink.KeptSignIn(System.currentTimeMillis(), ask, allowed, mark?.takeIf(bot.tafs.watchlink.WatchLink::isMark))),
+            )
+          }
+        }
+      }
+    }
+  }
+
+  /** "Sign this watch in as you?", as a notification that opens the app, where it's answered. */
+  private fun watchSignInNotice() {
+    bot.tafs.app.push.AlertNotifier(this)
+    val open = android.app.PendingIntent.getActivity(
+      this, WATCH_SIGN_IN_TAG.hashCode(), android.content.Intent(this, MainActivity::class.java).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP),
+      android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT,
     )
+    val shown = androidx.core.app.NotificationCompat.Builder(this, bot.tafs.app.push.AlertNotifier.HOLDS)
+      .setSmallIcon(R.drawable.ic_bell)
+      .setContentTitle(bot.tafs.app.model.Words.Watch.signInWatchQ)
+      .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+      .setContentIntent(open)
+      .setAutoCancel(true)
+      .build()
+    runCatching { androidx.core.app.NotificationManagerCompat.from(this).notify(WATCH_SIGN_IN_TAG, 1, shown) }
+  }
+
+  /** Needs you, kept for the watch as it changes ([bot.tafs.app.watch.WatchNeedsYou]): a held call reaches the wrist at once. */
+  val watchNeedsYou: bot.tafs.app.watch.WatchNeedsYou by lazy {
+    bot.tafs.app.watch.WatchNeedsYou(bot.tafs.app.watch.DataLayerKeep(this), mark = { model.watchMark() })
+      .also { it.follow(model.state, background) }
+  }
+
+  /** The taf list, kept for the watch as it changes ([bot.tafs.app.watch.WatchTafs]), once the watch has used tafs. */
+  val watchTafs: bot.tafs.app.watch.WatchTafs by lazy {
+    bot.tafs.app.watch.WatchTafs(bot.tafs.app.watch.DataLayerKeep(this), mark = { model.watchMark() })
+      .also { it.follow(model.state, background) }
   }
 
   /**
@@ -117,7 +170,7 @@ class TafsApplication : Application() {
    */
   val watchChats: bot.tafs.app.watch.WatchChats by lazy {
     bot.tafs.app.watch.WatchChats(bot.tafs.app.watch.DataLayerKeep(this), zone = { bot.tafs.app.model.zone.id },
-      store = bot.tafs.app.watch.WatchChats.OpenedStore.Preferences(this))
+      store = bot.tafs.app.watch.WatchChats.OpenedStore.Preferences(this), mark = { model.watchMark() })
       .also { it.follow(bot.tafs.app.watch.WatchChats.of(model.state), background) }
   }
 
@@ -140,3 +193,6 @@ class TafsApplication : Application() {
   val deviceName: String
     get() = bot.tafs.app.model.Words.Settings.Devices.thisDeviceName(device = bot.tafs.app.model.Words.Settings.Devices.androidDevice(device = bot.tafs.app.model.ThisDevice.word))
 }
+
+/** The notification that asks to sign a watch in again: one at a time, taken away once answered. */
+private const val WATCH_SIGN_IN_TAG = "watch-sign-in"

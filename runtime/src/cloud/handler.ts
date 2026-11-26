@@ -4,7 +4,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { type AgentDefinition, type AgentVersion, type Agents, type AISource, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers, membersOf } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, tafChatNotification, watchAskNotification, watchInboxNotification, reconcileDevices, ALERT_CAPABILITIES } from "./push.js";
@@ -15,7 +15,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, relevantNow, stateOf, summary } from "./home.js";
 import { AGENTS_MAX_INPUT, heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { failedLine, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
+import { failedLine, failureCode, retrySafe, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
@@ -37,13 +37,13 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine } from "./connections.js";
-import { maskedPath, normalHost, pageSiteRefused } from "./page-sites.js";
+import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine, tafPageSites } from "./connections.js";
+import { maskedPath, normalHost, onSites, pageSiteRefused } from "./page-sites.js";
 import { maskedCodes } from "./page-codes.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
-import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
+import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveKeys, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone, givePageConsent, pageConsentOf, pageConsentView, withdrawPageConsent } from "./consent.js";
+import { AI_CONSENT_CODE, type AIConsent, type AIConsentView, aiConsentOf, aiConsentView, aiSourceLine, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone, givePageConsent, pageConsentOf, pageConsentView, withdrawPageConsent } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
@@ -59,7 +59,7 @@ import { type APIDraft, doorKeys } from "./doors/model.js";
 type KeptAPIDraft = { draft?: APIDraft; made: string; expires: string; used?: { door: string; at: string } };
 import { canonical } from "./jcs.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
-import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
+import { fileReport, reportInput, reportKey, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
 import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, removedRecordTafs, removedTafsKey, type RemovedTaf } from "./record.js";
 import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
@@ -77,7 +77,7 @@ import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./bus
 import { MissionRefusal, planMission, readMissions, saveMissions } from "./missions.js";
 import { briefDue, briefLaterKey, briefZoneKey, buildBrief, checkDecision, connectionDecision, type BriefDecisionIn, type DecisionWords, holdDecision, laterOf, putOff, stepDecision } from "./brief.js";
 import { logDelivered, logPage, readLog } from "./missionlog.js";
-import { chromeBegan, chromeMayCall, chromeOf, markChromeChat } from "./chrome-chats.js";
+import { chromeBegan, chromeMayCall, chromeOf, chromeRunChats, chromeRunsOf, markChromeChat } from "./chrome-chats.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -132,8 +132,10 @@ import { chromeBegan, chromeMayCall, chromeOf, markChromeChat } from "./chrome-c
  *   POST /v1/tafs/{id}/chats/{session}/archive  hide a chat from the list and the thread (kiff/tafs#82)
  *   GET  /v1/tafs/{id}/chats/archived   the chats the owner archived, to find and reopen one (kiff/tafs#97)
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
+ *   DELETE /v1/tafs/{id}/chats/{session}  the person deletes one of their own chats for good (deleteChat)
  *   POST /v1/tafs/{id}/messages         {text, attachments?, session?, new_chat?, new_chat_after_handover?}: into the live chat, a chosen one, or a new one (a Coach chat that handed a taf over, a new one)
  *   POST /v1/tafs/{id}/messages/stream  the same, its answer streamed (handleStream)
+ *   POST /v1/tafs/{id}/messages/{message}/report  {reason, note?, session?}: reports an answer of the taf's (reportRoute)
  *   GET  /v1/tafs/{id}/runs/{run}/stream?after=N  the person's own run picked back up (handleStream)
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
@@ -238,12 +240,12 @@ export interface HTTPResult {
 
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
-  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
+  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "deleteSession" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
   "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "unclaimedDrafts" | "getRun" | "runByKey" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "checkTool" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" | "listFiles" | "readDeliveredFile" | "downloadDeliveredFile" | "deleteDeliveredFile" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" | "pausedRuns" |
-  "openTrial" | "openedTrial" | "trialMessage" | "endTrial">;
+  "openTrial" | "openedTrial" | "trialMessage" | "endTrial"> & Partial<Pick<Agents, "aiSource">>;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -822,14 +824,14 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       if (method === "DELETE") await withdrawAIConsent(deps.coach, me.tenantID, me.subject, deps.now?.() ?? new Date());
       else {
         const given = await giveAIConsent(deps.coach, me.tenantID, me.subject, parseBody(event).version, deps.now?.() ?? new Date());
-        if (given === "stale") throw new HTTPError(409, "the consent's words changed: read them again", { consent: aiConsentView(undefined, lang) });
+        if (given === "stale") throw new HTTPError(409, "the consent's words changed: read them again", { consent: await consentView(undefined, lang, me.tenantID, deps) });
         // The account's first yes from someone who manages its tafs is what its tafs from before take.
         if (me.capabilities.includes("cards.manage")) await recordFirstYes(deps.coach, me.tenantID, me.subject, deps.now?.() ?? new Date());
       }
       // Their tafs follow at once: paused on a withdrawal, resumed (and what waited started) on a yes.
       if (deps.aiConsent) await settleConsent(deps, me.tenantID).catch((err) => console.error(`consent: settle: ${(err as Error).message}`));
     }
-    return { consent: aiConsentView(await aiConsentOf(deps.coach, me.tenantID, me.subject), lang) };
+    return { consent: await consentView(await aiConsentOf(deps.coach, me.tenantID, me.subject), lang, me.tenantID, deps) };
   }
   if (parts.length === 3 && parts[1] === "me" && parts[2] === "page-consent" && (method === "GET" || method === "POST" || method === "DELETE")) {
     // Coach reading the page in front (consent.ts): each person's own, given and withdrawn in the extension. It grants no
@@ -912,19 +914,54 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   const taf = await owned(me, parts[2] ?? "", deps);
   const action = parts[3];
-  // A Chrome sees only the chats begun in it (chrome-chats.ts): its lists, its live thread, a chat by its id, and where its
-  // messages go. A chat it didn't begin is 404, as one that isn't there.
+  // A Chrome sees the chats begun in it (chrome-chats.ts): its lists, its live thread, a chat by its id, and where its
+  // messages go; and, of a chat whose run worked in it (planque's record), only those runs' turns, which it reads and
+  // reports from but never writes to. Any other chat is 404, as one that isn't there.
   const chrome = chromeOf(me);
   if (chrome) {
     const began = (session: string) => chromeBegan(deps.coach, me, chrome, session);
+    let worked: Promise<Map<string, Set<string>>> | undefined;
+    const runChats = () => worked ??= chromeRunsOf(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event))
+      .then((runs) => chromeRunChats(deps.coach, deps.agents, me, taf, runs, deps.now?.() ?? new Date()));
+    // What the panel may read of a chat: all of one it began, or only its runs that worked here; undefined for none.
+    const may = async (session: string): Promise<{ runs?: ReadonlySet<string> } | undefined> => {
+      if (!session) return undefined;
+      if (await began(session)) return {};
+      const runs = (await runChats()).get(session);
+      return runs ? { runs } : undefined;
+    };
     const latest = async () => (await chats(me, taf, deps, false, began)).find((c) => !c.set_aside)?.session;
-    if (action === "chats" && method === "GET") return { chats: await chats(me, taf, deps, parts.length === 5, began) };
+    if (action === "chats" && method === "GET") {
+      const ran = await runChats();
+      const listed = async (session: string) => await began(session) || ran.has(session);
+      const turnsOf = (session: string) => ran.get(session);
+      // A chat it began is listed whole, even where a run also worked here (chromeBegan, read again per row).
+      const whole = new Set<string>();
+      await Promise.all([...ran.keys()].map(async (s) => { if (await began(s)) whole.add(s); }));
+      return { chats: await chats(me, taf, deps, parts.length === 5, listed, (session) => whole.has(session) ? undefined : turnsOf(session)) };
+    }
     if (action === "chats" && parts.length === 6 && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
-    if (action === "conversation" && parts.length === 5 && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
+    if (action === "chats" && parts.length === 5 && method === "DELETE" && !await began(parts[4] ?? "")) throw new HTTPError(404, "no such chat");
+    if (action === "conversation" && parts.length === 5 && method === "GET") {
+      const id = parts[4] ?? "";
+      const seen = await may(id);
+      if (!seen) throw new HTTPError(404, "no such chat");
+      if (seen.runs) {
+        // Only the turns of the runs that worked here: the message that started each, its steps and its answer.
+        const [only, titles] = await Promise.all([ownChat(me, taf, id, deps), titlesOf(event, me, taf, deps)]);
+        const { messages, components, held, drives, sessions, agreements } = await conversation(me, taf, deps, only, false, titles, langOf(event), seen.runs);
+        await markSigns(event, me, taf, components, deps, agreements);
+        const latest = await latestRun(me, taf, sessions, deps, langOf(event), seen.runs);
+        return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: null, ...(latest.failed ? { failed: latest.failed } : {}) };
+      }
+    }
     if (action === "conversation" && parts.length === 4) {
       const own = await latest();
       if (!own) return { messages: [], components: [], items: [], working: null };
       parts.push(own); // read as that chat
+    }
+    if (action === "messages" && parts.length === 6 && parts[5] === "report" && method === "POST") {
+      return reportRoute(event, me, taf, parts[4] ?? "", deps, { may });
     }
     if (action === "messages" && parts.length === 4 && method === "POST") {
       const body = parseBody(event);
@@ -964,7 +1001,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     if (!deps.coach) throw new HTTPError(503, "the consent can't be kept here");
     if (!await aiConsentOf(deps.coach, me.tenantID, me.subject)) {
       const lang = langOf(event);
-      throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: AI_CONSENT_CODE, consent: aiConsentView(undefined, lang) });
+      throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: AI_CONSENT_CODE, consent: await consentView(undefined, lang, me.tenantID, deps) });
     }
     await takeOver(deps.coach, me.tenantID, taf.id, me.subject, deps.now?.() ?? new Date());
     await resumeFromConsent(deps, me.tenantID, taf.id);
@@ -1185,16 +1222,19 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(latest.failed ? { failed: latest.failed } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
-    return { chats: await chats(me, taf, deps) };
+    return { chats: await chats(me, taf, deps), delete: deleteWords(langOf(event)) };
   }
   if (parts.length === 5 && method === "GET" && action === "chats" && parts[4] === "archived") {
-    return { chats: await chats(me, taf, deps, true) };
+    return { chats: await chats(me, taf, deps, true), delete: deleteWords(langOf(event)) };
   }
   if (parts.length === 6 && method === "POST" && action === "chats" && parts[5] === "archive") {
     return archive(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 6 && method === "POST" && action === "chats" && parts[5] === "unarchive") {
     return unarchive(me, taf, parts[4] ?? "", deps);
+  }
+  if (parts.length === 5 && method === "DELETE" && action === "chats" && parts[4] !== "archived") {
+    return deleteChat(me, taf, parts[4] ?? "", deps, langOf(event));
   }
   if (parts.length === 4 && method === "POST" && action === "stop") {
     need(me, "cards.manage");
@@ -1408,7 +1448,8 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     const device = devices.find((d) => d.token === token && d.subject === me.subject);
     const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase);
     const answering = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent) && placesOf(t).includes("app"));
-    return { enabled: Boolean(device), sound: !device?.silent, kinds: alertChoices(device?.kinds, langOf(event)),
+    // A phone registered for background pushes only (alerts: false) has its alerts off: it shows nothing.
+    return { enabled: Boolean(device) && device?.alerts !== false, ...(device?.alerts === false ? { background_only: true } : {}), sound: !device?.silent, kinds: alertChoices(device?.kinds, langOf(event)),
       answering: { title: wordsIn(langOf(event)).alerts_answering_tafs(answering.length, plural(langOf(event), answering.length)), tafs: answering.map((t) => ({ id: t.id, name: t.name })) } };
   }
   if (method === "DELETE" && parts.length === 2) {
@@ -1435,7 +1476,7 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     // handed over now or, for a phone that registered before, the one kept.
     const newest = r.target?.secret ?? secrets[0];
     if (newest && answers) await deps.accounts.put(me.tenantID, me.tenantID, newest);
-    await deps.push.addDevice(me.tenantID, { token: r.token, platform: r.platform, environment: r.environment, subject: me.subject, answers, addsTasks, manages, silent: r.silent, kinds: r.kinds ?? devices.find((d) => d.token === r.token && d.subject === me.subject)?.kinds, lang: langOf(event), at });
+    await deps.push.addDevice(me.tenantID, { token: r.token, platform: r.platform, environment: r.environment, subject: me.subject, answers, addsTasks, manages, silent: r.silent, kinds: r.kinds ?? devices.find((d) => d.token === r.token && d.subject === me.subject)?.kinds, ...(r.alerts === false ? { alerts: false as const } : {}), lang: langOf(event), at });
     return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0, ...(r.kinds ? { kinds: alertChoices(r.kinds, langOf(event)) } : {}) };
   }
   if (method === "DELETE" && parts.length === 3) {
@@ -2148,7 +2189,9 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
     return {
       state: "to_give", ...(connect ? { connect } : {}), ...(card ? { card } : {}), ...(together ?? {}),
       // Only Cards missing (Coach gained tools since its Card was signed): the row says why it asks again.
-      coach_tools_step: coachToolsStep(langOf(event), { cardsOnly: !connect && !issued }),
+      // Which tools' Cards this answer's draft carries (`in_draft`): the missing ones when a draft is in it (`card`, or the
+      // pair's), none when it carries no draft (only tools to connect, or a pair KIFF couldn't word).
+      coach_tools_step: coachToolsStep(langOf(event), { cardsOnly: !connect && !issued, drafted: card || together ? missingCards : new Set() }),
     };
   } catch (err) {
     if (err instanceof KIFFError) {
@@ -2278,11 +2321,34 @@ function validZone(zone: string): boolean {
   try { new Intl.DateTimeFormat("en", { timeZone: zone }); return true; } catch { return false; }
 }
 
-/** Coach's start in words: one line, the button, and what it does (approvals and Coach's tools, one face or fingerprint). */
-function startWords(lang: Lang): { lead: string; start: string } {
+/**
+ * Coach's start in words: one line and the button, then the Card step before the signature (docs/api.md, "Coach's first
+ * start"): its title, its four lines (what it allows, what always asks, how the approval signs, how to stop it), the label
+ * of the fold that holds KIFF's own words for the Cards, and the button for each way the device approves, whole sentences
+ * so each language's grammar holds. A device that approves with a passkey (a computer) says `sign_passkey` for `sign`.
+ * `locked` is the line in place of Coach's message box until the step is approved: nothing is written to Coach before it.
+ */
+function startWords(lang: Lang): StartWords {
   const w = wordsIn(lang);
   // What Start does is the lead's to say, once: no second line under the button (the app-words cut, screen 3).
-  return { lead: w.start_lead, start: w.start_button };
+  return {
+    lead: w.start_lead, start: w.start_button, title: w.card_step_title,
+    lines: { allows: w.card_step_allows, asks: w.card_step_asks, sign: w.card_step_sign, stop: w.card_step_stop },
+    exact: w.card_step_exact, buttons: { fingerprint: w.card_step_give_fingerprint, face: w.card_step_give_face, passkey: w.card_step_give_passkey },
+    sign_passkey: w.card_step_sign_passkey, locked: w.card_step_locked,
+  };
+}
+
+/** Coach's start words, as `start.words` sends them. */
+export interface StartWords {
+  lead: string;
+  start: string;
+  title: string;
+  lines: { allows: string; asks: string; sign: string; stop: string };
+  exact: string;
+  buttons: { fingerprint: string; face: string; passkey: string };
+  sign_passkey: string;
+  locked: string;
 }
 
 /** `plan_needed` with its words when KIFF says the account has no plan; nothing when it has one or can't be read. */
@@ -3025,7 +3091,7 @@ export interface ThreadUsage {
   cost_micro_usd: number;
 }
 
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map(), lang: Lang = "en"): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; drives: ThreadDrive[]; sessions: Session[]; usage?: ThreadUsage; agreements: Map<string, ReturnType<typeof rulesAgreement>> }> {
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map(), lang: Lang = "en", runs?: ReadonlySet<string>): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; drives: ThreadDrive[]; sessions: Session[]; usage?: ThreadUsage; agreements: Map<string, ReturnType<typeof rulesAgreement>> }> {
   if (!only) await moveArchived(me, taf, deps);
   // The person's own sessions (with the job's runs and those from before owners), read by
   // owner so other people's chats never use up the scan; and, for `doors`, the door senders'
@@ -3042,7 +3108,10 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     ...chats.slice(0, CHAT.chatsInThread),
   ];
   // Read as the person: their own and the jobs'. A door's chat is read as its own owner says.
-  const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id, readerOf(me, s)).catch(() => undefined)));
+  // `runs`: only those runs' events, by each event's own run (a Chrome's view of a run that worked in it): nothing of
+  // the chat outside them, an event with no run included.
+  const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id, readerOf(me, s))
+    .then((r) => (runs ? { ...r, events: r.events.filter((e) => runs.has(e.run)) } : r)).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
   const components: ThreadComponent[] = [];
   // Words written while a card waited, by where they were recorded: unless Coach showed that card again, they answered it.
@@ -3072,6 +3141,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     // A run's line before its tool calls (one short line, which its calls follow) is shown on the live line
     // while the run goes, never as a message: the run's work, on its next message, holds it (docs/chat.md).
     const lines = preToolLines(r.events);
+    for (const id of wordsOnRefusedCards(r.events)) lines.add(id);
     // Each run's work, shown once, on its first message (the 845 test): when the run started,
     // the tools it called, in order, and when it last wrote. The app's live block sits there too,
     // under the owner's message, so it folds in place when the run ends. A run that paused on a
@@ -3264,10 +3334,10 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   await markConnected(me.tenantID, shown, deps, lang);
   await markPlanNeeded(me.tenantID, shown, deps, lang);
   const last = messages.slice(-CHAT.maxThread);
-  // The site each of the person's messages to Coach went with (PAGE), and which of Coach's answers came from a turn that read
+  // The site each of the person's messages to Coach or a taf went with (PAGE), and which answers came from a turn that read
   // a page (`page_turn`): tafs cloud's record of the host, never the page. One read for the whole thread, and none when no
   // message in view is a run's.
-  const ofRuns = taf.job === SETUP_JOB && deps.coach ? last.filter((m) => m.id.endsWith(".in") || m.from === "taf") : [];
+  const ofRuns = deps.coach ? last.filter((m) => m.id.endsWith(".in") || m.from === "taf") : [];
   if (ofRuns.length) {
     const hosts = new Map((await pageReads(deps.coach!, me.tenantID, me.subject, deps.now?.() ?? new Date())).map((r) => [r.run, r.host]));
     for (const m of ofRuns) {
@@ -3870,16 +3940,17 @@ function parkedOnDrive(r: Run): boolean {
   return open.length > 0 && open.every((q) => q.kind === "event" && q.wait?.grant === DRIVE_WAIT_GRANT);
 }
 
-async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps, lang: Lang = "en"): Promise<{ working: { session: string; run: string; parked?: true } | null; steering: Steering | null; capped?: Capped; stopped?: Stopped; failed?: Failed }> {
+async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps, lang: Lang = "en", runs?: ReadonlySet<string>): Promise<{ working: { session: string; run: string; parked?: true } | null; steering: Steering | null; capped?: Capped; stopped?: Stopped; failed?: Failed }> {
   const none = { working: null, steering: null };
   const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
   if (!latest) return none;
   // What the person wrote that waits in this chat for the taf to be done, whatever run is latest.
-  const held = await heldFor(me, taf, latest.id, deps).catch(() => undefined);
+  // `runs`: a Chrome's view of the runs that worked in it says only of those, and nothing the person wrote elsewhere.
+  const held = runs ? undefined : await heldFor(me, taf, latest.id, deps).catch(() => undefined);
   try {
     const read = await deps.agents.session(me.tenantID, latest.id, readerOf(me, latest));
     const run = read.events.at(-1)?.run;
-    if (!run) return none;
+    if (!run || (runs && !runs.has(run))) return none;
     const r = await deps.agents.getRun(me.tenantID, taf.id, run);
     // Times as the thread's are (milliseconds): kiff/agents writes nanoseconds, which the app can't read.
     let untaken = (r.steering ?? []).filter((m) => !m.taken).map(({ text, at }) => ({ text, at: iso(at) }));
@@ -3943,13 +4014,32 @@ const STOPS_TO_WORD = new Set<string>(["cost_cap", "turn_cap", "max_token", "ref
  */
 interface Failed {
   run: string;
-  code?: string;
+  /** Why: kiff/agents' own code (`ai_unavailable`), `timeout`, or `failed`. An app that doesn't know it shows `words`. */
+  code: string;
   words: string;
+  /**
+   * Whether sending the person's message again is safe: the run's record shows nothing it did that acted (retrySafe).
+   * Read from what the run did, never from its code: a run that acted partway could act twice.
+   */
+  retry: boolean;
+  /** The Try again button's words, only when `retry`. */
+  retry_label?: string;
 }
 
 function failedOf(r: Run, lang: Lang): Failed {
-  const coded = runFailure(r, lang);
-  return coded ? { run: r.id, code: coded.code, words: coded.words } : { run: r.id, words: failedLine(r.error, lang) };
+  const w = wordsIn(lang);
+  const code = failureCode(r);
+  const retry = retrySafe(r);
+  // Each reason's line, and its partway line once the run had acted: that one claims nothing about credits or "before
+  // it changed anything", and offers no Try again. A kiff/agents code tafs cloud doesn't word passes its words on.
+  const lines: Record<string, [string, string]> = {
+    ai_unavailable: [w.turn_failed_ours, w.turn_failed_ours_partway],
+    timeout: [w.turn_failed_time, w.turn_failed_time_partway],
+    failed: [w.turn_failed_error, w.turn_failed_error_partway],
+  };
+  const own = lines[code];
+  const words = own ? own[retry ? 0 : 1] : runFailure(r, lang)?.words ?? failedLine(r.error, lang);
+  return { run: r.id, code, words, retry, ...(retry ? { retry_label: w.turn_failed_retry } : {}) };
 }
 
 /**
@@ -4012,9 +4102,14 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps,
  * trial's too), and keeps and sends it as kiff/agents holds it. 404 when no answer of the
  * taf's by that id is theirs to read; reporting one again answers the first report.
  */
-async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, messageID: string, deps: Deps): Promise<unknown> {
-  if (!deps.reports) throw new HTTPError(503, "reports aren't taken here");
+async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, messageID: string, deps: Deps,
+  chrome?: { may: (session: string) => Promise<{ runs?: ReadonlySet<string> } | undefined> }): Promise<unknown> {
   const body = parseBody(event);
+  // A Chrome reports only what its panel may show (chrome-chats.ts): an answer in a chat it began, or in the turn of a
+  // run that worked in it. Its chat is named, and nothing else is searched.
+  const seen = chrome ? await chrome.may(str(body.session).trim()) : undefined;
+  if (chrome && (!seen || !messageID)) throw new HTTPError(404, "no answer of the taf's by that id");
+  if (!deps.reports) throw new HTTPError(503, "reports aren't taken here");
   let input: ReturnType<typeof reportInput>;
   try {
     input = reportInput(body);
@@ -4024,8 +4119,12 @@ async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, message
   const session = str(body.session).trim();
   const answer = (messages: ThreadMessage[]) => messages.find((m) => m.id === messageID && m.from === "taf");
   let found: ThreadMessage | undefined;
+  if (chrome && seen) {
+    found = answer((await conversation(me, taf, deps, await ownChat(me, taf, session, deps), false, new Map(), "en", seen.runs)).messages);
+    if (!found) throw new HTTPError(404, "no answer of the taf's by that id");
+  }
   // The chat the app names first, when it's the person's; else the whole thread (a run's, a door's).
-  if (messageID && session) {
+  if (!found && messageID && session) {
     for (const kind of ["chat", "trial"] as const) {
       const only = await ownChat(me, taf, session, deps, kind).catch((err) => {
         if (err instanceof HTTPError && err.status === 404) return undefined;
@@ -4927,7 +5026,35 @@ async function requireAIConsent(event: HTTPEvent, me: KIFFIdentity, deps: Deps):
   if (!deps.aiConsent) return;
   if (await aiConsentOf(deps.coach, me.tenantID, me.subject)) return;
   const lang = langOf(event);
-  throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: "ai_consent_required", consent: aiConsentView(undefined, lang) });
+  throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: "ai_consent_required", consent: await consentView(undefined, lang, me.tenantID, deps) });
+}
+
+/** How long a read of where kiff/agents runs turns is kept: a switch shows within this. A failed read is tried again sooner. */
+export const AI_SOURCE_KEPT_MS = 5 * 60_000;
+const AI_SOURCE_RETRY_MS = 30_000;
+const aiSources = new WeakMap<object, { until: number; src: AISource | undefined }>();
+
+/**
+ * Where kiff/agents runs new turns, read from kiff/agents itself (never a setting of tafs cloud's own, so the two can't
+ * drift) and kept a few minutes per process. Unreadable is undefined: the consent then shows no "Right now" line.
+ */
+async function aiSourceNow(deps: Deps, tenant: string): Promise<AISource | undefined> {
+  const read = deps.agents.aiSource;
+  if (!read) return undefined;
+  const now = (deps.now?.() ?? new Date()).getTime();
+  const kept = aiSources.get(deps.agents);
+  if (kept && kept.until > now) return kept.src;
+  const src = await read.call(deps.agents, tenant).catch((err: unknown) => {
+    console.error(`consent: where turns run: ${(err as Error).message}`);
+    return undefined;
+  });
+  aiSources.set(deps.agents, { until: now + (src ? AI_SOURCE_KEPT_MS : AI_SOURCE_RETRY_MS), src });
+  return src;
+}
+
+/** The consent's view, with the "Right now" line when kiff/agents says where it runs turns. */
+async function consentView(consent: AIConsent | undefined, lang: Lang, tenant: string, deps: Deps): Promise<AIConsentView> {
+  return aiConsentView(consent, lang, aiSourceLine(await aiSourceNow(deps, tenant), lang));
 }
 
 /**
@@ -5054,7 +5181,7 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   if (attached.length) at.attachments = attached;
   if (key) Object.assign(at, { dedupKey: key, source: APP_SOURCE });
   const page = await pageFor(event, me, taf, deps);
-  withPage(at, page);
+  withPage(at, page, taf);
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   const said = await withCoachSkills(me, taf, at, text, event, deps);
   // The page's host goes in the message kiff/agents keeps, so a later turn knows this one read it (withPageRead).
@@ -6470,11 +6597,12 @@ async function pageReads(store: CoachStore, tenant: string, person: string, now:
 }
 
 /**
- * The page the person had open, sent beside their words to Coach as `page: {url, title, text, truncated}` (the
- * Chrome side panel): what the run reads, and the host each message shows (`reading`). Only Coach reads one, only an
- * https page with no credentials in its address, kept to its address with no query or fragment. Anything else is a
- * 400, and nothing starts. A message that answers a card waiting in the chat goes on with the person's words alone,
- * and says no `reading`: only a message whose run read the page says which site went with it.
+ * The page the person had open, sent beside their words to Coach or a taf as `page: {url, title, text, truncated}`
+ * (the Chrome side panel): what the run reads, and the host each message shows (`reading`). Only an https page with no
+ * credentials in its address, kept to its address with no query or fragment, and to a taf only from one of the sites
+ * the owner signed for its browser connection (tafPageSites): a taf with none, or one signed for any public site, gets
+ * no page. Anything else is a 400, and nothing starts. A message that answers a card waiting in the chat goes on with
+ * the person's words alone, and says no `reading`: only a message whose run read the page says which site went with it.
  */
 async function pageFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ host: string; aside: string } | undefined> {
   const raw = parseBody(event).page;
@@ -6482,14 +6610,24 @@ async function pageFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   // Without the person's page consent the page is dropped here: never checked, read, kept or logged, and the message
   // goes alone, on their AI consent as ever (consent.ts).
   if (!await pageConsentOf(deps.coach, me.tenantID, me.subject)) return undefined;
-  return pageOf(event, taf);
+  return pageOf(event, taf, taf.job === SETUP_JOB ? undefined : await tafSites(event, me, taf, deps));
 }
 
-function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | undefined {
+/**
+ * The sites a taf gets the page from: those planque lists for its browser connections, read with the person's own
+ * session (the extension checks the phone-signed list too, chrome/src/sites.js). None when planque can't be read: the
+ * page is refused, never sent on a list tafs cloud couldn't check.
+ */
+async function tafSites(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string[]> {
+  if (!deps.planqueBase || !taf.kiffAgent) return [];
+  const conns = await accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => [] as AccountConnection[]);
+  return tafPageSites(conns, taf.kiffAgent);
+}
+
+function pageOf(event: HTTPEvent, taf: Taf, sites?: string[]): { host: string; aside: string } | undefined {
   const raw = parseBody(event).page;
   if (raw === undefined || raw === null) return undefined;
   const bad = (why: string) => new HTTPError(400, why, { code: "page_refused" });
-  if (taf.job !== SETUP_JOB) throw bad("only Coach reads the page you have open");
   // A page goes with the person's words, never alone (kiff/agents takes an aside only with an input).
   if (!withoutTafsLines(str(parseBody(event).text)).trim()) throw bad("a page goes with your words");
   if (typeof raw !== "object" || Array.isArray(raw)) throw bad("page is {url, title, text, truncated}");
@@ -6507,6 +6645,8 @@ function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | u
   if (u.protocol !== "https:" || !u.hostname || u.username || u.password) throw bad("Coach reads only an https page, with nothing signed in its address");
   // As the extension reads a host, so no form of one (a trailing dot, upper case) gets past the lists.
   const host = normalHost(u.hostname);
+  // A taf scoped to one shop never gets the text of any page the person happens to send from.
+  if (taf.job !== SETUP_JOB && !onSites(host, sites ?? [])) throw bad("a taf reads only a page on one of its own sites");
   // Never a bank, payment, mail or health site, nor the Web Store: the extension never sends one, and this holds whatever does.
   if (pageSiteRefused(host, u.pathname)) throw bad("Coach never reads a bank, payment, mail or health site, or Chrome's Web Store");
   const title = maskedCodes((p.title ?? "").replace(/\s+/g, " ").trim().slice(0, PAGE.title));
@@ -6519,14 +6659,21 @@ function pageOf(event: HTTPEvent, taf: Taf): { host: string; aside: string } | u
 }
 
 /**
- * Sends a run that reads a page with only the tools a page may lead to (PAGE_TOOLS), and keeps its host, never its
- * text, for the message's `reading`. The log says the host, never the page.
+ * Sends a run that reads a page with only the tools a page may lead to (PAGE_TOOLS for Coach, TAF_PAGE_TOOLS for a
+ * taf), and keeps its host, never its text, for the message's `reading`. The log says the host, never the page.
  */
-function withPage(at: RunAt, page: { host: string; aside: string } | undefined): void {
+function withPage(at: RunAt, page: { host: string; aside: string } | undefined, taf: Taf): void {
   if (!page) return;
   at.aside = page.aside;
-  at.asideTools = PAGE_TOOLS;
+  at.asideTools = taf.job === SETUP_JOB ? PAGE_TOOLS : TAF_PAGE_TOOLS;
 }
+
+/**
+ * The only tools a taf has in a turn that reads the page the person sent: it reads, on its own sites (planque holds
+ * it to them), and nothing else. A page can steer a call as any input can, so it never leads to an act, a pay or a
+ * call to another app; the chat's next message without a page has all of the taf's tools again.
+ */
+export const TAF_PAGE_TOOLS = ["browse_open", "browse_read"] as const;
 
 /** How far kiff/agents' clock may be behind tafs cloud's for a run to still count as this send's (startedBy). */
 export const PAGE_RUN_MARGIN_MS = 1000;
@@ -6739,6 +6886,12 @@ function newSession(at: RunAt, run: Run): boolean {
 
 /** One of the person's chats with the taf, by its id: another taf's, a job run's, another person's or none is 404. */
 async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind: "chat" | "trial" = "chat"): Promise<Session> {
+  return (await ownChatRead(me, taf, id, deps, kind)).session;
+}
+
+/** ownChat, with the chat's events kept so far. */
+async function ownChatRead(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind: "chat" | "trial" = "chat"):
+  Promise<Awaited<ReturnType<Deps["agents"]["session"]>>> {
   if (!id) throw new HTTPError(404, "no such chat");
   let read: Awaited<ReturnType<Deps["agents"]["session"]>>;
   try {
@@ -6748,7 +6901,68 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind:
     throw agentsFailure(err);
   }
   if (read.session.agent !== taf.id || read.session.kind !== kind || read.session.only) throw new HTTPError(404, "no such chat");
-  return read.session;
+  return read;
+}
+
+/**
+ * What an app draws to delete a chat, in the person's language: the menu item, the confirm, and the line for a delete that
+ * didn't go through. Sent with the chats list, so the failed line is on the device when the network is what failed; the
+ * 409's words come with the 409 (chat_delete_busy). A Chrome's list carries none: it can't delete a chat yet.
+ */
+function deleteWords(lang: Lang): { item: string; confirm_title: string; confirm_body: string; confirm_button: string; failed: string } {
+  const w = wordsIn(lang);
+  return { item: w.chat_delete_item, confirm_title: w.chat_delete_confirm_title, confirm_body: w.chat_delete_confirm_body,
+    confirm_button: w.chat_delete_confirm_button, failed: w.chat_delete_failed };
+}
+
+/**
+ * The person deletes one of their own chats with a taf or Coach for good: its messages and files (kiff/agents), and what
+ * tafs cloud kept by it that holds the chat's content or says something about it: what they wrote that waits to go as
+ * their next message there and the runs they wrote to (steer: the chat then drops out of their steer list at its next
+ * settle, as nothing waits in it), the ends of Coach's drives in it and their steps, its set aside, its connections, its
+ * notes for Coach and the reasons kept beside its approval cards, and their reports of its answers (reports.ts): the answer's
+ * text and their note go with the chat, though the email that told KIFF's support of a report is the support inbox's. Markers with no content (skills loaded, claims, a
+ * Chrome's or a watch's mark of the chat) end on their own. It is theirs alone (ownChat, and kiff/agents deletes only a
+ * thread its owner continued), never a job's or another person's. A chat whose run is still working or waits on a card is
+ * refused: stop it or answer it first, so no card outlives its chat. A run started by a message sent between that check
+ * and the delete finishes into a thread that's gone: nothing it writes is kept. What happened stays on record: the runs'
+ * records, the usage they counted and the KIFF record of every call are not part of a chat. A second delete answers 404.
+ */
+async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Deps, lang: Lang): Promise<unknown> {
+  const { session: chat, events } = await ownChatRead(me, taf, session, deps);
+  const active = await agentsCall(() => deps.agents.runs(me.tenantID, taf.id, true));
+  if (active.some((r) => r.session === chat.id)) {
+    throw new HTTPError(409, wordsIn(lang).chat_delete_busy);
+  }
+  // Their reports of its answers go first, from the whole chat as kiff/agents keeps it (every answer, never the thread's
+  // last ones), by each answer's id as the thread names it (`<run>.<seq>`). One that can't be removed stops the delete,
+  // with nothing of the chat gone, so trying again finishes it: a chat never goes while a report of it stays.
+  if (deps.reports) {
+    const store = deps.reports.store;
+    const keys = events.filter((e) => e.kind === "agent_message" || e.kind === "report").map((e) => reportKey(me.tenantID, me.subject, `${e.run}.${e.seq}`));
+    const removed = await Promise.all(keys.map((key) => store.remove(key).then(() => true, (err) => {
+      console.error(`delete chat: a report wasn't removed: ${(err as Error).message}`);
+      return false;
+    })));
+    if (removed.includes(false)) throw new HTTPError(503, wordsIn(lang).chat_delete_failed);
+  }
+  await agentsCall(() => deps.agents.deleteSession(me.tenantID, chat.id, ownerKey(me)));
+  // What tafs cloud kept by this chat: best effort, each ends on its own (30 days at most) if a removal fails.
+  const coach = deps.coach;
+  if (coach) {
+    const approvals = new Set(events.flatMap((e) => {
+      const b = e.kind === "answered" ? e.body as { id?: unknown; type?: unknown } : undefined;
+      return b?.type === "approval" && typeof b.id === "string" ? [b.id] : [];
+    }));
+    const recaps = await coach.get(driveKeys.recaps(me.tenantID, chat.id)).catch(() => undefined);
+    const drives = [...new Set(Array.isArray(recaps) ? recaps.filter((x): x is string => typeof x === "string" && x !== "") : [])];
+    const steer = chatKeys(me, taf, chat.id);
+    const kept = [setAsideKey(me.tenantID, chat.id), chatConnectedKey(me.tenantID, chat.id), coachKeys.chatNotes(me.tenantID, me.subject, chat.id),
+      ...[...approvals].map((id) => approvalNoteKey(me.tenantID, chat.id, id)), steer.held, steer.steered,
+      ...drives.flatMap((d) => [driveKeys.recap(me.tenantID, d), driveKeys.steps(me.tenantID, d)]), driveKeys.recaps(me.tenantID, chat.id)];
+    await Promise.all(kept.map((key) => coach.remove(key).catch((err) => console.error(`delete chat: a kept note stays until it ends: ${(err as Error).message}`))));
+  }
+  return { session: chat.id, deleted: true };
 }
 
 /**
@@ -6765,7 +6979,8 @@ function phoneChat(s: Session): boolean {
  * ones are left out, or, with `archivedOnly`, are the only ones (kiff/tafs#97).
  * A Coach chat its person set aside says so (`set_aside: true`): the apps never open it as the newest, on any device.
  */
-async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false, only?: (session: string) => Promise<boolean>): Promise<Array<{ session: string; started: string; updated: string; title: string; set_aside?: true }>> {
+async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false, only?: (session: string) => Promise<boolean>,
+  turnsOf?: (session: string) => ReadonlySet<string> | undefined): Promise<Array<{ session: string; started: string; updated: string; title: string; set_aside?: true }>> {
   await moveArchived(me, taf, deps);
   const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me)));
   const shown = all.filter((s) => phoneChat(s) && (s.archived === true) === archivedOnly);
@@ -6778,14 +6993,19 @@ async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = fals
     ? await Promise.all(listed.map((s) => deps.coach!.get(setAsideKey(me.tenantID, s.id)).then((v) => v !== undefined && v !== null, () => false)))
     : [];
   return listed.flatMap((s, i) => {
-    const events = read[i]?.events ?? [];
+    // A chat a Chrome sees only for the runs that worked in it (chrome-chats.ts): its row is those runs' turns alone,
+    // by each event's own run, its title and its times too.
+    const turns = turnsOf?.(s.id);
+    const events = (read[i]?.events ?? []).filter((e) => !turns || turns.has(e.run));
+    if (turns && events.length === 0) return [];
     const text = chatTitle(events.filter((e) => e.kind === "owner_message").map((e) => {
       const t = (e.body as { text?: unknown })?.text;
       return typeof t === "string" ? ownerWords(t.trim()) : "";
     }), events.filter((e) => e.kind === "component").map((e) => e.body));
     if (!text) return [];
     const title = text.length > CHAT.chatTitle ? text.slice(0, CHAT.chatTitle - 1).trimEnd() + "…" : text;
-    return [{ session: s.id, started: iso(s.started), updated: iso(s.updated), title, ...(setAside[i] ? { set_aside: true as const } : {}) }];
+    const [started, updated] = turns ? [events[0]!.time, events.at(-1)!.time] : [s.started, s.updated];
+    return [{ session: s.id, started: iso(started), updated: iso(updated), title, ...(setAside[i] && !turns ? { set_aside: true as const } : {}) }];
   });
 }
 
@@ -7037,7 +7257,7 @@ async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult
       titles = known;
       if (attached.length) at.attachments = attached;
       if (key) Object.assign(at, { dedupKey: key, source: APP_SOURCE });
-      withPage(at, page);
+      withPage(at, page, taf);
       try {
         // Coach's runs are announced when they pause, so a result it shows is
         // handed over by tafs cloud with no phone needed (handOver).
@@ -7348,6 +7568,33 @@ export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; k
     if (e.kind === "agent_message" && typeof text === "string" && text.trim()) pending.set(e.run, `${e.run}.${e.seq}`);
   }
   // Nothing after the calls: the last note is the run's message (an earlier one was followed by that note, so it's out).
+  return out;
+}
+
+/**
+ * What Coach wrote, by `<run>.<seq>`, while an approval card waited that tafs cloud's check then answered "failed: …":
+ * the run's words after the card and before that answer. Written while Coach took the card to stand ("I'm waiting for
+ * your approval"), they are false once the draft is refused, most often before the card was ever drawn (precheck); Coach
+ * hears the refusal and drafts again (a phone test, 25 Nov: "I'm waiting for you to approve" over a card refused at
+ * once, and no Approve anywhere). Words after any other answer, or after a card that's still open, stay.
+ */
+export function wordsOnRefusedCards(events: ReadonlyArray<{ run: string; seq: number; kind: string; body?: unknown }>): Set<string> {
+  const out = new Set<string>();
+  const open = new Map<string, { card: string; said: string[] }>(); // run → the approval card it waits on, and its words since
+  for (const e of events) {
+    const b = (e.body ?? {}) as { type?: unknown; id?: unknown; answer?: unknown; text?: unknown };
+    if (e.kind === "component" && b.type === "approval" && typeof b.id === "string") {
+      open.set(e.run, { card: b.id, said: [] });
+      continue;
+    }
+    const waiting = open.get(e.run);
+    if (!waiting) continue;
+    if (e.kind === "agent_message" && typeof b.text === "string" && b.text.trim()) waiting.said.push(`${e.run}.${e.seq}`);
+    else if (e.kind === "answered" && b.id === waiting.card) {
+      if (typeof b.answer === "string" && b.answer.startsWith("failed:")) for (const id of waiting.said) out.add(id);
+      open.delete(e.run);
+    }
+  }
   return out;
 }
 
@@ -11904,11 +12151,17 @@ async function watchChanged(tenant: string, ask: Ask, deps: Deps): Promise<void>
   }
 }
 
-/** A silent push to one person's phones alone, never the account's others; a phone its push service has forgotten is forgotten here. */
+/**
+ * A silent push to one person's phones alone, never the account's others; a phone its push service has forgotten is forgotten
+ * here. Each push is logged with what changed, the phone's platform and how it went (sent, gone or failed), so a push a phone
+ * never acted on can be told from one that never left: never a token, an id, the person or the account.
+ */
 async function tellPersonsPhones(tenant: string, subject: string, n: Notification, deps: Deps): Promise<void> {
   const { devices } = await deps.push.get(tenant);
+  const change = typeof n.payload.change === "string" ? n.payload.change : "other";
   await Promise.all(devices.filter((d) => d.subject === subject).map(async (d) => {
     const r = await sendNotification(deps.apns, d, n).catch(() => "failed" as const);
+    console.log(`phone push ${change}: ${r} (${d.platform ?? "ios"})`);
     if (r === "gone") await deps.push.removeDevice(tenant, d.token);
   }));
 }

@@ -1,0 +1,45 @@
+name: Public text (pull request)
+
+# This repo is public, and so is what's said on its pull requests. A pull request's title, its body and each review say
+# what changed, why and how it was checked, never who decided it or where (scripts/public_text.py, --text). The text
+# reaches the check only as the API returns it, piped in, never inside a run line, so nothing in it can run as a command. The check is the
+# base branch's own copy of the script, so a pull request can't change the rule it's checked by.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  pull_request_review:
+    types: [submitted, edited]
+
+permissions:
+  contents: read
+  # To read the pull request and the review as they read now, never write.
+  pull-requests: read
+
+jobs:
+  text:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha }}
+      # Each is read as it is now, not as the event first carried it: a re-run then checks the text after an edit, and an
+      # edit plus a re-run clears a failure. `shell: bash` runs with pipefail, so a read that fails fails the check.
+      - name: The pull request's title and body, as they read now
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: gh api "repos/$REPO/pulls/$PR" --jq '.title + "\n" + (.body // "")' | python3 scripts/public_text.py --text
+      - name: The review's body, as it reads now
+        if: github.event_name == 'pull_request_review'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          REVIEW: ${{ github.event.review.id }}
+        run: gh api "repos/$REPO/pulls/$PR/reviews/$REVIEW" --jq '.body // ""' | python3 scripts/public_text.py --text

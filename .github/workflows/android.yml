@@ -175,7 +175,12 @@ jobs:
           arch: x86_64
           disable-animations: true
           working-directory: android
-          script: ./gradlew :app:connectedDebugAndroidTest --stacktrace
+          # Then the release build, minified as Play gets it, started on the same emulator: R8 doesn't touch a debug build,
+          # and Android 144 closed at every launch on a constructor R8 removed (play/check_release_starts.sh).
+          script: |
+            ./gradlew :app:connectedDebugAndroidTest --stacktrace
+            ./gradlew :app:assembleRelease --stacktrace
+            bash play/check_release_starts.sh app/build/outputs/apk/release/app-release-unsigned.apk
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:

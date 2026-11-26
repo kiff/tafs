@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Hãy trả lời trước %3$s. Không có gì được gửi cho đến khi bạn phê duyệt.</string>
     <string name="alert_answered">Một taf đã trả lời ai đó</string>
     <string name="alert_approve_once">Phê duyệt một lần…</string>
+    <string name="alert_blocked_body">%1$s này không hỏi nữa, nên cảnh báo cho tafs đang tắt trong Cài đặt. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn.</string>
+    <string name="alert_blocked_body_android">Android không hỏi nữa, nên cảnh báo cho tafs đang tắt trong cài đặt điện thoại của bạn. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn, trên điện thoại này và trên đồng hồ. Đồng hồ của bạn vẫn nhận cập nhật dù thế nào.</string>
+    <string name="alert_blocked_body_watch">iPhone của bạn không hỏi nữa, nên cảnh báo cho tafs đang tắt trong Cài đặt. Hãy bật ở đó để phê duyệt và câu trả lời đến được với bạn, trên iPhone này và trên đồng hồ. Đồng hồ của bạn vẫn nhận cập nhật dù thế nào.</string>
+    <string name="alert_blocked_title">Bật cảnh báo cho tafs</string>
     <string name="alert_by_email">Qua email</string>
     <string name="alert_example">Ví dụ</string>
     <string name="alert_foot_cant_answer_holds">Thông báo được gửi tới những người có thể trả lời các yêu cầu đang giữ. Vai trò của bạn trong tài khoản này thì không.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Thông báo chưa bật cho điện thoại này. %1$s</string>
     <string name="alert_not_refused">Chưa từ chối</string>
     <string name="alert_not_sent">Một phản hồi chưa được gửi</string>
+    <string name="alert_now_on">Cảnh báo đã bật.</string>
     <string name="alert_on_this_device">Thông báo trên %1$s này</string>
+    <string name="alert_open_notification_settings">Mở cài đặt thông báo</string>
+    <string name="alert_open_settings">Mở Cài đặt</string>
     <string name="alert_open_tafs_answer_kiff_did">Hãy mở tafs để trả lời: KIFF không cho biết bạn đã thấy phiên bản nào của nó.</string>
     <string name="alert_open_tafs_answer_phone_can">Hãy mở tafs để trả lời: điện thoại này không thể ký từ thông báo.</string>
     <string name="alert_prompt">Nhận thông báo khi một taf cần bạn</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Không khả dụng</string>
     <string name="alert_status_off">Tắt</string>
     <string name="alert_status_on">Bật</string>
+    <string name="alert_still_off">Cảnh báo vẫn đang tắt.</string>
     <string name="alert_still_on_after_sign_out_body">tafs không tắt được chúng (%1$s). Hãy thử lại, hoặc vẫn đăng xuất rồi tắt thông báo cho tafs trong Cài đặt.</string>
     <string name="alert_still_on_after_sign_out_title">%1$s này có thể vẫn nhận cảnh báo của tài khoản này</string>
     <string name="alert_taf_needs_you">%1$s cần bạn</string>
@@ -45,6 +53,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">tafs không kết nối được KIFF để từ chối. Hãy mở tafs để trả lời.</string>
+    <string name="alert_watch_first_body">Để xem phê duyệt và câu trả lời dưới dạng cảnh báo, trên điện thoại này và trên đồng hồ, hãy bật cảnh báo cho tafs. Đồng hồ của bạn vẫn tiếp tục nhận cập nhật kể cả khi bạn không bật.</string>
+    <string name="alert_watch_first_title">Đồng hồ của bạn đang dùng tafs</string>
     <string name="alert_what_alerts">Điều gì báo cho bạn</string>
     <string name="alert_with_sound">Có âm thanh</string>
     <string name="app_name">tafs</string>
@@ -813,6 +823,7 @@
     <string name="coach_tools_give">Cấp công cụ cho Coach</string>
     <string name="coach_tools_giving">Đang cấp…</string>
     <string name="coach_tools_title">Công cụ của Coach</string>
+    <string name="coach_tools_write_after">Hãy phê duyệt công cụ của Coach trước, sau đó bạn có thể viết.</string>
     <string name="coach_tools_eyebrow">Công cụ</string>
     <string name="coach_tools_not_given">Công cụ của Coach chưa được cấp. %1$s</string>
     <string name="coach_tools_not_read">Không thể đọc công cụ của Coach. %1$s</string>
@@ -2705,6 +2716,7 @@
     <string name="watch_ask">Hỏi tafs</string>
     <string name="watch_ask_needs_consent">Trước khi hỏi tafs, hãy cho phép dùng AI trong tafs trên điện thoại của bạn.</string>
     <string name="watch_ask_not_on">Hỏi từ đồng hồ của bạn chưa được bật.</string>
+    <string name="watch_ask_phone_sign_in">Yêu cầu điện thoại đăng nhập đồng hồ này</string>
     <string name="watch_ask_text_only">tafs nhận lời của bạn dưới dạng văn bản, không bao giờ nhận giọng nói.</string>
     <string name="watch_asking_phone">Đang hỏi điện thoại của bạn…</string>
     <string name="watch_calendar_today">Lịch hôm nay</string>
@@ -2716,6 +2728,7 @@
     <string name="watch_deleted_nothing_sent">Đã xóa. Chưa gửi gì cả.</string>
     <string name="watch_didnt_catch">Không nghe rõ. Chạm để thử lại.</string>
     <string name="watch_dismiss">Bỏ qua</string>
+    <string name="watch_edit_words">Chạm vào chữ để sửa</string>
     <string name="watch_glance_description">Có bao nhiêu việc cần bạn, không bao giờ nói là gì hay của ai.</string>
     <string name="watch_halt_all_q">Đóng băng mọi taf của bạn?</string>
     <plurals name="watch_halt_now_count">
@@ -2729,6 +2742,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">%1$s lượt gọi đang giữ cần bạn</item>
     </plurals>
+    <string name="watch_held_channel">Lượt gọi đang giữ</string>
     <string name="watch_inbox_empty">Chưa có gì mới. Phản hồi của Coach và thông báo từ các taf của bạn sẽ đến đây.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">%1$s chưa đọc trong Hộp thư</item>
@@ -2742,7 +2756,7 @@
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Để hỏi bằng giọng nói, hãy cho phép micrô cho tafs trên đồng hồ này.</string>
     <string name="watch_more_on_phone">Phần còn lại ở trên điện thoại của bạn.</string>
-    <string name="watch_needs_lock">Để từ chối hoặc đóng băng từ đồng hồ này, hãy đặt khóa màn hình cho nó và mở khóa.</string>
+    <string name="watch_needs_lock">Để gửi, từ chối hoặc đóng băng từ đồng hồ này, hãy đặt khóa màn hình cho nó và mở khóa.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">%1$s việc cần bạn</item>
     </plurals>
@@ -2751,6 +2765,7 @@
     <string name="watch_nothing_sent_until">Không có gì được gửi cho đến khi bạn phê duyệt.</string>
     <string name="watch_nothing_waits">Không có gì đang chờ bạn.</string>
     <string name="watch_open_on_phone">Mở trên điện thoại</string>
+    <string name="watch_opened_on_phone">Đã mở trên điện thoại</string>
     <string name="watch_page_brief">Tóm tắt</string>
     <string name="watch_page_inbox">Hộp thư</string>
     <string name="watch_paused_still_answers">Đã tạm dừng: lịch của nó đã tắt. Nó vẫn trả lời những gì bạn gửi.</string>
@@ -2773,6 +2788,7 @@
     <string name="watch_recent_chats">Cuộc trò chuyện gần đây</string>
     <string name="watch_recording">Đang ghi âm</string>
     <string name="watch_recording_not_received">Bản ghi âm chưa đến được điện thoại của bạn. Hãy thử lại, hoặc gõ thay thế.</string>
+    <string name="watch_refuse_on_phone">Chưa từ chối. Hãy từ chối trên điện thoại.</string>
     <string name="watch_refused">Đã từ chối. Chưa gửi gì cả.</string>
     <string name="watch_reply">Trả lời</string>
     <string name="watch_rerecord">Ghi âm lại</string>
@@ -2781,14 +2797,20 @@
     <string name="watch_resume_on_phone">Tiếp tục trên điện thoại</string>
     <string name="watch_retry">Thử lại</string>
     <string name="watch_review">Kiểm tra trước khi gửi</string>
+    <string name="watch_seconds_left">Còn %1$s giây</string>
     <string name="watch_sending">Đang gửi…</string>
     <string name="watch_sent">Đã gửi</string>
     <string name="watch_settings_of">%1$s · cài đặt</string>
+    <string name="watch_sign_in_allow">Cho phép</string>
+    <string name="watch_sign_in_denied">Chưa đăng nhập. Đồng hồ này vẫn đăng xuất.</string>
+    <string name="watch_sign_in_deny">Từ chối</string>
     <string name="watch_sign_in_on_phone">Hãy đăng nhập tafs trên điện thoại của bạn trước.</string>
+    <string name="watch_sign_in_watch_q">Đăng nhập đồng hồ này bằng tài khoản của bạn?</string>
     <string name="watch_sign_out_q">Đăng xuất trên đồng hồ này?</string>
     <string name="watch_sign_out_sub">Điện thoại của bạn vẫn đăng nhập. Đồng hồ này sẽ quên các taf, cuộc trò chuyện và hộp thư của bạn.</string>
     <string name="watch_signed_in">Đã đăng nhập</string>
     <string name="watch_signed_out_here">Đã đăng xuất trên đồng hồ này. Điện thoại của bạn vẫn đăng nhập.</string>
+    <string name="watch_stopped_at_limit">Đã dừng ở giới hạn %1$s. Nội dung nghe được ở bên dưới.</string>
     <string name="watch_swipe_settings">Vuốt trái để xem cài đặt của nó</string>
     <string name="watch_tap_start">Chạm Bắt đầu, rồi nói. Lời của bạn hiện ở đây khi bạn nói.</string>
     <string name="watch_timing">Nghe %1$s ms · biên nhận %2$s ms · kết quả %3$s ms</string>
@@ -2797,8 +2819,10 @@
     <string name="watch_type">Gõ</string>
     <string name="watch_type_hint">Viết cho Coach…</string>
     <string name="watch_update_phone">Hãy cập nhật tafs trên điện thoại của bạn, rồi thử lại.</string>
+    <string name="watch_view_on_phone">Xem trên điện thoại</string>
     <string name="watch_view_only_phone">Điện thoại này chỉ xem được, nên bạn không thể hỏi từ đồng hồ. Hãy đăng nhập trên một điện thoại có thể phê duyệt.</string>
     <string name="watch_voice_text_only">Coach nhận lời của bạn dưới dạng văn bản, không bao giờ nhận giọng nói.</string>
+    <string name="watch_waiting_for_phone">Đang chờ điện thoại của bạn…</string>
     <string name="watch_what_it_does">Việc nó làm</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s đang làm việc</item>

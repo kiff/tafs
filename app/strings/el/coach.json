@@ -186,6 +186,7 @@
   "coach.tools.give": "Δώσε στον Coach τα εργαλεία του",
   "coach.tools.giving": "Παράδοση…",
   "coach.tools.title": "Τα εργαλεία του Coach",
+  "coach.tools.write_after": "Έγκρινε πρώτα τα εργαλεία του Coach και μετά μπορείς να γράψεις.",
   "coach.tools_eyebrow": "Εργαλεία",
   "coach.tools_not_given": "Τα εργαλεία του Coach δεν δόθηκαν. {why}",
   "coach.tools_not_read": "Τα εργαλεία του Coach δεν διαβάστηκαν. {why}",

@@ -1,0 +1,1 @@
+A person can delete one of their own chats with a taf or Coach for good: `DELETE /v1/tafs/{id}/chats/{session}`. Its messages, its files and the notes tafs cloud kept beside it go. Its runs' records, their usage and the KIFF record stay. A chat still working or waiting on the person is refused until it's stopped or answered.

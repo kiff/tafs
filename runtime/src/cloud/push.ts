@@ -47,6 +47,11 @@ export interface Device {
   manages?: boolean;
   /** The person turned off Sound for alerts on this phone: each alert arrives quietly (see `silencing`). */
   silent?: boolean;
+  /**
+   * False for a phone registered for background pushes only (`alerts: false`): one that serves a watch with alerts off. It
+   * gets every silent change (a taf's chat, a watch request, the watch Inbox, a live update), and never a visible alert.
+   */
+  alerts?: false;
   kinds?: AlertKinds;
   /** The language its app showed when it registered (Accept-Language): its alerts come in it (docs/languages.md). */
   lang?: string;
@@ -101,7 +106,8 @@ export function silencing(sender: Sender): Sender {
 
 /** An opted-out kind is handled successfully, so delivery retries cannot send it later. */
 export function sendNotification(sender: Sender, device: Device, n: Notification): Promise<"sent" | "gone" | "failed"> {
-  if (n.kind === "alert" && n.preference && device.kinds?.[n.preference] === false) return Promise.resolve("sent");
+  // Nothing shows on a phone that turned the kind off, or registered for background pushes only.
+  if (n.kind === "alert" && (device.alerts === false || (n.preference && device.kinds?.[n.preference] === false))) return Promise.resolve("sent");
   return sender.send(device, quietFor(device, n));
 }
 
@@ -624,6 +630,8 @@ export function registration(body: Record<string, unknown>): {
   silent: boolean;
   kinds?: AlertKinds;
   target?: { id: string; secret: string };
+  /** False: background pushes only, never a visible alert (a phone that serves a watch with alerts off). */
+  alerts?: false;
 } {
   const platform = body.platform === undefined ? "ios" : body.platform;
   if (platform !== "ios" && platform !== "android" && platform !== "macos") throw new PushError(400, "platform is ios, macos or android");
@@ -644,8 +652,12 @@ export function registration(body: Record<string, unknown>): {
   const silent = body.sound === false;
   let kinds: AlertKinds | undefined;
   try { kinds = parseKinds(body.kinds); } catch (err) { throw new PushError(400, (err as Error).message); }
+  if (body.alerts !== undefined && typeof body.alerts !== "boolean") throw new PushError(400, "alerts is true or false");
+  const quiet = body.alerts === false ? { alerts: false as const } : {};
   const t = body.alert_target;
-  if (t === undefined) return { token, platform, environment, silent, ...(kinds ? { kinds } : {}) };
+  if (t === undefined) return { token, platform, environment, silent, ...(kinds ? { kinds } : {}), ...quiet };
+  // KIFF's alert target is for a phone that shows held calls: one with background pushes only shows none.
+  if (quiet.alerts === false) throw new PushError(400, "a phone registered with alerts: false hands over no alert_target");
   return { token, platform, environment, silent, ...(kinds ? { kinds } : {}), target: alertTarget(t) };
 }
 

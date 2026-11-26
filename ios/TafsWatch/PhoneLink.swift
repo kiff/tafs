@@ -41,6 +41,11 @@ enum PhoneFailure: Error, Equatable, Sendable {
         }
     }
 
+    /// What a screen that tries again by itself says (docs/watch-app.md, "Linking tafs"): one calm line while the phone is
+    /// out of reach, slow or the link is down, with no Try again; tafs missing from the phone is said as it is, since only
+    /// installing it helps.
+    var waiting: String { self == .noApp ? Words.Watch.phoneNoApp : Words.Watch.linking }
+
     /// The send itself failed, so nothing was answered and a read may go once more. Not the limit: it's used up.
     var sendFailed: Bool { self == .notReachable || self == .link }
 }
@@ -115,7 +120,49 @@ final class PhoneLink: NSObject, WCSessionDelegate, @unchecked Sendable {
         WCSession.default.activate()
     }
 
-    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
+    /// Started: the phone's last word on its account (the application context) is heard first, so a watch whose phone
+    /// signed out or changed account while it was away wipes before anything else.
+    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        guard activationState == .activated, let push = WatchPush.from(session.receivedApplicationContext) else { return }
+        Task { @MainActor in Self.account(push) }
+    }
+
+    /// The phone signed in or out (`WatchLink.account`), as the latest application context.
+    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+        guard let push = WatchPush.from(applicationContext) else { return }
+        Task { @MainActor in Self.account(push) }
+    }
+
+    /// The phone's push (`WatchPush`), queued and delivered in order, even with the app put away: read here, on
+    /// WatchConnectivity's queue, and handed to what's listening on the main actor. Whose it is comes first: an account
+    /// change is applied when it's the newest heard; a data push is used only when it's the kept account's, and otherwise
+    /// dropped, since it may have waited on the watch since before a switch.
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        guard let push = WatchPush.from(userInfo) else { return }
+        Task { @MainActor in
+            if push.kind == .account { return Self.account(push) }
+            // The phone owner's answer to Ask your phone to sign this watch in: heard while signed out, and only for the id
+            // the watch asked with (`WatchSignIn.heard`).
+            if push.kind == .signIn { return WatchPushes.shared.deliver(push) }
+            // Signed out on this watch: nothing of the account comes in, held calls included, until the person taps Sign in
+            // with your phone here (`WatchSignIn`). Only the account's change above may still wipe.
+            guard WatchSignIn.takesData(signedOutHere: WatchSignIn.FileStore().signedOut()) else { return }
+            guard WatchAccountMark.shared.ours(push.mark) else { return }
+            // A conversation deleted on the phone: its kept copy goes now, whether or not a screen shows it.
+            if push.kind == .forget { WatchThreads.shared.drop(push.taf ?? WatchThreads.coach) }
+            WatchAccountZone.heard(push.reply)
+            WatchPushes.shared.deliver(push)
+        }
+    }
+
+    /// The phone signed in or out (`WatchAccountMark.heardAccount`): it may wipe, never confirm, and an older change than
+    /// the last one heard is ignored.
+    @MainActor
+    static func account(_ push: WatchPush) {
+        guard push.kind == .account else { return }
+        WatchAccountMark.shared.heardAccount(push.mark, at: push.at)
+        if push.mark == nil { WatchAccountZone.forget() }
+    }
 
     /// WatchConnectivity's error, as the wrist words it.
     static func failure(_ error: Error) -> PhoneFailure {
@@ -156,11 +203,20 @@ extension PhoneLink: PhoneAsking {
                 }
                 return answer ?? .failure(.noAnswer)
             })
+        // The person's acts go with the account mark this watch holds, so a phone signed in as someone else since does
+        // nothing with them (WatchRequest.Kind.carriesMark).
+        var request = request
+        if request.kind.carriesMark, let kept = WatchAccountMark.shared.kept, WatchMark.isMark(kept) { request.mark = kept }
         let reached = await route.reach(request)
+        // Whose answer it is, before anything in it is used: another account's wipes what was kept (`WatchAccountMark`).
+        WatchAccountMark.shared.heard(reply: reached.reply)
         // Whatever was asked, a signed-out phone drops the account's zone.
         WatchAccountZone.heard(reached.reply)
         // And what the watch kept so it opens at once (row 44, D).
-        if reached.reply?.outcome == .signedOut { WatchCache.shared.clear() }
+        if reached.reply?.outcome == .signedOut {
+            WatchCache.shared.clear()
+            WatchThreads.shared.clear()
+        }
         return reached
     }
 }

@@ -55,6 +55,8 @@ fun OverviewView(
   onMissionLog: ((bot.tafs.app.kiff.HomeLabelMission) -> Unit)? = null,
   /** Needs you, from the line that says how much more waits than the held calls listed; null where there's no such screen. */
   onNeedsYou: (() -> Unit)? = null,
+  /** Who each taf the person manages is shared with, under its name (as the iPad's); null, and no such line. */
+  people: PeopleActions? = null,
   onOpenTaf: (String) -> Unit,
 ) {
   // The label the table is filtered to, as Home's list is on a phone (docs/android-app.md, Labels): All each time it opens.
@@ -62,6 +64,15 @@ fun OverviewView(
   val label = chosenLabel(state.labels, labelId)
   LaunchedEffect(state.tafs.map { it.id }) {
     state.tafs.filter { it.cloudId != null && state.reports[it.id] == null }.forEach { loadReport(it.id) }
+  }
+  // Who uses each taf the person manages, as KIFF says (the iPad's `usedBy`): read when the tafs or the groups change. A taf
+  // whose shares aren't read yet, or that KIFF couldn't say, has no line.
+  var shared by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Map<String, List<bot.tafs.app.kiff.Share>?>>(emptyMap()) }
+  val managed = if (people != null && state.mode == bot.tafs.app.app.Mode.kiff) state.tafs.filter { it.cloudId != null && state.manages(it.id) }.map { it.id } else emptyList()
+  LaunchedEffect(managed, state.groups) {
+    if (people == null || managed.isEmpty()) return@LaunchedEffect
+    if (state.groups.isEmpty() && state.people.isEmpty()) people.refresh()
+    managed.forEach { id -> val now = people.shares(id); shared = shared + (id to now) }
   }
   Column(
     Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(24.dp).pageColumn(PageWidth.List),
@@ -139,7 +150,12 @@ fun OverviewView(
         ) {
           Row(Modifier.weight(1.3f), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             TafAvatar(taf, 30.dp)
-            Text(taf.name, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+              Text(taf.name, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis)
+              // Two lines at most, so a medium window ends on "1 persona", never "1 per…" (`PeopleWords.peopleLine`).
+              val who = if (taf.id in managed) bot.tafs.app.model.PeopleWords.usedBy(shared[taf.id], state.groups, state.people) else null
+              if (!who.isNullOrEmpty()) Text(who, style = scaled(12, color = Theme.dim), maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.testTag("overview.usedBy"))
+            }
           }
           Text(taf.now, style = scaled(13, color = Theme.ink), modifier = Modifier.weight(1f))
           Text(card ?: "–", style = scaled(13, color = Theme.ink), modifier = Modifier.weight(1.2f))

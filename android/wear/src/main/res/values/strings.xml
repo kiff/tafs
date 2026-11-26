@@ -57,6 +57,7 @@
     <string name="watch_ask">Ask tafs</string>
     <string name="watch_ask_needs_consent">Before you ask tafs, allow AI use in tafs on your phone.</string>
     <string name="watch_ask_not_on">Asking from your watch isn\'t on yet.</string>
+    <string name="watch_ask_phone_sign_in">Ask your phone to sign this watch in</string>
     <string name="watch_ask_text_only">tafs gets your words as text, never your voice.</string>
     <string name="watch_asking_phone">Asking your phone…</string>
     <string name="watch_calendar_today">Today\'s calendar</string>
@@ -68,6 +69,7 @@
     <string name="watch_deleted_nothing_sent">Deleted. Nothing was sent.</string>
     <string name="watch_didnt_catch">Didn\'t catch that. Tap to try again.</string>
     <string name="watch_dismiss">Dismiss</string>
+    <string name="watch_edit_words">Tap the words to change them</string>
     <string name="watch_glance_description">How many need you, never what or who.</string>
     <string name="watch_halt_all_q">Halt all your tafs?</string>
     <plurals name="watch_halt_now_count">
@@ -83,6 +85,7 @@
         <item quantity="one">%1$s held call needs you</item>
         <item quantity="other">%1$s held calls need you</item>
     </plurals>
+    <string name="watch_held_channel">Held calls</string>
     <string name="watch_inbox_empty">Nothing new. Coach\'s replies and your tafs\' alerts land here.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s unread in Inbox</item>
@@ -97,7 +100,7 @@
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">To ask by voice, allow the microphone for tafs on this watch.</string>
     <string name="watch_more_on_phone">The rest is on your phone.</string>
-    <string name="watch_needs_lock">To refuse or halt from this watch, set a screen lock on it and unlock it.</string>
+    <string name="watch_needs_lock">To send, refuse or halt from this watch, set a screen lock on it and unlock it.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s needs you</item>
         <item quantity="other">%1$s need you</item>
@@ -107,6 +110,7 @@
     <string name="watch_nothing_sent_until">Nothing is sent until you approve.</string>
     <string name="watch_nothing_waits">Nothing waits for you.</string>
     <string name="watch_open_on_phone">Open on phone</string>
+    <string name="watch_opened_on_phone">Opened on your phone</string>
     <string name="watch_page_brief">Brief</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Paused: its schedule is off. It still answers what you send.</string>
@@ -130,6 +134,7 @@
     <string name="watch_recent_chats">Recent chats</string>
     <string name="watch_recording">Recording</string>
     <string name="watch_recording_not_received">The recording didn\'t reach your phone. Try again, or type instead.</string>
+    <string name="watch_refuse_on_phone">Not refused. Refuse it on your phone.</string>
     <string name="watch_refused">Refused. Nothing was sent.</string>
     <string name="watch_reply">Reply</string>
     <string name="watch_rerecord">Re-record</string>
@@ -138,14 +143,20 @@
     <string name="watch_resume_on_phone">Resume on your phone</string>
     <string name="watch_retry">Retry</string>
     <string name="watch_review">Check before sending</string>
+    <string name="watch_seconds_left">%1$s s left</string>
     <string name="watch_sending">Sending…</string>
     <string name="watch_sent">Sent</string>
     <string name="watch_settings_of">%1$s · settings</string>
+    <string name="watch_sign_in_allow">Allow</string>
+    <string name="watch_sign_in_denied">Not signed in. This watch stays signed out.</string>
+    <string name="watch_sign_in_deny">Deny</string>
     <string name="watch_sign_in_on_phone">Sign in to tafs on your phone first.</string>
+    <string name="watch_sign_in_watch_q">Sign this watch in as you?</string>
     <string name="watch_sign_out_q">Sign out on this watch?</string>
     <string name="watch_sign_out_sub">Your phone stays signed in. This watch forgets your tafs, chats and inbox.</string>
     <string name="watch_signed_in">Signed in</string>
     <string name="watch_signed_out_here">Signed out on this watch. Your phone stays signed in.</string>
+    <string name="watch_stopped_at_limit">Stopped at the %1$s limit. What was heard is below.</string>
     <string name="watch_swipe_settings">Swipe left for its settings</string>
     <string name="watch_tap_start">Tap Start, then speak. Your words show here as you talk.</string>
     <string name="watch_timing">Listen %1$s ms · receipt %2$s ms · result %3$s ms</string>
@@ -154,8 +165,10 @@
     <string name="watch_type">Type</string>
     <string name="watch_type_hint">Write to Coach…</string>
     <string name="watch_update_phone">Update tafs on your phone, then try again.</string>
+    <string name="watch_view_on_phone">View on phone</string>
     <string name="watch_view_only_phone">This phone can only view, so you can\'t ask from the watch. Sign in on a phone that can approve.</string>
     <string name="watch_voice_text_only">Coach gets your words as text, never your voice.</string>
+    <string name="watch_waiting_for_phone">Waiting for your phone…</string>
     <string name="watch_what_it_does">What it does</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s working</item>

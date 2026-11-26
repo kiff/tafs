@@ -7,6 +7,7 @@
   "watch.ask": "ຖາມ tafs",
   "watch.ask_needs_consent": "ກ່ອນຖາມ tafs ໃຫ້ອະນຸຍາດການໃຊ້ AI ໃນ tafs ໃນໂທລະສັບຂອງທ່ານ.",
   "watch.ask_not_on": "ການຖາມຈາກໂມງຂອງທ່ານຍັງບໍ່ໄດ້ເປີດ.",
+  "watch.ask_phone_sign_in": "ຂໍໃຫ້ໂທລະສັບຂອງທ່ານເຂົ້າສູ່ລະບົບໂມງນີ້",
   "watch.ask_text_only": "tafs ໄດ້ຮັບຄຳເວົ້າຂອງທ່ານເປັນຂໍ້ຄວາມ, ບໍ່ເຄີຍເປັນສຽງ.",
   "watch.asking_phone": "ກຳລັງຖາມໂທລະສັບຂອງທ່ານ…",
   "watch.calendar_today": "ປະຕິທິນມື້ນີ້",
@@ -18,6 +19,7 @@
   "watch.deleted_nothing_sent": "ລຶບແລ້ວ. ບໍ່ມີຫຍັງຖືກສົ່ງ.",
   "watch.didnt_catch": "ຟັງບໍ່ທັນ. ແຕະເພື່ອລອງໃໝ່.",
   "watch.dismiss": "ປິດ",
+  "watch.edit_words": "ແຕະຂໍ້ຄວາມເພື່ອແກ້ໄຂ",
   "watch.glance_description": "ມີຈັກອັນທີ່ຕ້ອງການທ່ານ, ບໍ່ເຄີຍບອກວ່າຫຍັງ ຫຼື ໃຜ.",
   "watch.halt_all_q": "ຢຸດທຸກ taf ຂອງທ່ານບໍ?",
   "watch.halt_now_count": {
@@ -31,6 +33,7 @@
   "watch.held_calls": {
     "other": "ການໂທທີ່ພັກໄວ້ {count} ຕ້ອງການທ່ານ"
   },
+  "watch.held_channel": "ການໂທທີ່ພັກໄວ້",
   "watch.inbox_empty": "ບໍ່ມີຫຍັງໃໝ່. ຄຳຕອບຂອງ Coach ແລະ ການແຈ້ງເຕືອນຈາກ taf ຂອງທ່ານມາຮອດບ່ອນນີ້.",
   "watch.inbox_unread": {
     "other": "ຍັງບໍ່ໄດ້ອ່ານ {count} ໃນກ່ອງຂໍ້ຄວາມ"
@@ -44,7 +47,7 @@
   "watch.menu": "ເມນູ",
   "watch.mic_needed": "ເພື່ອຖາມດ້ວຍສຽງ ໃຫ້ອະນຸຍາດໄມໂຄຣໂຟນສຳລັບ tafs ໃນໂມງນີ້.",
   "watch.more_on_phone": "ສ່ວນທີ່ເຫຼືອຢູ່ໃນໂທລະສັບຂອງທ່ານ.",
-  "watch.needs_lock": "ເພື່ອປະຕິເສດ ຫຼື ຢຸດຈາກໂມງນີ້ ໃຫ້ຕັ້ງການລັອກໜ້າຈໍໃນມັນ ແລ້ວປົດລັອກ.",
+  "watch.needs_lock": "ເພື່ອສົ່ງ, ປະຕິເສດ ຫຼື ຢຸດຈາກໂມງນີ້ ໃຫ້ຕັ້ງການລັອກໜ້າຈໍໃນມັນ ແລ້ວປົດລັອກ.",
   "watch.needs_you_count": {
     "other": "{count} ຕ້ອງການທ່ານ"
   },
@@ -53,6 +56,7 @@
   "watch.nothing_sent_until": "ບໍ່ມີຫຍັງຖືກສົ່ງຈົນກວ່າທ່ານຈະອະນຸມັດ.",
   "watch.nothing_waits": "ບໍ່ມີຫຍັງລໍຖ້າທ່ານ.",
   "watch.open_on_phone": "ເປີດໃນໂທລະສັບ",
+  "watch.opened_on_phone": "ເປີດຢູ່ໂທລະສັບແລ້ວ",
   "watch.page.brief": "ບົດສະຫຼຸບ",
   "watch.page.inbox": "ກ່ອງຂໍ້ຄວາມ",
   "watch.paused_still_answers": "ຢຸດຊົ່ວຄາວ: ຕາຕະລາງຂອງມັນປິດ. ມັນຍັງຕອບສິ່ງທີ່ທ່ານສົ່ງ.",
@@ -75,6 +79,7 @@
   "watch.recent_chats": "ການສົນທະນາຫຼ້າສຸດ",
   "watch.recording": "ກຳລັງບັນທຶກ",
   "watch.recording_not_received": "ການບັນທຶກບໍ່ເຖິງໂທລະສັບຂອງທ່ານ. ລອງໃໝ່ ຫຼື ພິມແທນ.",
+  "watch.refuse_on_phone": "ຍັງບໍ່ໄດ້ປະຕິເສດ. ປະຕິເສດຢູ່ໂທລະສັບຂອງທ່ານ.",
   "watch.refused": "ປະຕິເສດແລ້ວ. ບໍ່ມີຫຍັງຖືກສົ່ງ.",
   "watch.reply": "ຕອບ",
   "watch.rerecord": "ບັນທຶກໃໝ່",
@@ -83,14 +88,20 @@
   "watch.resume_on_phone": "ສືບຕໍ່ໃນໂທລະສັບຂອງທ່ານ",
   "watch.retry": "ລອງໃໝ່",
   "watch.review": "ກວດກ່ອນສົ່ງ",
+  "watch.seconds_left": "ເຫຼືອ {seconds} ວິ",
   "watch.sending": "ກຳລັງສົ່ງ…",
   "watch.sent": "ສົ່ງແລ້ວ",
   "watch.settings_of": "{taf} · ການຕັ້ງຄ່າ",
+  "watch.sign_in_allow": "ອະນຸຍາດ",
+  "watch.sign_in_denied": "ບໍ່ໄດ້ເຂົ້າສູ່ລະບົບ. ໂມງນີ້ຍັງອອກຈາກລະບົບຢູ່.",
+  "watch.sign_in_deny": "ປະຕິເສດ",
   "watch.sign_in_on_phone": "ເຂົ້າສູ່ລະບົບ tafs ໃນໂທລະສັບຂອງທ່ານກ່ອນ.",
+  "watch.sign_in_watch_q": "ເຂົ້າສູ່ລະບົບໂມງນີ້ໃນນາມທ່ານບໍ?",
   "watch.sign_out_q": "ອອກຈາກລະບົບໃນໂມງນີ້ບໍ?",
   "watch.sign_out_sub": "ໂທລະສັບຂອງທ່ານຍັງເຂົ້າສູ່ລະບົບຢູ່. ໂມງນີ້ລືມ taf, ການສົນທະນາ ແລະ ກ່ອງຂໍ້ຄວາມຂອງທ່ານ.",
   "watch.signed_in": "ເຂົ້າສູ່ລະບົບແລ້ວ",
   "watch.signed_out_here": "ອອກຈາກລະບົບໃນໂມງນີ້ແລ້ວ. ໂທລະສັບຂອງທ່ານຍັງເຂົ້າສູ່ລະບົບຢູ່.",
+  "watch.stopped_at_limit": "ຢຸດທີ່ຂີດຈຳກັດ {limit}. ສິ່ງທີ່ໄດ້ຍິນຢູ່ລຸ່ມນີ້.",
   "watch.swipe_settings": "ປັດຊ້າຍເພື່ອເບິ່ງການຕັ້ງຄ່າຂອງມັນ",
   "watch.tap_start": "ແຕະ ເລີ່ມ ແລ້ວເວົ້າ. ຄຳເວົ້າຂອງທ່ານສະແດງຢູ່ທີ່ນີ້ໃນຂະນະທີ່ທ່ານເວົ້າ.",
   "watch.timing": "ຟັງ {listen} ms · ໃບຮັບເງິນ {receipt} ms · ຜົນ {result} ms",
@@ -99,8 +110,10 @@
   "watch.type": "ພິມ",
   "watch.type_hint": "ຂຽນຫາ Coach…",
   "watch.update_phone": "ອັບເດດ tafs ໃນໂທລະສັບຂອງທ່ານ ແລ້ວລອງໃໝ່.",
+  "watch.view_on_phone": "ເບິ່ງໃນໂທລະສັບ",
   "watch.view_only_phone": "ໂທລະສັບນີ້ເບິ່ງໄດ້ຢ່າງດຽວ ສະນັ້ນທ່ານຖາມຈາກໂມງບໍ່ໄດ້. ເຂົ້າສູ່ລະບົບໃນໂທລະສັບທີ່ອະນຸມັດໄດ້.",
   "watch.voice_text_only": "Coach ໄດ້ຮັບຄຳເວົ້າຂອງທ່ານເປັນຂໍ້ຄວາມ, ບໍ່ເຄີຍເປັນສຽງ.",
+  "watch.waiting_for_phone": "ກຳລັງລໍໂທລະສັບຂອງທ່ານ…",
   "watch.what_it_does": "ມັນເຮັດຫຍັງ",
   "watch.working_count": {
     "other": "{count} ກຳລັງເຮັດວຽກ"

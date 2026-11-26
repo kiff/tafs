@@ -1,0 +1,4 @@
+• Twoje czaty z Coachem i tafami zostają na zegarku i otwierają się od razu, z najnowszą wiadomością na dole.
+• Odpowiedzi przychodzą z powiadomieniem, nawet gdy aplikacja jest zamknięta.
+• Pisz w czacie tafa prosto z zegarka i czytaj całą odpowiedź dzięki „Czytaj dalej”.
+• Koniec z „Spróbuj ponownie”: zegarek sam łączy się z telefonem.

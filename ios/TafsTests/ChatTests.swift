@@ -411,6 +411,21 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(model.chats[id]?.map(\.text), ["By email: refund order 4410"])
     }
 
+    /// The owner's call 2b: tafs cloud's `taf_chat` push (a message from any device, or the taf's run answered) re-reads the
+    /// open chat, and only that chat: no refresh of every taf.
+    func testATafChatPushReadsTheOpenChatAgain() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        await model.loadChat(id)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-11-25T01:20:00Z","from":"owner","kind":"message","text":"From the laptop","session":"sesn_9"}]}
+        """)
+        let before = count("GET", "/v1/tafs/depl_1/conversation")
+        await model.liveChange("taf_chat", cloudTafID: "depl_1")
+        XCTAssertEqual(count("GET", "/v1/tafs/depl_1/conversation"), before + 1)
+        XCTAssertEqual(model.chats[id]?.map(\.text), ["From the laptop"])
+    }
+
     /// A message that isn't sent stays in the thread, marked not sent with why, and
     /// Retry sends it (#64).
     func testAFloodedTafKeepsTheMessageWithRetry() async throws {
@@ -866,7 +881,7 @@ final class ChatTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, String(decoding: answer, as: UTF8.self))
         await model.loadChat(id)
         XCTAssertNil(model.chatErrors[id])
-        XCTAssertEqual(model.chatState(id).runFailed, TafsCloud.RunFailed(run: "run2", words: words))
+        XCTAssertEqual(model.chatState(id).runFailed, TafsCloud.RunFailed(run: "run2", words: words, retry: true, retryLabel: "Try again"))
         guard case .message(let last)? = model.chatItems(id).last else { return XCTFail("a line last") }
         XCTAssertEqual(last.from, .taf)
         XCTAssertEqual(last.text, words, "tafs cloud's words, as they are")
@@ -1061,12 +1076,17 @@ final class ChatTests: XCTestCase {
         XCTAssertTrue(model.chatState(id).unsent.isEmpty, "taken by Retry, so not back")
     }
 
-    /// A run that fails part-way offers Retry, which sends its message again; a stopped
-    /// one is marked stopped.
-    func testARunThatFailsPartWayOffersRetry() async throws {
+    /// A run that fails offers Retry only where tafs cloud's thread says sending its message again is safe
+    /// (`failed.retry`), in its words, and Retry sends it again; with `retry` false, or no `failed` at all, there's no
+    /// Retry and nothing is sent. A stopped one is marked stopped. As Android's `failedRetry`.
+    func testARunThatFailsOffersRetryOnlyWhereTafsCloudSaysItsSafe() async throws {
         final class Sent { var texts: [String] = [] }
         let (model, id) = await kiffModel()
-        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        func failed(retry: Bool) -> String {
+            #"{"messages":[],"failed":{"run":"run_1","code":"ai_unavailable","words":"tafs can't answer right now.","retry":"#
+                + (retry ? #"true,"retry_label":"Try again"}}"# : #"false}}"#)
+        }
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, failed(retry: true))
         let sent = Sent()
         var ending = "ERROR"
         model.streamOpener = { _, text in
@@ -1081,9 +1101,30 @@ final class ChatTests: XCTestCase {
         await model.sendChat("Work the queue", to: id)
         await model.chatStreams[id]?.value
         XCTAssertEqual(model.chatState(id).ended, .failed(retry: "Work the queue"))
+        XCTAssertEqual(model.chatRetryLabel(id), "Try again", "tafs cloud's words")
         await model.retryChatRun(id)
         await model.chatStreams[id]?.value
         XCTAssertEqual(sent.texts, ["Work the queue", "Work the queue"])
+
+        // The run acted part-way: tafs cloud says no, so no Retry, and a tap that got through sends nothing.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, failed(retry: false))
+        await model.sendChat("Refund the rest", to: id)
+        await model.chatStreams[id]?.value
+        XCTAssertEqual(model.chatState(id).ended, .failed(retry: "Refund the rest"))
+        XCTAssertNil(model.chatRetryLabel(id))
+        await model.retryChatRun(id)
+        await model.chatStreams[id]?.value
+        XCTAssertEqual(sent.texts, ["Work the queue", "Work the queue", "Refund the rest"], "not sent again")
+
+        // No word from tafs cloud at all: no Retry either.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        await model.sendChat("Close the day", to: id)
+        await model.chatStreams[id]?.value
+        XCTAssertNil(model.chatRetryLabel(id))
+        await model.retryChatRun(id)
+        await model.chatStreams[id]?.value
+        XCTAssertEqual(sent.texts.last, "Close the day")
+        XCTAssertEqual(sent.texts.count, 4)
         ending = "CANCELLED"
         await model.sendChat("again", to: id)
         await model.chatStreams[id]?.value
@@ -1113,8 +1154,10 @@ final class ChatTests: XCTestCase {
         await model.chatStreams[id]?.value
         let moved = try XCTUnwrap(model.recordEntry(forCall: "tc-1")?.amountText, "KIFF's Record line, read once the run ended")
         XCTAssertEqual(model.failedWords(id, taf: "Refunds"), "Refunds stopped part-way, after this went through: create refund on ch_3001, \(moved).")
+        // It acted: no Retry (tafs cloud's thread says nothing safe here). The next message is the person's own.
+        XCTAssertNil(model.chatRetryLabel(id))
         done = []
-        await model.retryChatRun(id)
+        await model.sendChat("Refund T-3001", to: id)
         await model.chatStreams[id]?.value
         XCTAssertEqual(model.failedWords(id, taf: "Refunds"), "Refunds stopped part-way, before it finished.")
         XCTAssertEqual(AppModel.failedWords(taf: "Refunds", done: [("create refund", "ch_1", "US$5"), ("send email", nil, nil)]),
@@ -1127,6 +1170,9 @@ final class ChatTests: XCTestCase {
         let (model, id) = await kiffModel()
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
         let words = "Our AI provider isn't serving us right now, so this stopped and used none of your credits. It's on our side, not yours: try again a little later."
+        // Nothing it did acted: tafs cloud's thread says Retry is safe.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] =
+            (200, #"{"messages":[],"failed":{"run":"run_1","code":"ai_unavailable","words":"x","retry":true,"retry_label":"Try again"}}"#)
         var why: String? = words
         model.streamOpener = { _, _ in
             let said = why

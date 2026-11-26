@@ -186,6 +186,7 @@
   "coach.tools.give": "Coach'a araçlarını ver",
   "coach.tools.giving": "Veriliyor…",
   "coach.tools.title": "Coach'un araçları",
+  "coach.tools.write_after": "Önce Coach'un araçlarını onaylayın, sonra yazabilirsiniz.",
   "coach.tools_eyebrow": "Araçlar",
   "coach.tools_not_given": "Coach'un araçları verilmedi. {why}",
   "coach.tools_not_read": "Coach'un araçları okunamadı. {why}",

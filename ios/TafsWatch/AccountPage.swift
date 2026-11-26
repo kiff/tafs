@@ -114,7 +114,7 @@ struct WatchAccountScreen: View {
                         Section(Words.Settings.plan) { Text(plan).font(.footnote) }
                     }
                 case .unreachable(let why):
-                    notice(why.line)
+                    notice(why.waiting)
                 case .signedOut:
                     notice(Words.Watch.signInOnPhone)
                 case .updatePhone:
@@ -145,9 +145,12 @@ struct WatchAccountScreen: View {
         .onDisappear { model.leave() }
     }
 
-    /// Why the phone's part isn't shown, with Try again; the watch's own lines stay below it.
+    /// Why the phone's part isn't shown, read again by itself (`WatchRetry`); the watch's own lines stay below it.
     @ViewBuilder private func notice(_ line: String) -> some View {
         Text(line).font(.footnote)
-        Button(Words.Common.tryAgain) { Task { await model.load() } }
+            .task {
+                await WatchRetry.wait()
+                await model.load()
+            }
     }
 }

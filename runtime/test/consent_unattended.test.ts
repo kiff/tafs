@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { consentPauseOf, recordMaker, tafConsentOf, unattendedConsent, waitsForConsent } from "../src/cloud/consent.js";
+import { AI_CONSENT_VERSION, consentPauseOf, recordMaker, tafConsentOf, unattendedConsent, waitsForConsent } from "../src/cloud/consent.js";
 import { waitsToStart } from "../src/cloud/doors/hold.js";
 import { handle, type HTTPEvent, settleConsent, sweepConsent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -52,7 +52,7 @@ async function call(w: World, method: string, path: string, token: string, body?
   return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, unknown> };
 }
 
-const allow = (w: World, token: string) => call(w, "POST", "/v1/me/ai-consent", token, { version: "1" });
+const allow = (w: World, token: string) => call(w, "POST", "/v1/me/ai-consent", token, { version: AI_CONSENT_VERSION });
 /** Paused: its schedule is off, the one start tafs cloud can't gate. Nothing is halted, so a person's own chat goes on. */
 const halted = async (w: World) => {
   expect((await w.agents.api.halted("t_acme", RAE)).own).toBe(false);

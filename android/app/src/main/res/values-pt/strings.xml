@@ -9,6 +9,10 @@
     <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Responda até %3$s. Nada é enviado até aprovar.</string>
     <string name="alert_answered">Um taf respondeu a alguém</string>
     <string name="alert_approve_once">Aprovar uma vez…</string>
+    <string name="alert_blocked_body">Este %1$s já não pergunta, por isso os alertas do tafs estão desativados em Definições. Ative-os lá para que as aprovações e as respostas cheguem até si.</string>
+    <string name="alert_blocked_body_android">O Android já não pergunta, por isso os alertas do tafs estão desativados nas definições do telefone. Ative-os lá para que as aprovações e as respostas cheguem até si, neste telefone e no seu relógio. O relógio recebe as atualizações de qualquer forma.</string>
+    <string name="alert_blocked_body_watch">O seu iPhone já não pergunta, por isso os alertas do tafs estão desativados em Definições. Ative-os lá para que as aprovações e as respostas cheguem até si, neste iPhone e no seu relógio. O relógio recebe as atualizações de qualquer forma.</string>
+    <string name="alert_blocked_title">Ative os alertas do tafs</string>
     <string name="alert_by_email">Por email</string>
     <string name="alert_example">Exemplo</string>
     <string name="alert_foot_cant_answer_holds">Os alertas vão para as pessoas que podem responder a chamadas retidas. A sua função nesta conta não pode.</string>
@@ -24,7 +28,10 @@
     <string name="alert_not_on_for_phone">Os alertas ainda não estão ativos neste telefone. %1$s</string>
     <string name="alert_not_refused">Não recusado</string>
     <string name="alert_not_sent">Uma resposta não foi enviada</string>
+    <string name="alert_now_on">Os alertas estão ativados.</string>
     <string name="alert_on_this_device">Alertas neste %1$s</string>
+    <string name="alert_open_notification_settings">Abrir definições de notificações</string>
+    <string name="alert_open_settings">Abrir Definições</string>
     <string name="alert_open_tafs_answer_kiff_did">Abra o tafs para responder: o KIFF não indicou que versão do pedido viu.</string>
     <string name="alert_open_tafs_answer_phone_can">Abra o tafs para responder: este telefone não pode assiná-lo a partir da notificação.</string>
     <string name="alert_prompt">Receba um alerta quando um taf precisar de si</string>
@@ -38,6 +45,7 @@
     <string name="alert_status_not_available">Indisponível</string>
     <string name="alert_status_off">Desativado</string>
     <string name="alert_status_on">Ativado</string>
+    <string name="alert_still_off">Os alertas continuam desativados.</string>
     <string name="alert_still_on_after_sign_out_body">O tafs não conseguiu desativá-los (%1$s). Tente novamente, ou termine sessão na mesma e desative as notificações do tafs nas Definições.</string>
     <string name="alert_still_on_after_sign_out_title">Este %1$s pode continuar a receber os alertas desta conta</string>
     <string name="alert_taf_needs_you">%1$s precisa de si</string>
@@ -46,6 +54,8 @@
         <item quantity="other">%1$s tafs ›</item>
     </plurals>
     <string name="alert_tafs_could_not_reach_kiff">O tafs não conseguiu contactar o KIFF para recusar. Abra o tafs para responder.</string>
+    <string name="alert_watch_first_body">Para ver as aprovações e as respostas como alertas, neste telefone e no seu relógio, ative os alertas do tafs. O relógio continua a receber as atualizações mesmo que não o faça.</string>
+    <string name="alert_watch_first_title">O seu relógio está a usar o tafs</string>
     <string name="alert_what_alerts">O que gera alertas</string>
     <string name="alert_with_sound">Com som</string>
     <string name="app_name">tafs</string>
@@ -846,6 +856,7 @@
     <string name="coach_tools_give">Dar ao Coach as suas ferramentas</string>
     <string name="coach_tools_giving">A dar…</string>
     <string name="coach_tools_title">Ferramentas do Coach</string>
+    <string name="coach_tools_write_after">Aprove primeiro as ferramentas do Coach e depois poderá escrever.</string>
     <string name="coach_tools_eyebrow">Ferramentas</string>
     <string name="coach_tools_not_given">As ferramentas do Coach não foram dadas. %1$s</string>
     <string name="coach_tools_not_read">Não foi possível ler as ferramentas do Coach. %1$s</string>
@@ -2780,6 +2791,7 @@
     <string name="watch_ask">Pedir ao tafs</string>
     <string name="watch_ask_needs_consent">Antes de pedir ao tafs, autorize a utilização de IA no tafs no telemóvel.</string>
     <string name="watch_ask_not_on">Pedir a partir do relógio ainda não está ativo.</string>
+    <string name="watch_ask_phone_sign_in">Peça ao telemóvel para iniciar sessão neste relógio</string>
     <string name="watch_ask_text_only">O tafs recebe as suas palavras como texto, nunca a sua voz.</string>
     <string name="watch_asking_phone">A perguntar ao telemóvel…</string>
     <string name="watch_calendar_today">Calendário de hoje</string>
@@ -2791,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Eliminado. Nada foi enviado.</string>
     <string name="watch_didnt_catch">Não percebi. Toque para tentar novamente.</string>
     <string name="watch_dismiss">Ignorar</string>
+    <string name="watch_edit_words">Toque no texto para o alterar</string>
     <string name="watch_glance_description">Quantos precisam de si, nunca o quê nem quem.</string>
     <string name="watch_halt_all_q">Bloquear todos os seus tafs?</string>
     <plurals name="watch_halt_now_count">
@@ -2806,6 +2819,7 @@
         <item quantity="one">%1$s chamada retida precisa de si</item>
         <item quantity="other">%1$s chamadas retidas precisam de si</item>
     </plurals>
+    <string name="watch_held_channel">Chamadas retidas</string>
     <string name="watch_inbox_empty">Nada de novo. As respostas do Coach e os alertas dos seus tafs chegam aqui.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s por ler na Caixa de entrada</item>
@@ -2820,7 +2834,7 @@
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Para pedir por voz, autorize o microfone para o tafs neste relógio.</string>
     <string name="watch_more_on_phone">O resto está no telemóvel.</string>
-    <string name="watch_needs_lock">Para recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.</string>
+    <string name="watch_needs_lock">Para enviar, recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s precisa de si</item>
         <item quantity="other">%1$s precisam de si</item>
@@ -2830,6 +2844,7 @@
     <string name="watch_nothing_sent_until">Nada é enviado até aprovar.</string>
     <string name="watch_nothing_waits">Nada espera por si.</string>
     <string name="watch_open_on_phone">Abrir no telemóvel</string>
+    <string name="watch_opened_on_phone">Aberto no telemóvel</string>
     <string name="watch_page_brief">Resumo</string>
     <string name="watch_page_inbox">Caixa de entrada</string>
     <string name="watch_paused_still_answers">Em pausa: o agendamento está parado. Ainda assim responde ao que envia.</string>
@@ -2853,6 +2868,7 @@
     <string name="watch_recent_chats">Chats recentes</string>
     <string name="watch_recording">A gravar</string>
     <string name="watch_recording_not_received">A gravação não chegou ao telemóvel. Tente novamente ou escreva.</string>
+    <string name="watch_refuse_on_phone">Não foi recusado. Recuse-o no telemóvel.</string>
     <string name="watch_refused">Recusado. Nada foi enviado.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_rerecord">Gravar de novo</string>
@@ -2861,14 +2877,20 @@
     <string name="watch_resume_on_phone">Retomar no telemóvel</string>
     <string name="watch_retry">Repetir</string>
     <string name="watch_review">Verifique antes de enviar</string>
+    <string name="watch_seconds_left">Faltam %1$s s</string>
     <string name="watch_sending">A enviar…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_settings_of">%1$s · definições</string>
+    <string name="watch_sign_in_allow">Permitir</string>
+    <string name="watch_sign_in_denied">Sessão não iniciada. Este relógio continua com a sessão terminada.</string>
+    <string name="watch_sign_in_deny">Recusar</string>
     <string name="watch_sign_in_on_phone">Primeiro, inicie sessão no tafs no telemóvel.</string>
+    <string name="watch_sign_in_watch_q">Iniciar sessão neste relógio com a sua conta?</string>
     <string name="watch_sign_out_q">Terminar sessão neste relógio?</string>
     <string name="watch_sign_out_sub">O telemóvel continua com sessão iniciada. Este relógio esquece os seus tafs, chats e Caixa de entrada.</string>
     <string name="watch_signed_in">Sessão iniciada</string>
     <string name="watch_signed_out_here">Sessão terminada neste relógio. O telemóvel continua com sessão iniciada.</string>
+    <string name="watch_stopped_at_limit">Parou no limite de %1$s. O que foi ouvido está abaixo.</string>
     <string name="watch_swipe_settings">Deslize para a esquerda para as definições</string>
     <string name="watch_tap_start">Toque em Começar e fale. As suas palavras aparecem aqui enquanto fala.</string>
     <string name="watch_timing">Escuta %1$s ms · receção %2$s ms · resultado %3$s ms</string>
@@ -2877,8 +2899,10 @@
     <string name="watch_type">Escrever</string>
     <string name="watch_type_hint">Escrever ao Coach…</string>
     <string name="watch_update_phone">Atualize o tafs no telemóvel e tente novamente.</string>
+    <string name="watch_view_on_phone">Ver no telemóvel</string>
     <string name="watch_view_only_phone">Este telemóvel só pode ver, por isso não pode pedir a partir do relógio. Inicie sessão num telemóvel que possa aprovar.</string>
     <string name="watch_voice_text_only">O Coach recebe as suas palavras como texto, nunca a sua voz.</string>
+    <string name="watch_waiting_for_phone">A aguardar o telemóvel…</string>
     <string name="watch_what_it_does">O que faz</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s a trabalhar</item>

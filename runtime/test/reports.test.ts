@@ -170,3 +170,58 @@ describe("reporting an answer", () => {
     expect(isAccountItem(reportKey("t_acme", "u_ana", "run.3"), "t_acme")).toBe(true);
   });
 });
+
+// Delete conversation says "deleted now, for good": a report of an answer in it was kept 180 days apart from the chat, with
+// the answer's text and the person's note. Deleting the chat erases it now, and another chat's report stays.
+describe("deleting a chat erases its reports", () => {
+  it("removes the person's reports of its answers, keeps another chat's, and the chat is gone", async () => {
+    const w = world();
+    const { session } = await chat(w, RAE, "Order 7 is over the Card's $50.");
+    const m = await answerID(w, RAE);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages/${m.id}/report`, { token: "ana", body: { reason: "wrong", note: "Not true." } })).status).toBe(200);
+    for (const r of w.agents.runs) (r as { status: string }).status = "COMPLETED";
+    const other = await chat(w, COACH, "Coach's own answer.");
+    const o = await answerID(w, COACH);
+    expect((await call(w, "POST", `/v1/tafs/${COACH}/messages/${o.id}/report`, { token: "ana", body: { reason: "wrong" } })).status).toBe(200);
+    for (const r of w.agents.runs) (r as { status: string }).status = "COMPLETED";
+    expect(w.store.held.has(reportKey("t_acme", "u_ana", m.id))).toBe(true);
+
+    const r = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${session}`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(w.store.held.has(reportKey("t_acme", "u_ana", m.id))).toBe(false);
+    expect(w.store.held.has(reportKey("t_acme", "u_ana", o.id))).toBe(true);
+    expect(other.session).not.toBe(session);
+  });
+});
+
+describe("deleting a chat erases every report of it, or nothing", () => {
+  it("finds an answer past the thread's last 100 messages", async () => {
+    const w = world();
+    const run = await w.agents.api.startRun("t_acme", RAE, "Why was order 7 held?", ANA);
+    for (let i = 0; i < 130; i++) w.agents.say(run, `Answer ${i}.`);
+    for (const r of w.agents.runs) (r as { status: string }).status = "COMPLETED";
+    const first = w.agents.events.get(run.session)!.find((e) => e.kind === "agent_message")!;
+    const id = `${first.run}.${first.seq}`;
+    // Reported while it was in reach, as an app does: kept by person and answer.
+    await w.store.create(reportKey("t_acme", "u_ana", id), { id, by: "u_ana", message: id, text: "Answer 0." });
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${run.session}`, { token: "ana" })).status).toBe(200);
+    expect(w.store.held.has(reportKey("t_acme", "u_ana", id))).toBe(false);
+  });
+
+  it("deletes nothing when a report can't be removed, so trying again finishes it", async () => {
+    const w = world();
+    const { session } = await chat(w, RAE, "Order 7 is over the Card's $50.");
+    const m = await answerID(w, RAE);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages/${m.id}/report`, { token: "ana", body: { reason: "wrong" } })).status).toBe(200);
+    for (const r of w.agents.runs) (r as { status: string }).status = "COMPLETED";
+    const remove = w.store.remove;
+    w.store.remove = async () => { throw new Error("store down"); };
+    const failed = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${session}`, { token: "ana" });
+    expect(failed.status).toBe(503);
+    expect(w.agents.calls.filter((c) => c.startsWith("deleteSession"))).toEqual([]);
+    expect(w.store.held.has(reportKey("t_acme", "u_ana", m.id))).toBe(true);
+    w.store.remove = remove;
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${session}`, { token: "ana" })).status).toBe(200);
+    expect(w.store.held.has(reportKey("t_acme", "u_ana", m.id))).toBe(false);
+  });
+});

@@ -13,6 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.wear.compose.material3.confirmationDialogCurvedText
+import androidx.wear.compose.material3.openOnPhoneDialogCurvedText
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
@@ -44,7 +47,7 @@ class WatchActivity : ComponentActivity() {
     val keyguard = getSystemService(android.app.KeyguardManager::class.java)
     // A screen lock set and the watch unlocked now: the confirmation for an ask, a Refuse and a Halt (docs/watch-wear.md).
     WatchModel(
-      DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, secure = { keyguard.isDeviceSecure }, tile = TileCount(PreferencesTileStore(this)),
+      DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, secure = { keyguard.isDeviceSecure }, tile = TileCount(EncryptedTileStore.of(this)),
       // Only v2 keeps a message for later, an Inbox, and signs out on the watch alone.
       drafts = if (WATCH_V2) PreferencesDraftStore(this) else null,
       inboxStore = if (WATCH_V2) KeptInboxStore.of(this) else null,
@@ -53,6 +56,13 @@ class WatchActivity : ComponentActivity() {
       // Coach's conversation, kept across opens (docs/watch-wear.md, "What the watch keeps").
       // Behind its switch until the owner's yes and the Privacy page's line ([KEEP_THREADS]).
       thread = if (WATCH_V2 && KEEP_THREADS) KeptThreadStore.of(this) else null,
+      // The phone's account mark: what's kept is drawn only once a reply this open says it's the same sign-in (AccountMark).
+      marks = PreferencesMarkStore(this),
+      // An account wiped: its answers' notifications and any recording go with it.
+      wiped = {
+        runCatching { getSystemService(android.app.NotificationManager::class.java)?.cancelAll() }
+        runCatching { VoiceFiles.dir(this).deleteRecursively() }
+      },
     )
   }
 
@@ -143,6 +153,7 @@ class WatchActivity : ComponentActivity() {
         val taf by model.taf.collectAsState()
         val haltPick by model.haltPick.collectAsState()
         val signedOutHere by model.signedOutHere.collectAsState()
+        val signInAsk by model.signInAsk.collectAsState()
         val calendar by model.calendar.collectAsState()
         val account by model.account.collectAsState()
         val tafChatOff by model.tafChatOff.collectAsState()
@@ -161,6 +172,7 @@ class WatchActivity : ComponentActivity() {
         androidx.compose.runtime.LaunchedEffect(listeningSince) {
           if (WATCH_V2 && listeningSince != null) {
             kotlinx.coroutines.delay(LISTEN_LIMIT_MS)
+            model.reachedLimit(listeningSince)
             listener.stop()
           }
         }
@@ -194,6 +206,11 @@ class WatchActivity : ComponentActivity() {
           typeTaf = { taf -> typingFor = taf; type() },
           quickTaf = { taf, text -> model.review(text, tafId = taf) },
           readMore = { id -> lifecycleScope.launch { model.readMore(id) } },
+          readMoreLine = { id -> lifecycleScope.launch { model.readMoreLine(id) } },
+          editReview = model::editReview,
+          followAnswer = { id -> model.followAnswer(id) },
+          keepTrying = { model.keepTrying() },
+          rereadTaf = { model.rereadTaf() },
           keep = if (WATCH_V2) model::keepForLater else null,
           deleteKept = model::deleteKept,
           playback = if (WATCH_V2) playback else null,
@@ -215,13 +232,8 @@ class WatchActivity : ComponentActivity() {
           closeCalendar = model::closeCalendar,
           readAccount = { lifecycleScope.launch { model.readAccount() } },
           signOut = ::signOutHere,
-          signIn = {
-            model.signInHere()
-            lifecycleScope.launch {
-              model.start()
-              NeedsYouTileService.update(this@WatchActivity)
-            }
-          },
+          // Asks the phone's person; nothing is signed in here until their Allow comes back (row 18).
+          signIn = { lifecycleScope.launch { model.askSignIn() } },
         )
         val inbox by model.inbox.collectAsState()
         val inboxKept by model.inboxKept.collectAsState()
@@ -243,9 +255,12 @@ class WatchActivity : ComponentActivity() {
           WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
             // The Inbox kept on the watch, or, when it can't be (locked, no screen lock), what the phone answered now.
             probe = if (BuildConfig.TIMING) probe else null, linkTrace = if (BuildConfig.TIMING) linkTrace?.line else null, inbox = inbox.takeIf { inboxKept }, taf = taf, haltPick = haltPick,
-            signedOutHere = signedOutHere, calendar = calendar, account = account, thread = thread, answered = answered, linking = linking, tafChatOff = tafChatOff, wholes = wholes)
+            signedOutHere = signedOutHere, signInAsk = signInAsk, calendar = calendar, account = account, thread = thread, answered = answered, linking = linking, tafChatOff = tafChatOff, wholes = wholes)
         }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing, whole = result?.let { wholes[it.id] })
+        // Open on phone, said on the watch (row 28): the platform's own confirmation, in tafs's words, then back where it was.
+        val openedNow by opened.collectAsState()
+        OpenedOnPhone(openedNow) { opened.value = null }
       }
     }
     handle(intent)
@@ -297,6 +312,20 @@ class WatchActivity : ComponentActivity() {
     AskResults.shown = { ask -> runOnUiThread { model.took(ask) } }
     KeptResults.marks = { marks -> runOnUiThread { model.takeMarks(marks) } }
     KeptResults.chats = { tafId, lines -> runOnUiThread { model.tafChatChanged(tafId, lines) } }
+    KeptResults.tafs = { kept -> runOnUiThread { model.tafsChanged(kept.tafs, kept.allHalted, kept.zone) } }
+    // The phone's Allow or Deny for this watch's sign-in ask: allowed, it starts empty and reads fresh.
+    KeptResults.signIn = { answer ->
+      runOnUiThread {
+        if (model.signInAnswered(answer)) lifecycleScope.launch {
+          model.start()
+          NeedsYouTileService.update(this@WatchActivity)
+        }
+      }
+    }
+    // The tile's count follows the same push, and the system draws it again (row 24).
+    KeptResults.needsYou = { kept -> runOnUiThread { model.needsYouPushed(kept.count, kept.words, kept.calls); NeedsYouTileService.update(this) } }
+    // The phone signed out while the app is open: everything goes now, then the phone is read again.
+    KeptResults.signedOut = { runOnUiThread { model.phoneSignedOut(); lifecycleScope.launch { model.refresh() } } }
     opening = lifecycleScope.launch {
       // What's kept shows at once; the phone is read behind it, tried again by itself when it's slow (docs/watch-wear.md).
       model.start()
@@ -310,6 +339,10 @@ class WatchActivity : ComponentActivity() {
     AskResults.shown = null
     KeptResults.marks = null
     KeptResults.chats = null
+    KeptResults.tafs = null
+    KeptResults.signIn = null
+    KeptResults.needsYou = null
+    KeptResults.signedOut = null
     opening?.cancel()
     opening = null
     listener.cancel()
@@ -345,9 +378,20 @@ class WatchActivity : ComponentActivity() {
   }
 
   /** Opens tafs on the phone, at [where] (`needs-you`): approvals, and anything longer than the watch draws, are the phone's. */
+  /**
+   * Open on phone's outcome, as the watch's own confirmation over whatever screen it was pressed on, which stays: true, the phone
+   * opened tafs there ("Opened on your phone"); false, it wasn't reached ("Check your phone"); null, nothing to say.
+   */
+  private val opened = kotlinx.coroutines.flow.MutableStateFlow<Boolean?>(null)
+
   private fun openOnPhone(where: String) {
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(WatchLink.OPEN_ON_PHONE + where)).addCategory(Intent.CATEGORY_BROWSABLE)
-    runCatching { RemoteActivityHelper(this).startRemoteActivity(intent) }
+    val started = runCatching { RemoteActivityHelper(this).startRemoteActivity(intent) }.getOrNull()
+    if (started == null) {
+      opened.value = false
+      return
+    }
+    started.addListener({ opened.value = runCatching { started.get() }.isSuccess }, mainExecutor)
   }
 
   companion object {
@@ -367,6 +411,39 @@ class WatchActivity : ComponentActivity() {
     private fun ms(v: Long?): String = v?.toString() ?: "–"
   }
 }
+
+/**
+ * What Open on phone did, said on the watch (row 28): opened ([opened] true), the platform's Open on phone confirmation with
+ * "Opened on your phone"; not reached (false), its failure confirmation with "Check your phone". Each goes by itself.
+ */
+@Composable
+internal fun OpenedOnPhone(opened: Boolean?, done: () -> Unit) {
+  val openedStyle = androidx.wear.compose.material3.OpenOnPhoneDialogDefaults.curvedTextStyle
+  val failedStyle = androidx.wear.compose.material3.ConfirmationDialogDefaults.curvedTextStyle
+  val openedWords = openedLine(true).orEmpty()
+  val failedWords = openedLine(false).orEmpty()
+  androidx.wear.compose.material3.OpenOnPhoneDialog(
+    visible = opened == true, onDismissRequest = done,
+    curvedText = { openOnPhoneDialogCurvedText(openedWords, openedStyle) },
+    modifier = Modifier.testTag(OPENED_ON_PHONE),
+  )
+  androidx.wear.compose.material3.FailureConfirmationDialog(
+    visible = opened == false, onDismissRequest = done,
+    curvedText = { confirmationDialogCurvedText(failedWords, failedStyle) },
+    modifier = Modifier.testTag(OPEN_ON_PHONE_FAILED),
+  )
+}
+
+/** What Open on phone's confirmation says: opened, "Opened on your phone"; not reached, "Check your phone"; nothing to say, null. */
+internal fun openedLine(opened: Boolean?): String? = when (opened) {
+  true -> Words.Watch.openedOnPhone
+  false -> Words.Watch.checkPhoneTitle
+  null -> null
+}
+
+/** The Open on phone confirmations, for the screen tests. */
+internal const val OPENED_ON_PHONE = "opened-on-phone"
+internal const val OPEN_ON_PHONE_FAILED = "open-on-phone-failed"
 
 /** What the screen can do: everything that reaches the phone goes through [WatchModel]. */
 internal class Actions(
@@ -446,8 +523,18 @@ internal class Actions(
   val quickTaf: (String, String) -> Unit = { _, _ -> },
   /** Read more on a taf's answer, by its request's id. */
   val readMore: (String) -> Unit = {},
+  /** Read more on a cut line of the phone's thread, by its id (row 10). */
+  val readMoreLine: (String) -> Unit = {},
+  /** Edit before sending: the review's words, as the person changed them. */
+  val editReview: (String) -> Unit = {},
   /** Read more on an answer's card (Coach's or a taf's) that tafs cloud says goes on, by its request's id. */
   val readWhole: (String) -> Unit = {},
+  /** While a taf's chat on screen is answering: its answer followed through the phone, bounded ([WatchModel.followAnswer]). */
+  val followAnswer: suspend (String) -> Unit = {},
+  /** While a send's linking screen shows: the same words sent again by itself ([WatchModel.keepTrying]). */
+  val keepTrying: suspend () -> Unit = {},
+  /** While a taf's page can't be read: read again by itself, behind its calm linking line. */
+  val rereadTaf: suspend () -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */

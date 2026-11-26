@@ -26,6 +26,14 @@ class WatchCache(private val store: CacheStore, private val now: () -> Long) {
     runCatching { store.write(json.toString()) }
   }
 
+  /**
+   * Your tafs as the phone pushed them ([bot.tafs.watchlink.KeptTafs]) with the app closed: the list replaces the kept one and
+   * Needs you's count stays, so the next open draws the phone's list at once.
+   */
+  fun saveTafs(tafs: List<TafLine>, allHalted: Boolean) {
+    save(WatchModel.NeedsYouRead(load()?.count ?: 0, "", emptyList()), WatchModel.TafsRead(tafs, allHalted))
+  }
+
   /** The last snapshot, or none: nothing kept, unreadable, or older than [MAX_AGE_MS] (then it's cleared). */
   fun load(): Snapshot? {
     val text = runCatching { store.read() }.getOrNull() ?: return null

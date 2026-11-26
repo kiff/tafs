@@ -422,9 +422,12 @@ struct TafChatView: View {
                 Text(model.failedWords(tafID, taf: taf?.name ?? Words.Chat.theTaf))
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Spacer()
-                Button(Words.Chat.retry) { Task { await model.retryChatRun(tafID) } }
-                    .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
-                    .disabled(model.chatSending.contains(tafID))
+                // Only where tafs cloud says it's safe to send the message again (`chatRetryLabel`).
+                if let label = model.chatRetryLabel(tafID) {
+                    Button(label) { Task { await model.retryChatRun(tafID) } }
+                        .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                        .disabled(model.chatSending.contains(tafID))
+                }
             }
             .padding(12)
             .background(Theme.no.opacity(0.10))

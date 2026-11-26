@@ -16,7 +16,10 @@ this page says what is there now and what each step adds.
   state. It's read from the phone each time the watch shows it (`WatchModel.refresh`, `readAsks`) and forgotten when it's put
   away (`forget`). Without a phone it says so (`watch.phone_not_reachable`, Try again); with the phone signed out,
   `watch.sign_in_on_phone`; with an answer it can't draw, **Open on phone**, never a guess (`WatchModelTest`).
-- **Open on phone** opens `tafs://open/needs-you` on the phone (`RemoteActivityHelper`).
+- **Open on phone** opens `tafs://open/needs-you` on the phone (`RemoteActivityHelper`), and says what it did over the screen it
+  was pressed on, which stays (0.4.10, row 28): Wear's own Open on phone confirmation with "Opened on your phone"
+  (`watch.opened_on_phone`), or, when the phone isn't reached, its failure confirmation with "Check your phone"
+  (`OpenedOnPhone`).
 - **The all-clear** (the owner's illustration board 12): when nothing waits, no count and no held call
   (`NeedsYouRead.allClear`), Needs you shows a green disc with a white check above its own words. It's drawn as shapes in
   `Illustrations.kt` (`AllClearIllustration`), never an image file, and has no text in it. The words under it are the
@@ -82,8 +85,10 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
   the watch face; the app asks for the watch's lock first, as any ask does. It shows the count only while the watch has a screen lock and is unlocked,
   decided at each draw the system asks for, not the instant the lock changes. Found locked (Wear OS locks a watch taken off
   the wrist) or with no lock at a draw, it shows tafs's name, and the count is forgotten. The
-  count and its time are **the only things the watch writes to disk** (`TileCount`, preferences `tafs.tile`); the phone saying
-  it's signed out clears them too (`TileCountTest`).
+  count, its time and, from 0.4.10, the end time of each held call in it are kept encrypted (`EncryptedTileStore`,
+  `watch-tile.bin`, AES-GCM under the watch's Keystore key, as the Inbox is; 0.4.9's plain `tafs.tile` preferences are taken in
+  once and cleared). A call whose end has passed leaves the count, and its time the file. The phone saying it's signed out
+  clears them too (`TileCountTest`, `KeptAtRestTest`).
 
 - **Ask tafs** (`WatchModel.voice`, `WatchRelay.ask`, tafs cloud's side in [watch-ask.md](watch-ask.md)). The watch never says
   "Coach": it asks tafs, and tafs cloud picks the one taf that can do it.
@@ -191,7 +196,7 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   hears an answer as "Coach: …"; a turn at work is heard as its state line alone, which already names Coach. **One
   conversation, kept:** put away (the screen off, the keyboard's own screen, another app) it stays, and so do a taf's chat
   open and a review's words (`WatchModel.putAway`; a review's recording is erased); on either sign-out it goes. With
-  `KEEP_THREADS` on (a `-test` build, until the owner's yes and the Privacy page's line) it's also kept on the watch across
+  `KEEP_THREADS` on (every release build from 0.4.8; a `-test` build before) it's also kept on the watch across
   opens (`watch-threads.bin`, encrypted, "What the watch keeps"), as each taf's chat opened here is; off, it lives in memory while the app runs. **Send goes back to it:** the words
   are the newest turn at once, with "HH:mm ✓" beside them, then tafs cloud's state once Coach is at it, and the answer lands under them in
   the thread, whole however many lines (the owner's Watch 5 test: it was cut at five lines), as in a chat; the result card no
@@ -230,7 +235,13 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   `RECORD_STOP`). The top line is kept short for the top of a round face, and TalkBack reads it in full ("Ready · 30 s at
   most", `watch.limit`); it sits 12 % of the face down (`TOP_INSET_SHARE`), where the face is wide enough for it (the Galaxy
   Watch 5 test, W8). At 30 s (`LISTEN_LIMIT_MS`) listening stops by itself (`Listener.stop`). Reply opens it the same way, for
-  the same ask.
+  the same ask. While recording, the line under the ring says the seconds left ("18 s left", `watch.seconds_left`, red from 5
+  s); a recording the limit stopped keeps what was heard, and its review says "Stopped at the 30 s limit. What was heard is
+  below." (`watch.stopped_at_limit`, `WatchModel.reachedLimit`; 0.4.10, row 25). No Pause: Stop, then edit.
+- **Edit before sending** (0.4.10): on Check before sending, tapping the words ("Tap the words to change them",
+  `watch.edit_words`) opens them in a field with the watch's keyboard up (`EditWords`; the system's `RemoteInput` can't open with
+  text in it). ✓ puts the edited words back in the review, to the same chat (`WatchModel.editReview`); the recording goes, since
+  it no longer says them. Nothing leaves the watch before Send.
 - **Stopped, or the recognizer heard the end:** the words go to **Check before sending** (`Voice.Review`), never to the phone.
   It shows them in full, scrolled with the crown or a swipe, starting below the face's top curve, and fading out at the curve
   and above the foot rather than being cut. Its three actions are pinned at the foot, always in reach without scrolling (W9):
@@ -366,7 +377,15 @@ to them:
   the calendar and Account, and its own result notifications. It keeps one flag in its private preferences (`tafs.sign_in`,
   `PreferencesWatchSignIn`) and shows only "Signed out on this watch. Your phone stays signed in." with **Sign in with your
   phone**, across restarts, until the person taps it. Meanwhile it reads and sends nothing (no read, ask, Refuse or Halt, the
-  tile's Ask tafs included) and shows no result notification. Sign in clears the flag and reads the phone again.
+  tile's Ask tafs included) and shows no result notification. Every return of the app to the front reads that flag first
+  (`WatchModel.reload`), so a sign-out from one copy of the app holds in another opened earlier from the tile or a notification.
+- **Signing in again needs the phone's Allow** (0.4.10, row 18). A tap on the watch alone never signs it in: **Ask your phone to
+  sign this watch in** (`watch.ask_phone_sign_in`) sends `sign-in-ask` with a one-time id and shows "Waiting for your phone…".
+  The phone asks its person, inside the app and so behind its lock, "Sign this watch in as you?" with **Allow** and **Deny**
+  (`AppModel.askWatchSignIn`; a notification on the Needs you channel opens it, never answers it). The answer goes back as
+  `kept/sign-in` (`{put_at, ask, allowed, account_mark}`), and the watch takes it only from the paired phone, connected now, for
+  the ask it's waiting on, within 10 minutes (`SIGN_IN_ASK_MS`). Allow: the flag goes, and the watch starts empty and reads fresh.
+  Deny: "Not signed in. This watch stays signed out." The phone not reached: the link's own line, and nothing waits.
 - **Left out:** "Alerts on this watch". The watch's own notifications are only an ask's result; Needs you's alerts are the
   phone's, which Wear OS bridges, and the watch app doesn't switch them today. A switch with that name would leave those on, so
   it waits until it can switch both.
@@ -424,6 +443,12 @@ counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the tw
 foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" and the page back on the microphone after a
 send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
 to production only **after 0.4.0's review passes**, so the review isn't restarted.
+
+**400,000,013 (0.4.8)** is the owner's eight calls after their Galaxy Watch 5 test (kiff/tafs#2021): the chats kept on the
+watch and opened at once, answers pushed through the phone with the app closed, a taf's chat that sends from the watch, Read
+more, and no manual Try again. It turns `KEEP_THREADS` on in every release build, now that the Privacy page's line for watch
+threads is live. To `wear:internal` on merge, with its notes in the listing's 11 languages; with it, the phone's Android 143
+(1.49.0) carries the phone's side.
 
 **400,000,012 (0.4.7)** closes a gap found live in 0.4.6: a message kept for later is deleted, unsent, once the watch has no
 screen lock, checked when the app starts, opens or is put away (`WatchModel.checkLock`, #1943), as the Inbox's lines are. A
@@ -569,9 +594,42 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   changed), starts an expedited WorkManager job (`WatchResultsWork`, one chain per ask, outside Firebase's few seconds), which
   restores the phone's session if it must, reads the ask (`GET /v1/watch/asks/{id}`) or the marks (`GET /v1/watch/inbox`) and
   puts it for the watch as an urgent Data Layer item: `kept/ask/{id}` (the ask as `asks` gives it, and when it was put) or
-  `kept/inbox-marks`. A read that fails is tried again by WorkManager, three times at most. Signed out, or an ask tafs cloud
+  `kept/inbox-marks`. A read that fails is tried again by WorkManager, three times at most. WorkManager makes its Room
+  database by reflection when the app starts, so `app/proguard-rules.pro` keeps every `RoomDatabase`'s no-argument
+  constructor: Room 2.6's own rule keeps only the class, R8 removed the constructor, and Android 144 closed at every launch
+  (fixed in 145). Signed out, or an ask tafs cloud
   doesn't give this person: nothing is put. A message to a taf is put too: the watch takes it into that taf's chat, open or
   kept, never its Inbox.
+- **The phone takes the watch's pushes, alerts on or off** (`AppModel.watchUsed`, `syncBackgroundPush`; `WatchBackgroundPushTest`).
+  The first request the watch makes in a sign-in marks the phone as serving it (`tafs.watch-served`, cleared at sign-out). From
+  then on a phone whose alerts are off registers with tafs cloud for background pushes only (`POST /v1/push` with
+  `alerts: false`, no alert target): `taf_chat`, `watch_ask` and `watch_inbox` reach it with tafs closed, and no alert ever
+  shows. Firebase delivers these data messages without the notification permission. Turning alerts off keeps this
+  registration; sign-out takes it back (`DELETE /v1/push/{token}`). Before Android 146, a phone with alerts off was never
+  registered, so a taf's answer to the watch waited for the watch to open tafs again (the owner's Galaxy S23, 25 Nov).
+- **The taf list, as the phone's moves** (`WatchTafs`; `WatchTafsTest`). Once the watch is served, the phone puts the list the
+  watch's Tafs page draws as one urgent item, `kept/tafs` (`{put_at, tafs, all_halted, zone, account_mark}`, the fields of the
+  `tafs` reply), whenever it changes: a sign-in, a taf added, removed, paused, resumed or halted, a name changed. Only on a
+  change, compared with the last put, never on a timer; never before the list was read, so it's never put empty. Sign-out
+  drops it with the rest.
+- **Held calls are pushed too** (0.4.10, rows 1, 24 and 29): `kept/needs-you` (`WatchNeedsYou`, `{put_at, count, words, calls,
+  account_mark}`) whenever the phone's held calls or count change, as `kept/tafs` is. What the watch may keep, as the Privacy page
+  says: the count, and per held call its taf and what it wants with the amount taken out; never KIFF's amount or the reason,
+  which come from the live read when the call is opened. The watch (`HeldCalls`, `KeptResults.needsYou`) puts each call at the
+  top of the Inbox and on the tile's count (and redraws the tile), alerts a call new to it in its own channel ("Held calls",
+  `watch.held_channel`; a locked watch says only how many), and drops a call the phone no longer lists, as its own read now
+  does. Each call carries its hold's end (`ends_at`): past it, the watch drops the call on its own clock, with no word from the
+  phone (its line, its alert, which times out then, and its share of the tile's count). The end is used in memory, never
+  written to the Inbox file; the tile keeps the end times beside its count, encrypted, so it can drop them with the app closed. Taken only
+  under the mark held, drawn only once this open has heard it. Refuse stays behind the watch's lock, Approve
+  on your phone a hand-off; a Refuse the phone can't make from here says "Not refused. Refuse it on your phone."
+  (`watch.refuse_on_phone`).
+- **The watch's reads answer within its 10 s** (`WatchRelay`; `WatchFastReadTest`). Holding a read, the phone answers Needs you
+  and the list from it in under a second (`FRESH_WAIT_MS`, 800 ms) and the fresh read lands for the next ask, and as
+  `kept/tafs`. A phone woken by the watch restores its session first, which reads tafs cloud and KIFF (15 s measured on a
+  Galaxy S23): the watch waits for it at most 7 s (`FIRST_READ_WAIT_MS`), then hears "not now" and keeps what it shows, while
+  the restore goes on for the next ask. Nothing read yet, or a list that couldn't be read, is "not now" too, never an empty
+  list or a count of 0.
 - **A taf's chat, as the phone's moves.** Once the watch has read a taf's chat (`taf-chat`), the phone keeps each change to it
   for the watch, as one item, `kept/taf-chat/{id}` (its last 30 messages, `ChatLine.KEPT`), so a chat open on the watch moves at
   once and a kept one follows. Two ways: while the phone's app runs, each change to its own thread (a message sent on the phone,
@@ -600,10 +658,13 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   `replies` channel (high importance; locked, "A result is ready" only). The watch then deletes the item, on both ends.
 - **Opening.** What's kept draws at once (the conversation, the Inbox, the cache's count and tafs) with a small dot at the top
   while the phone is read behind it. A read the phone doesn't answer in time is tried again by the watch itself after 2, 4 and
-  8 s (`RETRY_BACKOFF_MS`), nothing changing on screen meanwhile; only then does a small line say why ("Your phone didn't
-  answer in time. Try again.") with **Try again**, over what's kept, never a screen of its own. With nothing kept at all (a
+  8 s (`RETRY_BACKOFF_MS`), nothing changing on screen meanwhile; only then does a small calm line say "Linking tafs. Keep your
+  phone nearby and connected." over what's kept, never a screen of its own, and the watch goes on reading the phone by itself
+  every 15 s while it shows, with no Try again (0.4.9; before, the line was why, with **Try again**). tafs missing from the phone
+  keeps its own line. With nothing kept at all (a
   first link, a first open) the watch shows one calm screen, the tafs mark in a turning ring and "Linking tafs. Keep your
-  phone nearby and connected." (`watch.linking`, `LinkingScreen`), and goes on trying every 15 s behind it while the app is
+  phone nearby and connected." (`watch.linking`, `LinkingScreen`; from 0.4.10 its line waits 500 ms, `LINKING_SHOWN_AFTER_MS`,
+  so a phone that confirms the sign-in sooner shows none of it), and goes on trying every 15 s behind it while the app is
   open; tafs missing from the phone says so instead. "Asking your phone…" is v1's only.
 - **The phone answers in time.** A watch read that needs tafs cloud and KIFF read again (Needs you, Your brief, a taf's page,
   past the 10 s floor) runs the app's whole refresh in the app's own scope (`TafsApplication.background`) and waits for it
@@ -613,6 +674,48 @@ The watch may ask fourteen things (`WatchRequest`), each a path under `/tafs/wat
   recipes and the gallery, one after another) before answering, which could pass the watch's 10 s even with tafs in front.
   A restore the watch stopped waiting for goes on in that scope too and the next ask joins it (`RestoreOnce`); one that was
   cancelled or failed is run again.
+
+**Wear 0.4.9: what the Galaxy Watch 5 re-test changed** (25 Nov):
+- **Your tafs never empties** (row 27; `WatchModel.refresh`, `retryTafs`, `tafsChanged`; `TafListTest`). A list read that misses
+  (the 10 s passing) keeps the list the watch had, shown and kept: it never saves nothing over it. The open reads it again
+  quietly after 2, 5 and 10 s (`TAFS_RETRY_MS`). The phone puts the list as a kept item, `kept/tafs` (`KeptTafs`: the lines
+  `tafs` gives, `all_halted`, the zone, and the account mark), when its list changes (a sign-in, a taf added, removed, paused or
+  halted): the open Tafs page moves at once (`KeptResults.tafs`), and with the app closed the kept list the next open draws
+  (`WatchCache.saveTafs`), only under the mark held.
+- **The Inbox keeps its lines across a close and reopen** (row 20; `WatchModel.reload`; `InboxReopenTest`). A reopen took the
+  Inbox only from its encrypted store, so a line whose write the Keystore refused (`EncryptedText.write` is quiet on failure)
+  vanished, and the page said "Nothing new". The open's own lines the store lacks now stay, and are written again; a line
+  dismissed stays away; a lock or a sign-out still empties it.
+- **A taf's answer lands in its chat alone** (`KeptThreads.inTafChat`, `KeptThread.sent`; `AnswerOnePlaceTest`). A taf's kept
+  chat remembers the asks sent from it, by id alone, the last 30, also once the phone's lines hold their turns. The open's read
+  of the asks, a kept item with the app closed and the Inbox with no lock all check it, so a taf's answer is never filed in
+  the Inbox; one an older watch filed there goes at the next open. Coach's answers are unchanged.
+- **The answer is followed while it's awaited** (row 13; `WatchModel.followAnswer`; `FollowAnswerTest`). While a taf's chat on
+  screen shows "{taf} is answering", the watch reads its asks through the phone every 5 s (`ANSWER_READ_EVERY_MS`), for 2
+  minutes at most (`ANSWER_FOLLOW_MS`), and stops at once when the answer lands or the chat closes; then Open on phone shows
+  beside the answering line, and the answer still lands when it's pushed. It runs only while the chat is on screen.
+- **A cut answer reads whole, or opens on the phone** (rows 10, 28; `KeptThreads.withLines`, `shownLines`; `CutAnswerTest`).
+  A message sent from the watch keeps its turn while it knows more than the phone's lines (its answer, so Read more reads it
+  by its request's id; or its "answering" before the lines hold an answer), and the lines of the same message (the same words,
+  within 10 minutes) aren't drawn twice. A taf's cut line with no turn of its own gets **Read more** (0.4.10, row 10): one tap
+  asks the phone for that message whole (`line-full`, the taf and the line's id), which the phone reads from the person's thread
+  with the taf (`WatchRelay.lineFull`, the taf's words only, never kept) and the watch shows in place. One that can't be read,
+  and an answer that couldn't be read whole, get "The rest is on your phone" and **Open on phone**, which opens that taf's chat
+  on the phone while the watch stays. Coach's Read more in its thread opens the answer and reads it whole in one tap.
+- **Plain text** (`Plain`; `PlainTest`). Wherever the watch draws or speaks an answer, markdown goes: bold and italics keep
+  their words, a link its words, code its text, a heading its line, a list item a bullet. The person's own words are never
+  changed.
+- **The words just sent show whole** (`tafChatFocus`). With a message sent from the watch, a taf's chat centres on the line
+  under its newest one, so the words sit whole above "{taf} is answering".
+- **Calm linking for a send** (row 30, call 6; `Voice.Linking`, `WatchModel.keepTrying`; `CalmLinkingTest`). A send with no
+  receipt (no answer in 10 s, or the phone's "may have arrived") shows one calm screen, "Linking tafs. Keep your phone nearby
+  and connected.", with Cancel (and Keep for later for Coach's), and sends the same words under the same id again by itself
+  after 2, 5 and 10 s, then every 30 s, for 10 minutes at most; tafs cloud takes one id once. It ends on its own when the phone
+  answers; a locked watch sends nothing meanwhile. Its tries spent: "Not sure it arrived", with Retry. A taf's page the phone
+  can't give shows the same calm line and reads itself again.
+- **At 10,000 users:** the answer is followed only while one person looks at an open chat that's answering, at most 24 reads;
+  a send is tried again only while its linking screen shows, at most about 22 times in 10 minutes; the phone puts the taf list
+  only when it changes, never on a timer. None of it runs with the app put away.
 
 **Chatting with a taf, the phone's half** (behind tafs cloud's `TAFS_WATCH_TAF_CHAT`, off; the wrist's screens follow the
 owner's picks; docs/watch-ask.md). An `ask` with `taf_id` names the phone's taf: the phone sends that taf's tafs cloud id as
@@ -683,7 +786,7 @@ watch doesn't know is shown as Open on phone, never guessed at.
   `Res.s` and `Res.p` set each text value apart in a right-to-left language (U+2068 … U+2069, `watchlink`'s `Bidi`, the
   one rule both apps fill their lines through), so a Latin taf name or an amount keeps its own direction in the sentence
   (`RtlWordsTest`). A count is written in the language's own digits, as on the phone.
-- **What the watch keeps:** in v1, on disk, only Needs you's count and its time, for the tile (`tafs.tile`), cleared on
+- **What the watch keeps:** in v1, on disk, only Needs you's count and its time, for the tile (encrypted from 0.4.10, `watch-tile.bin`), cleared on
   sign-out and when the watch comes off the wrist; the lists, Your tafs and the asks and their results stay in memory. v2 (behind
   `WATCH_V2`) keeps more, all in the app's private storage:
   - `tafs.draft`: one message kept for later, its text, ask id and the ask it continues; gone on Delete, once it's sent and
@@ -702,7 +805,7 @@ watch doesn't know is shown as Open on phone, never guessed at.
     Where the Inbox can't be kept (no screen lock), the Inbox page shows every answer the watch knows, opened ones too, so one
     read doesn't vanish (row 20), and held calls as Needs you has them.
   - `watch-threads.bin` (`KeptThreadStore`), encrypted at rest as the Inbox and the cache are (AES-GCM under the Keystore key;
-    what won't decrypt reads as none and is cleared), only with `KEEP_THREADS` on (a `-test` build, or `TAFS_WATCH_THREADS=1`; off in production until the
+    what won't decrypt reads as none and is cleared), only with `KEEP_THREADS` on (every release build from 0.4.8; before it, a `-test` build, or `TAFS_WATCH_THREADS=1`; off in production until the
     owner's yes and the Privacy page's line), as the Apple Watch keeps them: **the last 30 messages of each of up to 20 threads
     opened on the watch**, Coach's and each taf's (`KeptThreads`, `MESSAGES_MAX`, `THREADS_MAX`), text only with amounts
     stripped (`Amounts.strip`): the phone's lines of a taf's chat, and what was said from the watch with its ask's state and
@@ -723,6 +826,45 @@ watch doesn't know is shown as Open on phone, never guessed at.
   - `files/voice/`, in a test version only (`KEEP_AUDIO`): the review's recording, erased when the review is left and swept at
     start, put-away and sign-out here. A production build keeps no recording.
   - The result notifications (a taf's name and its line), cancelled on Sign out on this watch.
+  - `tafs.account`: the phone's **account mark** for the sign-in the watch last read (`MarkStore`, `AccountMark`).
+- **One account's data never shows under another's** (`AccountMarkTest`, `WatchAccountMarkTest`). Everything above that holds
+  an account's data goes, the same list as on a sign-out (`WatchModel.wipeAccount`), whenever the phone's account changes, not
+  only on an explicit sign-out:
+  - **The account mark.** The phone makes a random mark at each sign-in (16 bytes, base64url, `AppModel.watchMark`) and drops it
+    at sign-out. It's never derived from the tenant, the person or their email, so it tells the watch only "the same sign-in" or
+    "not". It rides beside the reply's own fields on every reply from a signed-in phone (`account_mark`, `WatchLink.encodeReply`),
+    and on each kept item, which a watch before marks ignores. The phone reads it before and after it answers: a reply read across
+    a change of sign-in goes as Open on phone with no mark (`WatchRelay.answerMarked`), and a kept item read across one isn't put.
+  - **On the watch, it fails closed.** Every reply's mark is checked before anything of it is used (`WatchModel.ask`):
+    - another sign-in's mark wipes everything kept first, then the reply is the new account's;
+    - holding a mark, a reply with none (an older code path, a downgraded phone app) wipes too, and its read isn't shown;
+    - a reply that carries nothing of an account (a failure, a refusal, no offline speech) proves nothing and wipes nothing;
+    - holding no mark (a phone before marks, or the first open after this version), as before;
+    - the first time the watch hears from an updated phone, it clears what it kept before, once: what was kept before marks can't
+      say whose it is, so it goes before anything of that first marked reply is drawn.
+  - **Nothing kept is drawn before the mark is confirmed.** Holding a mark, the watch draws nothing it kept (the cache's read, the
+    conversation, the Inbox, a taf's kept chat, a message kept for later) until a reply in this open carried that same mark. **So
+    opened with the phone out of reach, the watch shows its linking screen, then that the phone isn't reachable, not the last
+    read** as it did before marks: the phone may have changed accounts meanwhile. Pushed items from the phone are taken in only
+    when they carry the mark held (`AccountMark.keptTaken`): one with a mark, while the watch holds none, is dropped, and the
+    next checked read brings it back; only an item with no mark (a phone before marks) is taken while the watch holds none. A
+    kept item never sets or changes the mark held; only a checked reply does.
+  - **A message kept for later** keeps the mark it was kept under, and is sent only once a reply in this open said it's that
+    same sign-in; another's, it's deleted unsent.
+  - **The watch's acts carry the mark too** (`WatchLink.carriesMark`): an ask (a taf's message and a message kept for later
+    included), a message to Coach, Refuse, Halt and an Inbox mark go with the mark the watch holds, once a reply this open has
+    carried it, so a phone before marks never sees the field. A phone whose own mark differs, or with no session, answers signed
+    out and does nothing with it, and the watch wipes. So an act meant for one sign-in never reaches another, even if the phone
+    changes between the watch's check and the send. Reads carry none; on any other request the field is refused, as any
+    unknown field.
+  - **The phone tells the watch at sign-out** (`WatchSignedOut`): it takes back what it kept for the watch (`kept/ask/`,
+    `kept/inbox-marks`, `kept/taf-chat/`) and puts `kept/signed-out` with the mark it dropped. The watch takes it only from a
+    phone connected to it now, as it does replies, and wipes without asking, the app open or closed, notifications included. If
+    the watch was off, the item is still in the Data Layer when it comes back on, and is taken the same way then. It wipes only
+    the sign-in it names, or anything while the watch holds no mark. It sits at one path, so only the newest is kept, and in
+    whatever order it arrives, one naming an earlier sign-in (or none, once a mark is held) wipes nothing of the account read
+    since. It only ever deletes, so nothing comes back.
+  - The Apple Watch follows with the same rule (docs/parity.md).
 
   In memory only, for the app's life, and kept when it's put away so it comes back as it was (`WatchModel.putAway`): the reads
   (apart from the cache above), the asks, Coach's conversation (with `KEEP_THREADS` off), an open result, a taf's page and its

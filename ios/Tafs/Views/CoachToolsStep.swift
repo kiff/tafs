@@ -194,6 +194,10 @@ struct CoachToolsGiven: View {
     private var stepBody: some View {
         let step = tools.step
         let grouped = !(step?.groups.isEmpty ?? true)
+        // What this approval signs comes first and unfolded: Coach's Cards in KIFF's own words. Once Coach exists, the step
+        // lists every tool while the draft may carry only some Cards, so the list below is never presented as what's signed
+        // (the Card step's check, `CardStepCheck`, covers the first start alone).
+        if tools.card != nil { cards }
         if let step, grouped {
             // A few groups up front; each tool and its limits folded under them, closed at first.
             ForEach(Array(step.groups.enumerated()), id: \.offset) { _, group in
@@ -235,15 +239,8 @@ struct CoachToolsGiven: View {
             } else if let lines = tools.connect?.lines {
                 ForEach(Array(lines.enumerated()), id: \.offset) { _, said in line(said, 14, Theme.ink) }
             }
-            if let card = tools.card {
-                if let title = card.cardTitle, !title.isEmpty { line(title, 14, Theme.ink, .semibold).padding(.top, 4) }
-                ForEach(Array(card.cards.enumerated()), id: \.offset) { _, words in
-                    VStack(alignment: .leading, spacing: 2) {
-                        if !words.title.isEmpty { line(words.title, 13, Theme.ink, .semibold) }
-                        ForEach(Array(words.lines.enumerated()), id: \.offset) { _, said in line(said, 13, Theme.soft) }
-                    }
-                }
-            }
+            // Coach's Cards in KIFF's words are drawn above, unfolded (`cards`).
+
         }
     }
 
@@ -251,5 +248,61 @@ struct CoachToolsGiven: View {
         Text(words).scaledFont(size, weight: weight).foregroundColor(color)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// The Card step's plain list and its fold (docs/ios-app.md, "The Card step"): each group, then each tool with what it does
+/// and its limit, as tafs cloud words them; under "Exactly what you sign", folded, Coach's Cards in KIFF's own words, as
+/// signed. The list is what `CardStepCheck` compares with the signed draft.
+struct CardStepList: View {
+    let start: TafsCloud.CoachStart
+    let exact: String
+    @State private var folded = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let step = start.step {
+                ForEach(Array(step.groups.enumerated()), id: \.offset) { _, group in
+                    if !group.tools.isEmpty {
+                        Text(group.name).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).padding(.top, 4)
+                            .fixedSize(horizontal: false, vertical: true)
+                        ForEach(Array(group.tools.enumerated()), id: \.offset) { _, tool in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(tool.name).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                                if !tool.does.isEmpty { Text(tool.does).scaledFont(13).foregroundColor(Theme.soft) }
+                            }
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
+            }
+            Button { folded.toggle() } label: {
+                HStack(spacing: 6) {
+                    Text(exact).scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
+                    Image(systemName: folded ? "chevron.down" : "chevron.up").scaledFont(12).foregroundColor(Theme.amberText)
+                        .accessibilityHidden(true)
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.drivablePlain)
+            .accessibilityIdentifier("coach-card-step-exact")
+            if !folded, let draft = start.draft {
+                if let title = draft.cardTitle, !title.isEmpty {
+                    Text(title).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                }
+                ForEach(Array(draft.cards.enumerated()), id: \.offset) { _, words in
+                    VStack(alignment: .leading, spacing: 2) {
+                        if !words.title.isEmpty { Text(words.title).scaledFont(13, weight: .semibold).foregroundColor(Theme.ink) }
+                        ForEach(Array(words.lines.enumerated()), id: \.offset) { _, said in
+                            Text(said).scaledFont(13).foregroundColor(Theme.soft)
+                        }
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
     }
 }

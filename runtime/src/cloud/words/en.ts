@@ -395,6 +395,18 @@ export const en = {
   code_ai_unavailable: "Our AI provider isn't serving us right now, so this stopped and used none of your credits. It's on our side, not yours: try again a little later.",
   // The same, for a run that had sent something first: no claim about credits (work.ts runFailure).
   code_ai_unavailable_partway: "Our AI provider stopped serving us partway through, so this stopped. It's on our side, not yours: try again a little later.",
+  // A turn that failed, as the chat shows it under the person's message (kind "failed"). "ours" is ai_unavailable: our
+  // provider's balance or outage, or Bedrock's day cap. A _partway line is for a turn that changed something first:
+  // it makes no claim about credits and offers no Try again, since sending the message again could act twice.
+  turn_failed_ours: "tafs can't answer right now. It's on our side, and none of your credits were used. Try again a little later.",
+  turn_failed_ours_partway: "tafs stopped partway through. It's on our side, not yours. Check what was done, then ask again a little later.",
+  turn_failed_credits: "No answer: your account has no credits left. Add credits, then try again.",
+  turn_failed_credits_ask: "No answer: your account has no credits left. Ask an admin to add some, then try again.",
+  turn_failed_time: "This took too long and stopped before it changed anything. Try again, or ask for less at once.",
+  turn_failed_time_partway: "This took too long and stopped partway through. Check what was done, then ask again for less at once.",
+  turn_failed_error: "This stopped on an error before it changed anything. Try again.",
+  turn_failed_error_partway: "This stopped on an error partway through. Check what was done, then ask again.",
+  turn_failed_retry: "Try again",
   // Credits and the balance (credits.ts): the period, each taf's row, why runs weren't counted, and the balance's lines.
   // Counts come formatted for the person's locale, with their plural form; "Solo" and "Company" are plan names.
   cr_unreadable: "Credits can't be read right now. Try again in a moment.",
@@ -866,6 +878,31 @@ export const en = {
   cts_up_to_asks: (n: string) => `Up to ${n} a day; after that, each one waits for you.`,
   cts_up_to_shared: (n: string, other: string) => `Up to ${n} a day, counted with “${other}”.`,
   cts_always_asks: "Each one waits for your approval.",
+  // The guidance before Coach's first approval (its Cards): what it allows, what still waits, what the approval signs, how to stop.
+  // The tools and limits under it come from the Cards themselves (coachToolsStep). The app picks the button by its biometric:
+  // an approval is never signed with the screen lock or a passcode, so there is no passcode button. A computer approves with a
+  // passkey (Windows Hello or a security key), so it uses card_step_give_passkey and card_step_sign_passkey instead.
+  card_step_title: "Let Coach build tafs with you",
+  card_step_allows: "This lets Coach look at your tafs, run them, and draft and try new versions, each within the daily limits below. Only while you turn on a drive, it can also see and use the app on this device.",
+  card_step_asks: "Installing a version, choosing where a taf's results go, making a mission and saving your business description always wait for you in Needs you. Giving a taf a task or trying a version waits for you past its daily limit; anything else past its limit is refused.",
+  card_step_sign: "Your approval signs this with a key kept on this device, which never leaves it. It isn't a payment or a password.",
+  card_step_stop: "Halt stops Coach and every taf at once, with one tap.",
+  card_step_exact: "Exactly what you sign",
+  card_step_give_fingerprint: "Approve with fingerprint",
+  card_step_give_face: "Approve with face",
+  // Deleting a conversation (DELETE /v1/tafs/{id}/chats/{session}): sent with the chats list, so the failed line is on the phone
+  // when the network fails; chat_delete_busy is the 409's. Only what the delete removes: messages and attachments, not
+  // delivered files, what it remembers, or the record of what was done.
+  chat_delete_item: "Delete conversation",
+  chat_delete_confirm_title: "Delete this conversation?",
+  chat_delete_confirm_body: "Its messages and the files you added to it are deleted now, for good. Anything a taf saved in “What it remembers” stays until you remove it. What was already done stays done, and you can still see it in your Record.",
+  chat_delete_confirm_button: "Delete",
+  chat_delete_failed: "It wasn't deleted. Check that you're online and try again.",
+  chat_delete_busy: "This conversation is still working or waiting for you. Stop it or answer it first, then delete it.",
+  card_step_give_passkey: "Approve with your passkey",
+  card_step_sign_passkey: "Your approval signs this with your passkey, whose private key never leaves this computer or your security key. It isn't a payment or a password.",
+  // The one line in Coach's message box while it's locked: no typing until the Card step is approved.
+  card_step_locked: "Approve this first, then you can write to Coach.",
   cts_tafs_state: "See your tafs",
   cts_tafs_state_does: "Read each taf, its versions and its open runs.",
   cts_tafs_state_why: "It reads your account.",
@@ -997,7 +1034,13 @@ export const en = {
   sheet_done: (vendor: string, readOnly: boolean) => (readOnly ? `${vendor} is connected (read only)` : `${vendor} is connected`),
   // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
   ai_consent_title: "Your data and the AI",
-  ai_consent_lines: ["tafs uses Anthropic's Claude AI for Coach and your tafs.", "Coach and your tafs are AI agents: what they write is generated by AI and can be wrong. A message a taf sends outside your company says it was written by an AI agent.", "What's sent to it: what you write to Coach and your tafs, the files you attach, what your connected apps return to a taf while it works, and what's on your screen while Coach helps you in the app.", "What's never sent: the passwords and keys your connected apps use, or your fingerprint.", "Anthropic uses it to answer and keeps it up to 30 days.", "Nothing is sent until you allow it. You can withdraw in Account."],
+  ai_consent_lines: ["tafs uses Anthropic's Claude AI for Coach and your tafs.","Anthropic, or one of the cloud providers on our subprocessors page, runs it for us. That page says which, and where.","Coach and your tafs are AI agents: what they write is generated by AI and can be wrong. A message a taf sends outside your company says it was written by an AI agent.","What's sent to it: what you write to Coach and your tafs, the files you attach, what your connected apps return to a taf while it works, and what's on your screen while Coach helps you in the app.","What's never sent: the passwords and keys your connected apps use, or your fingerprint.","Whichever company runs it uses it to answer and deletes it within 30 days, unless it's flagged as breaking that company's usage rules or the law requires keeping it.","Nothing is sent until you allow it. You can withdraw in Account."],
+  // Under ai_consent_lines' second line: the provider kiff/agents runs on now, read from kiff/agents itself (never a
+  // setting of tafs cloud's own); no line when it can't be read. Naming it is a fact, not new words: no version change.
+  ai_consent_now_anthropic: "Right now: Anthropic itself, in the United States and other countries.",
+  ai_consent_now_bedrock: "Right now: Amazon Web Services, in the EU.",
+  ai_consent_now_vertex: "Right now: Google Cloud, in the EU, which may share it with Anthropic for abuse checks.",
+  ai_consent_now_foundry: "Right now: Microsoft Azure, in the EU, with Anthropic processing it.",
   ai_consent_allow: "Allow",
   ai_consent_not_now: "Not now",
   ai_consent_withdraw: "Withdraw",

@@ -56,6 +56,7 @@
     <string name="watch_ask">ถาม tafs</string>
     <string name="watch_ask_needs_consent">ก่อนถาม tafs ให้อนุญาตการใช้ AI ใน tafs บนโทรศัพท์ของคุณ</string>
     <string name="watch_ask_not_on">การถามจากนาฬิกาของคุณยังไม่เปิดใช้งาน</string>
+    <string name="watch_ask_phone_sign_in">ขอให้โทรศัพท์ลงชื่อเข้าใช้นาฬิกาเรือนนี้</string>
     <string name="watch_ask_text_only">tafs ได้รับถ้อยคำของคุณเป็นข้อความ ไม่เคยได้รับเสียงของคุณ</string>
     <string name="watch_asking_phone">กำลังถามโทรศัพท์ของคุณ…</string>
     <string name="watch_calendar_today">ปฏิทินวันนี้</string>
@@ -67,6 +68,7 @@
     <string name="watch_deleted_nothing_sent">ลบแล้ว ยังไม่ได้ส่งอะไร</string>
     <string name="watch_didnt_catch">ฟังไม่ทัน แตะเพื่อลองอีกครั้ง</string>
     <string name="watch_dismiss">ปิด</string>
+    <string name="watch_edit_words">แตะข้อความเพื่อแก้ไข</string>
     <string name="watch_glance_description">มีกี่เรื่องที่ต้องการคุณ ไม่บอกว่าอะไรหรือใคร</string>
     <string name="watch_halt_all_q">ระงับ taf ทั้งหมดของคุณหรือไม่</string>
     <plurals name="watch_halt_now_count">
@@ -80,6 +82,7 @@
     <plurals name="watch_held_calls">
         <item quantity="other">%1$s การเรียกที่พักไว้ต้องการคุณ</item>
     </plurals>
+    <string name="watch_held_channel">การเรียกที่พักไว้</string>
     <string name="watch_inbox_empty">ไม่มีอะไรใหม่ คำตอบของ Coach และการแจ้งเตือนจาก taf ของคุณจะมาที่นี่</string>
     <plurals name="watch_inbox_unread">
         <item quantity="other">%1$s ยังไม่ได้อ่านในกล่องข้อความ</item>
@@ -93,7 +96,7 @@
     <string name="watch_menu">เมนู</string>
     <string name="watch_mic_needed">หากต้องการถามด้วยเสียง ให้อนุญาตไมโครโฟนสำหรับ tafs บนนาฬิกาเรือนนี้</string>
     <string name="watch_more_on_phone">ที่เหลืออยู่บนโทรศัพท์ของคุณ</string>
-    <string name="watch_needs_lock">หากต้องการปฏิเสธหรือระงับจากนาฬิกาเรือนนี้ ให้ตั้งการล็อกหน้าจอและปลดล็อก</string>
+    <string name="watch_needs_lock">หากต้องการส่ง ปฏิเสธ หรือระงับจากนาฬิกาเรือนนี้ ให้ตั้งการล็อกหน้าจอและปลดล็อก</string>
     <plurals name="watch_needs_you_count">
         <item quantity="other">%1$s เรื่องต้องการคุณ</item>
     </plurals>
@@ -102,6 +105,7 @@
     <string name="watch_nothing_sent_until">จะไม่มีอะไรถูกส่งจนกว่าคุณจะอนุมัติ</string>
     <string name="watch_nothing_waits">ไม่มีอะไรรอคุณอยู่</string>
     <string name="watch_open_on_phone">เปิดบนโทรศัพท์</string>
+    <string name="watch_opened_on_phone">เปิดบนโทรศัพท์แล้ว</string>
     <string name="watch_page_brief">สรุป</string>
     <string name="watch_page_inbox">กล่องข้อความ</string>
     <string name="watch_paused_still_answers">หยุดชั่วคราว: กำหนดการของมันปิดอยู่ มันยังตอบสิ่งที่คุณส่ง</string>
@@ -124,6 +128,7 @@
     <string name="watch_recent_chats">แชตล่าสุด</string>
     <string name="watch_recording">กำลังบันทึกเสียง</string>
     <string name="watch_recording_not_received">การบันทึกเสียงไปไม่ถึงโทรศัพท์ของคุณ ลองอีกครั้ง หรือพิมพ์แทน</string>
+    <string name="watch_refuse_on_phone">ยังไม่ได้ปฏิเสธ ปฏิเสธบนโทรศัพท์ของคุณ</string>
     <string name="watch_refused">ปฏิเสธแล้ว ยังไม่ได้ส่งอะไร</string>
     <string name="watch_reply">ตอบ</string>
     <string name="watch_rerecord">บันทึกใหม่</string>
@@ -132,14 +137,20 @@
     <string name="watch_resume_on_phone">ทำต่อบนโทรศัพท์ของคุณ</string>
     <string name="watch_retry">ลองอีกครั้ง</string>
     <string name="watch_review">ตรวจสอบก่อนส่ง</string>
+    <string name="watch_seconds_left">เหลือ %1$s วิ</string>
     <string name="watch_sending">กำลังส่ง…</string>
     <string name="watch_sent">ส่งแล้ว</string>
     <string name="watch_settings_of">%1$s · การตั้งค่า</string>
+    <string name="watch_sign_in_allow">อนุญาต</string>
+    <string name="watch_sign_in_denied">ไม่ได้ลงชื่อเข้าใช้ นาฬิกาเรือนนี้ยังคงออกจากระบบอยู่</string>
+    <string name="watch_sign_in_deny">ปฏิเสธ</string>
     <string name="watch_sign_in_on_phone">เข้าสู่ระบบ tafs บนโทรศัพท์ของคุณก่อน</string>
+    <string name="watch_sign_in_watch_q">ลงชื่อเข้าใช้นาฬิกาเรือนนี้ในชื่อคุณไหม</string>
     <string name="watch_sign_out_q">ออกจากระบบบนนาฬิกาเรือนนี้หรือไม่</string>
     <string name="watch_sign_out_sub">โทรศัพท์ของคุณยังเข้าสู่ระบบอยู่ นาฬิกาเรือนนี้จะลืม taf แชต และกล่องข้อความของคุณ</string>
     <string name="watch_signed_in">เข้าสู่ระบบแล้ว</string>
     <string name="watch_signed_out_here">ออกจากระบบบนนาฬิกาเรือนนี้แล้ว โทรศัพท์ของคุณยังเข้าสู่ระบบอยู่</string>
+    <string name="watch_stopped_at_limit">หยุดที่ขีดจำกัด %1$s สิ่งที่ได้ยินอยู่ด้านล่าง</string>
     <string name="watch_swipe_settings">ปัดซ้ายเพื่อดูการตั้งค่าของมัน</string>
     <string name="watch_tap_start">แตะเริ่ม แล้วพูด ถ้อยคำของคุณจะแสดงที่นี่ขณะที่คุณพูด</string>
     <string name="watch_timing">ฟัง %1$s ms · ใบเสร็จ %2$s ms · ผลลัพธ์ %3$s ms</string>
@@ -148,8 +159,10 @@
     <string name="watch_type">พิมพ์</string>
     <string name="watch_type_hint">เขียนถึง Coach…</string>
     <string name="watch_update_phone">อัปเดต tafs บนโทรศัพท์ของคุณ แล้วลองอีกครั้ง</string>
+    <string name="watch_view_on_phone">ดูบนโทรศัพท์</string>
     <string name="watch_view_only_phone">โทรศัพท์เครื่องนี้ดูได้อย่างเดียว คุณจึงถามจากนาฬิกาไม่ได้ เข้าสู่ระบบบนโทรศัพท์ที่อนุมัติได้</string>
     <string name="watch_voice_text_only">Coach ได้รับถ้อยคำของคุณเป็นข้อความ ไม่เคยได้รับเสียงของคุณ</string>
+    <string name="watch_waiting_for_phone">กำลังรอโทรศัพท์ของคุณ…</string>
     <string name="watch_what_it_does">สิ่งที่มันทำ</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s กำลังทำงาน</item>

@@ -24,6 +24,12 @@
     "cash.app",
     "klarna.com",
     "payoneer.com",
+    "stripe.com",
+    "paddle.com",
+    "adyen.com",
+    "squareup.com",
+    "braintreegateway.com",
+    "gocardless.com",
     "ameli.fr",
     "nhs.uk",
     "mychart.com",
@@ -43,6 +49,10 @@
     "ameli.fr": true,
     "notpaypal.com": false,
     "health.example": true,
-    "github.com": false
+    "github.com": false,
+    "dashboard.stripe.com": true,
+    "stripe.com": true,
+    "notstripe.com": false,
+    "vendors.paddle.com": true
   }
 }

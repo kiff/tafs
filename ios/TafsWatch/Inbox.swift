@@ -107,15 +107,22 @@ final class FileInboxStore: InboxStore {
     }
 }
 
-/// v2's Inbox: each held call Needs you lists and each answer Coach gave this watch, newest first, kept until dismissed. With no
-/// passcode on this watch nothing is stored, and the page shows what the phone answered now (`kept` false).
+/// v2's Inbox: each held call Needs you lists, at the top, then each answer Coach gave this watch, each newest first. An answer
+/// is kept until dismissed; a held call until it's answered on any device or lapses, or it's dismissed. With no passcode on this
+/// watch nothing is stored, and the page shows what the phone answered now (`kept` false).
 @MainActor
 final class InboxModel: ObservableObject {
     /// The name the Inbox is kept under, as Wear OS's preferences file.
     static let storeKey = "tafs.inbox"
 
-    /// The Inbox, newest first.
+    /// The Inbox: held calls first, then answers, each newest first (`ordered`).
     @Published private(set) var lines: [InboxLine] = []
+    /// How much waits for the person, as the phone last said (a read or its push), held calls that lapsed left out. In memory
+    /// only, never kept: nil until the phone has said, this open.
+    @Published private(set) var waiting: Int?
+    /// When each held call lapses, by its line's id, as the phone said: in memory only, so a line past it goes on this watch's
+    /// own clock. Not kept in the file, which holds only the taf and what the call asks.
+    private var ends: [String: Date] = [:]
     /// Whether the Inbox can be kept on this watch now: only with a passcode. Checked when the app is opened and put away.
     @Published private(set) var kept: Bool
     private let store: InboxStore
@@ -126,9 +133,13 @@ final class InboxModel: ObservableObject {
     private let phone: PhoneAsking?
     /// The last mark sent, so a test can wait for it.
     private(set) var marking: Task<Void, Never>?
+    /// Whether what's kept belongs to the account the phone has now (`WatchAccountMark.mayDraw`): until this run has heard
+    /// so, the kept lines aren't shown, and come in once it has (`checkLock`).
+    private let mayDraw: @MainActor () -> Bool
 
     init(store: InboxStore = FileInboxStore(), lock: WristLock = DeviceWristLock(), clock: @escaping () -> Date = Date.init,
-         phone: PhoneAsking? = nil) {
+         phone: PhoneAsking? = nil, mayDraw: @escaping @MainActor () -> Bool = { true }) {
+        self.mayDraw = mayDraw
         self.store = store
         self.lock = lock
         self.clock = clock
@@ -136,46 +147,84 @@ final class InboxModel: ObservableObject {
         kept = lock.isSecure
         dismissed = store.dismissed()
         if kept {
-            lines = store.lines().sorted { $0.at > $1.at }
+            if mayDraw() { lines = Self.ordered(store.lines()) }
         } else {
             store.write([])
         }
+        WatchPushes.shared.listen(self)
     }
 
     /// How many lines aren't read yet: Coach's home says so.
     var unread: Int { lines.filter { !$0.read }.count }
 
+    /// The Inbox's order: what needs the person on top (held calls, newest first), then Coach's answers, newest first.
+    static func ordered(_ lines: [InboxLine]) -> [InboxLine] {
+        lines.filter { $0.kind == .held }.sorted { $0.at > $1.at } + lines.filter { $0.kind != .held }.sorted { $0.at > $1.at }
+    }
+
     /// The app was opened or put away: with no passcode, the lines go now, and the bare ids taken away stay, so a dismissed
-    /// line doesn't come back unread once one is set.
+    /// line doesn't come back unread once one is set. A held call past its time goes.
     func checkLock() {
         kept = lock.isSecure
         if kept { adoptStored() } else { clearLines() }
+        dropEnded()
     }
 
     /// What the file holds that this model doesn't yet: a model made while the file couldn't be read (the watch locked)
     /// starts empty, and takes the kept lines and ids in once it can, before anything it writes could leave them out.
     private func adoptStored() {
+        guard mayDraw() else { return }
         dismissed.formUnion(store.dismissed())
         let missing = store.lines().filter { stored in !lines.contains { $0.id == stored.id } }
-        let next = (lines + missing).filter { !dismissed.contains($0.id) }.sorted { $0.at > $1.at }
+        let next = Self.ordered((lines + missing).filter { !dismissed.contains($0.id) })
         guard next != lines else { return }
         save(next)
     }
 
-    /// What Needs you read: each held call is a line, kept until dismissed; an id taken away goes once the phone no longer lists
-    /// it. Signed out on the phone, nothing of the Inbox stays.
+    /// What Needs you read: taken in as the phone's push of its held calls is (`took`). Signed out on the phone, nothing of the
+    /// Inbox stays.
     func heard(_ state: NeedsYouModel.State) {
         switch state {
         case .loaded(let page):
-            for call in page.calls {
-                put(InboxLine(id: InboxLine.heldID(call.id), kind: .held, title: call.taf, line: InboxModel.line(call), at: clock()))
-            }
-            prune(listed: Set(page.calls.map { InboxLine.heldID($0.id) }))
+            took(WatchHolds(page))
         case .signedOut:
             clear()
         case .loading, .unreachable, .failed:
             break
         }
+    }
+
+    /// The phone's held calls, from Needs you's read or the phone's push (`WatchPush.Kind.needsYou`): each is a line at the top,
+    /// with its taf and what it asks, never its amount. One the phone no longer lists (answered on any device, or lapsed), or
+    /// past its time on this watch's clock, goes, and isn't counted; an id taken away goes once the phone no longer lists it.
+    /// Only once this open has heard the account is the phone's (`mayDraw`): before that, the open's own read brings them.
+    func took(_ holds: WatchHolds) {
+        guard mayDraw() else { return }
+        let now = clock()
+        for call in holds.calls {
+            if let end = call.ends { ends[InboxLine.heldID(call.id)] = end }
+        }
+        let live = holds.calls.filter { call in call.ends.map { $0 > now } ?? true }
+        for call in live {
+            put(InboxLine(id: InboxLine.heldID(call.id), kind: .held, title: call.taf, line: call.line ?? Words.NeedsYou.title, at: now))
+        }
+        let listed = Set(live.map { InboxLine.heldID($0.id) })
+        let next = lines.filter { $0.kind != .held || listed.contains($0.id) }
+        if next != lines { save(next) }
+        ends = ends.filter { listed.contains($0.key) }
+        prune(listed: Set(holds.calls.map { InboxLine.heldID($0.id) }))
+        waiting = max(0, holds.count - (holds.calls.count - live.count))
+    }
+
+    /// Held calls past their time, on this watch's clock: gone from the lines and the count.
+    private func dropEnded() {
+        let now = clock()
+        let ended = Set(ends.filter { $0.value <= now }.keys)
+        guard !ended.isEmpty else { return }
+        ends = ends.filter { !ended.contains($0.key) }
+        let next = lines.filter { !ended.contains($0.id) }
+        if let waiting { self.waiting = max(0, waiting - (lines.count - next.count)) }
+        if next != lines { save(next) }
     }
 
     /// A held call's line as the Inbox keeps it: what it asks, never its amount (as Wear OS). A phone from
@@ -282,6 +331,8 @@ final class InboxModel: ObservableObject {
         store.clear()
         dismissed = []
         lines = []
+        ends = [:]
+        waiting = nil
     }
 
     private func put(_ line: InboxLine) {
@@ -293,7 +344,7 @@ final class InboxModel: ObservableObject {
             next[at].line = line.line
             save(next)
         } else {
-            save([line] + lines)
+            save(Self.ordered([line] + lines))
         }
     }
 
@@ -322,5 +373,21 @@ final class InboxModel: ObservableObject {
     private func save(_ next: [InboxLine]) {
         lines = next
         store.write(next)
+    }
+}
+
+/// The phone's pushes, taken as a read's, with no ask: the Inbox's marks (`watch_inbox`), and its held calls (`needs_you`).
+extension InboxModel: WatchPushListening {
+    func heard(_ push: WatchPush) {
+        switch push.kind {
+        case .inbox:
+            guard let reply = push.reply, reply.outcome == .ok, let marks = reply.marks else { return }
+            take(marks)
+        case .needsYou:
+            guard let holds = push.holds else { return }
+            took(holds)
+        case .ask, .chat, .account, .forget, .signIn:
+            return
+        }
     }
 }

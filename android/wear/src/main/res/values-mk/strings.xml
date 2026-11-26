@@ -57,6 +57,7 @@
     <string name="watch_ask">Прашај tafs</string>
     <string name="watch_ask_needs_consent">Пред да прашаш tafs, дозволи користење на вештачка интелигенција во tafs на твојот телефон.</string>
     <string name="watch_ask_not_on">Прашувањето од часовникот сè уште не е вклучено.</string>
+    <string name="watch_ask_phone_sign_in">Побарај од телефонот да го најави овој часовник</string>
     <string name="watch_ask_text_only">tafs ги добива твоите зборови како текст, никогаш гласот.</string>
     <string name="watch_asking_phone">Го прашувам телефонот…</string>
     <string name="watch_calendar_today">Календарот за денес</string>
@@ -68,6 +69,7 @@
     <string name="watch_deleted_nothing_sent">Избришано. Ништо не е испратено.</string>
     <string name="watch_didnt_catch">Не разбрав. Допри за да се обидеш повторно.</string>
     <string name="watch_dismiss">Отфрли</string>
+    <string name="watch_edit_words">Допри го текстот за да го смениш</string>
     <string name="watch_glance_description">Колку те чекаат, никогаш што или кој.</string>
     <string name="watch_halt_all_q">Да ги запреш сите твои tafови?</string>
     <plurals name="watch_halt_now_count">
@@ -83,6 +85,7 @@
         <item quantity="one">%1$s задржано барање те чека</item>
         <item quantity="other">%1$s задржани барања те чекаат</item>
     </plurals>
+    <string name="watch_held_channel">Задржани барања</string>
     <string name="watch_inbox_empty">Нема ништо ново. Одговорите на Coach и известувањата од твоите tafови пристигнуваат тука.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">%1$s непрочитано во Приемно сандаче</item>
@@ -97,7 +100,7 @@
     <string name="watch_menu">Мени</string>
     <string name="watch_mic_needed">За да прашуваш со глас, дозволи му на tafs микрофон на овој часовник.</string>
     <string name="watch_more_on_phone">Остатокот е на твојот телефон.</string>
-    <string name="watch_needs_lock">За да одбиеш или запреш од овој часовник, постави заклучување на екранот на него и отклучи го.</string>
+    <string name="watch_needs_lock">За да испраќаш, одбиеш или запреш од овој часовник, постави заклучување на екранот на него и отклучи го.</string>
     <plurals name="watch_needs_you_count">
         <item quantity="one">%1$s те чека</item>
         <item quantity="other">%1$s те чекаат</item>
@@ -107,6 +110,7 @@
     <string name="watch_nothing_sent_until">Ништо не се испраќа додека не одобриш.</string>
     <string name="watch_nothing_waits">Ништо не те чека.</string>
     <string name="watch_open_on_phone">Отвори на телефонот</string>
+    <string name="watch_opened_on_phone">Отворено на телефонот</string>
     <string name="watch_page_brief">Преглед</string>
     <string name="watch_page_inbox">Приемно сандаче</string>
     <string name="watch_paused_still_answers">Паузиран: неговиот распоред е исклучен. Сè уште одговара на она што ќе му испратиш.</string>
@@ -130,6 +134,7 @@
     <string name="watch_recent_chats">Неодамнешни разговори</string>
     <string name="watch_recording">Снимам</string>
     <string name="watch_recording_not_received">Снимката не стигна до твојот телефон. Обиди се повторно, или пиши наместо тоа.</string>
+    <string name="watch_refuse_on_phone">Не е одбиено. Одбиј го на телефонот.</string>
     <string name="watch_refused">Одбиено. Ништо не е испратено.</string>
     <string name="watch_reply">Одговори</string>
     <string name="watch_rerecord">Сними повторно</string>
@@ -138,14 +143,20 @@
     <string name="watch_resume_on_phone">Продолжи на твојот телефон</string>
     <string name="watch_retry">Обиди се повторно</string>
     <string name="watch_review">Провери пред испраќање</string>
+    <string name="watch_seconds_left">Уште %1$s с</string>
     <string name="watch_sending">Се испраќа…</string>
     <string name="watch_sent">Испратено</string>
     <string name="watch_settings_of">%1$s · поставки</string>
+    <string name="watch_sign_in_allow">Дозволи</string>
+    <string name="watch_sign_in_denied">Не е најавен. Овој часовник останува одјавен.</string>
+    <string name="watch_sign_in_deny">Одбиј</string>
     <string name="watch_sign_in_on_phone">Прво најави се во tafs на твојот телефон.</string>
+    <string name="watch_sign_in_watch_q">Да се најави овој часовник како тебе?</string>
     <string name="watch_sign_out_q">Да се одјавиш на овој часовник?</string>
     <string name="watch_sign_out_sub">Твојот телефон останува најавен. Овој часовник ги заборава твоите tafови, разговори и приемно сандаче.</string>
     <string name="watch_signed_in">Најавен</string>
     <string name="watch_signed_out_here">Одјавен на овој часовник. Твојот телефон останува најавен.</string>
+    <string name="watch_stopped_at_limit">Запре на ограничувањето од %1$s. Она што се слушна е подолу.</string>
     <string name="watch_swipe_settings">Повлечи налево за неговите поставки</string>
     <string name="watch_tap_start">Допри Започни, па зборувај. Твоите зборови се прикажуваат тука додека зборуваш.</string>
     <string name="watch_timing">Слушање %1$s ms · признаница %2$s ms · резултат %3$s ms</string>
@@ -154,8 +165,10 @@
     <string name="watch_type">Пиши</string>
     <string name="watch_type_hint">Пиши на Coach…</string>
     <string name="watch_update_phone">Ажурирај го tafs на твојот телефон, па обиди се повторно.</string>
+    <string name="watch_view_on_phone">Види на телефонот</string>
     <string name="watch_view_only_phone">Овој телефон може само да гледа, па не можеш да прашуваш од часовникот. Најави се на телефон што може да одобрува.</string>
     <string name="watch_voice_text_only">Coach ги добива твоите зборови како текст, никогаш гласот.</string>
+    <string name="watch_waiting_for_phone">Се чека твојот телефон…</string>
     <string name="watch_what_it_does">Што прави</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s работи</item>

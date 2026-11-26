@@ -7,6 +7,7 @@
   "watch.ask": "tafsに質問",
   "watch.ask_needs_consent": "tafsに質問する前に、スマートフォンのtafsでAIの使用を許可してください。",
   "watch.ask_not_on": "ウォッチからの質問はまだオンになっていません。",
+  "watch.ask_phone_sign_in": "スマートフォンにこのウォッチへのサインインを依頼",
   "watch.ask_text_only": "tafsに届くのはあなたの言葉のテキストだけで、声は届きません。",
   "watch.asking_phone": "スマートフォンに問い合わせています…",
   "watch.calendar_today": "今日のカレンダー",
@@ -18,6 +19,7 @@
   "watch.deleted_nothing_sent": "削除しました。何も送信されていません。",
   "watch.didnt_catch": "聞き取れませんでした。タップしてもう一度お試しください。",
   "watch.dismiss": "閉じる",
+  "watch.edit_words": "文字をタップすると変更できます",
   "watch.glance_description": "要確認の件数だけを表示し、内容や相手は表示しません。",
   "watch.halt_all_q": "すべてのtafを遮断しますか？",
   "watch.halt_now_count": {
@@ -31,6 +33,7 @@
   "watch.held_calls": {
     "other": "保留中の呼び出し{count}件が確認を待っています"
   },
+  "watch.held_channel": "保留中の呼び出し",
   "watch.inbox_empty": "新着はありません。Coachの返信とtafの通知がここに届きます。",
   "watch.inbox_unread": {
     "other": "受信トレイに未読{count}件"
@@ -44,7 +47,7 @@
   "watch.menu": "メニュー",
   "watch.mic_needed": "音声で質問するには、このウォッチでtafsのマイク使用を許可してください。",
   "watch.more_on_phone": "残りはスマートフォンにあります。",
-  "watch.needs_lock": "このウォッチから拒否や遮断をするには、画面ロックを設定してロックを解除してください。",
+  "watch.needs_lock": "このウォッチから送信、拒否、遮断をするには、画面ロックを設定してロックを解除してください。",
   "watch.needs_you_count": {
     "other": "要確認{count}件"
   },
@@ -53,6 +56,7 @@
   "watch.nothing_sent_until": "承認するまで何も送信されません。",
   "watch.nothing_waits": "待機中の項目はありません。",
   "watch.open_on_phone": "スマートフォンで開く",
+  "watch.opened_on_phone": "スマートフォンで開きました",
   "watch.page.brief": "ブリーフィング",
   "watch.page.inbox": "受信トレイ",
   "watch.paused_still_answers": "一時停止中：スケジュールはオフです。送ったメッセージには引き続き答えます。",
@@ -75,6 +79,7 @@
   "watch.recent_chats": "最近のチャット",
   "watch.recording": "録音中",
   "watch.recording_not_received": "録音がスマートフォンに届きませんでした。もう一度お試しいただくか、入力してください。",
+  "watch.refuse_on_phone": "拒否されていません。スマートフォンで拒否してください。",
   "watch.refused": "拒否しました。何も送信されていません。",
   "watch.reply": "返信",
   "watch.rerecord": "録音し直す",
@@ -83,14 +88,20 @@
   "watch.resume_on_phone": "スマートフォンで再開してください",
   "watch.retry": "再試行",
   "watch.review": "送信前に確認",
+  "watch.seconds_left": "残り{seconds}秒",
   "watch.sending": "送信しています…",
   "watch.sent": "送信済み",
   "watch.settings_of": "{taf}・設定",
+  "watch.sign_in_allow": "許可",
+  "watch.sign_in_denied": "サインインしていません。このウォッチはサインアウトしたままです。",
+  "watch.sign_in_deny": "拒否",
   "watch.sign_in_on_phone": "先にスマートフォンでtafsにサインインしてください。",
+  "watch.sign_in_watch_q": "このウォッチにあなたとしてサインインしますか？",
   "watch.sign_out_q": "このウォッチでサインアウトしますか？",
   "watch.sign_out_sub": "スマートフォンはサインインしたままです。このウォッチはtafs、チャット、受信トレイを消去します。",
   "watch.signed_in": "サインイン済み",
   "watch.signed_out_here": "このウォッチでサインアウトしました。スマートフォンはサインインしたままです。",
+  "watch.stopped_at_limit": "上限の{limit}で停止しました。聞き取った内容は下にあります。",
   "watch.swipe_settings": "左にスワイプして設定を表示",
   "watch.tap_start": "「開始」をタップしてから話してください。話している間、言葉がここに表示されます。",
   "watch.timing": "聞き取り {listen}ms・領収書 {receipt}ms・結果 {result}ms",
@@ -99,8 +110,10 @@
   "watch.type": "入力",
   "watch.type_hint": "Coachに書く…",
   "watch.update_phone": "スマートフォンのtafsをアップデートしてから、もう一度お試しください。",
+  "watch.view_on_phone": "スマートフォンで表示",
   "watch.view_only_phone": "このスマートフォンは表示のみのため、ウォッチから質問できません。承認できるスマートフォンでサインインしてください。",
   "watch.voice_text_only": "Coachに届くのはあなたの言葉のテキストだけで、声は届きません。",
+  "watch.waiting_for_phone": "スマートフォンを待っています…",
   "watch.what_it_does": "できること",
   "watch.working_count": {
     "other": "{count}件作業中"

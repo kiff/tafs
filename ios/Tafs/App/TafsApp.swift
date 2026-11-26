@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 @main
 struct TafsApp: App {
@@ -46,9 +47,15 @@ struct TafsApp: App {
                     // Once tafs cloud pushes held calls, the app doesn't post its own alert as well.
                     model.onHeldChanged = { [lockScreen, weak model] held, tafs, names in
                         lockScreen.update(held: held, tafs: tafs, names: names, notify: model?.alertsReady != true)
+                        // Other held calls than the last read's: the watch is told too (`WatchPushRelay.heldChanged`).
+                        if model?.mode == .kiff { WatchPushRelay.heldChanged(held.compactMap(\.kiffID)) }
                     }
                     model.requestPushToken = { PushDelegate.register() }
                     model.askNotificationPermission = { await PushDelegate.askPermission() }
+                    model.notificationAuthorization = { await UNUserNotificationCenter.current().notificationSettings().authorizationStatus }
+                    model.openNotificationSettings = {
+                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) { UIApplication.shared.open(url) }
+                    }
                     push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
                     push.onHeldChanged = { [weak model] in await model?.refresh() }
                     push.onHoldAlert = { [weak model] hold in await model?.refreshUntilHeld(hold) }
@@ -77,6 +84,8 @@ struct TafsApp: App {
             // Back from the browser: a re-link waiting there asks KIFF again at once.
             if phase == .active, model.relink != nil { model.nudgeSignIn() }
             if phase == .active, model.mode == .kiff { Task { await model.refresh(); model.settleListOrder() } }
+            // Back from Settings, or the watch has used tafs: what alerts need, said once (row 13).
+            if phase == .active { Task { await model.checkAlertsOnReturn() } }
             // Back from Settings: whether this device can approve now (kiff/tafs#423).
             if phase == .active { model.checkApprovalReadiness() }
             if phase == .active, wasAway { wasAway = false; model.settleSampleOnReturn() }
@@ -180,6 +189,8 @@ struct RootView: View {
         .background(GeometryReader { g in
             Color.clear.onAppear { laidOut = g.size }.onChange(of: g.size) { laidOut = $0 }
         }.ignoresSafeArea())
+        // What alerts need, over any screen (row 13).
+        .modifier(AlertsPrompts())
         .onChange(of: scenePhase) { phase in
             guard phase == .active else { return }
             Task {
