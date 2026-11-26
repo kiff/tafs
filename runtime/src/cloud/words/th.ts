@@ -780,6 +780,7 @@ export const th: Words = {
   start_lead: "การเริ่มจะมอบเครื่องมือด้านล่างให้ Coach คุณอนุมัติมันบนอุปกรณ์นี้",
   start_button: "เริ่ม",
   plan_needed: "เลือกแพ็กเกจเพื่อเริ่ม",
+  handover_not_finished: "การส่งมอบของ Coach ยังไม่เสร็จ",
   cts_title: "ให้เครื่องมือแก่ Coach",
   cts_intro: "Coach ต้องใช้สิ่งเหล่านี้เพื่อดูแล taf ของคุณ",
   cts_details: "แต่ละเครื่องมือและขีดจำกัดของมัน",

@@ -780,6 +780,7 @@ export const et: Words = {
   start_lead: "Start annab Coachile allolevad tööriistad. Sa kiidad need sellel seadmel heaks.",
   start_button: "Alusta",
   plan_needed: "Alustamiseks vali pakett.",
+  handover_not_finished: "Coachi üleandmine jäi lõpetamata",
   cts_title: "Anna Coachile selle tööriistad",
   cts_intro: "Coach vajab neid, et sinu tafe hoolega hoida.",
   cts_details: "Iga tööriist ja selle piirid",

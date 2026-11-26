@@ -787,6 +787,7 @@ export const de: Words = {
   start_lead: "Starten gibt Coach die Werkzeuge unten. Du genehmigst sie auf diesem Gerät.",
   start_button: "Starten",
   plan_needed: "Wähle einen Tarif, um ihn zu starten.",
+  handover_not_finished: "die Übergabe von Coach wurde nicht abgeschlossen",
   cts_title: "Gib Coach seine Werkzeuge",
   cts_intro: "Coach braucht diese, um sich um deine tafs zu kümmern.",
   cts_details: "Jedes Werkzeug und seine Limits",

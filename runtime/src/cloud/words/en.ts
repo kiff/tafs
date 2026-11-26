@@ -859,6 +859,8 @@ export const en = {
   start_lead: "Start gives Coach the tools below. You approve them on this device.",
   start_button: "Start",
   plan_needed: "Choose a plan to start it.",
+  /** A result Coach handed over that a field of its own kept from being made, past the hand-over's hold: after "{name} wasn't set up:". */
+  handover_not_finished: "Coach's hand-over wasn't finished",
   cts_title: "Give Coach its tools",
   cts_intro: "Coach needs these to look after your tafs.",
   cts_details: "Each tool and its limits",

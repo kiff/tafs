@@ -780,6 +780,7 @@ export const ro: Words = {
   start_lead: "Pornirea îi dă lui Coach instrumentele de mai jos. Le aprobați pe acest dispozitiv.",
   start_button: "Porniți",
   plan_needed: "Alegeți un plan ca să porniți.",
+  handover_not_finished: "predarea de către Coach nu a fost finalizată",
   cts_title: "Dați-i lui Coach instrumentele lui",
   cts_intro: "Coach are nevoie de ele ca să aibă grijă de tafurile dvs.",
   cts_details: "Fiecare instrument și limitele lui",

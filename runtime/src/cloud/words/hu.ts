@@ -780,6 +780,7 @@ export const hu: Words = {
   start_lead: "Az Indítás a lenti eszközöket adja a Coachnak. Te ezen az eszközön hagyod jóvá őket.",
   start_button: "Indítás",
   plan_needed: "Az indításhoz válassz csomagot.",
+  handover_not_finished: "a Coach átadása nem fejeződött be",
   cts_title: "Add oda a Coachnak az eszközeit",
   cts_intro: "A Coachnak ezekre van szüksége, hogy gondoskodjon a tafjaidról.",
   cts_details: "Minden eszköz és a korlátai",
