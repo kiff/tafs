@@ -12,6 +12,11 @@ name: Mac TestFlight
 
 on:
   workflow_dispatch:
+    inputs:
+      cloud_mac_label:
+        description: "The cloud Mac only (CLOUD_MAC on): the one-time label of the runner registered for this dispatch, release- and 16 or more random hex characters (docs/mac-app.md, The cloud Mac). Empty otherwise."
+        type: string
+        default: ""
 
 concurrency:
   group: mac-testflight
@@ -21,8 +26,25 @@ permissions:
   contents: read
 
 jobs:
+  # With CLOUD_MAC on, the upload runs on a runner registered for this dispatch alone, by a one-time label the dispatch
+  # names (docs/mac-app.md, "The cloud Mac"). Without a well-formed one, this stops the run at once, so nothing waits for a
+  # runner and no label is guessed.
+  cloud-mac-label:
+    if: vars.CLOUD_MAC == 'on'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: The dispatch names a one-time label
+        env:
+          LABEL: ${{ inputs.cloud_mac_label }}
+        run: |
+          [[ "$LABEL" =~ ^release-[0-9a-f]{16,64}$ ]] || { echo "::error::With CLOUD_MAC on, dispatch with cloud_mac_label: release- and 16 to 64 random hex characters, made for this dispatch (docs/mac-app.md, The cloud Mac)"; exit 1; }
+
   testflight:
-    runs-on: macos-26
+    needs: [cloud-mac-label]
+    if: ${{ !cancelled() && needs.cloud-mac-label.result != 'failure' }}
+    # The runner registered for this dispatch carries exactly this label, and only it (cloud-mac-label checks its form).
+    runs-on: ${{ vars.CLOUD_MAC == 'on' && inputs.cloud_mac_label || 'macos-26' }}
     timeout-minutes: 60
     # The signing secrets (DIST_P12, MAC_INSTALLER_P12, ASC_KEY_P8) are this environment's, which deploys
     # only from main and v* tags: a workflow pushed on another branch can't read them (docs/mac-app.md).
@@ -32,6 +54,14 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
+      # On the cloud Mac (CLOUD_MAC, docs/mac-app.md, "The cloud Mac"), a release build runs only from main: its runner
+      # group admits only this workflow at main, and this stops anything else before a secret is read.
+      - name: The cloud Mac builds only from main
+        if: runner.environment == 'self-hosted' && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::A self-hosted Mac builds only from main (docs/mac-app.md, The cloud Mac)"
+          exit 1
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -40,6 +70,8 @@ jobs:
       # Catalyst), not the image's default, as the iOS upload is. A runner without one stops here and lists the Xcodes it
       # has, before any key or certificate is touched, rather than uploading a build made with an older SDK.
       - name: Use the newest Xcode 27
+        env:
+          ON_RUNNER: ${{ runner.environment }}
         run: |
           echo "Xcodes on this runner:"; ls -d /Applications/Xcode*.app || true
           xcode=$({ ls -d /Applications/Xcode_27*.app 2>/dev/null || true; } | python3 -c '
@@ -49,7 +81,13 @@ jobs:
           print(max(found, key=version) if found else "")
           ')
           [ -n "$xcode" ] || { echo "::error::No released Xcode 27 on this runner image: the Mac App Store build needs the macOS 27 SDK"; exit 1; }
-          sudo xcode-select -s "$xcode/Contents/Developer"
+          if [ "$ON_RUNNER" = "self-hosted" ]; then
+            # The cloud Mac's job user has no sudo: this job's steps use that Xcode through DEVELOPER_DIR.
+            echo "DEVELOPER_DIR=$xcode/Contents/Developer" >> "$GITHUB_ENV"
+            export DEVELOPER_DIR="$xcode/Contents/Developer"
+          else
+            sudo xcode-select -s "$xcode/Contents/Developer"
+          fi
           xcodebuild -version
           echo "macOS SDK $(xcrun --sdk macosx --show-sdk-version) ($(xcrun --sdk macosx --show-sdk-build-version)), iOS SDK $(xcrun --sdk iphoneos --show-sdk-version)"
 
@@ -63,8 +101,16 @@ jobs:
           fi
 
       - name: Generate the Xcode project
+        env:
+          ON_RUNNER: ${{ runner.environment }}
         run: |
-          brew install xcodegen
+          if [ "$ON_RUNNER" = "self-hosted" ]; then
+            # The cloud Mac's admin installs a pinned xcodegen before the job; its job user can't run brew.
+            command -v xcodegen >/dev/null || { echo "::error::No xcodegen on this Mac: its admin installs a pinned one before the job"; exit 1; }
+            xcodegen --version
+          else
+            brew install xcodegen
+          fi
           cd ios && xcodegen generate
 
       - name: Write the App Store Connect key
