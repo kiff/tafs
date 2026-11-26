@@ -69,6 +69,27 @@ export interface RecipesView {
   home: Home;
   /** The recipe sheet's words: its three zones and its button. */
   labels: Labels;
+  /**
+   * The 2-minute video the first-run welcome's last card links to, and How tafs works after it (welcomeVideo): sent only
+   * while TAFS_WELCOME_VIDEO_URL holds an https URL, so the apps show its link only once the video is up.
+   */
+  video_url?: string;
+}
+
+/**
+ * The welcome video's address, as `video_url` (RecipesView): TAFS_WELCOME_VIDEO_URL when it's an https URL, else nothing at
+ * all, so an empty, unset or malformed setting keeps the apps' link hidden. Read on every answer: a new setting needs no
+ * code change, only the runtime's next deploy of its environment.
+ */
+export function welcomeVideo(setting: string | undefined = process.env.TAFS_WELCOME_VIDEO_URL): { video_url?: string } {
+  const value = setting?.trim();
+  if (!value) return {};
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname && !url.username && !url.password ? { video_url: url.toString() } : {};
+  } catch {
+    return {};
+  }
 }
 
 /**
