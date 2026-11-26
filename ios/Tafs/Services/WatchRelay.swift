@@ -49,6 +49,9 @@ protocol WatchReading {
     func inboxMark(_ marks: WatchInboxMarks) async -> WatchReply
     /// View on phone: opens Coach's chat, or the taf's, on this phone (`WatchOpen`).
     func openOnPhone(taf: String?) async -> WatchReply
+    /// Approve on your phone: Needs you at the held call `hold`, when this phone's own fresh read lists it, else Needs you
+    /// with nothing chosen (`WatchOpen.holdDestination`). Nothing is signed: that's the phone's card, behind Face ID.
+    func openHold(_ hold: String) async -> WatchReply
     /// This session's mark for the watch (`WatchMark`, `PhoneWatchMark`), on every reply; none when signed out.
     var mark: String? { get }
 }
@@ -74,6 +77,7 @@ extension WatchReading {
     func inboxMark(_ marks: WatchInboxMarks) async -> WatchReply { WatchReply(.notYet) }
     /// A reader that opens nothing.
     func openOnPhone(taf: String?) async -> WatchReply { WatchReply(.notYet) }
+    func openHold(_ hold: String) async -> WatchReply { WatchReply(.notYet) }
     /// A reader with no session of its own (the tests' readers): no mark.
     var mark: String? { nil }
 }
@@ -207,6 +211,8 @@ enum WatchRelay {
             guard let marks = request.marks else { return WatchReply(.refused) }
             return await reading.inboxMark(marks)
         case .openOnPhone:
+            // Approve on your phone: only the hold's id, and only under this phone's own account (the mark, above).
+            if let hold = request.hold { return await reading.openHold(hold) }
             return await reading.openOnPhone(taf: request.taf)
         case .tafChat:
             // Read only: the person's own chat with a taf the phone lists.
@@ -257,6 +263,13 @@ struct KeptWatchReading: WatchReading {
 
     func openOnPhone(taf: String?) async -> WatchReply {
         await WatchOpen.run(WatchOpen.destination(taf: taf))
+        return WatchReply(.ok)
+    }
+
+    /// The held call read fresh from KIFF with this phone's session: opened at it only while that read lists it.
+    func openHold(_ hold: String) async -> WatchReply {
+        let listed = try? await kiff.heldCalls().map(\.id)
+        await WatchOpen.run(WatchOpen.holdDestination(hold, listed: listed))
         return WatchReply(.ok)
     }
 
@@ -312,7 +325,7 @@ struct KeptWatchReading: WatchReading {
                 return WatchNeedsYou.Call(id: hold.id, taf: taf, what: what,
                                           summary: WatchRelay.withoutAmount(call.proposed.summary, amount: call.proposed.amount),
                                           reason: call.reason,
-                                          answerBy: HoldNotification.time(call.expiresAt, in: zone))
+                                          answerBy: HoldNotification.time(call.expiresAt, in: zone), ends: call.expiresAt)
             }
         let count = await home?.needsYou?.count ?? calls.count
         return WatchNeedsYou(count: max(count, calls.count), calls: calls, at: now)

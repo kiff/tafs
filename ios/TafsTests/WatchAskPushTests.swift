@@ -129,6 +129,33 @@ final class WatchAskPushTests: XCTestCase {
         XCTAssertEqual(handed, [WatchPush(.inbox, reply: WatchReply(.ok, marks: marks), at: t), WatchPush(.chat, taf: "taf-1", at: t)])
     }
 
+    /// The phone's held calls go to the watch as `WatchHolds`: no amount, no reason, no time in words. Once per change under a
+    /// mark: the same again isn't sent, an answered call is, and a new account's first read always is. A failed read sends nothing.
+    func testHeldCallsAreHandedToTheWatchWithoutTheirAmountOncePerChange() async {
+        WatchPushRelay.forgetHolds()
+        defer { WatchPushRelay.forgetHolds() }
+        var handed: [WatchPush] = []
+        let call = WatchNeedsYou.Call(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00", summary: "Refund order 4502",
+                                      reason: "Over €150.00 each", answerBy: "10:51", ends: t + 600)
+        let page = WatchNeedsYou(count: 2, calls: [call], at: t)
+        let none = WatchNeedsYou(count: 0, calls: [], at: t)
+        let (m1, m2) = (String(repeating: "a", count: 32), String(repeating: "b", count: 32))
+        await WatchPushRelay.needsYou(read: { page }, mark: m1, now: t) { handed.append($0) }
+        await WatchPushRelay.needsYou(read: { page }, mark: m1, now: t + 30) { handed.append($0) }
+        await WatchPushRelay.needsYou(read: { throw URLError(.notConnectedToInternet) }, mark: m1, now: t) { handed.append($0) }
+        await WatchPushRelay.needsYou(read: { none }, mark: m1, now: t + 60) { handed.append($0) }
+        await WatchPushRelay.needsYou(read: { none }, mark: m2, now: t + 90) { handed.append($0) }
+        XCTAssertEqual(handed, [WatchPush(.needsYou, holds: WatchHolds(page), at: t), WatchPush(.needsYou, holds: WatchHolds(none), at: t + 60),
+                                WatchPush(.needsYou, holds: WatchHolds(none), at: t + 90)])
+        XCTAssertEqual(handed[0].holds?.calls.first?.line, "Refund order 4502")
+        let json = String(decoding: WatchMessage.encode(handed[0]), as: UTF8.self)
+        XCTAssertFalse(json.contains("€") || json.contains("480") || json.contains("Over"), json)
+        // The app's own refresh reads again only when its held calls differ from the last read's.
+        XCTAssertTrue(WatchPushRelay.heldChanged(["ce_1"], read: {}))
+        XCTAssertFalse(WatchPushRelay.heldChanged(["ce_1"], read: {}))
+        XCTAssertTrue(WatchPushRelay.heldChanged([], read: {}))
+    }
+
     /// W3's follow and a request it didn't keep (from before this build) post as before.
     func testARequestNotKeptIsW3sAlone() {
         XCTAssertTrue(pushes.claimPost("ask_unknown", now: t))

@@ -120,6 +120,8 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
             // The alert can come before KIFF's list of held calls has the hold: Needs you then
             // said "Nothing is waiting" under it (the 755 retest). It reads again until it's there.
             if let hold, let onHoldAlert = self.onHoldAlert { await onHoldAlert(hold) } else { await self.onHeldChanged?() }
+            // The watch's Inbox and Needs you take the held call in at once (`WatchPushRelay.needsYou`).
+            if hold != nil { await WatchPushRelay.holds() }
         }
     }
 
@@ -154,6 +156,8 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
         if userInfo["answered"] as? Bool == true { Self.removeAlerts(forHold: hold) }
         Task {
             await onHeldChanged?()
+            // A hold came, or was answered on any device: the watch is told with no ask of its own.
+            await WatchPushRelay.holds()
             completionHandler(.newData)
         }
     }

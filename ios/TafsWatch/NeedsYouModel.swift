@@ -37,6 +37,7 @@ final class NeedsYouModel: ObservableObject {
         self.clock = clock
         self.lock = lock
         self.briefOn = briefOn
+        WatchPushes.shared.listen(self)
     }
 
     private var asking = false
@@ -108,10 +109,33 @@ final class NeedsYouModel: ObservableObject {
         answers[hold] = WatchAnswer.from(reached, notDone: Words.Alert.notRefused, unreached: Words.Alert.tafsCouldNotReachKiff)
     }
 
+    /// Approve on your phone: the phone opens Needs you at this held call, in front or with a notification, once its own fresh
+    /// read still lists it (`WatchRequest.Kind.openOnPhone`). Only the hold's id goes, with the account mark; nothing is signed
+    /// or answered here, and nothing on the watch changes. Not in reach, nothing is said: the button stays to tap again.
+    func approveOnPhone(_ hold: String) async {
+        _ = await phone.reach(WatchRequest(.openOnPhone, made: clock(), hold: hold))
+    }
+
     /// The app left the screen: what was read goes.
     func leave() {
         state = .loading
         brief = nil
         answers = [:]
+    }
+}
+
+/// The phone's push of its held calls (`needs_you`): a call on screen that it no longer lists (answered on any device, or
+/// lapsed) goes at once, with its Refuse; one it lists that isn't on screen is read live, amount and all, as on opening.
+/// Nothing is drawn from the push itself, and nothing is read with the app put away (`leave`).
+extension NeedsYouModel: WatchPushListening {
+    func heard(_ push: WatchPush) {
+        guard push.kind == .needsYou, let holds = push.holds, case .loaded(var page) = state, holds.at >= page.at else { return }
+        let listed = Set(holds.calls.map(\.id))
+        let shown = Set(page.calls.map(\.id))
+        page.calls.removeAll { !listed.contains($0.id) }
+        page.count = holds.count
+        page.at = holds.at
+        state = .loaded(page)
+        if !listed.isSubset(of: shown) { Task { await load() } }
     }
 }

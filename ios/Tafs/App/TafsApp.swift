@@ -47,6 +47,8 @@ struct TafsApp: App {
                     // Once tafs cloud pushes held calls, the app doesn't post its own alert as well.
                     model.onHeldChanged = { [lockScreen, weak model] held, tafs, names in
                         lockScreen.update(held: held, tafs: tafs, names: names, notify: model?.alertsReady != true)
+                        // Other held calls than the last read's: the watch is told too (`WatchPushRelay.heldChanged`).
+                        if model?.mode == .kiff { WatchPushRelay.heldChanged(held.compactMap(\.kiffID)) }
                     }
                     model.requestPushToken = { PushDelegate.register() }
                     model.askNotificationPermission = { await PushDelegate.askPermission() }

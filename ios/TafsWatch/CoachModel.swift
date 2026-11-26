@@ -623,7 +623,7 @@ extension CoachModel: WatchPushListening {
             threads.drop(threadKey)
             history = []
             if !inFlight { turns = [] }
-        case .inbox, .account:
+        case .inbox, .account, .needsYou:
             return
         }
     }

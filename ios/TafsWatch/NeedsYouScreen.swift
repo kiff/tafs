@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Needs you on the wrist: the count, then each held call in the phone's words (the taf, what
 /// it asks with its amount, why it was held, and when it lapses). Refuse is answered from here,
-/// through the phone; approving is on the phone.
+/// through the phone; approving is on the phone, which Approve on your phone opens at the call.
 /// Until the phone answers, it says it's loading, never that nothing is waiting.
 struct NeedsYouScreen: View {
     @ObservedObject var model: NeedsYouModel
@@ -44,7 +44,7 @@ struct NeedsYouScreen: View {
                     Text(Words.Watch.asOf(time: needsYou.at.formatted(date: .omitted, time: .shortened)))
                 }
                 ForEach(needsYou.calls) { call in
-                    HeldCallRow(call: call, answer: model.answers[call.id]) {
+                    HeldCallRow(call: call, answer: model.answers[call.id], approve: { Task { await model.approveOnPhone(call.id) } }) {
                         Task { await model.refuse(call.id) }
                     }
                 }
@@ -61,10 +61,12 @@ struct NeedsYouScreen: View {
 }
 
 /// One held call, as the phone words it: the taf, what it asks, why, and by when. Refuse, once
-/// confirmed, and what came of it; never Approve.
+/// confirmed, and what came of it; never Approve: Approve on your phone opens the call on the phone.
 struct HeldCallRow: View {
     let call: WatchNeedsYou.Call
     let answer: WatchAnswer?
+    /// Approve on your phone (`NeedsYouModel.approveOnPhone`): the phone opens this call, to approve behind Face ID there.
+    var approve: () -> Void = {}
     let refuse: () -> Void
     @State private var confirming = false
 
@@ -84,10 +86,14 @@ struct HeldCallRow: View {
                 Button(Words.NeedsYou.refuse, role: .destructive) { confirming = true }
                     .buttonStyle(.bordered)
                     .padding(.top, 4)
-                // The watch never approves: an approval is signed on the phone, behind Face ID.
-                Label(Words.Watch.approveOnPhone, systemImage: "iphone")
-                    .font(.footnote)
-                    .padding(.top, 2)
+                // The watch never approves: the phone opens this call, and an approval is signed there, behind Face ID.
+                Button(action: approve) {
+                    Label(Words.Watch.approveOnPhone, systemImage: "iphone")
+                        .font(.footnote)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(WatchLook.coach)
+                .padding(.top, 2)
             case .sending:
                 ProgressView()
             case .done(let line):
@@ -178,7 +184,7 @@ struct BriefList: View {
                     if model.refusable(decision), let hold = decision.holdID,
                        let call = needsYou.calls.first(where: { $0.id == hold }) {
                         // The same row as Needs you's: Refuse, confirmed, behind the passcode; never Approve.
-                        HeldCallRow(call: call, answer: model.answers[hold]) {
+                        HeldCallRow(call: call, answer: model.answers[hold], approve: { Task { await model.approveOnPhone(hold) } }) {
                             Task { await model.refuse(hold) }
                         }
                     } else {

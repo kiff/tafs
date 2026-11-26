@@ -18,6 +18,25 @@ final class WatchPushTests: XCTestCase {
     }
 
     private let now = Date(timeIntervalSinceReferenceDate: 813_667_500)
+
+    /// The phone's push of its held calls carries only what the Privacy page lets the watch keep: the count, and each call's
+    /// id, taf, what it asks with its amount taken out, and when it lapses. Never its amount, why it was held, or its time in
+    /// words; and it comes through `transferUserInfo` whole.
+    func testTheHeldCallsPushCarriesNoAmountOrDetail() {
+        let call = WatchNeedsYou.Call(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00", summary: "Refund order 4502",
+                                      reason: "Over €150.00 each", answerBy: "10:51", ends: now + 600)
+        let bare = WatchNeedsYou.Call(id: "ce_2", taf: nil, what: "€90.00", summary: "  ", reason: "Over €50.00 each", answerBy: "10:55")
+        let push = WatchPush(.needsYou, holds: WatchHolds(WatchNeedsYou(count: 4, calls: [call, bare], at: now)), at: now,
+                             mark: String(repeating: "a", count: 32))
+        XCTAssertEqual(push.holds, WatchHolds(count: 4, calls: [.init(id: "ce_1", taf: "Rae", line: "Refund order 4502", ends: now + 600),
+                                                                .init(id: "ce_2", taf: nil, line: nil, ends: nil)], at: now))
+        let json = String(decoding: WatchMessage.encode(push), as: UTF8.self)
+        for word in ["€", "480", "150", "90.00", "Over", "10:51", "10:55", "what", "reason", "answerBy", "summary"] {
+            XCTAssertFalse(json.contains(word), "\(word) in \(json)")
+        }
+        XCTAssertEqual(WatchPush.from(push.userInfo), push)
+        XCTAssertTrue(push.holds!.sameAs(WatchHolds(WatchNeedsYou(count: 4, calls: [call, bare], at: now + 60))), "read again, the same")
+    }
     nonisolated private static let ticket = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "ask_1", sent: nil)
     nonisolated private static let rae = WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false)
 

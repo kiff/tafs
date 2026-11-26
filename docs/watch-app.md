@@ -239,8 +239,12 @@ Nothing leaves the watch before Send:
 
 **Step (iv), the Inbox kept on the watch** (`Inbox.swift`: `InboxModel`, `FileInboxStore`; `InboxScreen`; tested in
 `InboxModelTests`), as Wear OS's:
-- **The lines:** each held call Needs you lists, and each answer Coach gives words sent from this watch, newest first, kept until
-  dismissed: its taf (Coach for an answer), its words, and a blue dot while it's unread. A held call's words are what it asks
+- **The lines:** each held call the phone lists **on top**, then each answer Coach gives words sent from this watch, each newest
+  first (`InboxModel.ordered`): its taf (Coach for an answer), its words, and a blue dot while it's unread. An answer is kept
+  until dismissed. A held call is kept until it's dismissed, answered on any device, or past its time: once the phone no longer
+  lists it (its read, or its `needs_you` push, below), or its end time has passed on the watch's own clock, it leaves the
+  Inbox and its file and isn't counted. Above the lines, how much waits for the person, as the phone last said it (Needs
+  you's count, held calls past their time left out); like each call's end time, it's held in memory only, never in the file. A held call's words are what it asks
   **without its amount** (the phone's `summary`, as Wear OS's, with the call's own amount taken out of it in the ways it's
   written (a bare amount with no unit too), then any figure with a currency sign, code or word beside it, złoty, crowns,
   Swiss francs and the Swiss apostrophe included; Needs
@@ -250,6 +254,12 @@ Nothing leaves the watch before Send:
   summary uses too), so no line kept on the watch has an amount; on screen it shows whole, in memory. Coach's home counts the unread lines ("2 unread in Inbox"), and shows no line with none.
 - **Opened, it's read.** A held call shows whole while Needs you still holds it, with Refuse and Approve on your phone as Needs
   you has them; else "Already answered, or it ended.". Coach's answer shows whole.
+- **Approve on your phone** is a button wherever a held call is shown whole (Needs you, the Inbox, the brief's held call). It
+  asks the phone to open that call (`open_on_phone` with `hold`, under the account mark): the phone reads KIFF's held calls
+  fresh with its own session and opens Needs you at that call's own card with **no answer chosen**, in front, or with "From
+  your watch" whose tap opens it (`WatchOpen.holdDestination`). Answered, lapsed, another account's, or a read that failed:
+  Needs you with nothing chosen. Sent under another sign-in's mark, the phone opens nothing and answers signed out. Only the
+  hold's id goes; the approval is the phone's card, signed behind Face ID as always. The watch never approves.
 - **Dismiss** on each line (a swipe, or at the foot of the opened line), and **Clear read** for every read line. Either stays
   gone while the phone still lists it (its id is kept, and dropped once the phone no longer lists it), so a read never brings
   it back.
@@ -325,7 +335,10 @@ Nothing leaves the watch before Send:
   and inbox."). It's on this watch alone: nothing is sent to the phone, and it works with the phone out of reach. The watch
   forgets everything it holds: its Inbox (the ids taken away too) and what each page showed. It keeps one flag, an empty file
   `tafs.signed_out_here` in its Application Support, and shows only "Signed out on this watch. Your phone stays signed in."
-  with **Sign in with your phone**, across restarts, until the person taps it. Meanwhile it reads and sends nothing. Sign in
+  with **Sign in with your phone**, across restarts, until the person taps it. Meanwhile it reads and sends nothing, and the
+  phone's pushes, which keep coming since the phone isn't told, are dropped as they arrive: a thread, the Inbox's marks or a
+  held call is never kept again (`WatchSignIn.takesData`, in `PhoneLink` and the Inbox's `mayDraw`). Nothing from the phone
+  signs it back in; only the phone's own sign-out or account change is still heard, since it can only wipe. Sign in
   takes the flag away and reads the phone again. The privacy text names the flag ("…and whether you signed out on the
   watch"), which ships with the switch.
 - **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`,
@@ -589,8 +602,9 @@ microphone, with "Ask Coach" where the family has room, in the circular, corner,
   and it never asks the phone or refreshes (one entry, `.never`).
 - **Signing:** its own bundle id, `bot.tafs.app.watchkitapp.widgets`, and CI's profile "tafs watch widgets App Store CI",
   made by `asc-profiles.rb` in the `testflight` job. Creating that App ID is the owner's call, so this waits for their yes.
-- **Step 2, later:** the count of what waits, which needs an App Group shared by the watch app and the widget, and the
-  count kept on disk only while the watch has a passcode, cleared on sign-out.
+- **Step 2, later:** the count of what waits, which needs an App Group shared by the watch app and the widget (a capability
+  on the App IDs, so the owner's yes first), and the count kept on disk only while the watch has a passcode, cleared on
+  sign-out. Until then the count is on the Inbox page, in memory (step iv).
 
 ## Kept and pushed (the owner's eight calls on the watch)
 
@@ -606,6 +620,13 @@ The watch follows the phone's thread without asking it each time, and never asks
   - Coach's thread and a taf's thread finish the turn at once and stop reading (`CoachModel.heard`).
   - A taf's chat reads its turns again.
   - The Inbox takes the marks.
+  - **Held calls (`change` with a `hold_id`, a hold's alert, or the app's own read finding other held calls):** the iPhone
+    reads Needs you with the session it keeps and hands it on as `needs_you` (`WatchHolds`, as Wear OS's `kept/needs-you`):
+    the count, and each held call's id, taf, what it asks **with its amount taken out**, and when it lapses. Never the
+    amount, KIFF's reason or the time in words. It goes only when it differs from what the watch was last told under that
+    mark (`WatchPushRelay.needsYou`). The Inbox puts each call on top and drops one no longer listed, only once this open has
+    heard the account is the phone's (`WatchAccountMark.mayDraw`). Needs you on screen drops a call no longer listed at once,
+    and reads a new one live, amount and all. With the app put away it reads nothing.
   Only a request this iPhone sent for its watch is handed on, and never one whose answer the watch already read
   (`WatchAskPushes`). A thread opens on its newest message and stays there as messages come in (`WatchThread`).
 - **Sent from the thread (call 4).** Your message is a bubble on the right, with when it went and ✓ under it (`MineBubble`).
@@ -647,8 +668,9 @@ and never to tafs cloud directly.
 - **In memory only:** the list, the amounts and Coach's answers. They go when the app leaves the
   screen, and are read again when it's back.
 - **v2, behind its switch (step iv):** the Inbox's lines (each held call's taf and what it asks, never its amount, and
-  Coach's answers, also with no amount) are kept on the watch until dismissed, only while it has a passcode, in a file with complete file
-  protection, and cleared on sign-out.
+  Coach's answers, also with no amount) are kept on the watch until dismissed (a held call also until it's answered or lapses),
+  only while it has a passcode, in a file with complete file protection, and cleared on sign-out. The count of what waits
+  and each held call's end time are held in memory only.
 - **v2, behind its switch:** after Sign out on this watch, one empty file, `tafs.signed_out_here`, until Sign in with your
   phone.
 - **Keep for later, behind `CoachModel.keepForLaterOn` (on; row 8, as Wear OS's):** `tafs.draft.json`, one message to
