@@ -17,9 +17,16 @@ most of this ([coach.md](coach.md)).
 A message is 1 to 2,000 characters, or files alone ([attachments.md](attachments.md)).
 It is a run in one of the person's chats with the taf:
 
-- their **live chat**, which kiff/agents picks: the latest one, while it's recent;
+- their **live chat**, which kiff/agents picks: the latest one, while its last message is under
+  30 minutes old (kiff/agents' `DefaultLiveChat`); after that, a message starts a new chat;
 - a chat they **reopened** from the list, where messages then go on;
 - or a **new chat**, when they ask for one.
+
+A chat shows the taf only what was done in it: other chats, its scheduled runs and the owner's
+own changes don't show there. So every taf is told (`SHARED_INSTRUCTIONS` in `runtime/src/jobs.ts`)
+to answer a question about a time ("what did you refund today?") from a record that covers it:
+its Card's use from `kiff_card`, or the app's own list through its reads. It says which it read,
+and never puts work this chat doesn't show down to someone else.
 
 Chats are each person's own: nobody else on the account reads them, an admin or the
 account's owner included.
