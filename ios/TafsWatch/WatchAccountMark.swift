@@ -10,8 +10,9 @@ import UserNotifications
 ///
 /// And nothing kept is drawn before this open of the app has heard the phone's mark and it's the kept one (`mayDraw`), as
 /// on Wear OS: a watch whose phone changed account while it was away shows only what the phone answers now, never the old
-/// copy for a frame. Each time the app is put away the mark has to be heard again (`leave`), so an app still running in the
-/// background through a sign-out and a sign-in as someone else on the phone draws nothing of the first account.
+/// copy for a frame. Each time the app is put away, or back after more than two minutes with the wrist lowered, the mark
+/// has to be heard again (`phase`, `leave`), so an app still running through a sign-out and a sign-in as someone else on
+/// the phone draws nothing of the first account.
 @MainActor
 final class WatchAccountMark {
     static let shared = WatchAccountMark()
@@ -77,10 +78,34 @@ final class WatchAccountMark {
     /// phone may change accounts while the watch is away, and the app may go on running meanwhile.
     func leave() { confirmed = false }
 
-    /// Whether the app leaves the screen in `phase`: any phase but `.active`. A lowered wrist (`.inactive`) counts, since
-    /// watchOS can keep an app inactive on screen for up to an hour before it returns to the clock, and the phone can change
-    /// accounts in that hour.
-    nonisolated static func leaves(_ phase: ScenePhase) -> Bool { phase != .active }
+    /// How long a lowered wrist keeps the open: raised within it, the screen stays as it was; past it, it's a new open.
+    /// watchOS can keep an app inactive on screen for up to an hour, and the phone can change accounts meanwhile.
+    nonisolated static let inactiveKeeps: TimeInterval = 2 * 60
+    /// When the app went inactive (a lowered wrist), while it still is.
+    private var inactiveSince: Date?
+
+    /// The app's phase changed. Returns whether this is a new open, so each page forgets what it showed and reads again
+    /// behind `mayDraw`: put away (`.background`), or back on screen after more than `inactiveKeeps` inactive. A glance,
+    /// raised within it, keeps the screen and the proof.
+    @discardableResult
+    func phase(_ phase: ScenePhase) -> Bool {
+        switch phase {
+        case .background:
+            inactiveSince = nil
+            leave()
+            return true
+        case .inactive:
+            if inactiveSince == nil { inactiveSince = now() }
+            return false
+        case .active:
+            defer { inactiveSince = nil }
+            guard let since = inactiveSince, now().timeIntervalSince(since) > Self.inactiveKeeps else { return false }
+            leave()
+            return true
+        @unknown default:
+            return false
+        }
+    }
 
     /// What goes when the account changes: each store and page the app keeps adds its own.
     func onWipe(_ wipe: @escaping @MainActor () -> Void) { wipes.append(wipe) }

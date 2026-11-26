@@ -119,14 +119,55 @@ final class WatchAccountMarkTests: XCTestCase {
         XCTAssertTrue(mark.mayDraw)
         XCTAssertEqual(confirmed, 2, "confirmed again in this open, so the pages take in what they kept")
         XCTAssertEqual(box.cleared, 0, "the same account: nothing goes")
-        // A lowered wrist leaves the screen too: watchOS can keep the app inactive for up to an hour.
-        XCTAssertTrue(WatchAccountMark.leaves(.inactive))
-        XCTAssertTrue(WatchAccountMark.leaves(.background))
-        XCTAssertFalse(WatchAccountMark.leaves(.active))
         // Put away again, and the phone now says B: everything of A goes, and nothing of it is drawn first.
         mark.leave()
         XCTAssertFalse(mark.heard(Self.b))
         XCTAssertEqual(box.cleared, 1)
+    }
+
+    /// A glance keeps the open; put away, or back after more than two minutes with the wrist lowered, is a new open: what's
+    /// drawn is pinned through a kept thread, as a page reads it.
+    func testAGlanceKeepsTheOpenAndTwoMinutesInactiveOrPutAwayIsANewOpen() {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("threads")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let box = Box(Self.a)
+        var clock = now
+        let mark = WatchAccountMark(store: .init(load: { box.mark }, save: { box.mark = $0 }, loadAt: { box.at }, saveAt: { box.at = $0 }),
+                                    clearStored: { box.cleared += 1 }, now: { clock })
+        let threads = WatchThreads(url: url, lock: Unlocked(), clock: { clock }, mayDraw: { mark.mayDraw })
+        mark.heard(Self.a)
+        let line = WatchChatLine(id: "m1", mine: false, at: now, text: "A's line", more: false)
+        threads.keep("coach", [line])
+        XCTAssertEqual(threads.lines("coach"), [line])
+
+        // A glance: down, and back up within two minutes (1:59). The same open: the screen and the proof stay.
+        XCTAssertFalse(mark.phase(.inactive))
+        clock.addTimeInterval(119)
+        XCTAssertFalse(mark.phase(.active), "not a new open")
+        XCTAssertEqual(threads.lines("coach"), [line], "drawn as it was")
+
+        // Down for 2:01, then up: a new open. Nothing kept is drawn until a live reply in it carries the mark.
+        mark.phase(.inactive)
+        clock.addTimeInterval(121)
+        XCTAssertTrue(mark.phase(.active), "a new open: the pages forget what they showed")
+        XCTAssertEqual(threads.lines("coach"), [], "nothing kept before the phone is heard")
+        mark.heard(Self.a, live: false)
+        XCTAssertEqual(threads.lines("coach"), [], "a push that waited doesn't confirm it")
+        mark.heard(Self.a)
+        XCTAssertEqual(threads.lines("coach"), [line], "heard again: drawn, nothing wiped")
+        XCTAssertEqual(box.cleared, 0)
+
+        // Put away, then back at once: a new open all the same.
+        XCTAssertTrue(mark.phase(.background))
+        XCTAssertFalse(mark.phase(.active), "back from the background: the proof went when it was put away")
+        XCTAssertEqual(threads.lines("coach"), [])
+
+        // An account change heard while the wrist is down: everything of A goes before anything is drawn.
+        mark.heard(Self.a)
+        mark.phase(.inactive)
+        mark.heardAccount(Self.b, at: clock.addingTimeInterval(1))
+        XCTAssertEqual(box.cleared, 1)
+        XCTAssertEqual(threads.lines("coach"), [])
     }
 
     /// Signed in as A, then B on the phone: everything kept goes before B's answer is used, and B's mark is kept.
