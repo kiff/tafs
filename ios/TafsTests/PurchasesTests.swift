@@ -145,6 +145,10 @@ final class PurchasesTests: XCTestCase {
         store.sold = [Self.priced(Self.solo, "12,49 €")]
         await p.load([Self.solo])
         XCTAssertEqual(p.products[Self.solo]?.displayPrice, "12,49 €")
+        // One the App Store stops returning, in the same storefront, is dropped rather than kept at its old price.
+        store.sold = []
+        await p.load([Self.solo])
+        XCTAssertNil(p.products[Self.solo])
     }
 
     /// A change of storefront drops every price at once and reads them again there: a product the new storefront

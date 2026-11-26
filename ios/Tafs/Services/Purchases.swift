@@ -147,6 +147,9 @@ final class Purchases: ObservableObject {
         for id in ids where !known.contains(id) { known.append(id) }
         let wanted = ids.filter { !samples.contains($0) }
         guard !wanted.isEmpty, let read = try? await front.products(wanted) else { return }
+        // A product the App Store no longer returns is dropped, never shown at an earlier read's price.
+        let returned = Set(read.map(\.id))
+        for id in wanted where !returned.contains(id) { products[id] = nil }
         for p in read { products[p.id] = p }
     }
 
