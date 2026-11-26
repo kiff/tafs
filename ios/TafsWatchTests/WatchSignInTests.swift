@@ -179,6 +179,37 @@ final class WatchSignInTests: XCTestCase {
         XCTAssertTrue(WatchRequest(.signInWatch, made: now, message: id).isComplete)
         XCTAssertFalse(WatchRequest(.signInWatch, made: now, message: "not an id").isComplete)
         XCTAssertFalse(WatchRequest.Kind.signInWatch.isRead, "never sent twice")
+        // The phone's notifications are off: it says so, in its words, and nothing waits.
+        phone.reply = WatchReply(.failed, line: "Allow notifications for tafs in Settings, then try again.")
+        await signIn.askPhone()
+        XCTAssertEqual(signIn.asking, .unreached("Allow notifications for tafs in Settings, then try again."))
+    }
+
+    /// An ask no one answers (the question missed, or the phone put down) lapses after `answerWithin`: the wait goes and the
+    /// button is back (it's there while waiting too), and an Allow after that is ignored. Asking again sends a new id.
+    func testAnUnansweredAskLapses() async {
+        final class Clock { var now = Date(timeIntervalSinceReferenceDate: 813_667_500) }
+        let clock = Clock()
+        let flag = Flag()
+        flag.on = true
+        let phone = AskedPhone()
+        let signIn = WatchSignIn(store: flag, phone: phone, clock: { clock.now },
+                                 sleep: { _ in try? await Task.sleep(nanoseconds: 3_600_000_000_000) })
+        await signIn.askPhone()
+        let first = phone.asked[0].message!
+        XCTAssertEqual(signIn.asking, .waiting)
+        clock.now += 60
+        signIn.lapse()
+        XCTAssertEqual(signIn.asking, .waiting, "not yet")
+        clock.now += WatchSignIn.answerWithin
+        signIn.lapse()
+        XCTAssertEqual(signIn.asking, .idle, "lapsed: the wait goes")
+        WatchPushes.shared.deliver(WatchPush(.signIn, signIn: WatchSignInAnswer(id: first, allowed: true), at: clock.now,
+                                             mark: String(repeating: "a", count: 32)))
+        XCTAssertTrue(signIn.signedOutHere, "a late Allow signs nothing in")
+        await signIn.askPhone()
+        XCTAssertNotEqual(phone.asked[1].message, first, "asked again with a new id")
+        XCTAssertEqual(signIn.asking, .waiting)
     }
 
     func testSignInWithYourPhoneTakesTheFlagAway() {

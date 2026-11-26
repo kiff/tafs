@@ -62,13 +62,18 @@ final class WatchSignIn: ObservableObject {
     private let account: (String, Date) -> Void
     /// The ask in flight: its one-time id and when it went. In memory only: an app ended mid-ask asks again.
     private var pending: (id: String, at: Date)?
+    /// The wait for `answerWithin`, after which an unanswered ask lapses. Real time on the watch; a test calls `lapse`.
+    private let sleep: @Sendable (TimeInterval) async -> Void
+    private var lapseTimer: Task<Void, Never>?
 
     init(store: Store = FileStore(), phone: PhoneAsking? = nil, clock: @escaping () -> Date = Date.init,
-         account: @escaping (String, Date) -> Void = { _, _ in }) {
+         account: @escaping (String, Date) -> Void = { _, _ in },
+         sleep: @escaping @Sendable (TimeInterval) async -> Void = { try? await Task.sleep(nanoseconds: UInt64(max(0, $0) * 1_000_000_000)) }) {
         self.store = store
         self.phone = phone
         self.clock = clock
         self.account = account
+        self.sleep = sleep
         signedOutHere = store.signedOut()
         WatchPushes.shared.listen(self)
     }
@@ -98,15 +103,34 @@ final class WatchSignIn: ObservableObject {
         guard signedOutHere, pending?.id == id else { return }
         switch reached {
         case .reply(let reply) where reply.outcome == .ok:
+            // Asked: an answer that never comes (the question swiped away and missed, the phone put down) lapses, and the
+            // button is back, so the watch is never left waiting.
+            let sleep = self.sleep
+            lapseTimer?.cancel()
+            lapseTimer = Task { [weak self] in
+                await sleep(Self.answerWithin)
+                guard !Task.isCancelled else { return }
+                self?.lapse()
+            }
             return
         case .reply(let reply) where reply.outcome == .signedOut:
             asking = .unreached(Words.Watch.signInOnPhone)
+        case .reply(let reply) where reply.outcome == .failed:
+            // The phone's own words: its notifications are off, so it can't ask.
+            asking = .unreached(reply.line ?? Words.Watch.phoneCouldNotReachCloud)
         case .reply:
             asking = .unreached(Words.Watch.phoneCouldNotReachCloud)
         case .failed(let why):
             asking = .unreached(why.waiting)
         }
         pending = nil
+    }
+
+    /// An ask with no answer within `answerWithin` lapses: the wait goes, the button is back, and a late Allow is ignored.
+    func lapse() {
+        guard let pending, clock().timeIntervalSince(pending.at) >= Self.answerWithin else { return }
+        self.pending = nil
+        if asking == .waiting { asking = .idle }
     }
 
     /// The phone owner's answer: only for the id this watch asked with, within `answerWithin`, and with a mark the phone
@@ -116,6 +140,7 @@ final class WatchSignIn: ObservableObject {
         guard signedOutHere, let pending, answer.id == pending.id,
               clock().timeIntervalSince(pending.at) <= Self.answerWithin else { return }
         self.pending = nil
+        lapseTimer?.cancel()
         guard answer.allowed else { asking = .denied; return }
         guard WatchMark.isMark(mark), let mark else { asking = .idle; return }
         account(mark, at)
@@ -125,6 +150,7 @@ final class WatchSignIn: ObservableObject {
     /// Signed in again: the flag goes, and the watch reads the phone again. Only the phone's Allow calls it (or the demo's
     /// tap, which has no phone).
     func signIn() {
+        lapseTimer?.cancel()
         pending = nil
         asking = .idle
         store.set(false)
@@ -155,11 +181,10 @@ struct SignedOutHereScreen: View {
                 case .idle:
                     EmptyView()
                 }
-                if signIn.asking != .waiting {
-                    Button(Words.Watch.askPhoneSignIn) {
-                        // The demo has no phone to ask: its watch signs in on the tap.
-                        if WatchDemo.on { signIn.signIn() } else { Task { await signIn.askPhone() } }
-                    }
+                // Always there, waiting included: a question missed on the phone is asked again with a new id.
+                Button(Words.Watch.askPhoneSignIn) {
+                    // The demo has no phone to ask: its watch signs in on the tap.
+                    if WatchDemo.on { signIn.signIn() } else { Task { await signIn.askPhone() } }
                 }
             }
             .padding(.top, 8)

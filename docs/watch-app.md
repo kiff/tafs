@@ -345,13 +345,16 @@ Nothing leaves the watch before Send:
   - **The watch** sends `sign_in_watch` with a one-time id and nothing of the account, and shows "Waiting for your phone…".
     The flag stays.
   - **The phone** asks its owner with a notification, "Sign this watch in as you?". **Allow** is let through only once the
-    phone is unlocked (`.authenticationRequired`); **Deny** is a plain no. A tap that only opens tafs answers nothing.
-    A signed-out phone asks no one.
+    phone is unlocked (`.authenticationRequired`); **Deny** is a plain no, and so is a swipe away (`.customDismissAction`).
+    A tap that only opens tafs answers nothing. A signed-out phone asks no one, and a phone whose tafs notifications are
+    off says so to the watch ("Allow notifications for tafs in Settings, then try again.") rather than asking no one.
   - **Only Allow signs it in:** the phone's answer (`WatchPush.Kind.signIn`) is taken only for the id the watch asked with,
     within ten minutes (`answerWithin`), and with a mark the phone makes. Its mark is heard as an account change, so another
     account's wipes first. Then the flag goes and the watch reads fresh: nothing from before the sign-out comes back.
   - **Deny** says "Not signed in. This watch stays signed out." Out of reach, a phone signed out, or an older phone: the
-    watch says why and stays signed out. An app ended mid-ask asks again.
+    watch says why and stays signed out. **Never stuck waiting:** the button stays while it waits (a new ask, a new id), and
+    an ask with no answer lapses after ten minutes (`lapse`), so the wait goes and a late Allow is ignored. An app ended
+    mid-ask asks again.
   - **The demo** has no phone, so its watch signs in on the tap. The privacy text names the flag ("…and whether you signed out on the
   watch"), which ships with the switch.
 - **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`,

@@ -42,7 +42,8 @@ final class AlertAnswersTests: XCTestCase {
     }
 
     /// Row 18: a watch's Ask your phone to sign this watch in. The question carries only the watch's id. Allow is let through
-    /// only once the phone is unlocked; Deny is a plain no; any other action (a tap that opens tafs) answers nothing. Only Allow
+    /// only once the phone is unlocked; Deny is a plain no, and so is a swipe away (heard through `.customDismissAction`), so the
+    /// watch stops waiting; a tap that only opens tafs answers nothing. tafs's notifications off: nothing can be asked. Only Allow
     /// and Deny, for a real id, go to the watch.
     func testAWatchsSignInAskIsAllowedOnlyBehindThePhonesLock() throws {
         let category = try XCTUnwrap(AlertAnswers.categories().first { $0.identifier == WatchSignInAsk.categoryID })
@@ -61,7 +62,13 @@ final class AlertAnswersTests: XCTestCase {
                        WatchPush(.signIn, signIn: WatchSignInAnswer(id: id, allowed: true), at: now))
         XCTAssertEqual(WatchSignInAsk.answer(action: WatchSignInAsk.deny, id: id, now: now)?.signIn?.allowed, false)
         XCTAssertNil(WatchSignInAsk.answer(action: UNNotificationDefaultActionIdentifier, id: id), "opening tafs answers nothing")
-        XCTAssertNil(WatchSignInAsk.answer(action: UNNotificationDismissActionIdentifier, id: id))
+        XCTAssertTrue(category.options.contains(.customDismissAction), "a swipe away is heard")
+        XCTAssertEqual(WatchSignInAsk.answer(action: UNNotificationDismissActionIdentifier, id: id, now: now)?.signIn,
+                       WatchSignInAnswer(id: id, allowed: false), "swiped away: Deny, never Allow")
+        XCTAssertTrue(WatchSignInAsk.canAsk(.authorized))
+        XCTAssertTrue(WatchSignInAsk.canAsk(.provisional))
+        XCTAssertFalse(WatchSignInAsk.canAsk(.denied), "notifications off: the watch is told, not left waiting")
+        XCTAssertFalse(WatchSignInAsk.canAsk(.notDetermined))
         XCTAssertNil(WatchSignInAsk.answer(action: WatchSignInAsk.allow, id: "not an id"))
     }
 

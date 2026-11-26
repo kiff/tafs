@@ -275,7 +275,8 @@ struct KeptWatchReading: WatchReading {
     }
 
     func askWatchSignIn(_ id: String) async -> WatchReply {
-        await WatchSignInAsk.post(id)
+        // Notifications off: nothing can be asked, and the watch says so rather than wait.
+        guard await WatchSignInAsk.post(id) else { return WatchReply(.failed, line: Words.Alert.allowNotifications) }
         return WatchReply(.ok)
     }
 
