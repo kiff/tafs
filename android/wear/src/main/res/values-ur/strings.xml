@@ -57,6 +57,7 @@
     <string name="watch_ask">tafs سے پوچھیں</string>
     <string name="watch_ask_needs_consent">tafs سے پوچھنے سے پہلے اپنے فون پر tafs میں AI کے استعمال کی اجازت دیں۔</string>
     <string name="watch_ask_not_on">گھڑی سے پوچھنا ابھی چالو نہیں۔</string>
+    <string name="watch_ask_phone_sign_in">اس گھڑی میں سائن ان کرنے کے لیے فون سے کہیں</string>
     <string name="watch_ask_text_only">tafs کو آپ کے الفاظ متن کے طور پر ملتے ہیں، آپ کی آواز کبھی نہیں۔</string>
     <string name="watch_asking_phone">آپ کے فون سے پوچھا جا رہا ہے…</string>
     <string name="watch_calendar_today">آج کا کیلنڈر</string>
@@ -146,7 +147,11 @@
     <string name="watch_sending">بھیجا جا رہا ہے…</string>
     <string name="watch_sent">بھیج دیا</string>
     <string name="watch_settings_of">%1$s · ترتیبات</string>
+    <string name="watch_sign_in_allow">اجازت دیں</string>
+    <string name="watch_sign_in_denied">سائن ان نہیں ہوا۔ یہ گھڑی سائن آؤٹ ہی رہے گی۔</string>
+    <string name="watch_sign_in_deny">مسترد کریں</string>
     <string name="watch_sign_in_on_phone">پہلے اپنے فون پر tafs میں سائن اِن کریں۔</string>
+    <string name="watch_sign_in_watch_q">اس گھڑی میں اپنے اکاؤنٹ سے سائن ان کریں؟</string>
     <string name="watch_sign_out_q">اس گھڑی پر سائن آؤٹ کریں؟</string>
     <string name="watch_sign_out_sub">آپ کا فون سائن اِن رہتا ہے۔ یہ گھڑی آپ کے tafs، چیٹس اور ان باکس بھول جاتی ہے۔</string>
     <string name="watch_signed_in">سائن اِن ہے</string>
@@ -163,6 +168,7 @@
     <string name="watch_view_on_phone">فون پر دیکھیں</string>
     <string name="watch_view_only_phone">یہ فون صرف دیکھ سکتا ہے، اس لیے آپ گھڑی سے پوچھ نہیں سکتے۔ ایسے فون پر سائن اِن کریں جو منظور کر سکتا ہو۔</string>
     <string name="watch_voice_text_only">Coach کو آپ کے الفاظ متن کے طور پر ملتے ہیں، آپ کی آواز کبھی نہیں۔</string>
+    <string name="watch_waiting_for_phone">آپ کے فون کا انتظار…</string>
     <string name="watch_what_it_does">یہ کیا کرتا ہے</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s کام کر رہا ہے</item>

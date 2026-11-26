@@ -2716,6 +2716,7 @@
     <string name="watch_ask">សួរ tafs</string>
     <string name="watch_ask_needs_consent">មុនពេលសួរ tafs សូមអនុញ្ញាតការប្រើ AI ក្នុង tafs នៅលើទូរសព្ទរបស់អ្នក។</string>
     <string name="watch_ask_not_on">ការសួរពីនាឡិការបស់អ្នកមិនទាន់បើកនៅឡើយ។</string>
+    <string name="watch_ask_phone_sign_in">សុំទូរសព្ទឱ្យចូលនាឡិកានេះ</string>
     <string name="watch_ask_text_only">tafs ទទួលពាក្យរបស់អ្នកជាអត្ថបទ មិនដែលជាសំឡេងរបស់អ្នកទេ។</string>
     <string name="watch_asking_phone">កំពុងសួរទូរសព្ទរបស់អ្នក…</string>
     <string name="watch_calendar_today">ប្រតិទិនថ្ងៃនេះ</string>
@@ -2800,7 +2801,11 @@
     <string name="watch_sending">កំពុងផ្ញើ…</string>
     <string name="watch_sent">បានផ្ញើ</string>
     <string name="watch_settings_of">%1$s · ការកំណត់</string>
+    <string name="watch_sign_in_allow">អនុញ្ញាត</string>
+    <string name="watch_sign_in_denied">មិនបានចូលទេ។ នាឡិកានេះនៅតែចេញពីគណនី។</string>
+    <string name="watch_sign_in_deny">បដិសេធ</string>
     <string name="watch_sign_in_on_phone">ចូលទៅ tafs នៅលើទូរសព្ទរបស់អ្នកជាមុនសិន។</string>
+    <string name="watch_sign_in_watch_q">ចូលនាឡិកានេះដោយគណនីរបស់អ្នកឬ?</string>
     <string name="watch_sign_out_q">ចាកចេញនៅលើនាឡិកានេះឬ?</string>
     <string name="watch_sign_out_sub">ទូរសព្ទរបស់អ្នកនៅតែចូល។ នាឡិកានេះភ្លេច taf ការសន្ទនា និងប្រអប់សារចូលរបស់អ្នក។</string>
     <string name="watch_signed_in">បានចូល</string>
@@ -2817,6 +2822,7 @@
     <string name="watch_view_on_phone">មើលនៅលើទូរសព្ទ</string>
     <string name="watch_view_only_phone">ទូរសព្ទនេះអាចមើលតែប៉ុណ្ណោះ ដូច្នេះអ្នកមិនអាចសួរពីនាឡិកាបានទេ។ ចូលនៅលើទូរសព្ទដែលអាចអនុម័តបាន។</string>
     <string name="watch_voice_text_only">Coach ទទួលពាក្យរបស់អ្នកជាអត្ថបទ មិនដែលជាសំឡេងរបស់អ្នកទេ។</string>
+    <string name="watch_waiting_for_phone">កំពុងរង់ចាំទូរសព្ទ…</string>
     <string name="watch_what_it_does">អ្វីដែលវាធ្វើ</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s កំពុងធ្វើការ</item>

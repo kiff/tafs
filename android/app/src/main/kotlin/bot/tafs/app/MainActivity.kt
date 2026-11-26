@@ -466,6 +466,16 @@ fun RootView(model: AppModel) {
       containerColor = Theme.panel,
     )
   }
+  // A watch signed out on itself asks to be signed in again (row 18): this phone's person allows it or not, here, behind the lock.
+  if (state.watchSignInAsk != null && state.signedIn) {
+    DriveAlert(
+      onDismissRequest = {},
+      title = { Text(Words.Watch.signInWatchQ) },
+      confirmButton = { TextButton({ model.answerWatchSignIn(true) }) { Text(Words.Watch.signInAllow, color = Theme.amber) } },
+      dismissButton = { TextButton({ model.answerWatchSignIn(false) }) { Text(Words.Watch.signInDeny, color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
   // Back from Settings: alerts on now, or still off, said once.
   state.alertsRecheckLine?.let { line ->
     DriveAlert(

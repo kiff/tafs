@@ -1823,10 +1823,50 @@ class WatchModel(
     today = null
   }
 
-  /** Sign in, on this watch again: the phone is still signed in, so the watch only reads it again (the caller refreshes). */
-  fun signInHere() {
+  /** Signing in again, asked of the phone's person (row 18): waiting on them, denied, or the phone not reached. */
+  sealed interface SignInAsk {
+    data object Waiting : SignInAsk
+    data object Denied : SignInAsk
+    data class NotReached(val why: LinkFailure) : SignInAsk
+  }
+
+  private val _signInAsk = MutableStateFlow<SignInAsk?>(if (signIn?.asked() != null) SignInAsk.Waiting else null)
+  val signInAsk: StateFlow<SignInAsk?> = _signInAsk.asStateFlow()
+
+  /**
+   * "Ask your phone to sign this watch in" (row 18): the phone asks its person, behind its own lock, "Sign this watch in as you?".
+   * A tap on the watch alone never signs it in: only the phone's Allow for this ask does ([signInAnswered]).
+   */
+  suspend fun askSignIn() {
+    if (!_signedOutHere.value) return
+    val id = newClientId()
+    signIn?.ask(id, now())
+    _signInAsk.value = SignInAsk.Waiting
+    val asked = phone.ask(WatchRequest.SignInAsk(now(), id))
+    val sent = asked is Asked.Answered && asked.reply is WatchReply.Done
+    if (!sent) {
+      signIn?.forgetAsk()
+      _signInAsk.value = SignInAsk.NotReached((asked as? Asked.Unreachable)?.why ?: LinkFailure.Link)
+    }
+  }
+
+  /**
+   * The phone's answer to this watch's sign-in ask (`kept/sign-in`, from the paired phone only). Taken only for the ask waiting,
+   * within [SIGN_IN_ASK_MS]; any other is ignored. Allow: signed in again, empty, so the caller reads fresh (true). Deny: it stays
+   * signed out, and says so.
+   */
+  fun signInAnswered(answer: bot.tafs.watchlink.KeptSignIn): Boolean {
+    val (id, at) = signIn?.asked() ?: return false
+    if (answer.ask != id || now() - at > SIGN_IN_ASK_MS) return false
+    signIn?.forgetAsk()
+    if (!answer.allowed) {
+      _signInAsk.value = SignInAsk.Denied
+      return false
+    }
     signIn?.signIn()
+    _signInAsk.value = null
     _signedOutHere.value = false
+    return true
   }
 }
 
@@ -1879,3 +1919,6 @@ object SeenAsks {
 
 /** Where a phone-thread line's whole is kept in a taf's chat (`TafChat.whole`): apart from the watch's own asks' ids. */
 internal fun lineKey(lineId: String) = "line:$lineId"
+
+/** How long a sign-in ask waits for the phone's answer (row 18): a later Allow signs nothing in. */
+internal const val SIGN_IN_ASK_MS = 10 * 60_000L

@@ -153,6 +153,7 @@ class WatchActivity : ComponentActivity() {
         val taf by model.taf.collectAsState()
         val haltPick by model.haltPick.collectAsState()
         val signedOutHere by model.signedOutHere.collectAsState()
+        val signInAsk by model.signInAsk.collectAsState()
         val calendar by model.calendar.collectAsState()
         val account by model.account.collectAsState()
         val tafChatOff by model.tafChatOff.collectAsState()
@@ -231,13 +232,8 @@ class WatchActivity : ComponentActivity() {
           closeCalendar = model::closeCalendar,
           readAccount = { lifecycleScope.launch { model.readAccount() } },
           signOut = ::signOutHere,
-          signIn = {
-            model.signInHere()
-            lifecycleScope.launch {
-              model.start()
-              NeedsYouTileService.update(this@WatchActivity)
-            }
-          },
+          // Asks the phone's person; nothing is signed in here until their Allow comes back (row 18).
+          signIn = { lifecycleScope.launch { model.askSignIn() } },
         )
         val inbox by model.inbox.collectAsState()
         val inboxKept by model.inboxKept.collectAsState()
@@ -259,7 +255,7 @@ class WatchActivity : ComponentActivity() {
           WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
             // The Inbox kept on the watch, or, when it can't be (locked, no screen lock), what the phone answered now.
             probe = if (BuildConfig.TIMING) probe else null, linkTrace = if (BuildConfig.TIMING) linkTrace?.line else null, inbox = inbox.takeIf { inboxKept }, taf = taf, haltPick = haltPick,
-            signedOutHere = signedOutHere, calendar = calendar, account = account, thread = thread, answered = answered, linking = linking, tafChatOff = tafChatOff, wholes = wholes)
+            signedOutHere = signedOutHere, signInAsk = signInAsk, calendar = calendar, account = account, thread = thread, answered = answered, linking = linking, tafChatOff = tafChatOff, wholes = wholes)
         }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing, whole = result?.let { wholes[it.id] })
         // Open on phone, said on the watch (row 28): the platform's own confirmation, in tafs's words, then back where it was.
@@ -317,6 +313,15 @@ class WatchActivity : ComponentActivity() {
     KeptResults.marks = { marks -> runOnUiThread { model.takeMarks(marks) } }
     KeptResults.chats = { tafId, lines -> runOnUiThread { model.tafChatChanged(tafId, lines) } }
     KeptResults.tafs = { kept -> runOnUiThread { model.tafsChanged(kept.tafs, kept.allHalted, kept.zone) } }
+    // The phone's Allow or Deny for this watch's sign-in ask: allowed, it starts empty and reads fresh.
+    KeptResults.signIn = { answer ->
+      runOnUiThread {
+        if (model.signInAnswered(answer)) lifecycleScope.launch {
+          model.start()
+          NeedsYouTileService.update(this@WatchActivity)
+        }
+      }
+    }
     // The tile's count follows the same push, and the system draws it again (row 24).
     KeptResults.needsYou = { kept -> runOnUiThread { model.needsYouPushed(kept.count, kept.words, kept.calls); NeedsYouTileService.update(this) } }
     // The phone signed out while the app is open: everything goes now, then the phone is read again.
@@ -335,6 +340,7 @@ class WatchActivity : ComponentActivity() {
     KeptResults.marks = null
     KeptResults.chats = null
     KeptResults.tafs = null
+    KeptResults.signIn = null
     KeptResults.needsYou = null
     KeptResults.signedOut = null
     opening?.cancel()

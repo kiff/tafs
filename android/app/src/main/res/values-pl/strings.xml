@@ -2941,6 +2941,7 @@
     <string name="watch_ask">Zapytaj tafs</string>
     <string name="watch_ask_needs_consent">Zanim zapytasz tafs, zezwól na użycie AI w tafs na telefonie.</string>
     <string name="watch_ask_not_on">Pytanie z zegarka nie jest jeszcze włączone.</string>
+    <string name="watch_ask_phone_sign_in">Poproś telefon o zalogowanie tego zegarka</string>
     <string name="watch_ask_text_only">tafs dostaje Twoje słowa jako tekst, nigdy Twój głos.</string>
     <string name="watch_asking_phone">Pytam telefon…</string>
     <string name="watch_calendar_today">Dzisiejszy kalendarz</string>
@@ -3040,7 +3041,11 @@
     <string name="watch_sending">Wysyłanie…</string>
     <string name="watch_sent">Wysłano</string>
     <string name="watch_settings_of">%1$s · ustawienia</string>
+    <string name="watch_sign_in_allow">Zezwól</string>
+    <string name="watch_sign_in_denied">Nie zalogowano. Zegarek pozostaje wylogowany.</string>
+    <string name="watch_sign_in_deny">Odmów</string>
     <string name="watch_sign_in_on_phone">Najpierw zaloguj się do tafs na telefonie.</string>
+    <string name="watch_sign_in_watch_q">Zalogować ten zegarek na Twoje konto?</string>
     <string name="watch_sign_out_q">Wylogować na tym zegarku?</string>
     <string name="watch_sign_out_sub">Telefon pozostaje zalogowany. Ten zegarek zapomina Twoje tafs, czaty i Skrzynkę.</string>
     <string name="watch_signed_in">Zalogowano</string>
@@ -3057,6 +3062,7 @@
     <string name="watch_view_on_phone">Zobacz na telefonie</string>
     <string name="watch_view_only_phone">Ten telefon może tylko wyświetlać, więc nie możesz pytać z zegarka. Zaloguj się na telefonie, który może zatwierdzać.</string>
     <string name="watch_voice_text_only">Coach dostaje Twoje słowa jako tekst, nigdy Twój głos.</string>
+    <string name="watch_waiting_for_phone">Czekam na telefon…</string>
     <string name="watch_what_it_does">Co robi</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s pracuje</item>

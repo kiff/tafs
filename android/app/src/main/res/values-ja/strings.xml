@@ -2716,6 +2716,7 @@
     <string name="watch_ask">tafsに質問</string>
     <string name="watch_ask_needs_consent">tafsに質問する前に、スマートフォンのtafsでAIの使用を許可してください。</string>
     <string name="watch_ask_not_on">ウォッチからの質問はまだオンになっていません。</string>
+    <string name="watch_ask_phone_sign_in">スマートフォンにこのウォッチのサインインを頼む</string>
     <string name="watch_ask_text_only">tafsに届くのはあなたの言葉のテキストだけで、声は届きません。</string>
     <string name="watch_asking_phone">スマートフォンに問い合わせています…</string>
     <string name="watch_calendar_today">今日のカレンダー</string>
@@ -2800,7 +2801,11 @@
     <string name="watch_sending">送信しています…</string>
     <string name="watch_sent">送信済み</string>
     <string name="watch_settings_of">%1$s・設定</string>
+    <string name="watch_sign_in_allow">許可</string>
+    <string name="watch_sign_in_denied">サインインしていません。このウォッチはサインアウトのままです。</string>
+    <string name="watch_sign_in_deny">拒否</string>
     <string name="watch_sign_in_on_phone">先にスマートフォンでtafsにサインインしてください。</string>
+    <string name="watch_sign_in_watch_q">このウォッチにあなたとしてサインインしますか？</string>
     <string name="watch_sign_out_q">このウォッチでサインアウトしますか？</string>
     <string name="watch_sign_out_sub">スマートフォンはサインインしたままです。このウォッチはtafs、チャット、受信トレイを消去します。</string>
     <string name="watch_signed_in">サインイン済み</string>
@@ -2817,6 +2822,7 @@
     <string name="watch_view_on_phone">スマートフォンで表示</string>
     <string name="watch_view_only_phone">このスマートフォンは表示のみのため、ウォッチから質問できません。承認できるスマートフォンでサインインしてください。</string>
     <string name="watch_voice_text_only">Coachに届くのはあなたの言葉のテキストだけで、声は届きません。</string>
+    <string name="watch_waiting_for_phone">スマートフォンを待っています…</string>
     <string name="watch_what_it_does">できること</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s件作業中</item>

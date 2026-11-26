@@ -2941,6 +2941,7 @@
     <string name="watch_ask">Vprašaj tafs</string>
     <string name="watch_ask_needs_consent">Preden vprašate tafs, v tafs v telefonu dovolite uporabo umetne inteligence.</string>
     <string name="watch_ask_not_on">Spraševanje z ure še ni vklopljeno.</string>
+    <string name="watch_ask_phone_sign_in">Prosi telefon, naj prijavi to uro</string>
     <string name="watch_ask_text_only">tafs dobi vaše besede kot besedilo, nikoli vašega glasu.</string>
     <string name="watch_asking_phone">Sprašujem telefon…</string>
     <string name="watch_calendar_today">Današnji koledar</string>
@@ -3040,7 +3041,11 @@
     <string name="watch_sending">Pošiljam…</string>
     <string name="watch_sent">Poslano</string>
     <string name="watch_settings_of">%1$s · nastavitve</string>
+    <string name="watch_sign_in_allow">Dovoli</string>
+    <string name="watch_sign_in_denied">Niste prijavljeni. Ura ostane odjavljena.</string>
+    <string name="watch_sign_in_deny">Zavrni</string>
     <string name="watch_sign_in_on_phone">Najprej se v telefonu prijavite v tafs.</string>
+    <string name="watch_sign_in_watch_q">Želite to uro prijaviti s svojim računom?</string>
     <string name="watch_sign_out_q">Se odjavim na tej uri?</string>
     <string name="watch_sign_out_sub">Telefon ostane prijavljen. Ta ura pozabi vaše tafe, klepete in Nabiralnik.</string>
     <string name="watch_signed_in">Prijavljeni</string>
@@ -3057,6 +3062,7 @@
     <string name="watch_view_on_phone">Oglej si v telefonu</string>
     <string name="watch_view_only_phone">Ta telefon lahko samo prikazuje, zato z ure ne morete spraševati. Prijavite se v telefonu, ki lahko odobrava.</string>
     <string name="watch_voice_text_only">Coach dobi vaše besede kot besedilo, nikoli vašega glasu.</string>
+    <string name="watch_waiting_for_phone">Čakanje na telefon…</string>
     <string name="watch_what_it_does">Kaj počne</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s dela</item>

@@ -2791,6 +2791,7 @@
     <string name="watch_ask">Pedir a tafs</string>
     <string name="watch_ask_needs_consent">Antes de pedir algo a tafs, permite el uso de IA en tafs en tu teléfono.</string>
     <string name="watch_ask_not_on">Pedir desde el reloj aún no está activado.</string>
+    <string name="watch_ask_phone_sign_in">Pedir a tu teléfono que inicie sesión en este reloj</string>
     <string name="watch_ask_text_only">tafs recibe tus palabras como texto, nunca tu voz.</string>
     <string name="watch_asking_phone">Preguntando a tu teléfono…</string>
     <string name="watch_calendar_today">Calendario de hoy</string>
@@ -2880,7 +2881,11 @@
     <string name="watch_sending">Enviando…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_settings_of">%1$s · ajustes</string>
+    <string name="watch_sign_in_allow">Permitir</string>
+    <string name="watch_sign_in_denied">No se ha iniciado sesión. Este reloj sigue sin sesión.</string>
+    <string name="watch_sign_in_deny">Denegar</string>
     <string name="watch_sign_in_on_phone">Primero inicia sesión en tafs en tu teléfono.</string>
+    <string name="watch_sign_in_watch_q">¿Iniciar sesión en este reloj con tu cuenta?</string>
     <string name="watch_sign_out_q">¿Cerrar sesión en este reloj?</string>
     <string name="watch_sign_out_sub">Tu teléfono sigue con la sesión iniciada. Este reloj olvida tus tafs, chats y bandeja.</string>
     <string name="watch_signed_in">Sesión iniciada</string>
@@ -2897,6 +2902,7 @@
     <string name="watch_view_on_phone">Ver en el teléfono</string>
     <string name="watch_view_only_phone">Este teléfono solo puede ver, así que no puedes pedir desde el reloj. Inicia sesión en un teléfono que pueda aprobar.</string>
     <string name="watch_voice_text_only">Coach recibe tus palabras como texto, nunca tu voz.</string>
+    <string name="watch_waiting_for_phone">Esperando a tu teléfono…</string>
     <string name="watch_what_it_does">Qué hace</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s trabajando</item>

@@ -118,6 +118,11 @@ class WatchRelay(
       is WatchRequest.TafChat -> tafChat(request.tafId)
       is WatchRequest.AskFull -> askFull(request.askId)
       is WatchRequest.LineFull -> lineFull(request.tafId, request.lineId)
+      // Signing a watch in again is the person's to allow, on this phone (row 18): the request only asks them.
+      is WatchRequest.SignInAsk -> {
+        val model = signedIn() ?: return WatchReply.SignedOut
+        if (model.askWatchSignIn(request.ask)) WatchReply.Done(Words.Watch.waitingForPhone) else WatchReply.SignedOut
+      }
       is WatchRequest.Taf -> {
         val model = signedIn() ?: return WatchReply.SignedOut
         // Read again within the floor, as Needs you: today's use is KIFF's now, not what the phone last drew.

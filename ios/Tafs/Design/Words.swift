@@ -5561,6 +5561,8 @@ enum Words {
         static var askNeedsConsent: String { Words.line("watch.ask_needs_consent") }
         /// Asking from your watch isn't on yet.
         static var askNotOn: String { Words.line("watch.ask_not_on") }
+        /// Ask your phone to sign this watch in
+        static var askPhoneSignIn: String { Words.line("watch.ask_phone_sign_in") }
         /// tafs gets your words as text, never your voice.
         static var askTextOnly: String { Words.line("watch.ask_text_only") }
         /// Asking your phone…
@@ -5713,8 +5715,16 @@ enum Words {
         static var sent: String { Words.line("watch.sent") }
         /// {taf} · settings
         static func settingsOf(taf: String) -> String { Words.line("watch.settings_of", taf) }
+        /// Allow
+        static var signInAllow: String { Words.line("watch.sign_in_allow") }
+        /// Not signed in. This watch stays signed out.
+        static var signInDenied: String { Words.line("watch.sign_in_denied") }
+        /// Deny
+        static var signInDeny: String { Words.line("watch.sign_in_deny") }
         /// Sign in to tafs on your phone first.
         static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+        /// Sign this watch in as you?
+        static var signInWatchQ: String { Words.line("watch.sign_in_watch_q") }
         /// Sign out on this watch?
         static var signOutQ: String { Words.line("watch.sign_out_q") }
         /// Your phone stays signed in. This watch forgets your tafs, chats and inbox.
@@ -5747,6 +5757,8 @@ enum Words {
         static var viewOnlyPhone: String { Words.line("watch.view_only_phone") }
         /// Coach gets your words as text, never your voice.
         static var voiceTextOnly: String { Words.line("watch.voice_text_only") }
+        /// Waiting for your phone…
+        static var waitingForPhone: String { Words.line("watch.waiting_for_phone") }
         /// What it does
         static var whatItDoes: String { Words.line("watch.what_it_does") }
         /// {count} working

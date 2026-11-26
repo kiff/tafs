@@ -79,6 +79,12 @@ sealed interface WatchRequest {
    */
   data class LineFull(override val madeAt: Long, val tafId: String, val lineId: String) : WatchRequest
 
+  /**
+   * Sign in again, asked from a watch signed out on itself (watch row 18): the phone asks its person "Sign this watch in as you?",
+   * behind its own lock, and answers by [KeptSignIn] with this [ask] id. The request alone signs nothing in.
+   */
+  data class SignInAsk(override val madeAt: Long, val ask: String) : WatchRequest
+
   /** The calendar's [day] (`YYYY-MM-DD`, in the account's zone), or today there with [day] null: what the tafs will do then. */
   data class Calendar(override val madeAt: Long, val day: String? = null) : WatchRequest
 
@@ -355,6 +361,18 @@ data class KeptNeedsYou(
 )
 
 /**
+ * The phone's person's answer to a watch's [WatchRequest.SignInAsk] ([WatchLink.KEPT_SIGN_IN]): Allow or Deny, for that [ask] id
+ * alone. Only Allow, from the paired phone, for the ask the watch is waiting on, signs the watch in again, and it starts empty.
+ */
+@Serializable
+data class KeptSignIn(
+  @SerialName("put_at") val putAt: Long,
+  val ask: String,
+  val allowed: Boolean,
+  @SerialName(WatchLink.MARK_KEY) val mark: String? = null,
+)
+
+/**
  * The phone signed out ([WatchLink.KEPT_SIGNED_OUT]): put at every sign-out, so a watch out of reach then still forgets the
  * account when it's next in reach, without asking. [mark] is the account mark the phone dropped, so a late one never wipes the
  * account the watch has read since.
@@ -521,6 +539,9 @@ object WatchLink {
   /** Needs you as the phone holds it now ([KeptNeedsYou]), put when its held calls or count change there. */
   const val KEPT_NEEDS_YOU = KEPT + "needs-you"
 
+  /** The phone's Allow or Deny for a watch's sign-in ask ([KeptSignIn]). */
+  const val KEPT_SIGN_IN = KEPT + "sign-in"
+
   /**
    * The key of the phone's account mark: random, made at each sign-in on the phone and dropped at sign-out, never derived from
    * the account, so it says only "the same sign-in as before" or "not". On every reply from a signed-in phone, and on what it keeps
@@ -554,6 +575,9 @@ object WatchLink {
 
   /** A cut line of a taf's chat, whole ([WatchRequest.LineFull]). */
   const val LINE_FULL = PREFIX + "line-full"
+
+  /** A watch signed out on itself asks to be signed in again ([WatchRequest.SignInAsk]). */
+  const val SIGN_IN_ASK = PREFIX + "sign-in-ask"
   const val CALENDAR = PREFIX + "calendar"
   const val ACCOUNT = PREFIX + "account"
   const val TRANSCRIBE = PREFIX + "transcribe"
@@ -626,6 +650,7 @@ object WatchLink {
   @Serializable private data class TafBody(@SerialName("made_at") val madeAt: Long, @SerialName("taf_id") val tafId: String)
 
   @Serializable private data class AskFullBody(@SerialName("made_at") val madeAt: Long, @SerialName("ask_id") val askId: String)
+  @Serializable private data class SignInAskBody(@SerialName("made_at") val madeAt: Long, val ask: String)
   @Serializable private data class LineFullBody(@SerialName("made_at") val madeAt: Long, @SerialName("taf_id") val tafId: String, @SerialName("line_id") val lineId: String)
 
   @Serializable private data class CalendarBody(@SerialName("made_at") val madeAt: Long, val day: String? = null)
@@ -672,6 +697,7 @@ object WatchLink {
       is WatchRequest.TafChat -> TAF_CHAT to json.encodeToString(TafBody.serializer(), TafBody(request.madeAt, request.tafId))
       is WatchRequest.AskFull -> ASK_FULL to json.encodeToString(AskFullBody.serializer(), AskFullBody(request.madeAt, request.askId))
       is WatchRequest.LineFull -> LINE_FULL to json.encodeToString(LineFullBody.serializer(), LineFullBody(request.madeAt, request.tafId, request.lineId))
+      is WatchRequest.SignInAsk -> SIGN_IN_ASK to json.encodeToString(SignInAskBody.serializer(), SignInAskBody(request.madeAt, request.ask))
       is WatchRequest.Calendar -> CALENDAR to json.encodeToString(CalendarBody.serializer(), CalendarBody(request.madeAt, request.day))
       is WatchRequest.Account -> ACCOUNT to json.encodeToString(Read.serializer(), Read(request.madeAt))
       is WatchRequest.Transcribe -> TRANSCRIBE to json.encodeToString(TranscribeBody.serializer(), TranscribeBody(request.madeAt, request.voiceId, request.language))
@@ -729,6 +755,7 @@ object WatchLink {
         TAF_CHAT -> json.decodeFromString(TafBody.serializer(), text).let { WatchRequest.TafChat(it.madeAt, it.tafId) }
         ASK_FULL -> json.decodeFromString(AskFullBody.serializer(), text).let { WatchRequest.AskFull(it.madeAt, it.askId) }
         LINE_FULL -> json.decodeFromString(LineFullBody.serializer(), text).let { WatchRequest.LineFull(it.madeAt, it.tafId, it.lineId) }
+        SIGN_IN_ASK -> json.decodeFromString(SignInAskBody.serializer(), text).let { WatchRequest.SignInAsk(it.madeAt, it.ask) }
         CALENDAR -> json.decodeFromString(CalendarBody.serializer(), text).let { WatchRequest.Calendar(it.madeAt, it.day) }
         ACCOUNT -> WatchRequest.Account(json.decodeFromString(Read.serializer(), text).madeAt)
         TRANSCRIBE -> json.decodeFromString(TranscribeBody.serializer(), text).let { WatchRequest.Transcribe(it.madeAt, it.voiceId, it.language) }
@@ -759,6 +786,7 @@ object WatchLink {
     is WatchRequest.TafChat -> request.tafId.isNotBlank() && request.tafId.length <= 128
     is WatchRequest.AskFull -> ID.matches(request.askId)
     is WatchRequest.LineFull -> request.tafId.isNotBlank() && request.tafId.length <= 128 && request.lineId.isNotBlank() && request.lineId.length <= 128
+    is WatchRequest.SignInAsk -> CLIENT_ID.matches(request.ask)
     is WatchRequest.Calendar -> request.day == null || DAY.matches(request.day)
     is WatchRequest.Transcribe -> CLIENT_ID.matches(request.voiceId) && LANGUAGE.matches(request.language)
     is WatchRequest.InboxMark -> InboxMarkIds.complete(request.read, request.dismissed)
@@ -835,6 +863,11 @@ object WatchLink {
     runCatching { replies.decodeFromString(KeptNeedsYou.serializer(), data.decodeToString()) }.getOrNull()
 
   fun encodeKept(kept: KeptSignedOut): ByteArray = replies.encodeToString(KeptSignedOut.serializer(), kept).encodeToByteArray()
+
+  fun encodeKept(kept: KeptSignIn): ByteArray = replies.encodeToString(KeptSignIn.serializer(), kept).encodeToByteArray()
+
+  fun decodeKeptSignIn(data: ByteArray): KeptSignIn? =
+    runCatching { replies.decodeFromString(KeptSignIn.serializer(), data.decodeToString()) }.getOrNull()?.takeIf { CLIENT_ID.matches(it.ask) }
 
   fun decodeKeptSignedOut(data: ByteArray): KeptSignedOut? =
     runCatching { replies.decodeFromString(KeptSignedOut.serializer(), data.decodeToString()) }.getOrNull()

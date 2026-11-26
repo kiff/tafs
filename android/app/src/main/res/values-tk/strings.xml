@@ -2791,6 +2791,7 @@
     <string name="watch_ask">tafs-dan soraň</string>
     <string name="watch_ask_needs_consent">tafs-dan soramazdan öň, telefonyňyzdaky tafs-da AI ulanmaga rugsat beriň.</string>
     <string name="watch_ask_not_on">Sagatdan soramak heniz açyk däl.</string>
+    <string name="watch_ask_phone_sign_in">Telefondan bu sagada girmegi soraň</string>
     <string name="watch_ask_text_only">tafs sözleriňizi tekst hökmünde alýar, hiç haçan sesiňizi däl.</string>
     <string name="watch_asking_phone">Telefonyňyzdan soralýar…</string>
     <string name="watch_calendar_today">Şu günüň senenamasy</string>
@@ -2880,7 +2881,11 @@
     <string name="watch_sending">Iberilýär…</string>
     <string name="watch_sent">Iberildi</string>
     <string name="watch_settings_of">%1$s · sazlamalar</string>
+    <string name="watch_sign_in_allow">Rugsat ber</string>
+    <string name="watch_sign_in_denied">Girilmedi. Bu sagat çykyşda galýar.</string>
+    <string name="watch_sign_in_deny">Ret et</string>
     <string name="watch_sign_in_on_phone">Ilki telefonyňyzda tafs-a giriň.</string>
+    <string name="watch_sign_in_watch_q">Bu sagada hasabyňyz bilen girilsinmi?</string>
     <string name="watch_sign_out_q">Bu sagatda çykýarsyňyzmy?</string>
     <string name="watch_sign_out_sub">Telefonyňyz girilen galýar. Bu sagat tafs-laryňyzy, söhbetdeşlikleriňizi we inbox-yňyzy unudýar.</string>
     <string name="watch_signed_in">Girildi</string>
@@ -2897,6 +2902,7 @@
     <string name="watch_view_on_phone">Telefonda görüň</string>
     <string name="watch_view_only_phone">Bu telefon diňe görüp bilýär, şonuň üçin sagatdan soramak bolmaýar. Tassyklap bilýän telefonda giriň.</string>
     <string name="watch_voice_text_only">Coach sözleriňizi tekst hökmünde alýar, hiç haçan sesiňizi däl.</string>
+    <string name="watch_waiting_for_phone">Telefonyňyza garaşylýar…</string>
     <string name="watch_what_it_does">Ol näme edýär</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s işleýär</item>

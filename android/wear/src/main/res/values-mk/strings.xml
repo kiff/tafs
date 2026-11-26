@@ -57,6 +57,7 @@
     <string name="watch_ask">Прашај tafs</string>
     <string name="watch_ask_needs_consent">Пред да прашаш tafs, дозволи користење на вештачка интелигенција во tafs на твојот телефон.</string>
     <string name="watch_ask_not_on">Прашувањето од часовникот сè уште не е вклучено.</string>
+    <string name="watch_ask_phone_sign_in">Побарај од телефонот да го најави овој часовник</string>
     <string name="watch_ask_text_only">tafs ги добива твоите зборови како текст, никогаш гласот.</string>
     <string name="watch_asking_phone">Го прашувам телефонот…</string>
     <string name="watch_calendar_today">Календарот за денес</string>
@@ -146,7 +147,11 @@
     <string name="watch_sending">Се испраќа…</string>
     <string name="watch_sent">Испратено</string>
     <string name="watch_settings_of">%1$s · поставки</string>
+    <string name="watch_sign_in_allow">Дозволи</string>
+    <string name="watch_sign_in_denied">Не е најавен. Часовникот останува одјавен.</string>
+    <string name="watch_sign_in_deny">Одбиј</string>
     <string name="watch_sign_in_on_phone">Прво најави се во tafs на твојот телефон.</string>
+    <string name="watch_sign_in_watch_q">Да се најави ли овој часовник со твојата сметка?</string>
     <string name="watch_sign_out_q">Да се одјавиш на овој часовник?</string>
     <string name="watch_sign_out_sub">Твојот телефон останува најавен. Овој часовник ги заборава твоите tafови, разговори и приемно сандаче.</string>
     <string name="watch_signed_in">Најавен</string>
@@ -163,6 +168,7 @@
     <string name="watch_view_on_phone">Види на телефонот</string>
     <string name="watch_view_only_phone">Овој телефон може само да гледа, па не можеш да прашуваш од часовникот. Најави се на телефон што може да одобрува.</string>
     <string name="watch_voice_text_only">Coach ги добива твоите зборови како текст, никогаш гласот.</string>
+    <string name="watch_waiting_for_phone">Се чека телефонот…</string>
     <string name="watch_what_it_does">Што прави</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s работи</item>

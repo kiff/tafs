@@ -76,6 +76,28 @@ class WatchRefuseHaltTest {
 
   private suspend fun WatchRelay.ask(r: WatchRequest): WatchReply = WatchLink.encode(r).let { (path, data) -> answer(path, data) }
 
+  /** Row 18: a watch's sign-in ask only asks this phone's person; their Allow or Deny goes back for that ask alone. */
+  @Test fun aWatchsSignInAskWaitsForThePersonsAnswer() = runTest {
+    reads()
+    val m = model()
+    val answers = mutableListOf<Triple<String, Boolean, String?>>()
+    var told = 0
+    m.watchSignInAsked = { told++ }
+    m.watchSignInAnswered = { ask, allowed, mark -> answers += Triple(ask, allowed, mark) }
+    val relay = WatchRelay(model = { m }, now = { now })
+    assertEquals(WatchReply.Done(bot.tafs.app.model.Words.Watch.waitingForPhone), relay.ask(WatchRequest.SignInAsk(now, "w_0000aa11")))
+    assertEquals("w_0000aa11", m.state.value.watchSignInAsk)
+    assertEquals(1, told)
+    assertTrue("nothing answered by the phone alone", answers.isEmpty())
+    m.answerWatchSignIn(false)
+    assertEquals(Triple("w_0000aa11", false, null), answers.single())
+    assertEquals(null, m.state.value.watchSignInAsk)
+    relay.ask(WatchRequest.SignInAsk(now, "w_0000bb22"))
+    m.answerWatchSignIn(true)
+    assertEquals("w_0000bb22", answers.last().first)
+    assertTrue("Allow carries the account mark", answers.last().second && answers.last().third == m.watchMark())
+  }
+
   /** Row 10: a cut line of a taf's chat, whole, by its message id: the taf's own words, never the person's, never kept. */
   @Test fun aCutLineIsReadWholeByItsId() = runTest {
     reads()

@@ -57,6 +57,7 @@
     <string name="watch_ask">Pedir ao tafs</string>
     <string name="watch_ask_needs_consent">Antes de pedir ao tafs, autorize a utilização de IA no tafs no telemóvel.</string>
     <string name="watch_ask_not_on">Pedir a partir do relógio ainda não está ativo.</string>
+    <string name="watch_ask_phone_sign_in">Pedir ao telemóvel para iniciar sessão neste relógio</string>
     <string name="watch_ask_text_only">O tafs recebe as suas palavras como texto, nunca a sua voz.</string>
     <string name="watch_asking_phone">A perguntar ao telemóvel…</string>
     <string name="watch_calendar_today">Calendário de hoje</string>
@@ -146,7 +147,11 @@
     <string name="watch_sending">A enviar…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_settings_of">%1$s · definições</string>
+    <string name="watch_sign_in_allow">Permitir</string>
+    <string name="watch_sign_in_denied">Sessão não iniciada. Este relógio continua sem sessão.</string>
+    <string name="watch_sign_in_deny">Recusar</string>
     <string name="watch_sign_in_on_phone">Primeiro, inicie sessão no tafs no telemóvel.</string>
+    <string name="watch_sign_in_watch_q">Iniciar sessão neste relógio com a sua conta?</string>
     <string name="watch_sign_out_q">Terminar sessão neste relógio?</string>
     <string name="watch_sign_out_sub">O telemóvel continua com sessão iniciada. Este relógio esquece os seus tafs, chats e Caixa de entrada.</string>
     <string name="watch_signed_in">Sessão iniciada</string>
@@ -163,6 +168,7 @@
     <string name="watch_view_on_phone">Ver no telemóvel</string>
     <string name="watch_view_only_phone">Este telemóvel só pode ver, por isso não pode pedir a partir do relógio. Inicie sessão num telemóvel que possa aprovar.</string>
     <string name="watch_voice_text_only">O Coach recebe as suas palavras como texto, nunca a sua voz.</string>
+    <string name="watch_waiting_for_phone">À espera do telemóvel…</string>
     <string name="watch_what_it_does">O que faz</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s a trabalhar</item>

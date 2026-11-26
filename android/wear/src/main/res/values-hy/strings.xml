@@ -57,6 +57,7 @@
     <string name="watch_ask">Հարցրեք tafs-ին</string>
     <string name="watch_ask_needs_consent">Նախքան tafs-ին հարցնելը, ձեր հեռախոսում tafs-ում թույլատրեք AI-ի օգտագործումը։</string>
     <string name="watch_ask_not_on">Ձեր ժամացույցից հարցնելը դեռ միացված չէ։</string>
+    <string name="watch_ask_phone_sign_in">Խնդրեք հեռախոսին մուտք գործել այս ժամացույցով</string>
     <string name="watch_ask_text_only">tafs-ը ձեր բառերը ստանում է որպես տեքստ, երբեք ձեր ձայնը։</string>
     <string name="watch_asking_phone">Հարցնում ենք ձեր հեռախոսին…</string>
     <string name="watch_calendar_today">Այսօրվա օրացույցը</string>
@@ -146,7 +147,11 @@
     <string name="watch_sending">Ուղարկվում է…</string>
     <string name="watch_sent">Ուղարկվեց</string>
     <string name="watch_settings_of">%1$s · կարգավորումներ</string>
+    <string name="watch_sign_in_allow">Թույլատրել</string>
+    <string name="watch_sign_in_denied">Մուտք չի գործվել։ Ժամացույցը մնում է դուրս եկած։</string>
+    <string name="watch_sign_in_deny">Մերժել</string>
     <string name="watch_sign_in_on_phone">Նախ մուտք գործեք tafs ձեր հեռախոսում։</string>
+    <string name="watch_sign_in_watch_q">Մուտք գործե՞լ այս ժամացույցով ձեր հաշվով</string>
     <string name="watch_sign_out_q">Դուրս գա՞լ այս ժամացույցից։</string>
     <string name="watch_sign_out_sub">Ձեր հեռախոսը մնում է մուտք գործած։ Այս ժամացույցը մոռանում է ձեր taf-երը, զրույցները և մուտքայինը։</string>
     <string name="watch_signed_in">Մուտք գործած է</string>
@@ -163,6 +168,7 @@
     <string name="watch_view_on_phone">Դիտեք հեռախոսում</string>
     <string name="watch_view_only_phone">Այս հեռախոսը կարող է միայն դիտել, ուստի ժամացույցից չեք կարող հարցնել։ Մուտք գործեք հեռախոսում, որը կարող է հաստատել։</string>
     <string name="watch_voice_text_only">Coach-ը ձեր բառերը ստանում է որպես տեքստ, երբեք ձեր ձայնը։</string>
+    <string name="watch_waiting_for_phone">Սպասում ենք հեռախոսին…</string>
     <string name="watch_what_it_does">Ինչ է անում</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s աշխատում է</item>

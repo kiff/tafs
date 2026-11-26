@@ -2716,6 +2716,7 @@
     <string name="watch_ask">Hỏi tafs</string>
     <string name="watch_ask_needs_consent">Trước khi hỏi tafs, hãy cho phép dùng AI trong tafs trên điện thoại của bạn.</string>
     <string name="watch_ask_not_on">Hỏi từ đồng hồ của bạn chưa được bật.</string>
+    <string name="watch_ask_phone_sign_in">Yêu cầu điện thoại đăng nhập đồng hồ này</string>
     <string name="watch_ask_text_only">tafs nhận lời của bạn dưới dạng văn bản, không bao giờ nhận giọng nói.</string>
     <string name="watch_asking_phone">Đang hỏi điện thoại của bạn…</string>
     <string name="watch_calendar_today">Lịch hôm nay</string>
@@ -2800,7 +2801,11 @@
     <string name="watch_sending">Đang gửi…</string>
     <string name="watch_sent">Đã gửi</string>
     <string name="watch_settings_of">%1$s · cài đặt</string>
+    <string name="watch_sign_in_allow">Cho phép</string>
+    <string name="watch_sign_in_denied">Chưa đăng nhập. Đồng hồ này vẫn ở trạng thái đăng xuất.</string>
+    <string name="watch_sign_in_deny">Từ chối</string>
     <string name="watch_sign_in_on_phone">Hãy đăng nhập tafs trên điện thoại của bạn trước.</string>
+    <string name="watch_sign_in_watch_q">Đăng nhập đồng hồ này bằng tài khoản của bạn?</string>
     <string name="watch_sign_out_q">Đăng xuất trên đồng hồ này?</string>
     <string name="watch_sign_out_sub">Điện thoại của bạn vẫn đăng nhập. Đồng hồ này sẽ quên các taf, cuộc trò chuyện và hộp thư của bạn.</string>
     <string name="watch_signed_in">Đã đăng nhập</string>
@@ -2817,6 +2822,7 @@
     <string name="watch_view_on_phone">Xem trên điện thoại</string>
     <string name="watch_view_only_phone">Điện thoại này chỉ xem được, nên bạn không thể hỏi từ đồng hồ. Hãy đăng nhập trên một điện thoại có thể phê duyệt.</string>
     <string name="watch_voice_text_only">Coach nhận lời của bạn dưới dạng văn bản, không bao giờ nhận giọng nói.</string>
+    <string name="watch_waiting_for_phone">Đang chờ điện thoại…</string>
     <string name="watch_what_it_does">Việc nó làm</string>
     <plurals name="watch_working_count">
         <item quantity="other">%1$s đang làm việc</item>

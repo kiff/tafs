@@ -57,6 +57,7 @@
     <string name="watch_ask">Попитайте tafs</string>
     <string name="watch_ask_needs_consent">Преди да питате tafs, разрешете използването на ИИ в tafs на телефона си.</string>
     <string name="watch_ask_not_on">Питането от часовника още не е включено.</string>
+    <string name="watch_ask_phone_sign_in">Помолете телефона да впише този часовник</string>
     <string name="watch_ask_text_only">tafs получава думите ви като текст, никога гласа ви.</string>
     <string name="watch_asking_phone">Питане на телефона ви…</string>
     <string name="watch_calendar_today">Днешният календар</string>
@@ -146,7 +147,11 @@
     <string name="watch_sending">Изпращане…</string>
     <string name="watch_sent">Изпратено</string>
     <string name="watch_settings_of">%1$s · настройки</string>
+    <string name="watch_sign_in_allow">Разреши</string>
+    <string name="watch_sign_in_denied">Не е вписан. Часовникът остава отписан.</string>
+    <string name="watch_sign_in_deny">Откажи</string>
     <string name="watch_sign_in_on_phone">Първо влезте в tafs на телефона си.</string>
+    <string name="watch_sign_in_watch_q">Да се впише ли този часовник с вашия профил?</string>
     <string name="watch_sign_out_q">Излизане на този часовник?</string>
     <string name="watch_sign_out_sub">Телефонът ви остава влязъл. Този часовник забравя вашите tafs, чатове и входящи.</string>
     <string name="watch_signed_in">Влезли сте</string>
@@ -163,6 +168,7 @@
     <string name="watch_view_on_phone">Преглед на телефона</string>
     <string name="watch_view_only_phone">Този телефон може само да преглежда, така че не можете да питате от часовника. Влезте на телефон, който може да одобрява.</string>
     <string name="watch_voice_text_only">Coach получава думите ви като текст, никога гласа ви.</string>
+    <string name="watch_waiting_for_phone">Изчаква се телефонът…</string>
     <string name="watch_what_it_does">Какво прави</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s работи</item>

@@ -7,6 +7,7 @@
   "watch.ask": "Hỏi tafs",
   "watch.ask_needs_consent": "Trước khi hỏi tafs, hãy cho phép dùng AI trong tafs trên điện thoại của bạn.",
   "watch.ask_not_on": "Hỏi từ đồng hồ của bạn chưa được bật.",
+  "watch.ask_phone_sign_in": "Yêu cầu điện thoại đăng nhập đồng hồ này",
   "watch.ask_text_only": "tafs nhận lời của bạn dưới dạng văn bản, không bao giờ nhận giọng nói.",
   "watch.asking_phone": "Đang hỏi điện thoại của bạn…",
   "watch.calendar_today": "Lịch hôm nay",
@@ -91,7 +92,11 @@
   "watch.sending": "Đang gửi…",
   "watch.sent": "Đã gửi",
   "watch.settings_of": "{taf} · cài đặt",
+  "watch.sign_in_allow": "Cho phép",
+  "watch.sign_in_denied": "Chưa đăng nhập. Đồng hồ này vẫn ở trạng thái đăng xuất.",
+  "watch.sign_in_deny": "Từ chối",
   "watch.sign_in_on_phone": "Hãy đăng nhập tafs trên điện thoại của bạn trước.",
+  "watch.sign_in_watch_q": "Đăng nhập đồng hồ này bằng tài khoản của bạn?",
   "watch.sign_out_q": "Đăng xuất trên đồng hồ này?",
   "watch.sign_out_sub": "Điện thoại của bạn vẫn đăng nhập. Đồng hồ này sẽ quên các taf, cuộc trò chuyện và hộp thư của bạn.",
   "watch.signed_in": "Đã đăng nhập",
@@ -108,6 +113,7 @@
   "watch.view_on_phone": "Xem trên điện thoại",
   "watch.view_only_phone": "Điện thoại này chỉ xem được, nên bạn không thể hỏi từ đồng hồ. Hãy đăng nhập trên một điện thoại có thể phê duyệt.",
   "watch.voice_text_only": "Coach nhận lời của bạn dưới dạng văn bản, không bao giờ nhận giọng nói.",
+  "watch.waiting_for_phone": "Đang chờ điện thoại…",
   "watch.what_it_does": "Việc nó làm",
   "watch.working_count": {
     "other": "{count} đang làm việc"

@@ -2866,6 +2866,7 @@
     <string name="watch_ask">Jautāt tafs</string>
     <string name="watch_ask_needs_consent">Pirms jautā tafs, atļauj AI lietošanu tafs savā tālrunī.</string>
     <string name="watch_ask_not_on">Jautāšana no pulksteņa vēl nav ieslēgta.</string>
+    <string name="watch_ask_phone_sign_in">Lūgt tālrunim pierakstīt šo pulksteni</string>
     <string name="watch_ask_text_only">tafs saņem tavus vārdus kā tekstu, nekad tavu balsi.</string>
     <string name="watch_asking_phone">Jautā tālrunim…</string>
     <string name="watch_calendar_today">Šodienas kalendārs</string>
@@ -2960,7 +2961,11 @@
     <string name="watch_sending">Sūta…</string>
     <string name="watch_sent">Nosūtīts</string>
     <string name="watch_settings_of">%1$s · iestatījumi</string>
+    <string name="watch_sign_in_allow">Atļaut</string>
+    <string name="watch_sign_in_denied">Nav pierakstīts. Šis pulkstenis paliek izrakstīts.</string>
+    <string name="watch_sign_in_deny">Liegt</string>
     <string name="watch_sign_in_on_phone">Vispirms pieraksties tafs savā tālrunī.</string>
+    <string name="watch_sign_in_watch_q">Pierakstīt šo pulksteni ar tavu kontu?</string>
     <string name="watch_sign_out_q">Izrakstīties šajā pulkstenī?</string>
     <string name="watch_sign_out_sub">Tālrunis paliek pierakstījies. Šis pulkstenis aizmirst tavus taf, sarunas un iesūtni.</string>
     <string name="watch_signed_in">Pierakstījies</string>
@@ -2977,6 +2982,7 @@
     <string name="watch_view_on_phone">Skatīt tālrunī</string>
     <string name="watch_view_only_phone">Šis tālrunis var tikai skatīt, tāpēc no pulksteņa nevar jautāt. Pieraksties tālrunī, kas var apstiprināt.</string>
     <string name="watch_voice_text_only">Coach saņem tavus vārdus kā tekstu, nekad tavu balsi.</string>
+    <string name="watch_waiting_for_phone">Gaida tavu tālruni…</string>
     <string name="watch_what_it_does">Ko tas dara</string>
     <plurals name="watch_working_count">
         <item quantity="zero">Strādā: %1$s</item>

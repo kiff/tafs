@@ -107,6 +107,8 @@ internal fun WatchPages(
   haltPick: WatchModel.HaltPick? = null,
   /** Signed out on this watch alone (step vi): only that, and Sign in. */
   signedOutHere: Boolean = false,
+  /** Signing in again, asked of the phone (row 18). */
+  signInAsk: WatchModel.SignInAsk? = null,
   /** The calendar day, while it's open (step vi). */
   calendar: WatchModel.Reading<WatchModel.DayRead>? = null,
   /** Account's read from the phone (step vi). */
@@ -124,7 +126,7 @@ internal fun WatchPages(
   /** Answers read whole (Read more), by the ask's id. */
   wholes: Map<String, WatchModel.Whole> = emptyMap(),
 ) {
-  if (signedOutHere) return SignedOutHereScreen(act)
+  if (signedOutHere) return SignedOutHereScreen(act, signInAsk)
   if (linking && voice == null && result == null) return LinkingScreen()
   // The system's back (a swipe from the left edge) closes what's drawn over the pages, as its own Cancel or Close does, and never
   // the app; on the pages themselves it's the system's own (backOf).

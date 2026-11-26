@@ -2866,6 +2866,7 @@
     <string name="watch_ask">שאלת tafs</string>
     <string name="watch_ask_needs_consent">לפני ששואלים את tafs, יש לאפשר בטלפון שימוש ב-AI ב-tafs.</string>
     <string name="watch_ask_not_on">שאילה מהשעון עדיין לא פעילה.</string>
+    <string name="watch_ask_phone_sign_in">לבקש מהטלפון לחבר את השעון הזה</string>
     <string name="watch_ask_text_only">tafs מקבל את המילים שלך כטקסט, אף פעם לא את הקול.</string>
     <string name="watch_asking_phone">שואל את הטלפון שלך…</string>
     <string name="watch_calendar_today">לוח השנה של היום</string>
@@ -2960,7 +2961,11 @@
     <string name="watch_sending">שולח…</string>
     <string name="watch_sent">נשלח</string>
     <string name="watch_settings_of">%1$s · הגדרות</string>
+    <string name="watch_sign_in_allow">אישור</string>
+    <string name="watch_sign_in_denied">לא בוצעה כניסה. השעון נשאר מנותק.</string>
+    <string name="watch_sign_in_deny">דחייה</string>
     <string name="watch_sign_in_on_phone">קודם יש להיכנס ל-tafs בטלפון שלך.</string>
+    <string name="watch_sign_in_watch_q">לחבר את השעון הזה לחשבון שלך?</string>
     <string name="watch_sign_out_q">לצאת בשעון הזה?</string>
     <string name="watch_sign_out_sub">הטלפון שלך נשאר מחובר. השעון הזה שוכח את ה-taf, השיחות והדואר הנכנס שלך.</string>
     <string name="watch_signed_in">מחובר</string>
@@ -2977,6 +2982,7 @@
     <string name="watch_view_on_phone">צפייה בטלפון</string>
     <string name="watch_view_only_phone">הטלפון הזה יכול רק להציג, ולכן אי אפשר לשאול מהשעון. יש להיכנס בטלפון שיכול לאשר.</string>
     <string name="watch_voice_text_only">Coach מקבל את המילים שלך כטקסט, אף פעם לא את הקול.</string>
+    <string name="watch_waiting_for_phone">ממתין לטלפון…</string>
     <string name="watch_what_it_does">מה הוא עושה</string>
     <plurals name="watch_working_count">
         <item quantity="one">אחד עובד</item>
