@@ -1225,6 +1225,13 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(partway.failed.words).not.toBe(wordsIn("en").turn_failed_ours);
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { lookup: { refused: 2 } } });
     expect((await thread()).failed.words).toBe(wordsIn("en").turn_failed_ours);
+    // A day's AI limit: tafs cloud's words, with when it goes on (kiff/agents' resets_at), never kiff/agents' English.
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: "ai_limit_account", error: "limit", resets_at: "2026-11-27T00:00:00Z" });
+    const limited = (await thread()).failed;
+    expect(limited).toMatchObject({ run: run.id, code: "ai_limit_account", retry: true });
+    expect(limited.words).toMatch(/^This account has reached today's AI limit, so this stopped and used none of your credits\. It goes on at .*\d\d:\d\d\.$/);
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: "ai_limit_service" });
+    expect((await thread()).failed.words).toMatch(/^tafs has reached today's AI capacity, .* it goes on at .*\d\d:\d\d\.$/);
     // An ERROR with no code still ends with words, never silence; and never kiff/agents' English in a French thread.
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: undefined, error: "the run failed" });
     const plain = await thread("fr");

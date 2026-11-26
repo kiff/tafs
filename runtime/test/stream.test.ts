@@ -713,6 +713,12 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [], code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable } });
     const german = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET", language: "de-AT,de;q=0.9,en;q=0.5" });
     expect(german.events.at(-1)!.data).toMatchObject({ code: "ai_unavailable", words: wordsIn("de").code_ai_unavailable });
+    // A day's AI limit ends with tafs cloud's words and when it goes on (kiff/agents' resets_at).
+    Object.assign(stored, { code: "ai_limit_service", resets_at: "2026-11-27T00:00:00Z" });
+    const limited = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
+    expect(limited.events.at(-1)!.data).toMatchObject({ code: "ai_limit_service" });
+    expect(String(limited.events.at(-1)!.data.words)).toMatch(/^tafs has reached today's AI capacity, .* it goes on at .*\d\d:\d\d\.$/);
+    Object.assign(stored, { code: "ai_unavailable", resets_at: undefined });
     // One it doesn't know passes kiff/agents' words through, whole: all three sentences, never cut to two.
     Object.assign(stored, { code: "new_code" });
     const unknown = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET", language: "de" });

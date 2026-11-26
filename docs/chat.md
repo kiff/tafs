@@ -475,7 +475,13 @@ iOS drops its own queue the same way, with the same words.
   latest run, in the person's language, and that run is neither at work nor waiting. A run kiff/agents
   stopped with a code has its `code` and tafs cloud's words for it. `ai_unavailable` says it stopped and
   used none of your credits (a failed run is free); one that had already sent something, so
-  acted, says it stopped partway instead (`code_ai_unavailable_partway`), with no claim about credits. A failure
+  acted, says it stopped partway instead (`code_ai_unavailable_partway`), with no claim about credits.
+  A day's AI limit says when it goes on: `ai_limit_account` (this account's share of the day's AI is
+  spent, `code_ai_limit_account`) and `ai_limit_service` (the whole day's capacity, `code_ai_limit_service`)
+  take kiff/agents' `resets_at` and say it in the person's zone and language (`timeIn`: "18:00", or "Fri
+  01:00" when it isn't today), with partway lines once the run had acted. With no `resets_at` that can be
+  read, kiff/agents' own words pass through. The same words reach the stream's `end` and a request's line on
+  Its work. A failure
   with no code says kiff/agents' reason in the person's language, or a plain "It failed", never
   silence (`latestRun` and `runFailure`).
 - A run that **failed** part-way says it stopped part-way, with Retry, which sends its

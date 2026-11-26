@@ -395,6 +395,13 @@ export const en = {
   code_ai_unavailable: "Our AI provider isn't serving us right now, so this stopped and used none of your credits. It's on our side, not yours: try again a little later.",
   // The same, for a run that had sent something first: no claim about credits (work.ts runFailure).
   code_ai_unavailable_partway: "Our AI provider stopped serving us partway through, so this stopped. It's on our side, not yours: try again a little later.",
+  // A run kiff/agents stopped at a day's AI limit (ai_limit_account: this account's share; ai_limit_service: the whole
+  // cap), with when it goes on, in the person's zone (timeIn: "18:00", or "Fri 01:00" when it isn't today). The
+  // partway lines are a run that had acted before it stopped: they claim nothing about credits.
+  code_ai_limit_account: (time: string) => `This account has reached today's AI limit, so this stopped and used none of your credits. It goes on at ${time}.`,
+  code_ai_limit_account_partway: (time: string) => `This account reached today's AI limit partway through, so this stopped. It goes on at ${time}.`,
+  code_ai_limit_service: (time: string) => `tafs has reached today's AI capacity, so this stopped and used none of your credits. It's on our side, not yours: it goes on at ${time}.`,
+  code_ai_limit_service_partway: (time: string) => `tafs reached today's AI capacity partway through, so this stopped. It's on our side, not yours: it goes on at ${time}.`,
   // A turn that failed, as the chat shows it under the person's message (kind "failed"). "ours" is ai_unavailable: our
   // provider's balance or outage, or Bedrock's day cap. A _partway line is for a turn that changed something first:
   // it makes no claim about credits and offers no Try again, since sending the message again could act twice.
