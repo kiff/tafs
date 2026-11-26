@@ -1052,6 +1052,8 @@ jobs:
         run: |
           KC="$RUNNER_TEMP/signing.keychain-db"
           KC_PASS=$(openssl rand -hex 16)
+          # The decoded p12 goes when the step ends, even if an import below fails first.
+          trap 'rm -f "$RUNNER_TEMP/dist.p12"' EXIT
           printf '%s' "$DIST_P12" | base64 --decode > "$RUNNER_TEMP/dist.p12"
           security create-keychain -p "$KC_PASS" "$KC"
           security set-keychain-settings -lut 3600 "$KC"

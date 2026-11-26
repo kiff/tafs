@@ -136,6 +136,8 @@ jobs:
           security create-keychain -p "$KC_PASS" "$KC"
           security set-keychain-settings -lut 3600 "$KC"
           security unlock-keychain -p "$KC_PASS" "$KC"
+          # The decoded p12s go when the step ends, even if an import below fails first.
+          trap 'rm -f "$RUNNER_TEMP/dist.p12" "$RUNNER_TEMP/installer.p12"' EXIT
           printf '%s' "$DIST_P12" | base64 --decode > "$RUNNER_TEMP/dist.p12"
           printf '%s' "$MAC_INSTALLER_P12" | base64 --decode > "$RUNNER_TEMP/installer.p12"
           security import "$RUNNER_TEMP/dist.p12" -k "$KC" -P "$DIST_P12_PASSWORD" -f pkcs12 -A -T /usr/bin/codesign -T /usr/bin/security -T /usr/bin/productbuild
