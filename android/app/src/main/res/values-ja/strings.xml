@@ -766,7 +766,10 @@
     <string name="coach_prompt_connect_tools">アプリを接続</string>
     <string name="coach_prompt_connect_tools_mac">アプリを接続</string>
     <string name="coach_prompt_give_card">CoachにCardを渡す</string>
+    <string name="coach_prompt_give_card_why">承認した範囲でしか動けないよう、CoachにCardを渡します。</string>
+    <string name="coach_prompt_give_card_why_mac">承認した範囲でしか動けないよう、CoachにCardを渡す</string>
     <string name="coach_prompt_start">Coachを開始</string>
+    <string name="coach_prompt_why">Coachは承認した範囲でしか動けません。</string>
     <string name="coach_puts_words_message_box">メッセージ欄に入力します</string>
     <string name="coach_questions_answered_of">%2$s件中%1$s件回答済み</string>
     <string name="coach_questions_chat_about">これについて話す</string>

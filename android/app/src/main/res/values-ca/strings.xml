@@ -799,7 +799,10 @@
     <string name="coach_prompt_connect_tools">Connecta les teves aplicacions</string>
     <string name="coach_prompt_connect_tools_mac">connecta les teves aplicacions</string>
     <string name="coach_prompt_give_card">Dona a Coach el seu Card</string>
+    <string name="coach_prompt_give_card_why">Dona a Coach el seu Card, perquè només pugui actuar dins del que aproves.</string>
+    <string name="coach_prompt_give_card_why_mac">dona a Coach el seu Card, perquè només pugui actuar dins del que aproves</string>
     <string name="coach_prompt_start">Inicia Coach</string>
+    <string name="coach_prompt_why">Coach només pot actuar dins del que aproves.</string>
     <string name="coach_puts_words_message_box">Posa les seves paraules al quadre de missatge</string>
     <string name="coach_questions_answered_of">%1$s de %2$s respostes</string>
     <string name="coach_questions_chat_about">Parla\'n</string>

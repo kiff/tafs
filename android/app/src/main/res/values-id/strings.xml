@@ -766,7 +766,10 @@
     <string name="coach_prompt_connect_tools">Hubungkan aplikasi Anda</string>
     <string name="coach_prompt_connect_tools_mac">hubungkan aplikasi Anda</string>
     <string name="coach_prompt_give_card">Beri Coach Card-nya</string>
+    <string name="coach_prompt_give_card_why">Beri Coach Card-nya, agar Coach hanya bisa bertindak dalam batas yang Anda setujui.</string>
+    <string name="coach_prompt_give_card_why_mac">beri Coach Card-nya, agar Coach hanya bisa bertindak dalam batas yang Anda setujui</string>
     <string name="coach_prompt_start">Mulai Coach</string>
+    <string name="coach_prompt_why">Coach hanya bisa bertindak dalam batas yang Anda setujui.</string>
     <string name="coach_puts_words_message_box">Menaruh kata-katanya di kotak pesan</string>
     <string name="coach_questions_answered_of">%1$s dari %2$s terjawab</string>
     <string name="coach_questions_chat_about">Obrolkan ini</string>

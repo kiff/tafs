@@ -799,7 +799,10 @@
     <string name="coach_prompt_connect_tools">Tətbiqlərinizi qoşun</string>
     <string name="coach_prompt_connect_tools_mac">tətbiqlərinizi qoşun</string>
     <string name="coach_prompt_give_card">Coach-a Card-ını verin</string>
+    <string name="coach_prompt_give_card_why">Yalnız təsdiqlədiyiniz çərçivədə hərəkət edə bilməsi üçün Coach-a Card-ını verin.</string>
+    <string name="coach_prompt_give_card_why_mac">yalnız təsdiqlədiyiniz çərçivədə hərəkət edə bilməsi üçün Coach-a Card-ını verin</string>
     <string name="coach_prompt_start">Coach-u başladın</string>
+    <string name="coach_prompt_why">Coach yalnız təsdiqlədiyiniz çərçivədə hərəkət edə bilər.</string>
     <string name="coach_puts_words_message_box">Sözlərini mesaj qutusuna qoyur</string>
     <string name="coach_questions_answered_of">%2$s sualdan %1$s cavablandırıldı</string>
     <string name="coach_questions_chat_about">Bu barədə danışın</string>

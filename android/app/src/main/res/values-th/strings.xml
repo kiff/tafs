@@ -766,7 +766,10 @@
     <string name="coach_prompt_connect_tools">เชื่อมต่อแอปของคุณ</string>
     <string name="coach_prompt_connect_tools_mac">เชื่อมต่อแอปของคุณ</string>
     <string name="coach_prompt_give_card">ออก Card ให้ Coach</string>
+    <string name="coach_prompt_give_card_why">ออก Card ให้ Coach เพื่อให้ Coach ทำได้เฉพาะภายในสิ่งที่คุณอนุมัติ</string>
+    <string name="coach_prompt_give_card_why_mac">ออก Card ให้ Coach เพื่อให้ Coach ทำได้เฉพาะภายในสิ่งที่คุณอนุมัติ</string>
     <string name="coach_prompt_start">เริ่ม Coach</string>
+    <string name="coach_prompt_why">Coach ทำได้เฉพาะภายในสิ่งที่คุณอนุมัติ</string>
     <string name="coach_puts_words_message_box">ใส่ถ้อยคำของมันในช่องข้อความ</string>
     <string name="coach_questions_answered_of">ตอบแล้ว %1$s จาก %2$s</string>
     <string name="coach_questions_chat_about">คุยเรื่องนี้</string>

@@ -799,7 +799,10 @@
     <string name="coach_prompt_connect_tools">Je apps koppelen</string>
     <string name="coach_prompt_connect_tools_mac">je apps te koppelen</string>
     <string name="coach_prompt_give_card">Coach zijn Card geven</string>
+    <string name="coach_prompt_give_card_why">Coach zijn Card geven, zodat hij alleen kan handelen binnen wat je goedkeurt.</string>
+    <string name="coach_prompt_give_card_why_mac">zijn Card aan Coach te geven, zodat hij alleen kan handelen binnen wat je goedkeurt</string>
     <string name="coach_prompt_start">Coach starten</string>
+    <string name="coach_prompt_why">Coach kan alleen handelen binnen wat je goedkeurt.</string>
     <string name="coach_puts_words_message_box">Zet de tekst in het berichtvak</string>
     <string name="coach_questions_answered_of">%1$s van %2$s beantwoord</string>
     <string name="coach_questions_chat_about">Hierover chatten</string>

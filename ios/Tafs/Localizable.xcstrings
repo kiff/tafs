@@ -195588,6 +195588,532 @@
         }
       }
     },
+    "coach.prompt.give_card_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امنح Coach الـ Card الخاصة به، حتى لا يتصرف إلا في حدود ما توافق عليه."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnız təsdiqlədiyiniz çərçivədə hərəkət edə bilməsi üçün Coach-a Card-ını verin."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Даване на Card на Coach, за да може да действа само в рамките на това, което одобрите."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach-কে তার Card দিন, যাতে সে শুধু আপনার অনুমোদনের সীমার মধ্যেই কাজ করতে পারে।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dona a Coach el seu Card, perquè només pugui actuar dins del que aproves."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dát Coachovi jeho Card, aby mohl jednat jen v rámci toho, co schválíte."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib Coach seine Card, damit er nur in dem Rahmen handeln kann, den du genehmigst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give Coach its Card, so it can act only within what you approve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da a Coach su Card, para que solo pueda actuar dentro de lo que apruebas."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anna Coachile selle Card, et ta saaks tegutseda ainult selle piires, mida sa kinnitad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Donner sa Card à Coach, pour qu'il ne puisse agir que dans ce que vous approuvez."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מתן ה-Card ל-Coach, כדי שיוכל לפעול רק במסגרת מה שאישרת."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach को उसका Card दें, ताकि वह सिर्फ़ उसी दायरे में काम कर सके जिसे आप मंज़ूर करते हैं।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dajte Coachu njegov Card, da može djelovati samo u okviru onoga što odobrite."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card megadása a Coachnak, hogy csak azon belül cselekedhessen, amit jóváhagysz."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Տվեք Coach-ին իր Card-ը, որպեսզի այն գործի միայն ձեր հաստատածի սահմաններում։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beri Coach Card-nya, agar Coach hanya bisa bertindak dalam batas yang Anda setujui."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dai a Coach la sua Card, così può agire solo entro ciò che approvi."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "承認した範囲でしか動けないよう、CoachにCardを渡します。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "მიეცით Coach-ს მისი Card, რომ იმოქმედოს მხოლოდ იმის ფარგლებში, რასაც დაამტკიცებთ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ឱ្យ Card របស់វាទៅ Coach ដើម្បីឱ្យវាធ្វើសកម្មភាពបានតែក្នុងដែនកំណត់ដែលអ្នកអនុម័តប៉ុណ្ណោះ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "승인한 범위 안에서만 움직일 수 있도록 Coach에게 Card를 줍니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ໃຫ້ Coach ມີ Card ຂອງມັນ ເພື່ອໃຫ້ມັນເຮັດໄດ້ພຽງແຕ່ພາຍໃນສິ່ງທີ່ທ່ານອະນຸມັດ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suteikite Coach jo Card, kad jis galėtų veikti tik tiek, kiek patvirtinate."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dot Coach tā Card, lai tas varētu rīkoties tikai tajās robežās, ko tu apstiprini."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дај му на Coach неговиот Card, за да може да дејствува само во рамките на она што ќе го одобрите."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зөвхөн таны зөвшөөрсөн хүрээнд ажиллахын тулд Coach-д Card-ыг нь өгөх."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach लाई यसको Card दिनुहोस्, ताकि यसले तपाईंले स्वीकृत गरेको दायराभित्र मात्र काम गर्न सकोस्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach zijn Card geven, zodat hij alleen kan handelen binnen wat je goedkeurt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daj Coachowi jego Card, aby mógł działać tylko w granicach tego, co zatwierdzisz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar ao Coach o seu Card, para que só possa agir dentro do que aprova."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar ao Coach o Card dele, para que ele só possa agir dentro do que você aprova."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dați-i lui Coach Cardul său, ca să poată acționa doar în limitele a ceea ce aprobați."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dať Coachovi jeho Card, aby mohol konať len v rámci toho, čo schválite."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dajte Coachu njegovo Card, da lahko deluje le v okviru tega, kar odobrite."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jepini Coach Card-in e tij, që të mund të veprojë vetëm brenda asaj që miratoni."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dajte Coachu njegov Card, da bi mogao da deluje samo u okviru onoga što odobrite."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ออก Card ให้ Coach เพื่อให้ Coach ทำได้เฉพาะภายในสิ่งที่คุณอนุมัติ"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diňe siziň tassyklan çägiňizde hereket edip biler ýaly, Coach-a Card-yny beriň."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca onayladığınız sınırlar içinde hareket edebilmesi için Coach'a Card'ını verin."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach کو اس کا Card دیں، تاکہ وہ صرف اسی دائرے میں کام کر سکے جسے آپ منظور کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cấp Card cho Coach, để Coach chỉ có thể hành động trong phạm vi bạn phê duyệt."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "發給 Coach 它的 Card，讓它只能在您核准的範圍內行動。"
+          }
+        }
+      }
+    },
+    "coach.prompt.give_card_why_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امنح Coach الـ Card الخاصة به، حتى لا يتصرف إلا في حدود ما توافق عليه"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yalnız təsdiqlədiyiniz çərçivədə hərəkət edə bilməsi üçün Coach-a Card-ını verin"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "даване на Card на Coach, за да може да действа само в рамките на това, което одобрите"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "তার Card Coach-কে দিন, যাতে সে শুধু আপনার অনুমোদনের সীমার মধ্যেই কাজ করতে পারে"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dona a Coach el seu Card, perquè només pugui actuar dins del que aproves"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dát Coachovi jeho Card, aby mohl jednat jen v rámci toho, co schválíte"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "seine Card an Coach zu geben, damit er nur in dem Rahmen handeln kann, den du genehmigst"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "give Coach its Card, so it can act only within what you approve"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dar a Coach su Card, para que solo pueda actuar dentro de lo que apruebas"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "anna Coachile selle Card, et ta saaks tegutseda ainult selle piires, mida sa kinnitad"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "donner sa Card à Coach, pour qu'il ne puisse agir que dans ce que vous approuvez"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מתן ה-Card ל-Coach, כדי שיוכל לפעול רק במסגרת מה שאישרת"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "उसका Card Coach को दें, ताकि वह सिर्फ़ उसी दायरे में काम कर सके जिसे आप मंज़ूर करते हैं"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dajte Coachu njegov Card, da može djelovati samo u okviru onoga što odobrite"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a Card megadása a Coachnak, hogy csak azon belül cselekedhessen, amit jóváhagysz"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "տվեք Coach-ին իր Card-ը, որպեսզի այն գործի միայն ձեր հաստատածի սահմաններում"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "beri Coach Card-nya, agar Coach hanya bisa bertindak dalam batas yang Anda setujui"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dare a Coach la sua Card, così può agire solo entro ciò che approvi"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "承認した範囲でしか動けないよう、CoachにCardを渡す"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "მიეცით Coach-ს მისი Card, რომ იმოქმედოს მხოლოდ იმის ფარგლებში, რასაც დაამტკიცებთ"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ឱ្យ Card របស់វាទៅ Coach ដើម្បីឱ្យវាធ្វើសកម្មភាពបានតែក្នុងដែនកំណត់ដែលអ្នកអនុម័តប៉ុណ្ណោះ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "승인한 범위 안에서만 움직일 수 있도록 Coach에게 Card 주기"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ໃຫ້ Coach ມີ Card ຂອງມັນ ເພື່ອໃຫ້ມັນເຮັດໄດ້ພຽງແຕ່ພາຍໃນສິ່ງທີ່ທ່ານອະນຸມັດ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "suteikite Coach jo Card, kad jis galėtų veikti tik tiek, kiek patvirtinate"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dot Coach tā Card, lai tas varētu rīkoties tikai tajās robežās, ko tu apstiprini"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "дај му на Coach неговиот Card, за да може да дејствува само во рамките на она што ќе го одобрите"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "зөвхөн таны зөвшөөрсөн хүрээнд ажиллахын тулд Coach-д Card-ыг нь өгөх"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यसको Card Coach लाई दिनुहोस्, ताकि यसले तपाईंले स्वीकृत गरेको दायराभित्र मात्र काम गर्न सकोस्"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "zijn Card aan Coach te geven, zodat hij alleen kan handelen binnen wat je goedkeurt"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dać Coachowi jego Card, aby mógł działać tylko w granicach tego, co zatwierdzisz"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dar ao Coach o seu Card, para que só possa agir dentro do que aprova"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dar ao Coach o Card dele, para que ele só possa agir dentro do que você aprova"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dați-i lui Coach Cardul său, ca să poată acționa doar în limitele a ceea ce aprobați"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dať Coachovi jeho Card, aby mohol konať len v rámci toho, čo schválite"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dati Coachu njegovo Card, da lahko deluje le v okviru tega, kar odobrite"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "jepini Coach Card-in e tij, që të mund të veprojë vetëm brenda asaj që miratoni"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dajte Coachu njegov Card, da bi mogao da deluje samo u okviru onoga što odobrite"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ออก Card ให้ Coach เพื่อให้ Coach ทำได้เฉพาะภายในสิ่งที่คุณอนุมัติ"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "diňe siziň tassyklan çägiňizde hereket edip biler ýaly, Coach-a Card-yny beriň"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yalnızca onayladığınız sınırlar içinde hareket edebilmesi için Coach'a Card'ını verin"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اس کا Card Coach کو دیں، تاکہ وہ صرف اسی دائرے میں کام کر سکے جسے آپ منظور کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cấp Card cho Coach, để Coach chỉ có thể hành động trong phạm vi bạn phê duyệt"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "發給 Coach 它的 Card，讓它只能在您核准的範圍內行動"
+          }
+        }
+      }
+    },
     "coach.prompt.start": {
       "extractionState": "manual",
       "localizations": {
@@ -195847,6 +196373,269 @@
           "stringUnit": {
             "state": "translated",
             "value": "開始 Coach"
+          }
+        }
+      }
+    },
+    "coach.prompt.why": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن لـ Coach أن يتصرف إلا في حدود ما توافق عليه."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach yalnız təsdiqlədiyiniz çərçivədə hərəkət edə bilər."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach може да действа само в рамките на това, което одобрите."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach শুধু আপনার অনুমোদনের সীমার মধ্যেই কাজ করতে পারে।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach només pot actuar dins del que aproves."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach může jednat jen v rámci toho, co schválíte."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach kann nur in dem Rahmen handeln, den du genehmigst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach can act only within what you approve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach solo puede actuar dentro de lo que apruebas."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach saab tegutseda ainult selle piires, mida sa kinnitad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach ne peut agir que dans ce que vous approuvez."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach יכול לפעול רק במסגרת מה שאישרת."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach सिर्फ़ उसी दायरे में काम कर सकता है जिसे आप मंज़ूर करते हैं।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach može djelovati samo u okviru onoga što odobrite."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Coach csak azon belül cselekedhet, amit jóváhagysz."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach-ը կարող է գործել միայն ձեր հաստատածի սահմաններում։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach hanya bisa bertindak dalam batas yang Anda setujui."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach può agire solo entro ciò che approvi."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coachは承認した範囲でしか動けません。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach-ს შეუძლია იმოქმედოს მხოლოდ იმის ფარგლებში, რასაც დაამტკიცებთ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach អាចធ្វើសកម្មភាពបានតែក្នុងដែនកំណត់ដែលអ្នកអនុម័តប៉ុណ្ណោះ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach는 승인한 범위 안에서만 움직일 수 있습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach ເຮັດໄດ້ພຽງແຕ່ພາຍໃນສິ່ງທີ່ທ່ານອະນຸມັດ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach gali veikti tik tiek, kiek patvirtinate."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach var rīkoties tikai tajās robežās, ko tu apstiprini."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach може да дејствува само во рамките на она што ќе го одобрите."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach зөвхөн таны зөвшөөрсөн хүрээнд ажиллаж чадна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach ले तपाईंले स्वीकृत गरेको दायराभित्र मात्र काम गर्न सक्छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach kan alleen handelen binnen wat je goedkeurt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach może działać tylko w granicach tego, co zatwierdzisz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Coach só pode agir dentro do que aprova."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Coach só pode agir dentro do que você aprova."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach poate acționa doar în limitele a ceea ce aprobați."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach môže konať len v rámci toho, čo schválite."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach lahko deluje le v okviru tega, kar odobrite."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach mund të veprojë vetëm brenda asaj që miratoni."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach može da deluje samo u okviru onoga što odobrite."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach ทำได้เฉพาะภายในสิ่งที่คุณอนุมัติ"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach diňe siziň tassyklan çägiňizde hereket edip biler."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach yalnızca onayladığınız sınırlar içinde hareket edebilir."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach صرف اسی دائرے میں کام کر سکتا ہے جسے آپ منظور کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach chỉ có thể hành động trong phạm vi bạn phê duyệt."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach 只能在您核准的範圍內行動。"
           }
         }
       }
