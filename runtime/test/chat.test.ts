@@ -1228,10 +1228,18 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     // A day's AI limit: tafs cloud's words, with when it goes on (kiff/agents' resets_at), never kiff/agents' English.
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: "ai_limit_account", error: "limit", resets_at: "2026-11-27T00:00:00Z" });
     const limited = (await thread()).failed;
-    expect(limited).toMatchObject({ run: run.id, code: "ai_limit_account", retry: true });
+    // No Try again until the limit starts again: sent now, it would only stop at it again.
+    expect(limited).toMatchObject({ run: run.id, code: "ai_limit_account", retry: false });
+    expect(limited).not.toHaveProperty("retry_label");
     expect(limited.words).toMatch(/^This account has reached today's AI limit, so this stopped and used none of your credits\. It goes on at .*\d\d:\d\d\.$/);
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: "ai_limit_service" });
     expect((await thread()).failed.words).toMatch(/^tafs has reached today's AI capacity, .* it goes on at .*\d\d:\d\d\.$/);
+    expect((await thread()).failed.retry).toBe(false);
+    // With no time to read, Try again stays hidden too; once the limit has started again, it's back.
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { resets_at: undefined });
+    expect((await thread()).failed.retry).toBe(false);
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { resets_at: "2000-01-01T00:00:00Z" });
+    expect((await thread()).failed).toMatchObject({ code: "ai_limit_service", retry: true, retry_label: wordsIn("en").turn_failed_retry });
     // An ERROR with no code still ends with words, never silence; and never kiff/agents' English in a French thread.
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: undefined, error: "the run failed" });
     const plain = await thread("fr");

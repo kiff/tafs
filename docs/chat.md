@@ -481,7 +481,8 @@ iOS drops its own queue the same way, with the same words.
   take kiff/agents' `resets_at` and say it in the person's zone and language (`timeIn`: "18:00", or "Fri
   01:00" when it isn't today), with partway lines once the run had acted. With no `resets_at` that can be
   read, kiff/agents' own words pass through. The same words reach the stream's `end` and a request's line on
-  Its work. A failure
+  Its work. Neither offers Try again before `resets_at` (nor without one to read): sent then, it would
+  only stop at the limit again. A failure
   with no code says kiff/agents' reason in the person's language, or a plain "It failed", never
   silence (`latestRun` and `runFailure`).
 - A run that **failed** part-way says it stopped part-way, with Retry, which sends its

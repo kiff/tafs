@@ -4063,7 +4063,11 @@ interface Failed {
 function failedOf(r: Run, lang: Lang, zone = "UTC", now = new Date()): Failed {
   const w = wordsIn(lang);
   const code = failureCode(r);
-  const retry = retrySafe(r);
+  // At a day's AI limit, sending it again before the limit starts again would only stop at it again: no Try again
+  // until kiff/agents' resets_at, nor when it gives none to read.
+  const resets = Date.parse(r.resets_at ?? "");
+  const limited = (code === "ai_limit_account" || code === "ai_limit_service") && !(resets <= now.getTime());
+  const retry = !limited && retrySafe(r);
   // Each reason's line, and its partway line once the run had acted: that one claims nothing about credits or "before
   // it changed anything", and offers no Try again. A kiff/agents code tafs cloud doesn't word passes its words on.
   const lines: Record<string, [string, string]> = {
