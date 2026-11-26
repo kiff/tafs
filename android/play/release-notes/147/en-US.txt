@@ -1,0 +1,3 @@
+• Held calls reach your watch at once.
+• A watch signed out stays out until you allow it here.
+• The update banner never offers a Restart that does nothing.

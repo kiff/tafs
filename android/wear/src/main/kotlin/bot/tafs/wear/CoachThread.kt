@@ -37,7 +37,8 @@ internal fun ScalingLazyListScope.coachThread(turns: List<Pair<WatchModel.Said, 
     val day = WatchChatTime.dayOf(Instant.ofEpochMilli(said.at))
     if (ChatTime.startsDay(previous, day)) item(key = "day-$day") { DayHeader(WatchChatTime.day(day)) }
     previous = day
-    item(key = ask.id) { CoachTurn(said, ask, onOpen = { act.open(ask) }) }
+    // Read more opens the answer's card and reads it whole at once: one tap, not two (row 10).
+    item(key = ask.id) { CoachTurn(said, ask, onOpen = { act.open(ask) }, onReadMore = { act.open(ask); act.readWhole(ask.id) }) }
   }
 }
 
@@ -51,7 +52,7 @@ internal fun threadItems(turns: List<Pair<WatchModel.Said, AskLine>>): Int {
 }
 
 @Composable
-internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit) {
+internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit, onReadMore: () -> Unit = onOpen) {
   Column(Modifier.fillMaxWidth().testTag(THREAD_TURN + ask.id), verticalArrangement = Arrangement.spacedBy(3.dp)) {
     // The person's words on the right, with "HH:mm ✓" at their foot, as on the Apple Watch: when they were sent, and that tafs
     // cloud took them (a turn is in the thread only once it has). Beside the words, not under them, so a turn takes no more height
@@ -86,8 +87,8 @@ internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit) 
     )
     if (ask.ended) WatchChatTime.instantOf(ask.updated)?.let { MessageTime(WatchChatTime.time(it), inset = 0.dp) }
     }
-    // tafs cloud says the answer goes on past its line: Read more, in the thread itself; a tap opens it whole on its card.
-    if (ask.ended && ask.more) Text(Words.Watch.readMore, fontSize = 11.sp, color = Look.coach, modifier = Modifier.clickable(onClick = onOpen).testTag(THREAD_MORE + ask.id))
+    // tafs cloud says the answer goes on past its line: Read more, in the thread itself; one tap opens it whole on its card.
+    if (ask.ended && ask.more) Text(Words.Watch.readMore, fontSize = 11.sp, color = Look.coach, modifier = Modifier.clickable(onClick = onReadMore).testTag(THREAD_MORE + ask.id))
   }
 }
 

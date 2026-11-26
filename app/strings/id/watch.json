@@ -7,6 +7,7 @@
   "watch.ask": "Tanya tafs",
   "watch.ask_needs_consent": "Sebelum bertanya ke tafs, izinkan penggunaan AI di tafs pada ponsel Anda.",
   "watch.ask_not_on": "Bertanya dari jam tangan Anda belum aktif.",
+  "watch.ask_phone_sign_in": "Minta ponsel Anda memasukkan jam tangan ini",
   "watch.ask_text_only": "tafs menerima kata-kata Anda sebagai teks, tidak pernah suara Anda.",
   "watch.asking_phone": "Bertanya ke ponsel Anda…",
   "watch.calendar_today": "Kalender hari ini",
@@ -18,6 +19,7 @@
   "watch.deleted_nothing_sent": "Dihapus. Tidak ada yang dikirim.",
   "watch.didnt_catch": "Tidak terdengar. Ketuk untuk mencoba lagi.",
   "watch.dismiss": "Abaikan",
+  "watch.edit_words": "Ketuk teks untuk mengubahnya",
   "watch.glance_description": "Berapa yang menunggu Anda, bukan apa atau siapa.",
   "watch.halt_all_q": "Bekukan semua tafs Anda?",
   "watch.halt_now_count": {
@@ -31,6 +33,7 @@
   "watch.held_calls": {
     "other": "{count} panggilan yang ditahan menunggu Anda"
   },
+  "watch.held_channel": "Panggilan yang ditahan",
   "watch.inbox_empty": "Tidak ada yang baru. Balasan Coach dan peringatan tafs Anda masuk di sini.",
   "watch.inbox_unread": {
     "other": "{count} belum dibaca di Kotak Masuk"
@@ -53,6 +56,7 @@
   "watch.nothing_sent_until": "Tidak ada yang dikirim sampai Anda menyetujui.",
   "watch.nothing_waits": "Tidak ada yang menunggu Anda.",
   "watch.open_on_phone": "Buka di ponsel",
+  "watch.opened_on_phone": "Dibuka di ponsel Anda",
   "watch.page.brief": "Ringkasan",
   "watch.page.inbox": "Kotak Masuk",
   "watch.paused_still_answers": "Dijeda: jadwalnya mati. Ia tetap menjawab apa yang Anda kirim.",
@@ -75,6 +79,7 @@
   "watch.recent_chats": "Obrolan terbaru",
   "watch.recording": "Merekam",
   "watch.recording_not_received": "Rekaman tidak sampai ke ponsel Anda. Coba lagi, atau ketik saja.",
+  "watch.refuse_on_phone": "Tidak ditolak. Tolak di ponsel Anda.",
   "watch.refused": "Ditolak. Tidak ada yang dikirim.",
   "watch.reply": "Balas",
   "watch.rerecord": "Rekam ulang",
@@ -83,14 +88,20 @@
   "watch.resume_on_phone": "Lanjutkan di ponsel Anda",
   "watch.retry": "Coba lagi",
   "watch.review": "Periksa sebelum mengirim",
+  "watch.seconds_left": "Tersisa {seconds} dtk",
   "watch.sending": "Mengirim…",
   "watch.sent": "Terkirim",
   "watch.settings_of": "{taf} · pengaturan",
+  "watch.sign_in_allow": "Izinkan",
+  "watch.sign_in_denied": "Tidak masuk. Jam tangan ini tetap keluar.",
+  "watch.sign_in_deny": "Tolak",
   "watch.sign_in_on_phone": "Masuk ke tafs di ponsel Anda terlebih dahulu.",
+  "watch.sign_in_watch_q": "Masukkan jam tangan ini sebagai Anda?",
   "watch.sign_out_q": "Keluar di jam tangan ini?",
   "watch.sign_out_sub": "Ponsel Anda tetap masuk. Jam tangan ini melupakan tafs, obrolan, dan kotak masuk Anda.",
   "watch.signed_in": "Sudah masuk",
   "watch.signed_out_here": "Keluar di jam tangan ini. Ponsel Anda tetap masuk.",
+  "watch.stopped_at_limit": "Berhenti di batas {limit}. Yang terdengar ada di bawah.",
   "watch.swipe_settings": "Geser ke kiri untuk pengaturannya",
   "watch.tap_start": "Ketuk Mulai, lalu bicara. Kata-kata Anda muncul di sini saat Anda berbicara.",
   "watch.timing": "Mendengarkan {listen} md · tanda terima {receipt} md · hasil {result} md",
@@ -102,6 +113,7 @@
   "watch.view_on_phone": "Lihat di ponsel",
   "watch.view_only_phone": "Ponsel ini hanya dapat melihat, jadi Anda tidak dapat bertanya dari jam tangan. Masuk di ponsel yang dapat menyetujui.",
   "watch.voice_text_only": "Coach menerima kata-kata Anda sebagai teks, tidak pernah suara Anda.",
+  "watch.waiting_for_phone": "Menunggu ponsel Anda…",
   "watch.what_it_does": "Yang dilakukannya",
   "watch.working_count": {
     "other": "{count} bekerja"

@@ -163,6 +163,7 @@ class MainActivity : FragmentActivity() {
     }
     // The taf list kept for the watch follows the screen's changes too (a taf added or halted here), once the watch uses tafs.
     app.watchTafs
+    app.watchNeedsYou
     // The prompt for approving shows on this activity while it is on screen.
     app.authenticator.attach(this)
     // So does Google Play's purchase sheet, where buying is on.
@@ -462,6 +463,16 @@ fun RootView(model: AppModel) {
         TextButton({ model.leftForNotificationSettings(); openNotificationSettings(context) }) { Text(Words.Alert.openNotificationSettings, color = Theme.amber) }
       },
       dismissButton = { TextButton(model::dismissWatchAlertsOffer) { Text(Words.Common.notNow, color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
+  // A watch signed out on itself asks to be signed in again (row 18): this phone's person allows it or not, here, behind the lock.
+  if (state.watchSignInAsk != null && state.signedIn) {
+    DriveAlert(
+      onDismissRequest = {},
+      title = { Text(Words.Watch.signInWatchQ) },
+      confirmButton = { TextButton({ model.answerWatchSignIn(true) }) { Text(Words.Watch.signInAllow, color = Theme.amber) } },
+      dismissButton = { TextButton({ model.answerWatchSignIn(false) }) { Text(Words.Watch.signInDeny, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }

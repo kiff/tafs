@@ -1,0 +1,3 @@
+• Zurückgehaltene Aufrufe erreichen deine Uhr sofort.
+• Eine abgemeldete Uhr bleibt abgemeldet, bis du es hier erlaubst.
+• Das Update-Banner bietet keinen Neustart mehr an, der nichts tut.

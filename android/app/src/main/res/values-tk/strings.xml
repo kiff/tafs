@@ -2791,6 +2791,7 @@
     <string name="watch_ask">tafs-dan soraň</string>
     <string name="watch_ask_needs_consent">tafs-dan soramazdan öň, telefonyňyzdaky tafs-da AI ulanmaga rugsat beriň.</string>
     <string name="watch_ask_not_on">Sagatdan soramak heniz açyk däl.</string>
+    <string name="watch_ask_phone_sign_in">Telefonyňyzdan bu sagady içeri girizmegi haýyş ediň</string>
     <string name="watch_ask_text_only">tafs sözleriňizi tekst hökmünde alýar, hiç haçan sesiňizi däl.</string>
     <string name="watch_asking_phone">Telefonyňyzdan soralýar…</string>
     <string name="watch_calendar_today">Şu günüň senenamasy</string>
@@ -2802,6 +2803,7 @@
     <string name="watch_deleted_nothing_sent">Pozuldy. Hiç zat iberilmedi.</string>
     <string name="watch_didnt_catch">Eşitmedim. Täzeden synanyşmak üçin basyň.</string>
     <string name="watch_dismiss">Ýapyň</string>
+    <string name="watch_edit_words">Üýtgetmek üçin tekste basyň</string>
     <string name="watch_glance_description">Näçesi size zerur, hiç haçan näme ýa-da kim däl.</string>
     <string name="watch_halt_all_q">Ähli tafs-laryňyzy togtadýarsyňyzmy?</string>
     <plurals name="watch_halt_now_count">
@@ -2817,6 +2819,7 @@
         <item quantity="one">%1$s saklanan çagyryş size zerur</item>
         <item quantity="other">%1$s saklanan çagyryş size zerur</item>
     </plurals>
+    <string name="watch_held_channel">Saklanan çagyryşlar</string>
     <string name="watch_inbox_empty">Täze zat ýok. Coach-yň jogaplary we tafs-laryňyzyň duýduryşlary şu ýere düşýär.</string>
     <plurals name="watch_inbox_unread">
         <item quantity="one">Inbox-da %1$s okalmadyk</item>
@@ -2841,6 +2844,7 @@
     <string name="watch_nothing_sent_until">Siz tassyklamaňyzça hiç zat iberilmeýär.</string>
     <string name="watch_nothing_waits">Size hiç zat garaşmaýar.</string>
     <string name="watch_open_on_phone">Telefonda açyň</string>
+    <string name="watch_opened_on_phone">Telefonyňyzda açyldy</string>
     <string name="watch_page_brief">Gysgaça maglumat</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Bes edildi: onuň tertibi öçük. Ol henizem iberýän zadyňyza jogap berýär.</string>
@@ -2864,6 +2868,7 @@
     <string name="watch_recent_chats">Soňky söhbetdeşlikler</string>
     <string name="watch_recording">Ýazylýar</string>
     <string name="watch_recording_not_received">Ýazgy telefonyňyza ýetmedi. Täzeden synanyşyň, ýa-da ýerine ýazyň.</string>
+    <string name="watch_refuse_on_phone">Ret edilmedi. Ony telefonyňyzda ret ediň.</string>
     <string name="watch_refused">Ret edildi. Hiç zat iberilmedi.</string>
     <string name="watch_reply">Jogap beriň</string>
     <string name="watch_rerecord">Täzeden ýazyň</string>
@@ -2872,14 +2877,20 @@
     <string name="watch_resume_on_phone">Telefonyňyzda dowam etdiriň</string>
     <string name="watch_retry">Täzeden synanyşyň</string>
     <string name="watch_review">Ibermezden öň barlaň</string>
+    <string name="watch_seconds_left">%1$s sek galdy</string>
     <string name="watch_sending">Iberilýär…</string>
     <string name="watch_sent">Iberildi</string>
     <string name="watch_settings_of">%1$s · sazlamalar</string>
+    <string name="watch_sign_in_allow">Rugsat ber</string>
+    <string name="watch_sign_in_denied">Içeri girilmedi. Bu sagat çykan ýagdaýda galýar.</string>
+    <string name="watch_sign_in_deny">Ret et</string>
     <string name="watch_sign_in_on_phone">Ilki telefonyňyzda tafs-a giriň.</string>
+    <string name="watch_sign_in_watch_q">Bu sagat siziň adyňyzdan içeri girizilsinmi?</string>
     <string name="watch_sign_out_q">Bu sagatda çykýarsyňyzmy?</string>
     <string name="watch_sign_out_sub">Telefonyňyz girilen galýar. Bu sagat tafs-laryňyzy, söhbetdeşlikleriňizi we inbox-yňyzy unudýar.</string>
     <string name="watch_signed_in">Girildi</string>
     <string name="watch_signed_out_here">Bu sagatda çykyldy. Telefonyňyz girilen galýar.</string>
+    <string name="watch_stopped_at_limit">%1$s çäginde togtady. Eşidilen aşakda.</string>
     <string name="watch_swipe_settings">Sazlamalary üçin çepe süýşüriň</string>
     <string name="watch_tap_start">Başla basyň, soňra gürläň. Sözleriňiz gürleýşiňiz bilen şu ýerde görünýär.</string>
     <string name="watch_timing">Diňlemek %1$s ms · kwitansiýa %2$s ms · netije %3$s ms</string>
@@ -2891,6 +2902,7 @@
     <string name="watch_view_on_phone">Telefonda görüň</string>
     <string name="watch_view_only_phone">Bu telefon diňe görüp bilýär, şonuň üçin sagatdan soramak bolmaýar. Tassyklap bilýän telefonda giriň.</string>
     <string name="watch_voice_text_only">Coach sözleriňizi tekst hökmünde alýar, hiç haçan sesiňizi däl.</string>
+    <string name="watch_waiting_for_phone">Telefonyňyza garaşylýar…</string>
     <string name="watch_what_it_does">Ol näme edýär</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s işleýär</item>
