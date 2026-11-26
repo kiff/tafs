@@ -229,7 +229,9 @@ jobs:
     needs: changes
     if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && (needs.changes.outputs.tested != 'true' || needs.changes.outputs.ui == 'true')
     runs-on: macos-26
-    timeout-minutes: 30
+    # The unit and UI tests take 20 to 29 minutes on GitHub's macOS runners, so 30 cancelled a
+    # slow runner's whole release dispatch with nothing failing. 45 leaves room without hiding a hang for long.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
