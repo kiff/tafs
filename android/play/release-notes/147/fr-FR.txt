@@ -1,6 +1,6 @@
 • Nouvelles langues, dont coréen, japonais, turc, hindi et ourdou.
 • Fichiers : ce que font vos tafs reste 30 jours dans Compte › Fichiers.
 • Tablette : une barre latérale, Coach à côté de votre travail, toute orientation.
-• Chrome : associez-le d'une seule empreinte. Connexion avec un code envoyé par e-mail.
-• Votre montre reçoit ses réponses même tafs fermé, ne garde aucun montant et reste déconnectée jusqu'à votre accord ici.
+• Chrome : associez-le d'une seule empreinte.
+• TalkBack nomme chaque bouton, onglet et choix, et indique celui qui est sélectionné.
 • Supprimez définitivement une conversation avec Coach.

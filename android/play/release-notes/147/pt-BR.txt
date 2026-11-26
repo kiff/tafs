@@ -1,6 +1,6 @@
 • Novos idiomas, incluindo coreano, japonês, turco, hindi e urdu.
 • Arquivos: o que seus tafs criam está em Conta › Arquivos, por 30 dias.
 • Tablet: uma barra lateral, o Coach ao lado do seu trabalho, em qualquer orientação.
-• Chrome: associe com uma só digital. Entre com um código enviado por e-mail.
-• Seu relógio recebe as respostas mesmo com o tafs fechado, não guarda valores e continua desconectado até você permitir aqui.
+• Chrome: associe com uma só digital.
+• O TalkBack diz o nome de cada botão, aba e opção, e indica qual está selecionado.
 • Exclua uma conversa com o Coach para sempre.

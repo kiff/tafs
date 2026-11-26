@@ -1,6 +1,6 @@
 • Neue Sprachen, darunter Koreanisch, Japanisch, Türkisch, Hindi und Urdu.
 • Dateien: Was deine tafs erstellen, steht 30 Tage in Konto › Dateien.
 • Tablet: eine Seitenleiste, Coach neben der Arbeit, in jeder Ausrichtung.
-• Chrome: mit einem Fingerabdruck koppeln. Anmelden mit einem Code per E-Mail.
-• Deine Uhr bekommt ihre Antworten auch bei geschlossenem tafs, speichert keine Beträge und bleibt abgemeldet, bis du es hier erlaubst.
+• Chrome: mit einem Fingerabdruck koppeln.
+• TalkBack nennt jede Schaltfläche, jeden Tab und jede Auswahl und sagt, was ausgewählt ist.
 • Lösche ein Gespräch mit Coach endgültig.

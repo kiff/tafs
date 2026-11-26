@@ -1,6 +1,6 @@
 • Nieuwe talen, waaronder Koreaans, Japans, Turks, Hindi en Urdu.
 • Bestanden: wat je tafs maken, staat 30 dagen in Account › Bestanden.
 • Tablet: één zijbalk, Coach naast je werk, in elke stand.
-• Chrome: koppel het met één vingerafdruk. Inloggen met een code per e-mail.
-• Je horloge krijgt zijn antwoorden ook als tafs gesloten is, bewaart geen bedragen en blijft uitgelogd tot je het hier toestaat.
+• Chrome: koppel het met één vingerafdruk.
+• TalkBack noemt elke knop, elk tabblad en elke keuze, en zegt welke geselecteerd is.
 • Verwijder een gesprek met Coach voorgoed.

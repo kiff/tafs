@@ -1,6 +1,6 @@
 • Idiomas nuevos, entre ellos coreano, japonés, turco, hindi y urdu.
 • Archivos: lo que hacen tus tafs está en Cuenta › Archivos, 30 días.
 • Tablet: una barra lateral, Coach junto a tu trabajo, en cualquier orientación.
-• Chrome: vincúlalo con una sola huella. Inicia sesión con un código enviado por correo.
-• Tu reloj recibe sus respuestas aunque tafs esté cerrado, no guarda importes y sigue sin sesión hasta que lo permitas aquí.
+• Chrome: vincúlalo con una sola huella.
+• TalkBack nombra cada botón, pestaña y opción, y dice cuál está seleccionada.
 • Elimina una conversación con Coach para siempre.
