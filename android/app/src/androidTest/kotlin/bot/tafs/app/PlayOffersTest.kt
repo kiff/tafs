@@ -127,8 +127,8 @@ class PlayOffersTest {
     val restores = rule.onAllNodes(androidx.compose.ui.test.hasText("Restore purchases")).fetchSemanticsNodes().map { it.positionInRoot.y }.sorted()
     assertEquals(2, restores.size)
     assertEquals(true, line > pack && line < restores.last())
-    // The Restore offered with it is the one just under it.
-    rule.onAllNodes(androidx.compose.ui.test.hasText("Restore purchases"))[0].performClick()
+    // The Restore offered with it is the one just under it, brought into view first: the panel is taller than the screen.
+    rule.onAllNodes(androidx.compose.ui.test.hasText("Restore purchases"))[0].performScrollTo().performClick()
     rule.waitUntil(5_000) { bought.isNotEmpty() }
     assertEquals(listOf("restore"), bought)
   }
