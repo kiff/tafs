@@ -3137,6 +3137,55 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     });
   });
 
+  // An Eval, 26 Nov, Setup graded run 2: approve-2's on_exceed check pushed the reads to refuse, Coach wrote KIFF's 10,000
+  // reads a day with over: "refuse" on each read tool, rules_unsaid asked for it in each tool's words, and the notice's two
+  // 10,000 lines then didn't match the reads Card's one count. On a read tool, KIFF's count is KIFF's, whatever its over.
+  describe("KIFF's own count on a read tool, whatever its over (readsCountDropped)", () => {
+    const TOOLS = [{ tool: "create_invoice", name: "create_invoice_k3", title: "Create a draft invoice", resource_argument: "order_id" },
+      { tool: "list_orders", name: "list_orders_k3", title: "List orders", read_only: true },
+      { tool: "get_order", name: "get_order_k3", title: "Read one order", read_only: true }];
+    const KIFFS = { quantity: "count", window: "calendar_day", limit: 10000 };
+    const WRITE = { tool: "create_invoice", over: "refuse", limits: [{ quantity: "count", window: "calendar_day", limit: 10 }] };
+    function setCards(s: ReturnType<typeof services>) {
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
+        { id: "c1", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "create_invoice_k3" }], aggregates: [{ quantity: "count", window: "calendar_day", limit: 10 }] },
+        // The reads Card: one count across both read tools.
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_orders_k3" }, { action: "get_order_k3" }], aggregates: [KIFFS] }] };
+    }
+    const RUN2 = [WRITE, { tool: "list_orders", over: "refuse", limits: [{ ...KIFFS, over: "refuse" }] }, { tool: "get_order", over: "refuse", limits: [{ ...KIFFS, over: "refuse" }] }];
+    const SAID = "Invoices makes up to 10 draft invoices a day. Reading orders is open (KIFF adds its own count).";
+
+    it("run 2's shape is signed with a notice that says KIFF's count once, or not at all", async () => {
+      for (const text of [SAID, "Invoices makes up to 10 draft invoices a day."]) {
+        const ok = await setUp("refuse", TOOLS);
+        setCards(ok.s);
+        ok.rules("rules-1", RUN2, true, text);
+        expect(await ok.tap(), text).toMatchObject({ outcome: "sign" });
+      }
+    });
+
+    it("a write's own 10,000 that refuses is still the owner's: held to the notice's words", async () => {
+      const off = await setUp("refuse", TOOLS);
+      off.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
+        { id: "c1", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "create_invoice_k3" }], aggregates: [KIFFS] },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_orders_k3" }, { action: "get_order_k3" }], aggregates: [KIFFS] }] };
+      off.rules("rules-1", [{ tool: "create_invoice", over: "refuse", limits: [{ ...KIFFS, over: "refuse" }] }, RUN2[1], RUN2[2]], true, "Reading orders is open.");
+      const r = await off.tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesUnsaid });
+      expect(String(r.answer)).toContain(": create_invoice count calendar_day 10000. ");
+      expect(String(r.answer)).not.toContain("list_orders");
+      expect(String(r.answer)).not.toContain("get_order");
+    });
+
+    it("a read's figure that isn't KIFF's count stays the owner's", async () => {
+      const off = await setUp("refuse", TOOLS);
+      setCards(off.s);
+      off.rules("rules-1", [WRITE, { tool: "list_orders", over: "refuse", limits: [{ quantity: "count", window: "calendar_day", limit: 500 }] }, RUN2[2]], true, SAID);
+      const r = await off.tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("List orders") });
+    });
+  });
+
   // invoices-3 replayed in each language: create_invoice at 10 a day and 1 per order. A notice that says neither is
   // refused; one that says 10 in digits and 1 in digits, or in words where the word for one is never an article (en, nl,
   // pl), is signed.
