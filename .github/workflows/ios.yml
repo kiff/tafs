@@ -1071,6 +1071,14 @@ jobs:
             echo "::error::DIST_P12's Apple Distribution identity was imported but isn't valid on this Mac (the reason is above; most often Apple's WWDR intermediate certificate is missing from its System keychain)"
             exit 1
           fi
+          # Xcode finds the identity through the user's keychain search list, not by this keychain's path: found here
+          # but not there (a cloud Mac, 26 Nov, try 4: "1 valid identities found", then the same Archive error), the
+          # list didn't keep this keychain for the job's user.
+          if ! security find-identity -v -p codesigning | grep -q '"Apple Distribution: '; then
+            echo "The user's keychain search list:"; security list-keychains -d user
+            echo "::error::The Apple Distribution identity is valid in this run's keychain, but the user's keychain search list doesn't reach it, so Xcode won't find it (the list is above)"
+            exit 1
+          fi
 
       - name: Make and install the App Store profiles
         env:
