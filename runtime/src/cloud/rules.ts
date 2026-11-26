@@ -26,7 +26,7 @@
  * agreed figures it carries (the tool's for one that carries none), so two figures with different answers are never on
  * one Card: one Card has one `on_exceed`.
  */
-import { EVERY_CALL_FIGURE_FIRST, EVERY_CALL_SPACED, EVERY_CALL_UNSPACED } from "./every-call-words.js";
+import { EVERY_CALL_CLAUSE_STARTS, EVERY_CALL_SPACED, EVERY_CALL_UNSPACED } from "./every-call-words.js";
 import type { ApprovalGrant } from "./approval.js";
 
 export interface AgreedLimit { quantity: string; window: string; limit: number; over?: "ask" | "refuse"; per?: string }
@@ -805,15 +805,16 @@ const EVERY_CALL_ASKS: RegExp[] = [
 
 // The other 35 app languages, and pt-BR's own forms (every-call-words.ts): a gap that may be empty (Mongolian's "бүр" sits
 // right before the verb), and, in scripts written without spaces, no word boundaries, within 40 characters of one clause.
-// In the languages that put "over €5" before the noun (EVERY_CALL_FIGURE_FIRST), never after a figure earlier in the same
+// In the languages that put "over €5" before the noun (EVERY_CALL_CLAUSE_STARTS), never after a figure earlier in the same
 // clause. Elsewhere the gap's refusal of a digit already keeps "every refund over €5 asks you" a cap, and a guard would miss
 // "€50 a day and every refund asks you first".
 // A figure in any script's digits (٥, ५, ５…), and a clause's end in its own punctuation too: ، ؛ ؟ ۔ । ॥, Armenian ։,
 // Khmer ។ ៕, full-width ； ：, and the Greek semicolon (U+0387).
 const CLAUSE_ENDS = "،؛؟۔।॥։។៕；：\\u0387";
-const noFigureBefore = `(?<!\\p{Nd}[^\\p{Nd}.,;:!?\\n、，。．！？${CLAUSE_ENDS}]{0,30})`;
+// The guard: no figure within 30 characters before "every", unless a stop or the language's "and" or "but" comes between.
+const noFigureBefore = (starts: string) => `(?<!\\p{Nd}(?:(?!${starts})[^\\p{Nd}.,;:!?\\n、，。．！？${CLAUSE_ENDS}]){0,30})`;
 const betweenOrNone = `[^\\p{Nd}.;:!?\\n${CLAUSE_ENDS}]{0,60}?`;
-const guardFor = (lang: string) => (EVERY_CALL_FIGURE_FIRST.has(lang) ? noFigureBefore : "");
+const guardFor = (lang: string) => (EVERY_CALL_CLAUSE_STARTS[lang] ? noFigureBefore(EVERY_CALL_CLAUSE_STARTS[lang]!) : "");
 EVERY_CALL_ASKS.push(
   ...Object.entries(EVERY_CALL_SPACED).map(([lang, [every, asks]]) =>
     new RegExp(`${guardFor(lang)}(?<![\\p{L}\\p{N}])(?:${every})\\s${betweenOrNone}(?:${asks.join("|")})(?![\\p{L}\\p{N}])`, "u")),
