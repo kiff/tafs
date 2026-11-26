@@ -1,0 +1,1 @@
+- Parity: the watch table checks the Apple Watch on iPhone build 4248, and Wear row 1 notes that a held call now reaches the watch with the phone's app in the background (Android 149).
