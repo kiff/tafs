@@ -296,7 +296,7 @@ export interface MoneyCard {
  * every Card), a held Card that would bound no amount, a held Card with no total of its own and no refused day's total
  * beside it for KIFF's count, or a count of a money tool's calls (its limits are its amounts).
  */
-export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count" | "asks_unnamed" | "ask_inherited" | "every_call_unheld";
+export type MoneyUnbuilt = "refused_total" | "held_bound" | "held_total" | "count" | "asks_unnamed" | "every_call_unheld";
 
 /** A money tool's Cards, as the agreed rules give them, or why they can't be. `tool` is named as the connection titles it. */
 export type MoneyCards = { tool: string; action: string } & ({ cards: MoneyCard[] } | { unbuilt: MoneyUnbuilt });
@@ -343,10 +343,10 @@ function moneyCardsOf(rule: AgreedRule, action: string, agent: string, everyCall
   // asks you first", agreed as `over: "ask"` beside a refused €50 a refund and €200 a day). It's never guessed either way:
   // the rules are shown again with the figure that asks ("every call asks" is a count of 0 a day), or with nothing asking.
   if (rule.over === "ask" && !limits.some((l) => over(l) === "ask")) return "asks_unnamed";
-  // In any language: a rule that asks says what happens past each of its figures. A figure that inherits the rule's ask is
-  // a cap that asks only past it, whatever the words say, so every call under it runs unasked; it's shown again with
-  // each figure's over said, never read as the owner's.
-  if (rule.over === "ask" && limits.some((l) => l.over === undefined)) return "ask_inherited";
+  // A figure that says nothing of its own over takes the rule's (`over`, above): under a rule that asks, a cap that asks
+  // past it, and calls under it run by themselves, as "up to €5 each, by itself; over €5 asks you first" reads. Never
+  // refused for that alone (an Eval, 26 Nov: a refusal of it steered Coach to tell the owner such a cap couldn't be set,
+  // and a €4 refund meant to run by itself was held). Words that say every call asks are every_call_unheld's, below.
   // The notice says every call asks, and this rule asks past a figure, but none of them is a count of 0 a day that asks:
   // a positive cap, or one a figure inherits from the rule's `over`, lets every call under it run unasked.
   if (everyCall && limits.some((l) => over(l) === "ask") &&
