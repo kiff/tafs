@@ -1,0 +1,1 @@
+- **Wear OS: the phone's Allow signs a watch in again only with the phone's account mark.** As on the Apple Watch, an Allow without a valid mark leaves the watch signed out, and the mark is heard as an account change, so another sign-in's wipes what the watch kept first. See [The Wear OS watch](docs/watch-wear.md).
