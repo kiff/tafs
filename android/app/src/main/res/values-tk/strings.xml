@@ -801,7 +801,10 @@
     <string name="coach_prompt_connect_tools">Programmalaryňyzy birikdiriň</string>
     <string name="coach_prompt_connect_tools_mac">programmalaryňyzy birikdiriň</string>
     <string name="coach_prompt_give_card">Coach-a Card-yny beriň</string>
+    <string name="coach_prompt_give_card_why">Diňe siziň tassyklan çägiňizde hereket edip biler ýaly, Coach-a Card-yny beriň.</string>
+    <string name="coach_prompt_give_card_why_mac">diňe siziň tassyklan çägiňizde hereket edip biler ýaly, Coach-a Card-yny beriň</string>
     <string name="coach_prompt_start">Coach-y başladyň</string>
+    <string name="coach_prompt_why">Coach diňe siziň tassyklan çägiňizde hereket edip biler.</string>
     <string name="coach_puts_words_message_box">Onuň sözlerini habar gutusyna goýýar</string>
     <string name="coach_questions_answered_of">%2$s-dan %1$s jogap berildi</string>
     <string name="coach_questions_chat_about">Bu barada gürleşiň</string>

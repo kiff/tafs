@@ -801,7 +801,10 @@
     <string name="coach_prompt_connect_tools">Ühenda oma rakendused</string>
     <string name="coach_prompt_connect_tools_mac">ühenda oma rakendused</string>
     <string name="coach_prompt_give_card">Anna Coachile selle Card</string>
+    <string name="coach_prompt_give_card_why">Anna Coachile selle Card, et ta saaks tegutseda ainult selle piires, mida sa kinnitad.</string>
+    <string name="coach_prompt_give_card_why_mac">anna Coachile selle Card, et ta saaks tegutseda ainult selle piires, mida sa kinnitad</string>
     <string name="coach_prompt_start">Käivita Coach</string>
+    <string name="coach_prompt_why">Coach saab tegutseda ainult selle piires, mida sa kinnitad.</string>
     <string name="coach_puts_words_message_box">Paneb selle sõnad sõnumikasti</string>
     <string name="coach_questions_answered_of">Vastatud %1$s/%2$s</string>
     <string name="coach_questions_chat_about">Aruta seda vestluses</string>

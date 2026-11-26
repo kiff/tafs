@@ -801,7 +801,10 @@
     <string name="coach_prompt_connect_tools">Аппуудаа холбох</string>
     <string name="coach_prompt_connect_tools_mac">аппуудаа холбох</string>
     <string name="coach_prompt_give_card">Coach-д Card-ыг нь өгөх</string>
+    <string name="coach_prompt_give_card_why">Зөвхөн таны зөвшөөрсөн хүрээнд ажиллахын тулд Coach-д Card-ыг нь өгөх.</string>
+    <string name="coach_prompt_give_card_why_mac">зөвхөн таны зөвшөөрсөн хүрээнд ажиллахын тулд Coach-д Card-ыг нь өгөх</string>
     <string name="coach_prompt_start">Coach-ийг эхлүүлэх</string>
+    <string name="coach_prompt_why">Coach зөвхөн таны зөвшөөрсөн хүрээнд ажиллаж чадна.</string>
     <string name="coach_puts_words_message_box">Түүний үгийг мессежийн талбарт оруулна</string>
     <string name="coach_questions_answered_of">%2$s-аас %1$s хариулсан</string>
     <string name="coach_questions_chat_about">Энэ тухай ярих</string>

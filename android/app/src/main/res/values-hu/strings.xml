@@ -801,7 +801,10 @@
     <string name="coach_prompt_connect_tools">Az alkalmazásaid csatlakoztatása</string>
     <string name="coach_prompt_connect_tools_mac">az alkalmazásaid csatlakoztatása</string>
     <string name="coach_prompt_give_card">Card megadása a Coachnak</string>
+    <string name="coach_prompt_give_card_why">Card megadása a Coachnak, hogy csak azon belül cselekedhessen, amit jóváhagysz.</string>
+    <string name="coach_prompt_give_card_why_mac">a Card megadása a Coachnak, hogy csak azon belül cselekedhessen, amit jóváhagysz</string>
     <string name="coach_prompt_start">A Coach indítása</string>
+    <string name="coach_prompt_why">A Coach csak azon belül cselekedhet, amit jóváhagysz.</string>
     <string name="coach_puts_words_message_box">A szavait az üzenetmezőbe teszi</string>
     <string name="coach_questions_answered_of">%1$s / %2$s megválaszolva</string>
     <string name="coach_questions_chat_about">Beszéljük meg</string>

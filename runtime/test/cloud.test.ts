@@ -468,6 +468,22 @@ describe("tafs cloud", () => {
     expect((await call(w, "GET", "/v1/recipes", { token: "ana", headers: { "Accept-Language": "fr" } })).body.home)
       .toEqual({ shown: false, words: "Pas encore de tafs. Dites à Coach quel travail un taf doit faire.", own_words: { title: "Dites-la avec vos mots", line: "Coach construit le taf avec vous." } });
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: true } })).body.suggestions.show).toBe(true);
+    // The welcome video: with no setting, no `video_url` at all (above, the answers are whole); with one, on every answer,
+    // a list with recipes and an empty one alike, so How tafs works links it whatever the list holds.
+    expect(fresh.body).not.toHaveProperty("video_url");
+    expect(live.body).not.toHaveProperty("video_url");
+    vi.stubEnv("TAFS_WELCOME_VIDEO_URL", "https://kiff.dev/tafs/video");
+    try {
+      expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body.video_url).toBe("https://kiff.dev/tafs/video");
+      expect((await call(w, "GET", "/v1/recipes", { token: "viewer" })).body.video_url).toBe("https://kiff.dev/tafs/video");
+      await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: false } });
+      expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body).toMatchObject({ recipes: [], video_url: "https://kiff.dev/tafs/video" });
+      await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: true } });
+      vi.stubEnv("TAFS_WELCOME_VIDEO_URL", "");
+      expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body).not.toHaveProperty("video_url");
+    } finally {
+      vi.unstubAllEnvs();
+    }
     expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body.shown).toBe(true);
   });
 
@@ -2553,7 +2569,7 @@ describe("Setup (kiff/agents#91)", () => {
       // lines, the fold's label over KIFF's own words, and a whole-sentence button for each way a device approves, which the
       // app picks by its lock; a passkey's device says sign_passkey for sign. Every one in the person's language.
       const en = wordsIn("en");
-      expect(first.words).toEqual({ lead: en.start_lead, start: en.start_button, title: en.card_step_title,
+      expect(first.words).toEqual({ lead: en.start_lead, start: en.start_button, does: en.start_first_send, title: en.card_step_title,
         lines: { allows: en.card_step_allows, asks: en.card_step_asks, sign: en.card_step_sign, stop: en.card_step_stop },
         exact: en.card_step_exact, buttons: { fingerprint: en.card_step_give_fingerprint, face: en.card_step_give_face, passkey: en.card_step_give_passkey },
         sign_passkey: en.card_step_sign_passkey, locked: en.card_step_locked });
@@ -2573,6 +2589,16 @@ describe("Setup (kiff/agents#91)", () => {
       for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
         expect(wordsIn(lang).start_lead, lang).not.toMatch(/\b(once|einmal|une fois|una vez|una volta|uma vez|één keer|raz)\b/i);
       }
+      // Why starting Coach asks for the person (the owner's iPad feedback, 26 Nov): on the Card step both apps draw, in its
+      // sign line; on the older Start screen, in `does`. Each says why, and neither says the first message starts Coach,
+      // since on the Card step its button does.
+      expect(en.card_step_sign).toMatch(/^Your approval uses your fingerprint or face, so Coach can act only within what you approve here\. /);
+      expect(en.card_step_sign_passkey).toMatch(/^Your approval uses your passkey, so Coach can act only within what you approve here\. /);
+      expect(en.start_first_send).toBe("Coach asks for your fingerprint, face or passkey before it starts, to give Coach its Card, so it can act only within what you approve.");
+      expect(en.start_first_send).not.toMatch(/first message/i);
+      // A promise about control holds to what's approved: Coach acts within its Card without asking each time.
+      for (const line of [en.card_step_sign, en.card_step_sign_passkey, en.start_first_send]) expect(line).not.toMatch(/nothing moves without you/i);
+      for (const lang of FULL_LANGUAGES) expect(wordsIn(lang).start_first_send, lang).toContain("Coach");
       // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
       // (#852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
       expect(draft.card_title).toBe("Coach's Card");

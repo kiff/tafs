@@ -801,7 +801,10 @@
     <string name="coach_prompt_connect_tools">Collega le tue app</string>
     <string name="coach_prompt_connect_tools_mac">collegare le tue app</string>
     <string name="coach_prompt_give_card">Dai a Coach la sua Card</string>
+    <string name="coach_prompt_give_card_why">Dai a Coach la sua Card, così può agire solo entro ciò che approvi.</string>
+    <string name="coach_prompt_give_card_why_mac">dare a Coach la sua Card, così può agire solo entro ciò che approvi</string>
     <string name="coach_prompt_start">Avvia Coach</string>
+    <string name="coach_prompt_why">Coach può agire solo entro ciò che approvi.</string>
     <string name="coach_puts_words_message_box">Mette le sue parole nella casella del messaggio</string>
     <string name="coach_questions_answered_of">%1$s di %2$s con risposta</string>
     <string name="coach_questions_chat_about">Parlane in chat</string>

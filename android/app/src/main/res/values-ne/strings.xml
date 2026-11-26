@@ -801,7 +801,10 @@
     <string name="coach_prompt_connect_tools">आफ्ना एप जडान गर्नुहोस्</string>
     <string name="coach_prompt_connect_tools_mac">आफ्ना एप जडान गर्नुहोस्</string>
     <string name="coach_prompt_give_card">Coach लाई यसको Card दिनुहोस्</string>
+    <string name="coach_prompt_give_card_why">Coach लाई यसको Card दिनुहोस्, ताकि यसले तपाईंले स्वीकृत गरेको दायराभित्र मात्र काम गर्न सकोस्।</string>
+    <string name="coach_prompt_give_card_why_mac">यसको Card Coach लाई दिनुहोस्, ताकि यसले तपाईंले स्वीकृत गरेको दायराभित्र मात्र काम गर्न सकोस्</string>
     <string name="coach_prompt_start">Coach सुरु गर्नुहोस्</string>
+    <string name="coach_prompt_why">Coach ले तपाईंले स्वीकृत गरेको दायराभित्र मात्र काम गर्न सक्छ।</string>
     <string name="coach_puts_words_message_box">यसका शब्द सन्देश बाकसमा राख्छ</string>
     <string name="coach_questions_answered_of">%2$s मध्ये %1$s जवाफ दिइयो</string>
     <string name="coach_questions_chat_about">यसबारे कुरा गर्नुहोस्</string>

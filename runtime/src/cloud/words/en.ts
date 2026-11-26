@@ -464,8 +464,9 @@ export const en = {
   cr_no_plan_line: "No plan · choose one to start",
   cr_w_again: (day: string) => `they go on when the period starts again on ${day}`,
   cr_w_no_plan: "Choose a plan to start your tafs.",
-  // What Coach's help includes, under the Solo offer in the store (buy.coach).
-  cr_buy_coach: "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.",
+  // What Solo gives, under the Solo offer in the store (buy.coach): `credits` is KIFF's included credits, formatted
+  // (credits.ts soloIncluded), and the jobs Coach sets up are COACH_JOBS_A_MONTH; a test holds every language to both.
+  cr_buy_coach: (credits: string) => `Solo gives you ${credits} every month for your tafs' runs; a quiet check uses none, and they don't carry over to the next month. Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits. Packs are only for when a month runs out, and they never expire.`,
   cr_w_limit_raise: (day: string) => `Spend limit reached. Raise it, or your tafs go on from ${day}.`,
   cr_w_limit_ceiling: (again: string) => `Your tafs are waiting: the spend limit is reached, and it can't go higher from the app. Contact KIFF to raise it further, or ${again}.`,
   cr_w_limit_admin: "Your tafs are waiting: the spend limit is reached. An admin of this account can raise it.",
@@ -858,6 +859,9 @@ export const en = {
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
   start_lead: "Start gives Coach the tools below. You approve them on this device.",
   start_button: "Start",
+  // Why starting Coach asks for the person, on the older Start screen (start.words.does); the Card step says it in card_step_sign.
+  // True on both paths: there, the button starts Coach, not the first message.
+  start_first_send: "Coach asks for your fingerprint, face or passkey before it starts, to give Coach its Card, so it can act only within what you approve.",
   plan_needed: "Choose a plan to start it.",
   /** A result Coach handed over that a field of its own kept from being made, past the hand-over's hold: after "{name} wasn't set up:". */
   handover_not_finished: "Coach's hand-over wasn't finished",
@@ -887,7 +891,8 @@ export const en = {
   card_step_title: "Let Coach build tafs with you",
   card_step_allows: "This lets Coach look at your tafs, run them, and draft and try new versions, each within the daily limits below. Only while you turn on a drive, it can also see and use the app on this device.",
   card_step_asks: "Installing a version, choosing where a taf's results go, making a mission and saving your business description always wait for you in Needs you. Giving a taf a task or trying a version waits for you past its daily limit; anything else past its limit is refused.",
-  card_step_sign: "Your approval signs this with a key kept on this device, which never leaves it. It isn't a payment or a password.",
+  // Shown on a device that approves with a fingerprint or face; a passkey's device shows card_step_sign_passkey instead.
+  card_step_sign: "Your approval uses your fingerprint or face, so Coach can act only within what you approve here. It signs this with a key kept on this device, which never leaves it. It isn't a payment or a password.",
   card_step_stop: "Halt stops Coach and every taf at once, with one tap.",
   card_step_exact: "Exactly what you sign",
   card_step_give_fingerprint: "Approve with fingerprint",
@@ -902,7 +907,7 @@ export const en = {
   chat_delete_failed: "It wasn't deleted. Check that you're online and try again.",
   chat_delete_busy: "This conversation is still working or waiting for you. Stop it or answer it first, then delete it.",
   card_step_give_passkey: "Approve with your passkey",
-  card_step_sign_passkey: "Your approval signs this with your passkey, whose private key never leaves this computer or your security key. It isn't a payment or a password.",
+  card_step_sign_passkey: "Your approval uses your passkey, so Coach can act only within what you approve here. Its private key never leaves this computer or your security key. It isn't a payment or a password.",
   // The one line in Coach's message box while it's locked: no typing until the Card step is approved.
   card_step_locked: "Approve this first, then you can write to Coach.",
   cts_tafs_state: "See your tafs",
