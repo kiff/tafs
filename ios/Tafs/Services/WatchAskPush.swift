@@ -134,6 +134,49 @@ enum WatchPushRelay {
         relay(WatchPush(.chat, taf: taf, at: now))
     }
 
+    /// The held calls last handed to the watch, and under whose mark: the same again isn't sent.
+    private static var lastHolds: (mark: String?, holds: WatchHolds)?
+
+    /// The phone's held calls changed, or may have (a hold's push, its alert, the app's own read finding others): Needs you
+    /// read with the session the app keeps and handed to the watch as `WatchHolds`, the amount and the call's details left
+    /// out (`WatchPush.Kind.needsYou`). Nothing when the read fails, or it's what the watch was last told under this mark.
+    static func needsYou(read: () async throws -> WatchNeedsYou, mark: String?, now: Date = Date(),
+                         relay: (WatchPush) -> Void) async {
+        guard let read = try? await read() else { return }
+        let holds = WatchHolds(read)
+        if let last = lastHolds, last.mark == mark, last.holds.sameAs(holds) { return }
+        lastHolds = (mark, holds)
+        relay(WatchPush(.needsYou, holds: holds, at: now))
+    }
+
+    /// Forgets what the watch was last told, for the tests. Another account's mark is never the same, so its first read goes.
+    static func forgetHolds() {
+        lastHolds = nil
+        lastHeldIDs = nil
+    }
+
+    /// The held calls' ids the app's own read last found.
+    private static var lastHeldIDs: Set<String>?
+
+    /// The app read its held calls (`AppModel.onHeldChanged`, each refresh): the watch is told only when the ids differ from
+    /// the last read's, so a refresh that finds the same calls reads nothing more. Returns whether it reads.
+    @discardableResult
+    static func heldChanged(_ ids: [String], read: @escaping @MainActor () async -> Void = { await holds() }) -> Bool {
+        let now = Set(ids)
+        guard now != lastHeldIDs else { return false }
+        lastHeldIDs = now
+        Task { await read() }
+        return true
+    }
+
+    /// The app's own: read with the session the app keeps, for a paired watch with tafs on it.
+    static func holds() async {
+        let reading = KeptWatchReading()
+        guard reading.signedIn, watchListening else { return }
+        let mark = reading.mark
+        await needsYou(read: { try await reading.needsYou(now: Date()) }, mark: mark, relay: { toWatch($0, mark: mark) })
+    }
+
     static func run(change: String, taf: String?) async {
         let reading = KeptWatchReading()
         guard reading.signedIn, watchListening else { return }
@@ -175,6 +218,14 @@ enum WatchOpen {
     static func destination(taf: String?) -> String {
         guard let taf, !taf.isEmpty else { return "coach" }
         return "taf:" + taf
+    }
+
+    /// Approve on your phone: the held call's own card in Needs you, with no answer chosen, only when this phone's fresh read
+    /// (`listed`, KIFF's held calls under the account signed in now) has it. Answered, lapsed, another account's, or a read
+    /// that failed: Needs you, with nothing chosen. The person approves on the phone's card, behind Face ID, as always.
+    static func holdDestination(_ hold: String, listed: [String]?) -> String {
+        guard let listed, listed.contains(hold) else { return "needs-you" }
+        return AlertAnswers.destination(hold: hold)
     }
 
     static func content(_ destination: String) -> UNMutableNotificationContent {

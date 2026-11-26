@@ -31,6 +31,55 @@ final class NeedsYouModelTests: XCTestCase {
         XCTAssertEqual(model.state, .loaded(page))
     }
 
+    /// Approve on your phone: the phone is asked to open the held call, by its id alone (with the account mark, as the person's
+    /// act); nothing is signed or answered, and nothing on the watch changes.
+    func testApproveOnYourPhoneSendsTheHoldsIDAlone() async {
+        let phone = Phone(WatchReply(.ok, needsYou: page))
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        await model.load()
+        phone.reply = WatchReply(.ok)
+        await model.approveOnPhone("ce_1")
+        XCTAssertEqual(phone.asked.last, WatchRequest(.openOnPhone, made: now, hold: "ce_1"))
+        XCTAssertTrue(WatchRequest.Kind.openOnPhone.carriesMark)
+        XCTAssertTrue(WatchRequest(.openOnPhone, made: now, hold: "ce_1").isComplete)
+        XCTAssertFalse(WatchRequest(.openOnPhone, made: now, hold: "ce_1", taf: "taf-1").isComplete, "a call or a chat, not both")
+        XCTAssertFalse(WatchRequest(.openOnPhone, made: now, hold: "not an id").isComplete)
+        let sent = String(decoding: WatchMessage.encode(phone.asked.last!), as: UTF8.self)
+        XCTAssertFalse(sent.contains("€") || sent.contains("480") || sent.contains("approve"), sent)
+        XCTAssertEqual(model.state, .loaded(page), "nothing on the watch changes")
+        XCTAssertEqual(model.answers, [:])
+    }
+
+    /// The phone's push of its held calls: a call on screen it no longer lists goes at once, with its Refuse; a new one is read
+    /// live, amount and all; an older push, or one with the app put away, changes nothing and reads nothing.
+    func testThePhonesPushTakesAnAnsweredCallOffTheScreen() async {
+        let two = WatchNeedsYou(count: 3, calls: [
+            .init(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00", reason: "Over €150.00 each", answerBy: "10:51"),
+            .init(id: "ce_2", taf: "Rae", what: "Refund order 4503, €90.00", reason: "Over €50.00 each", answerBy: "10:55"),
+        ], at: now)
+        let phone = Phone(WatchReply(.ok, needsYou: two))
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        await model.load()
+        let one = WatchNeedsYou(count: 2, calls: [two.calls[0]], at: now + 5)
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(WatchNeedsYou(count: 2, calls: [two.calls[1]], at: now - 5)), at: now - 5))
+        XCTAssertEqual(model.state, .loaded(two), "an older push changes nothing")
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(one), at: now + 5))
+        XCTAssertEqual(model.state, .loaded(one))
+        XCTAssertEqual(phone.asked.count, 1, "nothing read for a call that went")
+        let three = WatchNeedsYou(count: 3, calls: [two.calls[0], .init(id: "ce_3", taf: "Rae", what: "Refund order 4510, €75.00",
+                                                                          reason: "Over €50.00 each", answerBy: "11:02")], at: now + 9)
+        phone.reply = WatchReply(.ok, needsYou: three)
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(three), at: now + 9))
+        for _ in 0..<100 where phone.asked.count < 2 { await Task.yield() }
+        XCTAssertEqual(phone.asked.count, 2, "a new call is read live")
+        for _ in 0..<100 where model.state != .loaded(three) { await Task.yield() }
+        XCTAssertEqual(model.state, .loaded(three))
+        model.leave()
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(two), at: now + 20))
+        XCTAssertEqual(model.state, .loading)
+        XCTAssertEqual(phone.asked.count, 2, "put away: nothing read")
+    }
+
     func testThePhoneOutOfReachIsSaidAsSuch() async {
         let model = NeedsYouModel(phone: Phone(nil), clock: { self.now }, lock: Unlocked())
         await model.load()

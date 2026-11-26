@@ -118,6 +118,55 @@ final class WatchInboxMarksTests: XCTestCase {
         XCTAssertEqual(older, WatchReply(.notYet))
     }
 
+    /// Approve on your phone: the phone opens the held call's own card, with no answer chosen, only when its own fresh read
+    /// lists it under the account signed in now. Another account's hold, or one answered or lapsed, opens Needs you with nothing
+    /// chosen; sent under another sign-in's mark, nothing opens at all, and the watch is told signed out.
+    func testApproveOnYourPhoneOpensTheHeldCallOnlyWhileThisAccountHoldsIt() async {
+        final class Opened { var holds: [String] = [] }
+        struct HoldOpener: WatchReading {
+            let listed: [String]
+            let opened: Opened
+            var signedIn: Bool { true }
+            var mark: String? { String(repeating: "a", count: 32) }
+            func needsYou(now: Date) async throws -> WatchNeedsYou { WatchNeedsYou(count: 0, calls: [], at: now) }
+            func tafs() async throws -> [WatchTaf] { [] }
+            func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome { .gone }
+            func halt(taf: String?) async -> HaltAll.Outcome { .needsApp("") }
+            func coach(text: String, messageID: UUID) async -> WatchReply { WatchReply(.notYet) }
+            func tafPage(_ id: String) async throws -> WatchTafPage? { nil }
+            func calendar(day: String?) async throws -> WatchCalendarDay { WatchCalendarDay(day: "", words: "", events: [], halted: false) }
+            func account() async throws -> WatchAccount { WatchAccount(email: nil, account: "", plan: nil) }
+            func openOnPhone(taf: String?) async -> WatchReply { WatchReply(.ok, line: WatchOpen.destination(taf: taf)) }
+            func openHold(_ hold: String) async -> WatchReply {
+                opened.holds.append(hold)
+                return WatchReply(.ok, line: WatchOpen.holdDestination(hold, listed: listed))
+            }
+        }
+        let opened = Opened()
+        let reading = HoldOpener(listed: ["ce_1"], opened: opened)
+        func request(_ hold: String, mark: String = String(repeating: "a", count: 32)) -> WatchRequest {
+            var request = WatchRequest(.openOnPhone, made: now, hold: hold)
+            request.mark = mark
+            return request
+        }
+        let held = await send(request("ce_1"), reading: reading)
+        XCTAssertEqual(held.line, "hold:ce_1")
+        XCTAssertEqual(AlertAnswers.request(from: held.line ?? ""), AppModel.HoldRequest(kiffID: "ce_1", answer: nil), "its card, no answer chosen")
+        let other = await send(request("ce_9"), reading: reading)
+        XCTAssertEqual(other.line, "needs-you", "not this account's: Needs you, nothing chosen")
+        XCTAssertNil(AlertAnswers.request(from: "needs-you"))
+        let stale = await send(request("ce_1", mark: String(repeating: "b", count: 32)), reading: reading)
+        XCTAssertEqual(stale.outcome, .signedOut)
+        XCTAssertEqual(opened.holds, ["ce_1", "ce_9"], "nothing opened under another sign-in")
+        var both = request("ce_1")
+        both.taf = "taf-1"
+        let refused = await send(both, reading: reading)
+        XCTAssertEqual(refused.outcome, .refused)
+        XCTAssertEqual(WatchOpen.holdDestination("ce_1", listed: nil), "needs-you", "a read that failed: nothing chosen")
+        XCTAssertEqual(WatchOpen.content("hold:ce_1").body, Words.Coach.Chats.fromYourWatch, "the notification names no amount")
+        XCTAssertEqual(WatchOpen.content("hold:ce_1").userInfo["open"] as? String, "hold:ce_1")
+    }
+
     /// The notification View on phone posts with tafs not in front: "From your watch", whose tap opens the chat.
     func testViewOnPhonesNotificationOpensTheChat() {
         let coach = WatchOpen.content("coach")

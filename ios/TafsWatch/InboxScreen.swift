@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// v2's Inbox page (docs/watch-app.md, "Step (iv)"): the lines kept on the watch, newest first, each with its taf, its words and
-/// a blue dot while it's unread; Dismiss on each, and Clear read. With no passcode on this watch nothing is kept, and the page
+/// v2's Inbox page (docs/watch-app.md, "Step (iv)"): how much waits for the person, as the phone last said, then the lines kept
+/// on the watch, held calls on top, each newest first, each with its taf, its words and a blue dot while it's unread; Dismiss on
+/// each, and Clear read. With no passcode on this watch nothing is kept, and the page
 /// is Needs you as the phone answered now, so a call that needs the person is never hidden behind "Nothing new".
 struct InboxScreen: View {
     @ObservedObject var inbox: InboxModel
@@ -11,6 +12,11 @@ struct InboxScreen: View {
         if inbox.kept {
             NavigationStack {
                 List {
+                    if let waiting = inbox.waiting, waiting > 0 {
+                        Text(Words.NeedsYou.count(count: waiting))
+                            .font(.headline)
+                            .listRowBackground(Color.clear)
+                    }
                     if inbox.lines.isEmpty {
                         Text(Words.Watch.inboxEmpty)
                             .font(.footnote)
@@ -95,7 +101,7 @@ struct InboxLineScreen: View {
             case .held:
                 if let call = Self.held(line, in: needsYou.state) {
                     // The call whole, as the phone's Needs you words it; Refuse here, Approve only on the phone.
-                    HeldCallRow(call: call, answer: needsYou.answers[call.id]) {
+                    HeldCallRow(call: call, answer: needsYou.answers[call.id], approve: { Task { await needsYou.approveOnPhone(call.id) } }) {
                         Task { await needsYou.refuse(call.id) }
                     }
                     Text(Words.Watch.nothingSentUntil)

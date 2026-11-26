@@ -1,8 +1,9 @@
 import XCTest
 @testable import TafsWatch
 
-/// v2's Inbox kept on the watch (docs/watch-app.md, "Step (iv)"), as Wear OS's: each held call and each answer from Coach a
-/// line, newest first, until dismissed; nothing kept with no passcode; nothing left after sign-out.
+/// v2's Inbox kept on the watch (docs/watch-app.md, "Step (iv)"), as Wear OS's: each held call a line on top, until it's
+/// answered, lapses or is dismissed, and each answer from Coach a line, until dismissed, each newest first; nothing kept with no
+/// passcode; nothing left after sign-out.
 @MainActor
 final class InboxModelTests: XCTestCase {
     private var now = Date(timeIntervalSinceReferenceDate: 813_667_500)
@@ -26,9 +27,10 @@ final class InboxModelTests: XCTestCase {
         var isSecure: Bool { on }
     }
 
-    private func call(_ id: String, summary: String? = "Refund order 4502", amount: String = "€150.00") -> WatchNeedsYou.Call {
+    private func call(_ id: String, summary: String? = "Refund order 4502", amount: String = "€150.00",
+                      ends: Date? = nil) -> WatchNeedsYou.Call {
         WatchNeedsYou.Call(id: id, taf: "Rae", what: [summary, amount].compactMap { $0 }.joined(separator: ", "), summary: summary,
-                           reason: "Over the limit", answerBy: "10:51")
+                           reason: "Over the limit", answerBy: "10:51", ends: ends)
     }
 
     private func heard(_ calls: [WatchNeedsYou.Call]) -> NeedsYouModel.State {
@@ -68,14 +70,97 @@ final class InboxModelTests: XCTestCase {
                        "opened while Needs you holds it: the amount, from memory")
     }
 
-    /// A held call no longer listed stays until it's dismissed: opened, it says it was answered or ended.
-    func testALineStaysUntilDismissed() {
-        let inbox = model(Kept())
+    /// A held call the phone no longer lists (answered on any device, or lapsed) leaves the Inbox and its file, as on Wear OS;
+    /// one past its time on this watch's own clock leaves too, and neither is counted. A read that still lists one past its
+    /// time (the phone's clock behind) doesn't bring it back.
+    func testAHeldCallAnsweredOrEndedLeavesAndIsntCounted() {
+        let store = Kept()
+        let inbox = model(store)
+        inbox.heard(heard([call("h_1", ends: now + 300), call("h_2", ends: now + 600)]))
+        XCTAssertEqual(Set(inbox.lines.map(\.id)), ["held:h_1", "held:h_2"])
+        XCTAssertEqual(inbox.waiting, 2)
+        inbox.heard(heard([call("h_1", ends: now + 300)]))
+        XCTAssertEqual(inbox.lines.map(\.id), ["held:h_1"], "answered on another device")
+        XCTAssertEqual(store.kept.map(\.id), ["held:h_1"])
+        XCTAssertEqual(inbox.waiting, 1)
+        now += 301
+        inbox.checkLock()
+        XCTAssertEqual(inbox.lines, [], "past its time, by this watch's clock")
+        XCTAssertEqual(store.kept, [])
+        XCTAssertEqual(inbox.waiting, 0)
+        inbox.heard(heard([call("h_1", ends: now - 1)]))
+        XCTAssertEqual(inbox.lines, [])
+        XCTAssertEqual(inbox.waiting, 0, "never counted")
+    }
+
+    /// What needs the person is on top: held calls, newest first, then Coach's answers, newest first, however new an answer
+    /// is; and the same when the app opens again.
+    func testHeldCallsAreOnTopOfCoachsAnswers() {
+        let store = Kept()
+        let inbox = model(store)
         inbox.heard(heard([call("h_1")]))
-        inbox.heard(heard([]))
-        XCTAssertEqual(inbox.lines.map(\.id), ["held:h_1"])
-        XCTAssertNil(InboxLineScreen.held(inbox.lines[0], in: heard([])), "Already answered, or it ended.")
-        XCTAssertEqual(InboxLineScreen.held(inbox.lines[0], in: heard([call("h_1")]))?.id, "h_1")
+        now += 60
+        inbox.answered(WatchCoachAnswer(text: "Done.", more: false, approveOnPhone: false), message: "m_1")
+        XCTAssertEqual(inbox.lines.map(\.id), ["held:h_1", "answer:m_1"], "the held call on top, though older")
+        now += 60
+        inbox.heard(heard([call("h_1"), call("h_2")]))
+        now += 60
+        inbox.answered(WatchCoachAnswer(text: "Also done.", more: false, approveOnPhone: false), message: "m_2")
+        XCTAssertEqual(inbox.lines.map(\.id), ["held:h_2", "held:h_1", "answer:m_2", "answer:m_1"])
+        XCTAssertEqual(model(store).lines.map(\.id), ["held:h_2", "held:h_1", "answer:m_2", "answer:m_1"], "opened again")
+        XCTAssertEqual(InboxLineScreen.held(inbox.lines[1], in: heard([call("h_1")]))?.id, "h_1")
+    }
+
+    /// The phone's push of its held calls (`needs_you`) is taken with no ask: each a line on top, what it asks with no amount,
+    /// kept so; the count as the phone said, in memory only. One answered on the phone leaves at the next push; one dismissed
+    /// here stays away while the phone lists it.
+    func testThePhonesPushOfItsHeldCallsIsTakenWithNoAsk() {
+        let store = Kept()
+        let phone = MarksPhone()
+        let inbox = model(store, phone: phone)
+        let page = WatchNeedsYou(count: 3, calls: [call("h_1", amount: "€150.00", ends: now + 600), call("h_2", summary: nil)], at: now)
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(page), at: now))
+        XCTAssertEqual(inbox.lines.map(\.id).sorted(), ["held:h_1", "held:h_2"])
+        XCTAssertEqual(Set(inbox.lines.map(\.line)), ["Refund order 4502", Words.NeedsYou.title])
+        XCTAssertEqual(inbox.unread, 2)
+        XCTAssertEqual(inbox.waiting, 3)
+        for line in store.kept { XCTAssertFalse(line.line.contains("€") || line.line.contains("150"), line.line) }
+        XCTAssertTrue(phone.asked.isEmpty, "nothing asked")
+        inbox.dismiss("held:h_2")
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(page), at: now))
+        XCTAssertEqual(inbox.lines.map(\.id), ["held:h_1"], "dismissed here, it stays away")
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: WatchHolds(WatchNeedsYou(count: 0, calls: [], at: now)), at: now))
+        XCTAssertEqual(inbox.lines, [], "answered on the phone")
+        XCTAssertEqual(inbox.waiting, 0)
+        XCTAssertEqual(store.gone, [], "and nothing left of it")
+    }
+
+    /// Drawn per open (`WatchAccountMark.mayDraw`): a push before this open has heard the account is the phone's draws nothing,
+    /// counts nothing and writes nothing over what's kept; once it has, the push comes in on top. No passcode: nothing kept.
+    func testAPushBeforeThisOpenHeardTheAccountDrawsNothing() {
+        final class Heard { var yes = false }
+        let heardIt = Heard()
+        let store = Kept()
+        let answer = InboxLine(id: InboxLine.answerID("m_1"), kind: .answer, title: nil, line: "Done.", at: now, read: true)
+        store.kept = [answer]
+        let inbox = InboxModel(store: store, lock: Unlocked(), clock: { self.now }, mayDraw: { heardIt.yes })
+        let holds = WatchHolds(WatchNeedsYou(count: 1, calls: [call("h_1")], at: now))
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: holds, at: now))
+        XCTAssertEqual(inbox.lines, [])
+        XCTAssertNil(inbox.waiting)
+        XCTAssertEqual(store.kept, [answer], "nothing written over")
+        heardIt.yes = true
+        inbox.checkLock()
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: holds, at: now))
+        XCTAssertEqual(inbox.lines.map(\.id), ["held:h_1", "answer:m_1"])
+
+        let bare = Kept()
+        let open = Passcode()
+        open.on = false
+        let unkept = model(bare, lock: open)
+        WatchPushes.shared.deliver(WatchPush(.needsYou, holds: holds, at: now))
+        XCTAssertEqual(unkept.lines, [])
+        XCTAssertEqual(bare.kept, [], "no passcode: nothing kept")
     }
 
     /// Opened is read; Dismiss and Clear read take lines away, and a read while the phone still lists them doesn't bring them
