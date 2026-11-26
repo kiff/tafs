@@ -646,7 +646,9 @@ The watch follows the phone's thread without asking it each time, and never asks
   - Coach's thread and a taf's thread finish the turn at once and stop reading (`CoachModel.heard`).
   - A taf's chat reads its turns again.
   - The Inbox takes the marks.
-  - **Held calls (`change` with a `hold_id`, a hold's alert, or the app's own read finding other held calls):** the iPhone
+  - **Held calls (`change` with a `hold_id`, a hold's alert, or the app's own read finding other held calls):** a hold's
+    alert carries `content-available`, so it wakes the iPhone app in the background as an answered hold's silent push does,
+    and the watch hears of a new held call with tafs closed, not only once the iPhone app is opened. The iPhone
     reads Needs you with the session it keeps and hands it on as `needs_you` (`WatchHolds`, as Wear OS's `kept/needs-you`):
     the count, and each held call's id, taf, what it asks **with its amount taken out**, and when it lapses. Never the
     amount, KIFF's reason or the time in words. It goes only when it differs from what the watch was last told under that

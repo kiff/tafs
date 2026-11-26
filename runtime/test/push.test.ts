@@ -175,7 +175,7 @@ describe("KIFF's alerts", () => {
     expect(n.payload).toEqual({
       aps: {
         alert: { title: "A taf needs you", body: "Stripe refund waits for your answer. Nothing is sent until you approve." }, "thread-id": "held", category: "hold",
-        "mutable-content": 1, sound: "default", "interruption-level": "time-sensitive",
+        "mutable-content": 1, "content-available": 1, sound: "default", "interruption-level": "time-sensitive",
       },
       open: "needs-you", hold_id: "hold_1", expires_at: "2026-10-15T09:10:00.000Z",
       // Your brief: an alert that comes at once is urgent, with the decision it opens (Android's Urgent channel).

@@ -11,7 +11,7 @@ const phone: Device = { token: FCM_TOKEN, platform: "android", environment: "pro
 const hold: Notification = {
   kind: "alert",
   payload: {
-    aps: { alert: { title: "A taf needs you", body: "Stripe refund waits for your answer. Nothing is sent until you approve." }, "thread-id": "held", category: "hold", "mutable-content": 1, ...apsFor("interrupt") },
+    aps: { alert: { title: "A taf needs you", body: "Stripe refund waits for your answer. Nothing is sent until you approve." }, "thread-id": "held", category: "hold", "mutable-content": 1, "content-available": 1, ...apsFor("interrupt") },
     open: "needs-you", hold_id: "hold_1", expires_at: "2026-10-15T09:10:00.000Z",
   },
   collapseID: "hold_1",
@@ -32,6 +32,11 @@ describe("the message an Android phone gets", () => {
       open: "needs-you", hold_id: "hold_1", expires_at: "2026-10-15T09:10:00.000Z", level: "interrupt",
     });
     expect(m.android).toEqual({ priority: "HIGH", collapse_key: "hold_1", ttl: "600s" });
+  });
+
+  it("stays an alert though the held call's aps also wakes an iPhone (content-available)", () => {
+    expect(fcmMessage(hold, NOW).data.kind).toBe("alert");
+    expect(fcmMessage(hold, NOW).android.priority).toBe("HIGH");
   });
 
   it("carries no call parameters: nothing but what the phone reads the held call by", () => {
