@@ -361,6 +361,7 @@ The chat is one thing drawn in several places: Coach's chat and a taf's on the p
 | Feature | iPhone/iPad | Android | Chrome side panel |
 | :- | :- | :- | :- |
 | Each message's time, and a header where a day starts | done | done | done (0.2.24): in the panel's language and the computer's zone; the language's own 12- or 24-hour clock (a browser doesn't say the computer's) |
+| Every other time of day on a screen in the same 12- or 24-hour clock as the chat's stamps: a decision line, "next run at", "halted since" (tafs#2195) | not yet: `Date.shortTime` is fixed "HH:mm" while the chat's stamps follow the device | done on main, from 149 (tafs#2196) | done: every time in the panel is the language's own clock (`panel.js`, `chatrow.js`), one style per screen |
 | Copy an answer | done | done | done (0.2.24): no permission asked for; a refused clipboard selects the words and says so |
 | Report this answer (⋯) | done | done | done (0.2.24): only on a message the panel may show (its own chats, and a run's turn shown there), always with the chat's session (the route open to the panel, tafs#2119) |
 | Your own message: Send again, Edit and send, Copy | done | done | done (0.2.24): Send again and Edit and send only in a chat begun in this Chrome (a taf's chat always; a Coach chat once a send from here went into it); a run's turn from another device gets Copy only (a failed turn has Retry, 0.2.22) |
