@@ -55,6 +55,8 @@ protocol WatchReading {
     /// Ask your phone to sign this watch in (row 18): asks this phone's owner, with Allow behind the phone's lock
     /// (`WatchSignInAsk`). Nothing is sent to the watch now; only the owner's Allow signs it in.
     func askWatchSignIn(_ id: String) async -> WatchReply
+    /// Read more on a cut line from a taf's chat (row 10): that message whole, the taf's words only, for a taf the phone lists.
+    func lineFull(taf: String, id: String) async -> WatchReply
     /// This session's mark for the watch (`WatchMark`, `PhoneWatchMark`), on every reply; none when signed out.
     var mark: String? { get }
 }
@@ -83,6 +85,8 @@ extension WatchReading {
     func openHold(_ hold: String) async -> WatchReply { WatchReply(.notYet) }
     /// A reader that asks no one: the watch stays signed out.
     func askWatchSignIn(_ id: String) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader from before Read more on a chat line: the rest is on the phone.
+    func lineFull(taf: String, id: String) async -> WatchReply { WatchReply(.notYet) }
     /// A reader with no session of its own (the tests' readers): no mark.
     var mark: String? { nil }
 }
@@ -222,6 +226,9 @@ enum WatchRelay {
             // Approve on your phone: only the hold's id, and only under this phone's own account (the mark, above).
             if let hold = request.hold { return await reading.openHold(hold) }
             return await reading.openOnPhone(taf: request.taf)
+        case .lineFull:
+            // Read only: one of the taf's own messages, whole, from a chat the phone lists.
+            return await reading.lineFull(taf: request.taf ?? "", id: request.message ?? "")
         case .tafChat:
             // Read only: the person's own chat with a taf the phone lists.
             do {
@@ -682,6 +689,28 @@ struct KeptWatchReading: WatchReading {
     func tafChat(_ id: String) async throws -> [WatchChatLine]? {
         guard try await cloud.tafs().contains(where: { $0.id == id }) else { return nil }
         return Self.chatLines(try await cloud.conversation(id).messages)
+    }
+
+    func lineFull(taf: String, id: String) async -> WatchReply {
+        do {
+            guard try await cloud.tafs().contains(where: { $0.id == taf }),
+                  let whole = Self.wholeLine(try await cloud.conversation(taf).messages, id: id) else {
+                return WatchReply(.failed, line: Words.Watch.openOnPhone)
+            }
+            return WatchReply(.ok, coach: whole)
+        } catch {
+            return WatchReply(.failed, line: Words.Watch.phoneCouldNotReachCloud)
+        }
+    }
+
+    /// The taf's message `id` whole (Read more), at most `WatchCoachAnswer.wholeLength`. Never the person's own words, and
+    /// nothing that isn't a message: those are nil, and the rest stays on the phone.
+    nonisolated static func wholeLine(_ messages: [TafsCloud.ChatMessage], id: String) -> WatchCoachAnswer? {
+        guard let m = messages.first(where: { $0.id == id }), m.kind == .message, m.from != .owner,
+              !m.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        var whole = WatchCoachAnswer.whole(m.text, approveOnPhone: false)
+        whole.at = m.at
+        return whole
     }
 
     nonisolated static func chatLines(_ messages: [TafsCloud.ChatMessage]) -> [WatchChatLine] {

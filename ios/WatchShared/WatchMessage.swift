@@ -51,13 +51,18 @@ struct WatchRequest: Codable, Equatable, Sendable {
         /// The phone asks its owner, "Sign this watch in as you?", with Allow behind the phone's own lock, and answers this
         /// request only that it asked. The watch signs in only on the phone's Allow for that id (`WatchPush.Kind.signIn`).
         case signInWatch = "sign_in_watch"
+        /// Read more on a cut line of a taf's chat from before this visit (row 10, Wear OS's `line-full`): the taf in `taf` and
+        /// the line's id in `message`. The phone reads that taf's chat with its session and answers that one message whole, the
+        /// taf's words only, never the person's. Read only, shown in place, never kept.
+        case lineFull = "line_full"
 
         /// A read changes nothing, so one whose send failed may go once more (`PhoneRoute`). A write (Refuse, Halt, Halt
         /// all, a Coach message) is never sent twice: a send that failed may still have arrived. Nor is a recording's
         /// `transcribe`: the phone erases the file once it's read, so a second ask would find nothing.
         var isRead: Bool {
             switch self {
-            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat, .inboxMarks, .openOnPhone:
+            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat, .inboxMarks, .openOnPhone,
+                 .lineFull:
                 return true
             case .refuse, .halt, .haltAll, .coach, .coachSend, .transcribe, .inboxMark, .signInWatch: return false
             }
@@ -72,7 +77,7 @@ struct WatchRequest: Codable, Equatable, Sendable {
             case .refuse, .halt, .haltAll, .coach, .coachSend, .inboxMark, .openOnPhone: return true
             // A watch signed out on itself asks with no account: the phone's own owner answers it.
             case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat, .inboxMarks,
-                 .transcribe, .signInWatch: return false
+                 .transcribe, .signInWatch, .lineFull: return false
             }
         }
     }
@@ -145,6 +150,8 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .transcribe: return WatchVoice.isID(message)
         case .inboxMarks: return true
         case .inboxMark: return marks?.isComplete ?? false
+        case .lineFull:
+            return given(taf) && (taf ?? "").count <= Self.tafIDLimit && WatchChatLine.isID(message)
         case .openOnPhone:
             // A chat or a held call, never both; a hold's id as KIFF writes them.
             if let hold { return taf == nil && WatchInboxMarks.isID(hold) }
@@ -295,6 +302,13 @@ struct WatchChatLine: Codable, Equatable, Sendable, Identifiable {
 
     /// The most turns the wrist shows from before this visit.
     static let last = 6
+
+    /// A line's id as the phone makes it from a chat message (`TafsCloud.ChatMessage.id`, e.g. `s1|1763600005.0|taf|message`):
+    /// 1 to 200 letters, digits, `_`, `-`, `.`, `:` or `|`.
+    static func isID(_ value: String?) -> Bool {
+        guard let value else { return false }
+        return value.range(of: #"^[A-Za-z0-9_.:|-]{1,200}$"#, options: .regularExpression) != nil
+    }
 }
 
 /// Where Coach's answer to the words the watch sent will be (v2's Send, W2): Coach's chat, the conversation the words

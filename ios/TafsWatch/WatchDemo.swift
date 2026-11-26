@@ -159,6 +159,9 @@ final class DemoPhone: PhoneAsking {
         case .signInWatch:
             // The demo has no phone to ask: its watch signs in on its own tap (`SignedOutHereScreen`).
             return WatchReply(.ok)
+        case .lineFull:
+            // A cut line of the demo's taf chat, whole.
+            return WatchReply(.ok, coach: WatchCoachAnswer.whole(Self.longAnswer, approveOnPhone: false))
         }
     }
 
