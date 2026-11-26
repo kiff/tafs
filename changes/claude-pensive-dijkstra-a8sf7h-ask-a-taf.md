@@ -1,0 +1,1 @@
+- **A watch request goes to the taf whose own job it is.** "Set up an interview with the candidate for Friday" goes to the taf that schedules interviews, not one that only books meetings, and Coach never answers a request itself. When two tafs could each do it, the watch says which in one short line. See [Asking from the watch](docs/watch-ask.md).

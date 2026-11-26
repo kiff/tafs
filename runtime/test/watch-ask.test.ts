@@ -122,7 +122,7 @@ describe("a request from the watch", () => {
     expect(r.body.ask).toMatchObject({ client_id: ASK.client_id, state: "accepted", words: "Sent · Coach has it" });
     expect(JSON.stringify(r.body)).not.toMatch(/session|coach_run|person/);
     expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([
-      `startRun ${COACH} new skills=ask-a-taf@2 only={"skills":true,"tools":["tafs_state","taf_task","read_skill"]}`,
+      `startRun ${COACH} new skills=ask-a-taf@3 only={"skills":true,"tools":["tafs_state","taf_task","read_skill"]}`,
     ]);
     // The run is the person's own, under KIFF's run grant.
     expect(w.agents.runs.at(-1)?.requester).toEqual({ kind: "member", id: ANA });

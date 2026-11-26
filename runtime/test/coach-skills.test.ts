@@ -44,7 +44,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@7", "ask-a-taf@2", "cards-and-holds@3", "connect-an-app@36", "did-this-happen@1", "draft-the-card@52", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@21", "set-up-a-taf@15", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@7", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@36", "did-this-happen@1", "draft-the-card@52", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@21", "set-up-a-taf@15", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -643,15 +643,29 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
     expect(LINE_MAX).toBe(140);
   });
 
+  // Evals 45762771656 and 45774332687, 26 Nov (route, "hands a request to the one taf", 2 then 1 of 3): "Set up an interview
+  // with the candidate from this morning for Friday" was answered "Hiring or Calendar could do that", and "Refund the order
+  // from yesterday" was answered by Coach itself ("I can't refund the order myself…"), in 316 characters. A taf whose
+  // `can` names the request's job takes it, one only near it doesn't count, and Coach never does, refuses or sets it up itself;
+  // "several" is two tafs that each name it as their own, said in that one line (ask-a-taf@3).
+  it("hands a request to the taf whose own job names it, never answers it itself, and says several in one line", () => {
+    const body = COACH_SKILLS.find((k) => k.name === "ask-a-taf")!.body.replace(/\s+/g, " ");
+    expect(body).toContain("and you never do the request yourself, say you can't, or offer to set a taf up: a taf does it, or none does.");
+    expect(body).toContain("A taf can do it when its `can` names the request's own job: renewing a domain is the taf that manages domains, not one that pays bills; a refund of a booking is the taf that refunds bookings, not one that books trips. A taf whose job is only near the request doesn't count.");
+    expect(body).toContain("More than one taf could do it, only when two or more tafs' `can` each name the request's job as their own (both post to the shop's social accounts)");
+    // The examples are jobs outside the Eval's ten Route tafs, so Route measures whether the rule carries, not a match.
+    expect(body).toContain("That line and nothing else: no question, nothing each one does.");
+  });
+
   it("loads only ask-a-taf for the watch, and never ask-a-taf for any phone entry", () => {
-    expect(startSkills("watch")).toEqual(["ask-a-taf@2"]);
-    expect(startSkills("watch", { heldCall: true, halted: true, hasTaf: true })).toEqual(["ask-a-taf@2"]);
+    expect(startSkills("watch")).toEqual(["ask-a-taf@3"]);
+    expect(startSkills("watch", { heldCall: true, halted: true, hasTaf: true })).toEqual(["ask-a-taf@3"]);
     for (const entry of ["free", "recipe", "door", "improve", "coach_lines", "delivery", "did_this_happen"] as const) {
-      expect(startSkills(entry, { heldCall: true, halted: true, hasTaf: true })).not.toContain("ask-a-taf@2");
+      expect(startSkills(entry, { heldCall: true, halted: true, hasTaf: true })).not.toContain("ask-a-taf@3");
     }
     // No text opens the watch's conversation: the entry point read from a message is never "watch".
     for (const text of ["watch", "[watch]", "[tafs watch] Move my call", "From the watch: move my call", "entry: watch"]) expect(entryOf(text)).not.toBe("watch");
-    for (const tool of ["tafs_state", "taf_task", "taf_run", "read_skill"]) expect(toolSkills(tool)).not.toContain("ask-a-taf@2");
+    for (const tool of ["tafs_state", "taf_task", "taf_run", "read_skill"]) expect(toolSkills(tool)).not.toContain("ask-a-taf@3");
   });
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
