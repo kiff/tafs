@@ -2802,7 +2802,7 @@
     <string name="watch_deleted_nothing_sent">Eliminado. Nada foi enviado.</string>
     <string name="watch_didnt_catch">Não percebi. Toque para tentar novamente.</string>
     <string name="watch_dismiss">Ignorar</string>
-    <string name="watch_edit_words">Toque no texto para o alterar</string>
+    <string name="watch_edit_words">Toque no texto para alterá-lo</string>
     <string name="watch_glance_description">Quantos precisam de você, nunca o quê nem quem.</string>
     <string name="watch_halt_all_q">Bloquear todos os seus tafs?</string>
     <plurals name="watch_halt_now_count">
