@@ -315,6 +315,9 @@ describe("words that say every call asks hold the rule to a count of 0 a day tha
       "Cada reembolso te pregunta primero cuando supera 5 €.", "Ogni rimborso ti chiede prima se supera 5 €.",
       "Elke terugbetaling vraagt je eerst als die boven 5 € komt.", "Każdy zwrot pyta cię najpierw gdy przekracza 5 €.",
       "Cada reembolso pergunta-lhe primeiro quando passar de 5 €.",
+      // A comma straight before the threshold word goes on with the clause, as German and Polish always write it.
+      "Jede Erstattung fragt dich zuerst, wenn sie über 5 € liegt.", "Każdy zwrot pyta cię najpierw, gdy przekracza 5 €.",
+      "Every refund asks you first, when it's over €5.", "Chaque remboursement attend votre accord, s'il dépasse 5 €.",
     ]) expect(saysEveryCallAsks(text), text).toBe(false);
   });
 
@@ -326,8 +329,9 @@ describe("words that say every call asks hold the rule to a count of 0 a day tha
       "Every refund asks you first. A refund over 50 EUR is refused.",
       "Chaque remboursement attend votre accord, et au-delà de 200 € par jour il est refusé.",
       "Jede Erstattung fragt dich zuerst und über 200 € am Tag wird abgelehnt.",
-      // After a comma, a threshold reads as another clause: every call, so the rules are shown again (the safe side).
-      "Every refund asks you first, when it's over €5.",
+      // A comma before anything but a threshold word ends the clause.
+      "Every refund asks you first, and over a day refunds stop at 200 EUR.",
+      "Jede Erstattung fragt dich zuerst, und über 200 € am Tag wird abgelehnt.",
     ]) expect(saysEveryCallAsks(text), text).toBe(true);
   });
 

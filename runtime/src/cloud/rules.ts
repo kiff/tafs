@@ -760,12 +760,15 @@ const THRESHOLDS = [
   "gdy|jeśli|jeżeli|kiedy|powyżej|ponad|więcej niż|przekracza|przekroczy",
   "quando|se|acima de|mais de|ultrapassa|ultrapassar|superior a|passar de|a partir de",
 ];
-// Where the clause after the verb ends for that look: a comma, or the language's "and" or "but", as well as a stop. So
+// Where the clause after the verb ends for that look: a comma (unless a threshold word follows it), or the language's "and"
+// or "but", as well as a stop. So
 // "every refund asks you first, and refunds over €200 a day are refused" still reads as every call: that figure is another
 // rule's.
 const CLAUSE_JOINS = ["and|but|while", "et|mais", "und|aber", "y|pero", "e|ma", "en|maar", "i|a|ale", "e|mas"];
+// A comma followed straight away by a threshold word goes on with the clause: German and Polish always set one before
+// "wenn" and "gdy" ("jede Erstattung fragt dich zuerst, wenn sie über 5 € liegt").
 const figureAfter = (thresholds: string, joins: string) =>
-  `(?!(?:(?!(?<![\\p{L}\\p{N}])(?:${joins})(?![\\p{L}\\p{N}]))[^.,;:!?\\n]){0,80}?(?<![\\p{L}\\p{N}])(?:${thresholds})(?![\\p{L}\\p{N}])[^\\d.,;:!?\\n]{0,30}?\\d)`;
+  `(?!(?:(?!(?<![\\p{L}\\p{N}])(?:${joins})(?![\\p{L}\\p{N}]))[^.,;:!?\\n]|,\\s*(?=(?:${thresholds})(?![\\p{L}\\p{N}]))){0,80}?(?<![\\p{L}\\p{N}])(?:${thresholds})(?![\\p{L}\\p{N}])[^\\d.,;:!?\\n]{0,30}?\\d)`;
 const EVERY_CALL_ASKS: RegExp[] = [
   ["every|each", [
     "(?:will |must |should |always |first )?asks? (?:you|first)",
