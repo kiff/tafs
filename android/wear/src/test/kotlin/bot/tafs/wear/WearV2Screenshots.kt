@@ -137,6 +137,15 @@ class WearV2Screenshots(private val size: String, private val dp: Int, private v
     pages(Page.Coach, voice = WatchModel.Voice.Listening("Move my call with Nord Atelier to Thursday at ten", null, since = System.currentTimeMillis() - 12_000))
   }
 
+  /** The recording screen in two longer languages, so the round-fit check sees a top line longer than English's. */
+  @Test fun recordingInFrench() = shot("11-recording-fr", language = "fr") {
+    pages(Page.Coach, voice = WatchModel.Voice.Listening("", null, since = System.currentTimeMillis() - 12_000))
+  }
+
+  @Test fun recordingInHindi() = shot("11-recording-hi", language = "hi") {
+    pages(Page.Coach, voice = WatchModel.Voice.Listening("", null, since = System.currentTimeMillis() - 12_000))
+  }
+
   /** Sent, while Coach is at work on it: the green check in Coach's turning ring. */
   @Test fun sent() = shot("12-sent") { pages(Page.Coach, voice = WatchModel.Voice.Sent(working)) }
 

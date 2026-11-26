@@ -1,3 +1,6 @@
-• Oczekujące wywołania od razu trafiają na zegarek.
-• Wylogowany zegarek pozostaje wylogowany, dopóki tu nie zezwolisz.
-• Baner aktualizacji nie proponuje już ponownego uruchomienia, które nic nie robi.
+• Nowe języki, m.in. koreański, japoński, turecki, hindi i urdu.
+• Pliki: to, co tworzą Twoje tafy, jest przez 30 dni w Konto › Pliki.
+• Tablet: jeden panel boczny, Coach obok pracy, w każdej orientacji.
+• Chrome: powiąż go jednym odciskiem palca.
+• TalkBack nazywa każdy przycisk, kartę i opcję oraz mówi, która jest wybrana.
+• Usuń rozmowę z Coachem na zawsze.

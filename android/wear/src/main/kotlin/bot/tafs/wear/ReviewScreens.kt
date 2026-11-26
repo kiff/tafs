@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -74,6 +75,30 @@ internal const val DELETED_SHOWN_MS = 2_000L
  */
 internal const val TOP_INSET_SHARE = 0.12f
 
+/**
+ * The recording screen's top line: "[state] · [limit]" when it fits the [room] the round face has where it's drawn, measured in
+ * the style it's drawn in (the theme's text style at 11 sp), else [state] alone.
+ */
+@Composable
+internal fun stateLine(state: String, limit: String, room: Dp): String {
+  val full = "$state · $limit"
+  val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+  val density = androidx.compose.ui.platform.LocalDensity.current
+  val style = androidx.wear.compose.material3.LocalTextStyle.current.merge(androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
+  val width = with(density) { measurer.measure(full, style, maxLines = 1, softWrap = false).size.width.toDp() }
+  return if (width <= room) full else state
+}
+
+/** The width of a round face [faceWidth] across, [top] down from its top: the chord there. */
+internal fun roomAt(faceWidth: Dp, top: Dp): Dp {
+  val r = faceWidth.value / 2
+  val y = (r - top.value).coerceIn(-r, r)
+  return Dp(2 * kotlin.math.sqrt(r * r - y * y))
+}
+
+/** Kept clear of the curve on each side of the recording screen's top line. */
+internal val STATE_MARGIN: Dp = 6.dp
+
 /** The limit on one recording, short enough for the top of a round face: "30 s". TalkBack reads it in full ("30 s at most"). */
 internal fun limitShort(): String = "${LISTEN_LIMIT_MS / 1000} s"
 
@@ -122,10 +147,18 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
     val heardWidth = (maxWidth * HEARD_WIDTH_SHARE).coerceAtMost(150.dp)
     // On a small face, the heard words get one line, so they never run into Cancel at the foot.
     val heardLines = if (maxHeight < SMALL_FACE) 1 else 2
+    // The round face: as wide as it's high on a watch; the smaller side wherever the two differ.
+    val faceWidth = minOf(maxWidth, maxHeight)
+    val lineTop = faceWidth * TOP_INSET_SHARE
     Column(Modifier.fillMaxSize().padding(top = maxHeight * TOP_INSET_SHARE, bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
       val state = if (start != null) Words.Watch.ready else "● ${Words.Watch.recording}"
-      T("$state · ${limitShort()}", 11.sp, if (start != null) Look.dim else Look.recording, lines = 1,
-        modifier = Modifier.semantics { contentDescription = "$state · ${Words.Watch.limit}" }.testTag(RECORD_STATE))
+      // The line sits where the round face is narrowest: in a longer language or at a large font size, "· 30 s" goes rather than
+      // the line run past the curve (Wear OS app quality). The seconds left show under the button, and TalkBack reads it in full.
+      val room = roomAt(faceWidth, lineTop) - STATE_MARGIN * 2
+      val line = stateLine(state, limitShort(), room)
+      // Bounded by the room too, so even the state alone ends in an ellipsis inside the curve rather than past it.
+      T(line, 11.sp, if (start != null) Look.dim else Look.recording, lines = 1,
+        modifier = Modifier.widthIn(max = room).semantics { contentDescription = "$state · ${Words.Watch.limit}" }.testTag(RECORD_STATE))
       Spacer(Modifier.height(2.dp))
       Box(Modifier.size(78.dp), contentAlignment = Alignment.Center) {
         // The ring fills to the limit.

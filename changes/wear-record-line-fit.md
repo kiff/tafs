@@ -1,0 +1,1 @@
+- **Wear OS: the recording screen's top line fits a round face in every language.** Where "● Recording · 30 s" would run past the curve, in a longer language or at a large font size, it shows "● Recording" alone; the seconds left stay under the button. See [The Wear OS watch](docs/watch-wear.md).

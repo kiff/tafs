@@ -1,3 +1,6 @@
-• Las llamadas retenidas llegan a tu reloj al instante.
-• Un reloj sin sesión sigue así hasta que lo permitas aquí.
-• El aviso de actualización ya no ofrece un reinicio que no hace nada.
+• Idiomas nuevos, entre ellos coreano, japonés, turco, hindi y urdu.
+• Archivos: lo que hacen tus tafs está en Cuenta › Archivos, 30 días.
+• Tablet: una barra lateral, Coach junto a tu trabajo, en cualquier orientación.
+• Chrome: vincúlalo con una sola huella.
+• TalkBack nombra cada botón, pestaña y opción, y dice cuál está seleccionada.
+• Elimina una conversación con Coach para siempre.

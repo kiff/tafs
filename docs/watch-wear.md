@@ -808,9 +808,11 @@ watch doesn't know is shown as Open on phone, never guessed at.
   page and settings) show their page dots, and their lists stop above them (`PAGE_DOTS_ROOM`), so no line rests under a dot;
   Coach's microphone rests where it did. On the recording screen the heard words take only the whole lines left above Cancel:
   one on a face under 196 dp (`SMALL_FACE`), two on a larger one, none at the largest font size on a small face (they're still
-  heard, and shown on the review). The **round-fit check** draws every screen of `WearV2Screenshots` at Play's smallest round face
+  heard, and shown on the review). Its top line ("● Recording · 30 s") is measured against the face's width where it's drawn
+  (`stateLine`, in the style it's drawn in, against `roomAt`, 6 dp clear of the curve each side, and bounded to that room): where it won't fit, in a longer language or at a large font size,
+  it's "● Recording" alone. The seconds left show under the button, and TalkBack reads the limit in full. The **round-fit check** draws every screen of `WearV2Screenshots` at Play's smallest round face
   (192 dp) and the Galaxy Watch 5's two (198 and 225 dp), at the default and the largest font size (1.24), with what falls outside
-  the face shaded red: `./gradlew :wear:testDebugUnitTest --tests 'bot.tafs.wear.WearV2Screenshots' -PwearRoundFit=<folder>`.
+  the face shaded red, and the recording screen in French and Hindi too: `./gradlew :wear:testDebugUnitTest --tests 'bot.tafs.wear.WearV2Screenshots' -PwearRoundFit=<folder>`.
 - **Refuse and Halt from the wrist** are signed by the phone with its signing key and no prompt of its own, as a
   notification's Refuse on iPhone: they only take authority away. The phone acts only on a message from the paired watch
   running this app, and the watch sends one only while it has a screen lock and is unlocked; otherwise it says to set one
