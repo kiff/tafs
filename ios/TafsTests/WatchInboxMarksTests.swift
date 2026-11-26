@@ -167,6 +167,38 @@ final class WatchInboxMarksTests: XCTestCase {
         XCTAssertEqual(WatchOpen.content("hold:ce_1").userInfo["open"] as? String, "hold:ce_1")
     }
 
+    /// Row 18: a watch's ask to be signed in again reaches only a signed-in phone's own question to its owner, by its id; a
+    /// bad id is refused, and a signed-out phone asks no one.
+    func testAWatchsSignInAskOnlyAsksThePhonesOwner() async {
+        final class Asked { var ids: [String] = [] }
+        struct Asker: WatchReading {
+            let asked: Asked
+            var signedIn = true
+            func needsYou(now: Date) async throws -> WatchNeedsYou { WatchNeedsYou(count: 0, calls: [], at: now) }
+            func tafs() async throws -> [WatchTaf] { [] }
+            func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome { .gone }
+            func halt(taf: String?) async -> HaltAll.Outcome { .needsApp("") }
+            func coach(text: String, messageID: UUID) async -> WatchReply { WatchReply(.notYet) }
+            func tafPage(_ id: String) async throws -> WatchTafPage? { nil }
+            func calendar(day: String?) async throws -> WatchCalendarDay { WatchCalendarDay(day: "", words: "", events: [], halted: false) }
+            func account() async throws -> WatchAccount { WatchAccount(email: nil, account: "", plan: nil) }
+            func askWatchSignIn(_ id: String) async -> WatchReply {
+                asked.ids.append(id)
+                return WatchReply(.ok)
+            }
+        }
+        let asked = Asked()
+        let id = UUID().uuidString.lowercased()
+        let reply = await send(WatchRequest(.signInWatch, made: now, message: id.uppercased()), reading: Asker(asked: asked))
+        XCTAssertEqual(reply.outcome, .ok)
+        XCTAssertEqual(asked.ids, [id])
+        let refused = await send(WatchRequest(.signInWatch, made: now, message: "x"), reading: Asker(asked: asked))
+        XCTAssertEqual(refused.outcome, .refused)
+        let out = await send(WatchRequest(.signInWatch, made: now, message: id), reading: Asker(asked: asked, signedIn: false))
+        XCTAssertEqual(out.outcome, .signedOut)
+        XCTAssertEqual(asked.ids, [id], "nothing asked by a bad id or a signed-out phone")
+    }
+
     /// The notification View on phone posts with tafs not in front: "From your watch", whose tap opens the chat.
     func testViewOnPhonesNotificationOpensTheChat() {
         let coach = WatchOpen.content("coach")

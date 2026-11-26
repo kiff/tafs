@@ -642,7 +642,7 @@ extension CoachModel: WatchPushListening {
             threads.drop(threadKey)
             history = []
             if !inFlight { turns = [] }
-        case .inbox, .account, .needsYou:
+        case .inbox, .account, .needsYou, .signIn:
             return
         }
     }

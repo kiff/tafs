@@ -246,3 +246,73 @@ enum WatchOpen {
         try? await UNUserNotificationCenter.current().add(request)
     }
 }
+
+/// Ask your phone to sign this watch in (docs/watch-app.md, "Sign out on this watch"; row 18): a watch signed out on itself
+/// asks, and this phone's owner answers. The question is a notification, "Sign this watch in as you?", with **Allow**, which
+/// iOS lets through only once the phone is unlocked (`.authenticationRequired`), and **Deny**. A tap that only opens tafs
+/// answers nothing. Only Allow signs the watch in, by the id it asked with, under this phone's mark now.
+@MainActor
+enum WatchSignInAsk {
+    nonisolated static let categoryID = "watch-sign-in"
+    nonisolated static let allow = "watch-sign-in.allow"
+    nonisolated static let deny = "watch-sign-in.deny"
+    /// The `userInfo` key the watch's id goes under.
+    nonisolated static let idKey = "watch_sign_in"
+
+    nonisolated static func category() -> UNNotificationCategory {
+        let allow = UNNotificationAction(identifier: allow, title: Words.Watch.signInAllow, options: [.authenticationRequired])
+        let deny = UNNotificationAction(identifier: deny, title: Words.Watch.signInDeny, options: [.destructive])
+        // A swipe away is heard (`.customDismissAction`) and taken as Deny, so the watch stops waiting.
+        return UNNotificationCategory(identifier: categoryID, actions: [allow, deny], intentIdentifiers: [], options: [.customDismissAction])
+    }
+
+    /// The question: nothing of the account in it, only the watch's id, so a locked phone's screen shows no more.
+    static func content(_ id: String) -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+        content.title = "tafs"
+        content.body = Words.Watch.signInWatchQ
+        content.sound = .default
+        content.categoryIdentifier = categoryID
+        content.userInfo = [idKey: id]
+        return content
+    }
+
+    /// Whether the phone can ask its owner at all: tafs's notifications allowed. Otherwise the watch is told so at once, in
+    /// the phone's words, rather than left waiting for a question no one sees.
+    nonisolated static func canAsk(_ status: UNAuthorizationStatus) -> Bool {
+        status == .authorized || status == .provisional || status == .ephemeral
+    }
+
+    /// Asks the owner, one question per ask: a second ask replaces any still waiting. False when tafs's notifications are
+    /// off, and nothing is asked.
+    static func post(_ id: String) async -> Bool {
+        let center = UNUserNotificationCenter.current()
+        guard canAsk(await center.notificationSettings().authorizationStatus) else { return false }
+        let waiting = await center.pendingNotificationRequests().filter { $0.content.categoryIdentifier == categoryID }.map(\.identifier)
+        center.removePendingNotificationRequests(withIdentifiers: waiting)
+        let delivered = await center.deliveredNotifications().filter { $0.request.content.categoryIdentifier == categoryID }
+        center.removeDeliveredNotifications(withIdentifiers: delivered.map(\.request.identifier))
+        let request = UNNotificationRequest(identifier: "watch-sign-in-" + id, content: content(id), trigger: nil)
+        do {
+            try await center.add(request)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    /// The owner's answer, as the watch takes it: Allow, or Deny (a swipe away is Deny too), for that id. A tap that only
+    /// opens tafs answers nothing; the watch's ask lapses on its own.
+    nonisolated static func answer(action: String, id: String, now: Date = Date()) -> WatchPush? {
+        let denied = action == deny || action == UNNotificationDismissActionIdentifier
+        guard WatchVoice.isID(id), action == allow || denied else { return nil }
+        return WatchPush(.signIn, signIn: WatchSignInAnswer(id: id.lowercased(), allowed: action == allow), at: now)
+    }
+
+    /// Hands the answer to the watch with this phone's mark now; nothing while this phone is signed out.
+    static func respond(action: String, id: String) {
+        let reading = KeptWatchReading()
+        guard reading.signedIn, let push = answer(action: action, id: id) else { return }
+        WatchPushRelay.toWatch(push, mark: reading.mark)
+    }
+}
