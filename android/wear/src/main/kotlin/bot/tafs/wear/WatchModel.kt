@@ -813,6 +813,19 @@ class WatchModel(
     return asked
   }
 
+  /**
+   * The mark that came with the phone's Allow (row 18), heard as a checked reply's is: another sign-in's wipes everything kept
+   * first, then it's the one held.
+   */
+  private fun hearMark(mark: String) {
+    val store = marks ?: return
+    if (AccountMark.seen(store.read(), mark) != AccountMark.Seen.Same) {
+      wipeAccount()
+      store.write(mark)
+    }
+    verified = true
+  }
+
   /** The first reply this process with the mark the watch holds: what was kept is drawn now. */
   private fun takeInKept() {
     if (verified) return
@@ -1880,6 +1893,12 @@ class WatchModel(
       _signInAsk.value = SignInAsk.Denied
       return false
     }
+    // An Allow carries the phone's account mark, as on the Apple Watch: without a valid one it signs nothing in.
+    val mark = answer.mark?.takeIf(bot.tafs.watchlink.WatchLink::isMark) ?: run {
+      _signInAsk.value = SignInAsk.NotReached(LinkFailure.Link)
+      return false
+    }
+    hearMark(mark)
     signIn?.signIn()
     _signInAsk.value = null
     _signedOutHere.value = false

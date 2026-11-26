@@ -1,4 +1,4 @@
-import { grantSuffix, kiffsOwnCount, KIFF_COUNT_A_DAY, moneyCardsOff, type MoneyCard, type MoneyUnbuilt, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement, unpinnedConnection } from "./rules.js";
+import { grantSuffix, kiffsOwnCount, KIFF_COUNT_A_DAY, moneyCardsOff, type MoneyCard, type MoneyUnbuilt, readsCountDropped, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement, unpinnedConnection } from "./rules.js";
 import { noteSendingOutside, sendingProfileOf } from "./sends-outside.js";
 /**
  * An approval card's outcome is tafs cloud's to decide (kiff/tafs#413). The
@@ -295,7 +295,9 @@ export const MONEY_UNBUILT: Record<MoneyUnbuilt, string> = {
   held_total: "its held limits have no total, and no refused day's total on the amount stands beside them for KIFF's own count: the rules need a day's total on the amount",
   count: "the rules count its calls, and a money tool is limited by its amounts: each call's and a day's total, no count of calls but 0 (every call asks)",
   asks_unnamed: "its rule says its calls ask the owner, but no figure asks, so no Card can hold it: if every call asks, the rules need a count of 0 a calendar day that asks (count, 0, calendar_day, over ask); if none asks, the rule's over is refuse",
-  every_call_unheld: "the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks, so calls under its figures would run unasked: the rules need that count (count, 0, calendar_day, over ask), beside its refused figures, or words that say which calls ask",
+  // The words, not the owner's rule, are what's off when the owner set a figure past which calls ask (an Eval, 26 Nov: "Every
+  // refund asks you first when it's over 5 EUR" was read as every call, Coach took the count of 0, and a €4 refund was held).
+  every_call_unheld: "the rules' words say every call asks the owner, but no figure on it is a count of 0 a calendar day that asks, so calls under its figures would run unasked. If the owner set a figure past which calls ask, keep their figure and rule: say the figure before the verb in the notice (\"every refund over €5 asks you first\", not \"every refund asks you first when it's over €5\"). Only if the owner said every call asks, the rules need that count (count, 0, calendar_day, over ask), beside its refused figures",
 };
 
 /** Said with every money refusal: what a refusal names is what the rules need, never a rule the owner can't have. */
@@ -973,18 +975,20 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
   if (unpinned) {
     return { outcome: "answered", answer: `failed: the rules the owner agreed say the connection keeps "${unpinned.line}"${unpinned.tool ? ` for "${unpinned.tool}"` : ""}, but ${unpinned.tool ? `the connection doesn't pin "${unpinned.tool}"` : "the line names no tool"}. Pin it in the connection's request, or show the rules again with that line kept in its instructions, then draft it again.`, note: W.rulesUnpinned(unpinned.title), code: "rules_unpinned" };
   }
-  const off = rulesMismatch([grant, ...others], cards, agreement.rules);
+  // KIFF's own count on a read tool is KIFF's, whatever over Coach gave it (readsCountDropped).
+  const rules = readsCountDropped(agreement.rules, [grant, ...others]);
+  const off = rulesMismatch([grant, ...others], cards, rules);
   if (!off) {
     // A limit the owner never agreed, in any window, is never signed (Eval 43927756622: an hour's €50 held, beside the
     // agreed €5 a refund held and €50 a day refused). Coach hears the one figure to drop, and to change nothing else.
-    const extra = rulesUnnamedFigures([grant, ...others], cards, agreement.rules, ctx.rulesPerToTheLetter)[0];
+    const extra = rulesUnnamedFigures([grant, ...others], cards, rules, ctx.rulesPerToTheLetter)[0];
     if (extra) {
       const per = (extra.window === "call" ? "each call" : extra.window ? `per ${extra.window}` : "with no window") + (extra.per ? ` for each ${extra.per}` : "");
       return { outcome: "answered", answer: `failed: the draft gives "${extra.tool}" a limit the owner never agreed: ${extra.limit} on ${extra.quantity}, ${per}. The rules they agreed name every limit it has, and a Card carries those alone: no other ceiling, total or count, even as a safety margin. Draft it again without that one, and change nothing else: no new limit, Card or tool in its place.`, note: W.rulesFigures(extra.tool), code: "rules_unagreed_figure" };
     }
     // A figure the notice's words don't say was never agreed: the owner agrees to what they read (Eval 44765665210,
     // invoices-3: "a draft invoice for each one", and the Card held 10 a day and 1 per order). The Cards stay as drafted.
-    const unsaid = rulesUnsaid(agreement.rules, agreement.text);
+    const unsaid = rulesUnsaid(rules, agreement.text);
     if (unsaid.length > 0) {
       console.log(`approval rules: figures the notice's words don't say: ${unsaid.join("; ")}`);
       return { outcome: "answered", answer: `failed: the rules notice "${agreement.notice}" the owner agreed doesn't say every limit its rules give, so the owner never read them: ${unsaid.join("; ")}. Show the rules again as a new notice with its confirm, one line per limit with its figure in digits as the Card holds it ("up to 10 a day", "1 per order, ever", "€5 each"), in the owner's language; once they tap agree, draft again with the same Cards, changing nothing in the draft.`, note: W.rulesUnsaid, code: "rules_unsaid" };

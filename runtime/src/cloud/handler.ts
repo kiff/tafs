@@ -3332,6 +3332,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   drives.sort((a, b) => a.at.localeCompare(b.at));
   const shown = components.slice(-CHAT.maxThread);
   await markConnected(me.tenantID, shown, deps, lang);
+  retriedResults(shown, deps.now?.() ?? new Date(), lang);
   await markPlanNeeded(me.tenantID, shown, deps, lang);
   const last = messages.slice(-CHAT.maxThread);
   // The site each of the person's messages to Coach or a taf went with (PAGE), and which answers came from a turn that read
@@ -3552,6 +3553,36 @@ export function approvalAnswerWords(b: { type?: unknown; answer?: unknown; note?
  * waited (docs/secure-connection.md). The apps draw that line and the card's Card alone. A note that can't be
  * read leaves the card as it was.
  */
+/**
+ * The start of a result's failed answer that is Coach's to fix: a field it wrote that tafs cloud refused (the check, the
+ * schedule, a disclosure). Coach reads it whole and shows the result again; the owner never reads it (retriedResults).
+ */
+export const COACH_FIXES = "Fix this and show the result again: ";
+
+/**
+ * A result's card whose hand-over failed on a field Coach wrote, as the apps read it (a demo, 26 Nov: "Order rows wasn't set
+ * up: check.items is where the list is…" in red, then Coach's second result made it):
+ * - once a later result in the thread made the same taf (or its version), it reads as that, set up;
+ * - until the hand-over's hold is over, it reads as setting up (no outcome);
+ * - past it, with no taf made, it says in the reader's language that it wasn't finished, and to ask Coach.
+ * The owner's own failures (their role, no person, KIFF not answering) are left as they are.
+ */
+export function retriedResults(components: ThreadComponent[], now: Date, lang: Lang): void {
+  const agentOf = (c: ThreadComponent) => {
+    const card = c.component as { type?: unknown; taf?: { agent?: unknown } } | undefined;
+    return card?.type === "result" && typeof card.taf?.agent === "string" ? card.taf.agent : undefined;
+  };
+  for (const [i, c] of components.entries()) {
+    const outcome = c.answer?.outcome;
+    if (!outcome || !("failed" in outcome) || !outcome.failed.startsWith(COACH_FIXES)) continue;
+    const agent = agentOf(c);
+    const made = agent ? components.slice(i + 1).find((later) => agentOf(later) === agent && later.answer?.outcome && !("failed" in later.answer.outcome)) : undefined;
+    if (made) c.answer!.outcome = "taf_id" in made.answer!.outcome! ? { taf_id: made.answer!.outcome.taf_id } : { ...made.answer!.outcome! };
+    else if (now.getTime() - Date.parse(c.answer!.at) < HANDOVER_HELD_MS) delete c.answer!.outcome;
+    else c.answer!.outcome = { failed: wordsIn(lang).handover_not_finished };
+  }
+}
+
 /** Where tafs cloud keeps that a taf was made with no plan, for its hand-over card. */
 const planNeededKey = (tenant: string, taf: string) => `${tenant}#plan-needed#${taf}`;
 
@@ -10251,7 +10282,7 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     const misfit = card.taf.check ? await deps.agents.session(tenant, r.session).then((s) => checkMisfitSeen(s.events, card.taf!.check), () => undefined) : undefined;
     if (misfit) {
       console.log(JSON.stringify({ event: "handover_check_misfit", run: r.id, card: card.id }));
-      await deps.agents.answerResult(tenant, coach.id, r.id, card.id, { failed: misfit }).catch((err: unknown) => console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`));
+      await deps.agents.answerResult(tenant, coach.id, r.id, card.id, { failed: COACH_FIXES + misfit }).catch((err: unknown) => console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`));
       continue;
     }
     const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, { ...card.taf as ImprovedTaf, ...(tools ? { tools } : {}) }, tafs, deps) : newTafFor(tenant, coach.id, r, { ...card.taf, ...(tools ? { tools } : {}) }, tafs, deps);
@@ -10823,7 +10854,7 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
   }
   // A tool its connections say sends outside the company is disclosed, by the taf already or by this improvement (gap 14).
   const undisclosed = await sendingCheck(tenant, taf.kiffAgent, want.tools, [...(taf.disclose ?? []), ...(more ?? [])], deps);
-  if (undisclosed) return { failed: undisclosed };
+  if (undisclosed) return { failed: COACH_FIXES + undisclosed };
   // The tools it names are the taf's from now on, for a dial's check to read (Taf.tools).
   const named = (want.tools ?? []).filter((t) => typeof t === "string" && t);
   if (named.length) {
@@ -10885,7 +10916,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
   if (made) return { taf_id: made.id };
   // A tool its connections say sends outside the company is named in disclose (gap 14), whatever Coach remembered.
   const undisclosed = await sendingCheck(tenant, taf.agent, taf.tools, Array.isArray(taf.disclose) ? taf.disclose : [], deps);
-  if (undisclosed) return { failed: undisclosed };
+  if (undisclosed) return { failed: COACH_FIXES + undisclosed };
   let access: { requester: Requester; cards_manage?: boolean };
   try {
     access = await deps.agents.requesterAccess(tenant, coach, r.id);
@@ -10941,7 +10972,9 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       // The owner hasn't approved the Card yet: nothing failed, and the result waits for them.
       // By its code, never its words: a reworded line still waits (#773).
       if (err.status === 409 && err.extra?.code === "draft_not_ready") throw new CardNotApproved();
-      return { failed: err.message };
+      // A field Coach wrote that tafs cloud refused (a 400: the check, the schedule, the kickoff…) is Coach's to fix, and
+      // the owner never reads it (retriedResults).
+      return { failed: (err.status === 400 ? COACH_FIXES : "") + err.message };
     }
     throw err;
   }

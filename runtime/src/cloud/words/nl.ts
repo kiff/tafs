@@ -787,6 +787,7 @@ export const nl: Words = {
   start_lead: "Starten geeft Coach de tools hieronder. Je keurt ze goed op dit apparaat.",
   start_button: "Starten",
   plan_needed: "Kies een abonnement om het te starten.",
+  handover_not_finished: "de overdracht door Coach is niet afgerond",
   cts_title: "Geef Coach zijn tools",
   cts_intro: "Coach heeft deze nodig om voor je tafs te zorgen.",
   cts_details: "Elke tool en zijn limieten",

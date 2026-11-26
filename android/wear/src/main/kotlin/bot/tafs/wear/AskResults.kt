@@ -163,14 +163,29 @@ object KeptResults {
 
   /**
    * The phone's Allow or Deny for this watch's sign-in ask (row 18): into the open app, or, closed, the watch's own flag. Only the
-   * ask waiting, within [SIGN_IN_ASK_MS], is taken; Allow clears the flag, and the next open starts empty and reads fresh.
+   * ask waiting, within [SIGN_IN_ASK_MS], is taken; Allow clears the flag, and the next open starts empty and reads fresh. An Allow
+   * signs in only with the phone's account mark, as on the Apple Watch, and that mark is heard as an account change.
    */
-  fun signInAnswer(context: Context, answer: bot.tafs.watchlink.KeptSignIn, now: Long = System.currentTimeMillis()) {
+  fun signInAnswer(
+    context: Context,
+    answer: bot.tafs.watchlink.KeptSignIn,
+    stores: Stores? = null,
+    now: Long = System.currentTimeMillis(),
+    store: WatchSignIn = PreferencesWatchSignIn(context),
+  ) {
     signIn?.let { return it(answer) }
-    val store = PreferencesWatchSignIn(context)
     val (id, at) = store.asked() ?: return
     if (answer.ask != id || now - at > SIGN_IN_ASK_MS) return
-    if (answer.allowed) store.signIn() else store.forgetAsk()
+    // Deny, or an Allow without a valid mark: it stays signed out.
+    val mark = answer.mark?.takeIf(WatchLink::isMark)
+    if (!answer.allowed || mark == null) return store.forgetAsk()
+    // Another sign-in's mark wipes what's kept first, then it's the one held.
+    val marks = stores?.marks
+    if (marks != null && marks.read() != mark) {
+      stores.wipe()
+      marks.write(mark)
+    }
+    store.signIn()
   }
 
   /** The open app's model, while it's on screen: the phone signed out ([WatchModel.phoneSignedOut]). */
@@ -197,7 +212,7 @@ object KeptResults {
     when {
       path == WatchLink.KEPT_SIGNED_OUT -> if (fromPhone()) bytes?.let(WatchLink::decodeKeptSignedOut)?.let { signedOut(context, it, stores) }
       // Only from the paired phone, connected now, as its replies are.
-      path == WatchLink.KEPT_SIGN_IN -> if (fromPhone()) bytes?.let(WatchLink::decodeKeptSignIn)?.let { signInAnswer(context, it) }
+      path == WatchLink.KEPT_SIGN_IN -> if (fromPhone()) bytes?.let(WatchLink::decodeKeptSignIn)?.let { signInAnswer(context, it, stores) }
       WatchLink.keptAskId(path) != null -> bytes?.let(WatchLink::decodeKeptAsk)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.ask?.takeIf { it.id == WatchLink.keptAskId(path) }?.let { ask(context, it, stores) }
       path == WatchLink.KEPT_MARKS -> bytes?.let(WatchLink::decodeKeptMarks)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { marks(bot.tafs.watchlink.WatchReply.InboxMarks(it.read, it.dismissed), stores) }
       path == WatchLink.KEPT_TAFS -> bytes?.let(WatchLink::decodeKeptTafs)?.takeIf { AccountMark.keptTaken(held, it.mark) }?.let { tafList(it, stores) }

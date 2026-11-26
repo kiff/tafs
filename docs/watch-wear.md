@@ -386,6 +386,10 @@ to them:
   `kept/sign-in` (`{put_at, ask, allowed, account_mark}`), and the watch takes it only from the paired phone, connected now, for
   the ask it's waiting on, within 10 minutes (`SIGN_IN_ASK_MS`). Allow: the flag goes, and the watch starts empty and reads fresh.
   Deny: "Not signed in. This watch stays signed out." The phone not reached: the link's own line, and nothing waits.
+  - **An Allow counts only with the phone's account mark** (after 0.4.10, as on the Apple Watch, tafs#2132). Without a valid
+    mark it signs nothing in: the ask is spent, and the watch says it couldn't talk to the phone. The mark is heard as a checked
+    reply's is (`WatchModel.hearMark`; `KeptResults.signInAnswer` with the app closed): another sign-in's wipes everything kept
+    first and becomes the one held; the same one wipes nothing.
 - **Left out:** "Alerts on this watch". The watch's own notifications are only an ask's result; Needs you's alerts are the
   phone's, which Wear OS bridges, and the watch app doesn't switch them today. A switch with that name would leave those on, so
   it waits until it can switch both.

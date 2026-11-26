@@ -1146,7 +1146,7 @@ class WatchModelTest {
     assertNull(model.outcome.value)
     // Signed in again (the phone's Allow for this watch's ask, row 18): the old outcome never shows.
     signIn.ask("w_00000003", t)
-    model.signInAnswered(bot.tafs.watchlink.KeptSignIn(t, "w_00000003", allowed = true))
+    model.signInAnswered(bot.tafs.watchlink.KeptSignIn(t, "w_00000003", allowed = true, mark = "AAAAAAAAAAAAAAAAAAAAAA"))
     assertNull("never shown after Sign in", model.outcome.value)
   }
 

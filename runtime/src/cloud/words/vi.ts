@@ -780,6 +780,7 @@ export const vi: Words = {
   start_lead: "Bắt đầu sẽ trao cho Coach các công cụ bên dưới. Bạn duyệt chúng trên thiết bị này.",
   start_button: "Bắt đầu",
   plan_needed: "Hãy chọn một gói để bắt đầu.",
+  handover_not_finished: "Coach chưa trao xong",
   cts_title: "Trao công cụ cho Coach",
   cts_intro: "Coach cần chúng để chăm sóc các taf của bạn.",
   cts_details: "Từng công cụ và giới hạn của nó",
