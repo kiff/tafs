@@ -778,6 +778,12 @@ struct KeptWatchReading: WatchReading {
 final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     static let shared = WatchLink()
 
+    /// Pushes made before WatchConnectivity finished activating, sent once it has (`activationDidCompleteWith`). An Allow on
+    /// the watch's sign-in ask that launches a killed tafs runs before `activate()` completes, and was dropped: the watch
+    /// waited out its ten minutes for nothing (row 18, the iPhone's twin of the owner's Android finding, 26 Nov).
+    private var waiting = WaitingWatchPushes()
+    private let waitingLock = NSLock()
+
     func start() {
         guard WCSession.isSupported() else { return }
         // A recording a process that ended left behind goes (`WatchVoiceInbox`).
@@ -797,9 +803,15 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     /// the watch app is put away. An older push of the same request or chat still waiting is cancelled, so a watch out of
     /// reach for an hour gets each thread's newest state, not every step of it.
     func push(_ push: WatchPush) {
-        guard watchListening else { return }
         // Read under a session that has since ended or changed: never handed on as the account's now.
         guard push.mark != nil, push.mark == PhoneWatchMark.stored() else { return }
+        // Not activated yet (a cold launch, or another watch being switched to): held, then sent through here again once
+        // activation completes, so a watch listening then gets it, and the mark is checked again then.
+        if WCSession.isSupported(), WCSession.default.activationState != .activated {
+            waitingLock.withLock { waiting.add(push) }
+            return
+        }
+        guard watchListening else { return }
         let session = WCSession.default
         for waiting in session.outstandingUserInfoTransfers {
             guard let old = WatchPush.from(waiting.userInfo), old.kind == push.kind, old.ask == push.ask, old.taf == push.taf,
@@ -827,7 +839,11 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
         Task { await WatchVoiceInbox.shared.arrived(id) }
     }
 
-    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
+    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        guard activationState == .activated else { return }
+        let held = waitingLock.withLock { waiting.take() }
+        for push in held { self.push(push) }
+    }
     func sessionDidBecomeInactive(_ session: WCSession) {}
     /// Another watch was paired: answer that one from now on.
     func sessionDidDeactivate(_ session: WCSession) { session.activate() }
@@ -849,3 +865,23 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     }
 }
 #endif
+
+/// Pushes waiting for WatchConnectivity to finish activating (`WatchLink`): the newest of each kind, request and taf, as the
+/// queue keeps them once sent, and at most `most`, the oldest going first. Taken once, when activation completes.
+struct WaitingWatchPushes {
+    static let most = 16
+    private(set) var pushes: [WatchPush] = []
+
+    mutating func add(_ push: WatchPush) {
+        let same = { (p: WatchPush) in p.kind == push.kind && p.ask == push.ask && p.taf == push.taf }
+        if pushes.contains(where: { same($0) && $0.at > push.at }) { return }
+        pushes.removeAll(where: same)
+        pushes.append(push)
+        if pushes.count > Self.most { pushes.removeFirst(pushes.count - Self.most) }
+    }
+
+    mutating func take() -> [WatchPush] {
+        defer { pushes = [] }
+        return pushes
+    }
+}
