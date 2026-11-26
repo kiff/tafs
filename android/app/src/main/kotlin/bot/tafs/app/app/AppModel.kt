@@ -3246,12 +3246,23 @@ class AppModel(
   var watchSignInAnswered: ((ask: String, allowed: Boolean, mark: String?) -> Unit)? = null
 
   /**
+   * Where a watch's sign-in ask waits for its person, so a restart of this app's process keeps it (watch row 18): the relay may
+   * take the ask in a process the system ends before the person opens tafs. Attached, the ask still waiting is shown again.
+   */
+  var watchSignInKeep: WatchSignInKeep? = null
+    set(value) {
+      field = value
+      value?.waiting(clock().toEpochMilli())?.let { ask -> _state.update { it.copy(watchSignInAsk = ask) } }
+    }
+
+  /**
    * A watch signed out on itself asks to be signed in again (watch row 18): asked of this phone's person, never answered by the
    * phone alone. Signed out here, or in the sample, nothing is asked. The newest ask replaces one still waiting.
    */
   fun askWatchSignIn(ask: String): Boolean {
     if (_state.value.mode != Mode.kiff) return false
     _state.update { it.copy(watchSignInAsk = ask) }
+    runCatching { watchSignInKeep?.keep(ask, clock().toEpochMilli()) }
     runCatching { watchSignInAsked?.invoke() }
     return true
   }
@@ -3260,6 +3271,7 @@ class AppModel(
   fun answerWatchSignIn(allowed: Boolean) {
     val ask = _state.value.watchSignInAsk ?: return
     _state.update { it.copy(watchSignInAsk = null) }
+    runCatching { watchSignInKeep?.clear() }
     runCatching { watchSignInAnswered?.invoke(ask, allowed, if (allowed) watchMark() else null) }
   }
 

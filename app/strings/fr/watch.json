@@ -69,6 +69,7 @@
   "watch.phone_no_answer": "Votre téléphone n'a pas répondu à temps. Réessayez.",
   "watch.phone_no_app": "tafs n'est pas installé sur votre téléphone. Installez-le, puis réessayez.",
   "watch.phone_not_reachable": "Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.",
+  "watch.phone_update_app": "Mettez à jour tafs sur votre téléphone, puis réessayez.",
   "watch.play": "Lire",
   "watch.qr.needs_me_today": "Qu'est-ce qui m'attend aujourd'hui ?",
   "watch.qr.not_now": "Pas maintenant",

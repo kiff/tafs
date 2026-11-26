@@ -2853,6 +2853,7 @@
     <string name="watch_phone_no_answer">თქვენმა ტელეფონმა დროზე არ უპასუხა. სცადეთ ხელახლა.</string>
     <string name="watch_phone_no_app">tafs თქვენს ტელეფონზე არ არის. დააყენეთ იქ, შემდეგ სცადეთ ხელახლა.</string>
     <string name="watch_phone_not_reachable">თქვენი ტელეფონი მიუწვდომელია. მიიტანეთ ახლოს, შემდეგ სცადეთ ხელახლა.</string>
+    <string name="watch_phone_update_app">განაახლეთ tafs თქვენს ტელეფონზე, შემდეგ სცადეთ ხელახლა.</string>
     <string name="watch_play">დაკვრა</string>
     <string name="watch_qr_needs_me_today">რა მჭირდება დღეს?</string>
     <string name="watch_qr_not_now">ახლა არა</string>

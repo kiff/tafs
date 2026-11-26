@@ -5663,6 +5663,8 @@ enum Words {
         static var phoneNoApp: String { Words.line("watch.phone_no_app") }
         /// Your phone isn't in reach. Bring it closer, then try again.
         static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
+        /// Update tafs on your phone, then try again.
+        static var phoneUpdateApp: String { Words.line("watch.phone_update_app") }
         /// Play
         static var play: String { Words.line("watch.play") }
         enum Qr {

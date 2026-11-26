@@ -124,6 +124,7 @@
     <string name="watch_phone_no_answer">Telefonul nu a răspuns la timp. Încercați din nou.</string>
     <string name="watch_phone_no_app">tafs nu este pe telefon. Instalați-l acolo, apoi încercați din nou.</string>
     <string name="watch_phone_not_reachable">Telefonul nu este în apropiere. Apropiați-l, apoi încercați din nou.</string>
+    <string name="watch_phone_update_app">Actualizați tafs pe telefon, apoi încercați din nou.</string>
     <string name="watch_play">Redați</string>
     <string name="watch_qr_needs_me_today">Ce mă așteaptă azi?</string>
     <string name="watch_qr_not_now">Nu acum</string>

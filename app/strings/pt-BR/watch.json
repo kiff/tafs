@@ -35,6 +35,7 @@
   "watch.phone_no_answer": "O celular não respondeu a tempo. Tente novamente.",
   "watch.phone_no_app": "O app tafs não está no celular. Instale-o e tente novamente.",
   "watch.phone_not_reachable": "O celular não está ao alcance. Aproxime-o e tente novamente.",
+  "watch.phone_update_app": "Atualize o app tafs no celular e tente novamente.",
   "watch.recording": "Gravando",
   "watch.recording_not_received": "A gravação não chegou ao celular. Tente novamente ou digite.",
   "watch.refuse_on_phone": "Não foi recusado. Recuse no seu celular.",

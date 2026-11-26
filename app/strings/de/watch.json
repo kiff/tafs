@@ -69,6 +69,7 @@
   "watch.phone_no_answer": "Dein Handy hat nicht rechtzeitig geantwortet. Versuch es erneut.",
   "watch.phone_no_app": "tafs ist nicht auf deinem Handy. Installier es dort und versuch es dann erneut.",
   "watch.phone_not_reachable": "Dein Handy ist nicht in Reichweite. Bring es näher und versuch es dann erneut.",
+  "watch.phone_update_app": "Aktualisier tafs auf deinem Handy und versuch es dann erneut.",
   "watch.play": "Abspielen",
   "watch.qr.needs_me_today": "Was braucht mich heute?",
   "watch.qr.not_now": "Nicht jetzt",

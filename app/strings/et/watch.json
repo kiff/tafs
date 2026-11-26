@@ -69,6 +69,7 @@
   "watch.phone_no_answer": "Telefon ei vastanud õigel ajal. Proovi uuesti.",
   "watch.phone_no_app": "tafsi pole telefonis. Paigalda see sinna ja proovi uuesti.",
   "watch.phone_not_reachable": "Telefon pole käeulatuses. Too see lähemale ja proovi uuesti.",
+  "watch.phone_update_app": "Uuenda tafsi telefonis ja proovi uuesti.",
   "watch.play": "Esita",
   "watch.qr.needs_me_today": "Mis mind täna vajab?",
   "watch.qr.not_now": "Mitte praegu",

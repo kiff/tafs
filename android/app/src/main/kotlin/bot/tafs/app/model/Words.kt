@@ -3052,6 +3052,7 @@ object Words {
     val phoneNoAnswer: String get() = Res.s(R.string.watch_phone_no_answer)
     val phoneNoApp: String get() = Res.s(R.string.watch_phone_no_app)
     val phoneNotReachable: String get() = Res.s(R.string.watch_phone_not_reachable)
+    val phoneUpdateApp: String get() = Res.s(R.string.watch_phone_update_app)
     val play: String get() = Res.s(R.string.watch_play)
     object Qr {
       val needsMeToday: String get() = Res.s(R.string.watch_qr_needs_me_today)

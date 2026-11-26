@@ -2932,6 +2932,7 @@
     <string name="watch_phone_no_answer">הטלפון שלך לא ענה בזמן. יש לנסות שוב.</string>
     <string name="watch_phone_no_app">tafs לא מותקן בטלפון שלך. יש להתקין אותו שם ולנסות שוב.</string>
     <string name="watch_phone_not_reachable">הטלפון שלך לא בטווח. יש להקרב אליו ולנסות שוב.</string>
+    <string name="watch_phone_update_app">יש לעדכן את tafs בטלפון שלך ולנסות שוב.</string>
     <string name="watch_play">הפעלה</string>
     <string name="watch_qr_needs_me_today">מה צריך ממני היום?</string>
     <string name="watch_qr_not_now">לא עכשיו</string>

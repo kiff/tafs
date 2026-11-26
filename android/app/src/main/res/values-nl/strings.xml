@@ -2853,6 +2853,7 @@
     <string name="watch_phone_no_answer">Je telefoon antwoordde niet op tijd. Probeer het opnieuw.</string>
     <string name="watch_phone_no_app">tafs staat niet op je telefoon. Installeer het daar en probeer het opnieuw.</string>
     <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
+    <string name="watch_phone_update_app">Werk tafs bij op je telefoon en probeer het opnieuw.</string>
     <string name="watch_play">Afspelen</string>
     <string name="watch_qr_needs_me_today">Wat wacht er vandaag op mij?</string>
     <string name="watch_qr_not_now">Nu niet</string>

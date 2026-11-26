@@ -124,6 +124,7 @@
     <string name="watch_phone_no_answer">Vaš telefon nije odgovorio na vrijeme. Pokušajte ponovno.</string>
     <string name="watch_phone_no_app">tafs nije na vašem telefonu. Instalirajte ga tamo, pa pokušajte ponovno.</string>
     <string name="watch_phone_not_reachable">Vaš telefon nije u dometu. Približite ga, pa pokušajte ponovno.</string>
+    <string name="watch_phone_update_app">Ažurirajte tafs na telefonu, pa pokušajte ponovno.</string>
     <string name="watch_play">Pustite</string>
     <string name="watch_qr_needs_me_today">Što me čeka danas?</string>
     <string name="watch_qr_not_now">Ne sada</string>

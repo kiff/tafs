@@ -3011,6 +3011,7 @@
     <string name="watch_phone_no_answer">Telefon ni pravočasno odgovoril. Poskusite znova.</string>
     <string name="watch_phone_no_app">tafs ni v vašem telefonu. Namestite ga tja in poskusite znova.</string>
     <string name="watch_phone_not_reachable">Telefon ni v dosegu. Približajte ga in poskusite znova.</string>
+    <string name="watch_phone_update_app">Posodobite tafs v telefonu in poskusite znova.</string>
     <string name="watch_play">Predvajaj</string>
     <string name="watch_qr_needs_me_today">Kaj danes čaka name?</string>
     <string name="watch_qr_not_now">Ne zdaj</string>

@@ -280,6 +280,27 @@ class AccountModelTest {
     assertTrue(model.signedOutHere.value)
   }
 
+  /**
+   * A phone from before the ask (tafs before Android 147) answers it as a path it doesn't serve: the watch says to update tafs
+   * there, not that it couldn't talk to the phone, and stays signed out with nothing waiting.
+   */
+  @Test fun aPhoneTooOldForTheAskSaysToUpdateIt() = runTest {
+    val signIn = SignIn()
+    val model = v2(Phone { r ->
+      if (r is WatchRequest.SignInAsk) Asked.Answered(WatchReply.Refused(bot.tafs.watchlink.NotAccepted.UNKNOWN_PATH)) else reads(r)
+    }, signIn = signIn)
+    model.signOutHere()
+    model.askSignIn()
+    assertEquals(WatchModel.SignInAsk.PhoneTooOld, model.signInAsk.value)
+    assertNull(signIn.asked())
+    assertTrue(model.signedOutHere.value)
+    // Any other answer than Done or that refusal is still the link's own line.
+    val other = v2(Phone { r -> if (r is WatchRequest.SignInAsk) Asked.Answered(WatchReply.Failed("Open on phone")) else reads(r) }, signIn = SignIn())
+    other.signOutHere()
+    other.askSignIn()
+    assertEquals(WatchModel.SignInAsk.NotReached(LinkFailure.Link), other.signInAsk.value)
+  }
+
   @Test fun anAnswerThatLandsAfterSigningOutOnTheWatchIsDropped() = runTest {
     val tile = Tile()
     lateinit var model: WatchModel

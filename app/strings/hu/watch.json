@@ -69,6 +69,7 @@
   "watch.phone_no_answer": "A telefonod nem válaszolt időben. Próbáld újra.",
   "watch.phone_no_app": "A tafs nincs a telefonodon. Telepítsd ott, majd próbáld újra.",
   "watch.phone_not_reachable": "A telefonod nincs elérhető közelségben. Hozd közelebb, majd próbáld újra.",
+  "watch.phone_update_app": "Frissítsd a tafst a telefonodon, majd próbáld újra.",
   "watch.play": "Lejátszás",
   "watch.qr.needs_me_today": "Mi vár rám ma?",
   "watch.qr.not_now": "Most nem",

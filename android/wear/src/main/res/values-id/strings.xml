@@ -114,6 +114,7 @@
     <string name="watch_phone_no_answer">Ponsel Anda tidak menjawab tepat waktu. Coba lagi.</string>
     <string name="watch_phone_no_app">tafs tidak ada di ponsel Anda. Pasang di sana, lalu coba lagi.</string>
     <string name="watch_phone_not_reachable">Ponsel Anda tidak terjangkau. Dekatkan, lalu coba lagi.</string>
+    <string name="watch_phone_update_app">Perbarui tafs di ponsel Anda, lalu coba lagi.</string>
     <string name="watch_play">Putar</string>
     <string name="watch_qr_needs_me_today">Apa yang butuh saya hari ini?</string>
     <string name="watch_qr_not_now">Nanti saja</string>

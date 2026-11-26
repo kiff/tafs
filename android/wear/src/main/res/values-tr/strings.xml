@@ -119,6 +119,7 @@
     <string name="watch_phone_no_answer">Telefonunuz zamanında yanıt vermedi. Tekrar deneyin.</string>
     <string name="watch_phone_no_app">tafs telefonunuzda yok. Orada kurun, sonra tekrar deneyin.</string>
     <string name="watch_phone_not_reachable">Telefonunuz erişilebilir değil. Yaklaştırın, sonra tekrar deneyin.</string>
+    <string name="watch_phone_update_app">Telefonunuzdaki tafs\'ı güncelleyin, sonra tekrar deneyin.</string>
     <string name="watch_play">Oynat</string>
     <string name="watch_qr_needs_me_today">Bugün neye ihtiyacım var?</string>
     <string name="watch_qr_not_now">Şimdi değil</string>

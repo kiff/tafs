@@ -2932,6 +2932,7 @@
     <string name="watch_phone_no_answer">Telefón neodpovedal včas. Skúste to znova.</string>
     <string name="watch_phone_no_app">tafs v telefóne nie je. Nainštalujte ho tam a skúste to znova.</string>
     <string name="watch_phone_not_reachable">Telefón nie je na dosah. Prineste ho bližšie a skúste to znova.</string>
+    <string name="watch_phone_update_app">Aktualizujte tafs v telefóne a skúste to znova.</string>
     <string name="watch_play">Prehrať</string>
     <string name="watch_qr_needs_me_today">Čo na mňa dnes čaká?</string>
     <string name="watch_qr_not_now">Teraz nie</string>
