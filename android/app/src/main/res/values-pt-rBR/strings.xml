@@ -2842,7 +2842,7 @@
     <string name="watch_nothing_sent_until">Nada é enviado até aprovar.</string>
     <string name="watch_nothing_waits">Nada espera por você.</string>
     <string name="watch_open_on_phone">Abrir no celular</string>
-    <string name="watch_opened_on_phone">Aberto no telemóvel</string>
+    <string name="watch_opened_on_phone">Aberto no seu celular</string>
     <string name="watch_page_brief">Resumo</string>
     <string name="watch_page_inbox">Caixa de entrada</string>
     <string name="watch_paused_still_answers">Em pausa: o agendamento está parado. Ainda assim responde ao que envia.</string>
@@ -2866,7 +2866,7 @@
     <string name="watch_recent_chats">Chats recentes</string>
     <string name="watch_recording">Gravando</string>
     <string name="watch_recording_not_received">A gravação não chegou ao celular. Tente novamente ou digite.</string>
-    <string name="watch_refuse_on_phone">Não foi recusado. Recuse-o no telemóvel.</string>
+    <string name="watch_refuse_on_phone">Não foi recusado. Recuse no seu celular.</string>
     <string name="watch_refused">Recusado. Nada foi enviado.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_rerecord">Gravar de novo</string>
