@@ -7,6 +7,8 @@ import XCTest
 @MainActor
 final class FaceIDSigner: ApprovalSigning {
     var prompts: [String] = []
+    /// What each prompt said, in order: the reason the person reads in the Face ID or Touch ID sheet.
+    var reasons: [String] = []
     var quiet: [String] = []
     var refuse = false
     /// The prompt's own error, such as `LAError(.userCancel)` for a prompt the person closed.
@@ -18,6 +20,7 @@ final class FaceIDSigner: ApprovalSigning {
         if let throwing { throw throwing }
         if refuse { throw ApprovalSigner.SignerError.notAuthenticated }
         prompts.append(String(decoding: message, as: UTF8.self))
+        reasons.append(reason)
         return "signature"
     }
 

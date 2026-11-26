@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: the fingerprint or face prompt that gives Coach its Card says why.** It reads "Give Coach its Card, so it can act only within what you approve", and on a Mac it continues Touch ID's own "tafs is trying to" ([ios-app.md](docs/ios-app.md)).
