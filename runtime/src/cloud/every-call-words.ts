@@ -7,9 +7,11 @@
 //   The gap may be empty: Mongolian puts "бүр" (every) after the noun, right before the verb.
 // - In scripts written without spaces (ja, zh-Hant, th, lo, km, and Korean's "-마다"), the pair is matched within 40
 //   characters of one clause, with no word boundaries.
-// - Never after a figure earlier in the same clause: in ja, ko, zh-Hant, tr, az, tk, hy, ka, mn, hi, bn, ur and ne, "over €5"
-//   comes before the noun ("5유로가 넘는 모든 환불은…", "every refund over €5…"). The guard stops at a comma, so "…€50 a day,
-//   and every refund asks you first" still reads as every call.
+// - In the languages that put "over €5" before the noun (EVERY_CALL_FIGURE_FIRST: ja, ko, zh-Hant, tr, az, tk, hy, ka, mn,
+//   hi, bn, ur, ne and hu: "5유로가 넘는 모든 환불은…", every refund over €5…, and th, lo and km), never after a figure earlier
+//   in the same clause.
+//   The guard stops at a comma, so "…€50 a day, and every refund asks you first" still reads as every call. Elsewhere there's
+//   no guard: a digit between "every" and the verb already keeps a figure that asks a cap.
 //
 // This narrows the gap; it doesn't close it. Agglutinative languages (hu tr az tk ka hy et lt lv mn) carry the forms Coach is
 // likely to write, and th, lo and km the shortest lists. A missed phrase reads as not said, as before, and the skill's rule
@@ -17,6 +19,15 @@
 // ne want a native speaker's read before any real customer.
 // Thai and Lao end a sentence with a space, not a sign, so in th and lo the figure guard's 30 characters can look back into
 // the sentence before. That errs towards not reading every call: it fails open, as a missed phrase does.
+
+/**
+ * The languages that put a figure before the noun ("5유로가 넘는 모든 환불", every refund over €5), where the figure guard reads
+ * "every" after a figure in the same clause as a cap. Hungarian too ("az 5 € feletti minden visszatérítés"). In these, "€50 a
+ * day and every refund asks you first", with no comma, reads as not said: it fails open, as a missed phrase does.
+ */
+export const EVERY_CALL_FIGURE_FIRST: ReadonlySet<string> = new Set(["ja", "ko", "zh-Hant", "tr", "az", "tk", "hy", "ka", "mn", "hi", "bn", "ur", "ne", "hu",
+  // Thai, Lao and Khmer, written without spaces, where "every time" can follow the figure ("เกิน 5 € ทุกครั้ง…").
+  "th", "lo", "km"]);
 
 /** A language written with spaces: its words for every, and the forms that ask. */
 export const EVERY_CALL_SPACED: Record<string, [string, string[]]> = {
