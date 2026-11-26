@@ -41,7 +41,15 @@ sealed interface StreamEvent {
   data class State(val state: String, val words: String?) : StreamEvent
   /** The run stopped: its status (COMPLETED, ERROR, CANCELLED…), why, and for a failed run what went through before it stopped. */
   /** [code] and [words]: tafs cloud's, on a run that failed for a reason it names (`ai_unavailable`), said as they are. */
-  data class End(val status: String, val stop: String, val done: List<DoneCall> = emptyList(), val code: String? = null, val words: String? = null) : StreamEvent
+  data class End(
+    val status: String,
+    val stop: String,
+    val done: List<DoneCall> = emptyList(),
+    val code: String? = null,
+    val words: String? = null,
+    /** tafs cloud's say on Retry for this end (the thread's `failed.retry` rule): false for an AI limit until it resets. */
+    val retry: Boolean? = null,
+  ) : StreamEvent
   /** The stream broke on tafs cloud's side; the thread has the rest. */
   data object Broken : StreamEvent
 
@@ -74,6 +82,7 @@ sealed interface StreamEvent {
           },
           str("code")?.takeIf(String::isNotBlank),
           str("words")?.takeIf(String::isNotBlank),
+          (o["retry"] as? kotlinx.serialization.json.JsonPrimitive)?.booleanOrNull,
         )
         "state" -> str("state")?.let { State(it, str("words")?.takeIf(String::isNotBlank)) }
         "error" -> Broken

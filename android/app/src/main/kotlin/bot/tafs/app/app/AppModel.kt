@@ -152,7 +152,7 @@ const val ASK_COACH = "ask_coach"
 const val FAILED_LINE = "failed|"
 
 /** The codes tafs cloud's `failed` carries (contracts/conversation-failed.json): Try again only ever shows for one of these. */
-val FAILED_RETRY_CODES = setOf("ai_unavailable", "no_credits", "ai_consent_required", "timeout", "failed")
+val FAILED_RETRY_CODES = setOf("ai_unavailable", "no_credits", "ai_consent_required", "timeout", "failed", "ai_limit_account", "ai_limit_service")
 
 /** Try again under a failed run's line: the person's own words for [run], sent again; [label], tafs cloud's words for the button. */
 data class FailedRetry(val run: String, val text: String, val label: String?)
@@ -7518,7 +7518,9 @@ class AppModel(
       _state.update { s ->
         val how = when {
           end == null -> null
-          end.status == "ERROR" && retry != null -> ChatEnd.Failed(retry, end.done, end.words, run)
+          // No Retry where tafs cloud says `retry: false` (an AI limit until it resets), so a tap never meets the same limit again.
+          // With no `retry` (a tafs cloud before it), as before; iOS reads it the same way.
+          end.status == "ERROR" && retry != null -> ChatEnd.Failed(retry, end.done, end.words, run, retryable = end.retry != false)
           end.status == "CANCELLED" -> ChatEnd.Stopped
           end.stop in CAP_STOPS -> ChatEnd.Capped(end.stop)
           else -> null

@@ -833,7 +833,7 @@ private fun EndedLine(end: ChatEnd, taf: String, onRetry: (String) -> Unit) {
   }
   Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
     Text(words, style = scaled(14, color = Theme.ink))
-    if (end is ChatEnd.Failed) {
+    if (end is ChatEnd.Failed && end.retryable) {
       Text(Words.Chat.retry, style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.tapping { onRetry(end.retry) }.padding(vertical = 6.dp))
     }
   }
