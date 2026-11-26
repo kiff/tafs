@@ -16,7 +16,10 @@ struct TafsWatchApp: App {
     @StateObject private var inbox = WatchDemo.on
         ? InboxModel(store: FileInboxStore(url: WatchDemo.folder.appendingPathComponent("inbox.json")), lock: WatchDemo.lock,
                      phone: WatchDemo.phone)
-        : InboxModel(phone: PhoneLink.shared, mayDraw: { WatchAccountMark.shared.mayDraw })
+        : InboxModel(phone: PhoneLink.shared, mayDraw: {
+            // Signed out on this watch, nothing comes in, a held call pushed by the phone included (`WatchSignIn.takesData`).
+            WatchAccountMark.shared.mayDraw && WatchSignIn.takesData(signedOutHere: WatchSignIn.FileStore().signedOut())
+        })
     /// v2: signed out on this watch alone (Account's Sign out), kept across restarts; the demo's in its own folder.
     @StateObject private var signIn = WatchDemo.on
         ? WatchSignIn(store: WatchSignIn.FileStore(url: WatchDemo.folder.appendingPathComponent("signed-out")))

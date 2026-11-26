@@ -52,6 +52,11 @@ final class WatchSignIn: ObservableObject {
         signedOutHere = true
     }
 
+    /// Whether a data push from the phone (a thread, the Inbox's marks, held calls) may be taken: never while signed out here,
+    /// so nothing of the account is kept again until the person signs in here. The phone isn't told, and may keep sending; the
+    /// watch drops it. An account change (`WatchPush.Kind.account`) is heard either way, since it can only wipe.
+    nonisolated static func takesData(signedOutHere: Bool) -> Bool { !signedOutHere }
+
     /// Sign in with your phone: the flag goes, and the watch reads the phone again.
     func signIn() {
         store.set(false)

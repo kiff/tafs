@@ -141,6 +141,9 @@ final class PhoneLink: NSObject, WCSessionDelegate, @unchecked Sendable {
         guard let push = WatchPush.from(userInfo) else { return }
         Task { @MainActor in
             if push.kind == .account { return Self.account(push) }
+            // Signed out on this watch: nothing of the account comes in, held calls included, until the person taps Sign in
+            // with your phone here (`WatchSignIn`). Only the account's change above may still wipe.
+            guard WatchSignIn.takesData(signedOutHere: WatchSignIn.FileStore().signedOut()) else { return }
             guard WatchAccountMark.shared.ours(push.mark) else { return }
             // A conversation deleted on the phone: its kept copy goes now, whether or not a screen shows it.
             if push.kind == .forget { WatchThreads.shared.drop(push.taf ?? WatchThreads.coach) }
