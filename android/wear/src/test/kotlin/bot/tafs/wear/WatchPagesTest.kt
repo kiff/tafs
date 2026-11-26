@@ -167,6 +167,17 @@ class WatchPagesTest {
     compose.onAllNodesWithText(Words.Watch.askingPhone).assertCountEquals(0)
   }
 
+  /** Row 10: Coach's Read more, in the thread, opens the answer and reads it whole in one tap. */
+  @Test fun coachsReadMoreOpensTheWholeInOneTap() {
+    val ask = AskLine("wa_7", "w_7", AskLine.DONE, line = "Wiki lookup is ready. Version 3 is live…", words = "Done", updated = "2026-11-26T00:28:00Z", more = true)
+    var opened = 0
+    var more = 0
+    compose.setContent { MaterialTheme { CoachTurn(WatchModel.Said("Which tafs are ready", 0L), ask, onOpen = { opened++ }, onReadMore = { more++ }) } }
+    compose.onNodeWithTag(THREAD_MORE + "wa_7").performClick()
+    assertEquals(1, more)
+    assertEquals("Read more isn't the plain open", 0, opened)
+  }
+
   /** Row 25: while recording, the seconds left before the limit stops it. */
   @Test fun recordingShowsTheSecondsLeft() {
     compose.setContent { MaterialTheme { VoiceScreenV2(WatchModel.Voice.Listening("Move my call", null, since = 1_000L), actions, now = { 13_000L }) } }

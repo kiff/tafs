@@ -317,7 +317,8 @@ class WatchActivity : ComponentActivity() {
     KeptResults.marks = { marks -> runOnUiThread { model.takeMarks(marks) } }
     KeptResults.chats = { tafId, lines -> runOnUiThread { model.tafChatChanged(tafId, lines) } }
     KeptResults.tafs = { kept -> runOnUiThread { model.tafsChanged(kept.tafs, kept.allHalted, kept.zone) } }
-    KeptResults.needsYou = { kept -> runOnUiThread { model.needsYouPushed(kept.count, kept.words, kept.calls) } }
+    // The tile's count follows the same push, and the system draws it again (row 24).
+    KeptResults.needsYou = { kept -> runOnUiThread { model.needsYouPushed(kept.count, kept.words, kept.calls); NeedsYouTileService.update(this) } }
     // The phone signed out while the app is open: everything goes now, then the phone is read again.
     KeptResults.signedOut = { runOnUiThread { model.phoneSignedOut(); lifecycleScope.launch { model.refresh() } } }
     opening = lifecycleScope.launch {
