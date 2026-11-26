@@ -401,6 +401,29 @@ class WatchPagesTest {
     assertTrue("the top line meets the face's curve", insideTheFace(line.getBoundsInRoot()))
   }
 
+  /**
+   * Google's round-fit finding (0.4.0's recording screen, its top line cut by the curve): in a longer language on Play's smallest
+   * face, the line drops "· 30 s" rather than run past the edge, and stays inside the face; TalkBack still hears the limit.
+   */
+  @GraphicsMode(GraphicsMode.Mode.NATIVE)
+  @Test fun aLongLanguagesTopLineFitsTheSmallFace() {
+    RuntimeEnvironment.setQualifiers("hi-w192dp-h192dp-round-watch-xhdpi")
+    RuntimeEnvironment.setFontScale(WearV2Screenshots.LARGEST_FONT)
+    Res.install(ApplicationProvider.getApplicationContext())
+    show(read, voice = WatchModel.Voice.Listening("", null, since = System.currentTimeMillis()))
+    val line = compose.onNodeWithTag(RECORD_STATE)
+    line.assertTextEquals("● ${Words.Watch.recording}")
+    line.assertContentDescriptionEquals("● ${Words.Watch.recording} · ${Words.Watch.limit}")
+    assertTrue("the top line meets the face's curve", insideTheFace(line.getBoundsInRoot()))
+  }
+
+  @Test fun theRoomAtTheTopOfARoundFaceIsItsChord() {
+    assertEquals(192f, roomAt(androidx.compose.ui.unit.Dp(192f), androidx.compose.ui.unit.Dp(96f)).value, 0.01f)
+    // 12 % down a 192 dp face: about 125 dp across.
+    assertEquals(124.8f, roomAt(androidx.compose.ui.unit.Dp(192f), androidx.compose.ui.unit.Dp(192f * TOP_INSET_SHARE)).value, 0.5f)
+    assertEquals(0f, roomAt(androidx.compose.ui.unit.Dp(192f), androidx.compose.ui.unit.Dp(0f)).value, 0.01f)
+  }
+
   /** On the 40 mm face, the heard words' two lines stay clear of the curve, with room to spare (#1439). */
   @Test fun theHeardWordsStayInsideTheFaceAt40mm() {
     roundFace()
