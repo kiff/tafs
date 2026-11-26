@@ -1063,6 +1063,14 @@ jobs:
           SERIAL=$(security find-certificate -c "Apple Distribution" -p "$KC" | openssl x509 -noout -serial | cut -d= -f2)
           echo "DIST_CERT_SERIAL=$SERIAL" >> "$GITHUB_ENV"
           security find-identity -v -p codesigning "$KC" | sed 's/[0-9A-F]\{40\}/<hash>/'
+          # Archive needs this identity valid. Imported but not valid (a cloud Mac, 26 Nov: "0 valid identities found",
+          # then Archive's "No signing certificate … with a private key") means its chain isn't trusted on this Mac, most
+          # often because Apple's WWDR intermediate certificate, which GitHub's images carry, isn't in its System keychain.
+          if ! security find-identity -v -p codesigning "$KC" | grep -q '"Apple Distribution: '; then
+            security find-identity -p codesigning "$KC" | sed 's/[0-9A-F]\{40\}/<hash>/'
+            echo "::error::DIST_P12's Apple Distribution identity was imported but isn't valid on this Mac (the reason is above; most often Apple's WWDR intermediate certificate is missing from its System keychain)"
+            exit 1
+          fi
 
       - name: Make and install the App Store profiles
         env:
