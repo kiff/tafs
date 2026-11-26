@@ -1,3 +1,6 @@
-• Cada lista mostra onde você está enquanto rola.
-• As telas cabem em relógios redondos, mesmo com o maior tamanho de texto, e nada fica sob os pontos de página.
+• O Coach é o início: fale, digite ou escolha uma resposta rápida, e veja suas palavras antes do envio.
+• Converse com seus tafs pelo relógio; suas conversas abrem na hora.
+• Uma Caixa de entrada para respostas e chamadas retidas, igual em cada um dos seus relógios.
+• As respostas chegam com uma notificação mesmo com o app fechado.
 • O bloco do tafs mostra quantas chamadas retidas precisam de você enquanto o relógio está desbloqueado.
+• Todos os idiomas do celular. Aprovar continua no celular.
