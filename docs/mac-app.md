@@ -75,6 +75,26 @@ If anything readable ever reaches a log, revoke the certificate in App Store Con
 
 **The app's category.** The Mac App Store refuses a Mac upload whose Info.plist has no `LSApplicationCategoryType` (Mac TestFlight's first run stopped there). `project.yml` sets it to `public.app-category.business` (Business); it should be the App Store listing's primary category, which the owner confirms. iOS ignores the key. The Mac workflow checks it's there.
 
+### The cloud Mac
+
+The two App Store uploads (`ios.yml`'s `testflight` and `mac-testflight.yml`) can run on a Mac of our own in the
+cloud instead of GitHub's `macos-26`, while the hosted image lacks a released Xcode 27. Every other macOS job stays
+on GitHub's runners.
+
+- **Switched by repository variables**, which only an admin can change and a pull request can't: `CLOUD_MAC` set to
+  `on`, and `CLOUD_MAC_RUNNER` holding the runner, as `runs-on` takes it (its group and labels). With `CLOUD_MAC`
+  unset, both jobs run on `macos-26` exactly as before. It's turned off again when the Mac is released.
+- **The runner** is registered for one job at a time, in a runner group that admits only these two workflows at
+  `main`. The job also stops itself on a self-hosted runner unless it runs from `main`, before any secret is read.
+  So a tag's upload runs on GitHub's runners or waits for `CLOUD_MAC` to be off.
+- **The job's user has no sudo.** Before each job, the Mac's admin selects the Xcode (a released 27.x, signed by
+  Apple) and installs a pinned xcodegen that the job's user can only read. The job then picks that Xcode with
+  `DEVELOPER_DIR` instead of `sudo xcode-select`, and uses the installed xcodegen instead of `brew install`. It
+  stops if either is missing.
+- **Between the iPhone and the Mac builds**, the job's user and everything it left (its home, its temporary files)
+  are deleted, and the system's launch items are checked against their first listing, so nothing of one build's
+  signing keys reaches the next.
+
 ## The download for macOS 13 and later
 
 Beside the Mac App Store listing, which stays, the same app is offered as a download from
