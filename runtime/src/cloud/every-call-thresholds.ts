@@ -29,16 +29,14 @@ export const EVERY_CALL_AMOUNTS: Record<string, string> = {
 
 /**
  * The words that set it with the figure right before them, in languages that put the figure first ("5 € से ज़्यादा",
- * "5 €'yu aşarsa", "5 € felett"): within 15 characters of it, in the same clause.
+ * "5 €'yu aşarsa", "5 € felett", "5 歐元以上"): within 15 characters of it, in the same clause.
  */
 export const EVERY_CALL_AMOUNTS_AFTER: Record<string, string> = {
-  hu: "felett|fölött|feletti|fölötti|felül|meghaladja|túllépi",
-  tr: "aşarsa|aşıyorsa|aşan|aşınca|üzerindeyse|üzerinde|üstündeyse|fazlaysa|fazla",
-  az: "keçərsə|keçdikdə|artıq|çox|üzərində", tk: "geçse|geçende|köp|artyk|ýokary",
-  hy: "ավելի|գերազանցի|գերազանցում|գերազանցելիս", ka: "მეტი|მეტია|აღემატება|გადააჭარბებს|ზემოთ",
-  mn: "их|илүү|хэтэрвэл|давбал|давсан", hi: "से ज़्यादा|से ज्यादा|से अधिक|से ऊपर|के पार",
-  ur: "سے زیادہ|سے اوپر|سے زائد", ne: "भन्दा बढी|भन्दा माथि|भन्दा धेरै|नाघे",
-  bn: "বেশি|অধিক|ছাড়ালে|ছাড়িয়ে গেলে|অতিক্রম",
+  hu: "felett|fölött|feletti|fölötti|felettit|fölöttit",
+  tr: "üzeri|üstü|üzerinde|aşarsa|aşan|aşınca|geçerse|geçen|fazla", az: "çox|artıq|yuxarı|keçərsə|keçən",
+  tk: "köp|ýokary|geçse|geçýän", hy: "ավելի|գերազանցի|գերազանցում", ka: "მეტი|ზემოთ|აღემատება|გადააჭარბებს",
+  mn: "дээш|илүү|хэтэрвэл|хэтэрсэн", hi: "से ज़्यादा|से ज्यादा|से अधिक|से ऊपर", ur: "سے زیادہ|سے اوپر",
+  ne: "भन्दा बढी|भन्दा माथि|भन्दा बढ्ता", bn: "এর বেশি|-এর বেশি|ইউরোর বেশি|বেশি", "zh-Hant": "以上",
 };
 /** The words that open a condition, which a comma before them doesn't end the look at. They set no threshold alone. */
 export const EVERY_CALL_CONDITIONS: Record<string, string> = {

@@ -794,7 +794,7 @@ const AMOUNTS = [
   "oltre|sopra|più di|supera|superiore a",
   "boven|meer dan|vanaf|overschrijdt|hoger dan",
   "powyżej|ponad|więcej niż|przekracza|przekroczy",
-  "acima de|mais de|ultrapassa|ultrapassar|superior a|passa de|passar de|a partir de",
+  "acima de|mais de|ultrapassa|ultrapassar|excede|superior a|passa de|passar de|a partir de",
 ];
 // The same with the figure right before them ("€5 or more", "wenn sie 5 € übersteigt").
 const AMOUNTS_AFTER = [

@@ -97,7 +97,7 @@ describe("a threshold after the verb that asks, in the 36 other languages", () =
       "Každá refundace se vás nejdřív zeptá, když je přes 5 €.", "Every refund asks you first if it is over €5.",
       "Every refund asks you first if it's €5 or more.", "Jede Erstattung fragt dich zuerst, wenn sie 5 € übersteigt.",
       "Κάθε επιστροφή σε ρωτά πρώτα όταν ξεπερνά τα 5 €.", "Minden visszatérítés előbb téged kérdez, ha 5 € felett van.",
-      "Every refund asks you first over EUR 5.",
+      "Every refund asks you first over EUR 5.", "每一筆退款都會先詢問您，如果 5 歐元以上。",
     ]) expect(saysEveryCallAsks(text), text).toBe(false);
   });
 
