@@ -65,6 +65,7 @@ struct NeedsYouScreen: View {
 struct HeldCallRow: View {
     let call: WatchNeedsYou.Call
     let answer: WatchAnswer?
+    @ObservedObject private var opened = WatchOpenedNotice.shared
     /// Approve on your phone (`NeedsYouModel.approveOnPhone`): the phone opens this call, to approve behind Face ID there.
     var approve: () -> Void = {}
     let refuse: () -> Void
@@ -87,13 +88,20 @@ struct HeldCallRow: View {
                     .buttonStyle(.bordered)
                     .padding(.top, 4)
                 // The watch never approves: the phone opens this call, and an approval is signed there, behind Face ID.
-                Button(action: approve) {
-                    Label(Words.Watch.approveOnPhone, systemImage: "iphone")
+                if opened.key == call.id {
+                    Label(Words.Watch.openedOnPhone, systemImage: "checkmark")
                         .font(.footnote)
+                        .foregroundStyle(WatchLook.coach)
+                        .padding(.top, 2)
+                } else {
+                    Button(action: approve) {
+                        Label(Words.Watch.approveOnPhone, systemImage: "iphone")
+                            .font(.footnote)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(WatchLook.coach)
+                    .padding(.top, 2)
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(WatchLook.coach)
-                .padding(.top, 2)
             case .sending:
                 ProgressView()
             case .done(let line):

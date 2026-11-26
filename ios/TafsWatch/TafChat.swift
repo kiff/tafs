@@ -322,16 +322,58 @@ struct MineBubble: View {
 }
 
 /// View on phone, inline where the rest of an answer is (the owner's call 5): the phone opens the chat (`CoachModel.openOnPhone`).
+/// Once the phone says it opened it, "Opened on your phone" for a moment (row 28, as Wear OS's confirmation).
 struct ViewOnPhone: View {
     let open: () -> Void
+    @ObservedObject private var notice = WatchOpenedNotice.shared
 
     var body: some View {
-        Button(action: open) {
-            Label(Words.Watch.viewOnPhone, systemImage: "iphone")
+        if notice.key == WatchOpenedNotice.chat {
+            Label(Words.Watch.openedOnPhone, systemImage: "checkmark")
                 .font(.caption2.weight(.semibold))
+                .foregroundStyle(WatchLook.coach)
+        } else {
+            Button(action: open) {
+                Label(Words.Watch.viewOnPhone, systemImage: "iphone")
+                    .font(.caption2.weight(.semibold))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(WatchLook.coach)
         }
-        .buttonStyle(.plain)
-        .foregroundStyle(WatchLook.coach)
+    }
+}
+
+/// Row 28: "Opened on your phone" for a moment, once the phone answers that it opened what the watch asked for (View on phone
+/// for a chat, Approve on your phone for a held call). Nothing on the phone or the watch changes; it only says so. Not reached,
+/// nothing is said, and the button stays to tap again.
+@MainActor
+final class WatchOpenedNotice: ObservableObject {
+    static let shared = WatchOpenedNotice()
+    /// The key View on phone shows it for: a chat, Coach's or the taf's on screen.
+    static let chat = "chat"
+    /// How long it shows.
+    static let showFor: TimeInterval = 3
+
+    /// What it shows for: `chat`, or a held call's id; none once it's gone.
+    @Published private(set) var key: String?
+    private var clear: Task<Void, Never>?
+
+    /// The phone's answer to an open: `ok` shows it for `key`; anything else, nothing.
+    func heard(_ reply: WatchReply?, for key: String) {
+        guard reply?.outcome == .ok else { return }
+        self.key = key
+        clear?.cancel()
+        clear = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(Self.showFor * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.key = nil
+        }
+    }
+
+    /// For the tests: nothing showing.
+    func reset() {
+        clear?.cancel()
+        key = nil
     }
 }
 

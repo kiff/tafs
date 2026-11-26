@@ -144,6 +144,24 @@ final class TafChatTests: XCTestCase {
         XCTAssertEqual(phone.asked.count, before, "Coach's model reads no taf's chat")
     }
 
+    /// Row 28: View on phone says "Opened on your phone" for a moment once the phone answers that it opened the chat; not
+    /// reached, nothing.
+    func testViewOnPhoneSaysItOpened() async {
+        WatchOpenedNotice.shared.reset()
+        defer { WatchOpenedNotice.shared.reset() }
+        final class Opens: PhoneAsking {
+            var reply: WatchReply?
+            func ask(_ request: WatchRequest) async -> WatchReply? { reply }
+        }
+        let phone = Opens()
+        let model = CoachModel(phone: phone, taf: Self.tafID, clock: { self.now }, lock: Unlocked(), pause: {})
+        await model.openOnPhone()
+        XCTAssertNil(WatchOpenedNotice.shared.key)
+        phone.reply = WatchReply(.ok)
+        await model.openOnPhone()
+        XCTAssertEqual(WatchOpenedNotice.shared.key, WatchOpenedNotice.chat)
+    }
+
     /// Row 10, as Wear OS's `line-full`: a taf's cut line from before this visit offers Read more, and the tap reads it whole
     /// by the taf and the line's id, shown in place, once. The person's own cut line, Coach's chat, or a phone that can't give
     /// it: the rest is on the phone. Nothing read stays once the app leaves.

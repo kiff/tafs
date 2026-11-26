@@ -80,6 +80,23 @@ final class NeedsYouModelTests: XCTestCase {
         XCTAssertEqual(phone.asked.count, 2, "put away: nothing read")
     }
 
+    /// Row 28: once the phone answers that it opened the held call, "Opened on your phone" shows on that call for a moment;
+    /// not reached, nothing is said and the button stays.
+    func testApproveOnYourPhoneSaysItOpened() async {
+        WatchOpenedNotice.shared.reset()
+        defer { WatchOpenedNotice.shared.reset() }
+        let phone = Phone(nil)
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        await model.approveOnPhone("ce_1")
+        XCTAssertNil(WatchOpenedNotice.shared.key, "not reached: nothing said")
+        phone.reply = WatchReply(.notYet)
+        await model.approveOnPhone("ce_1")
+        XCTAssertNil(WatchOpenedNotice.shared.key, "an older phone: nothing said")
+        phone.reply = WatchReply(.ok)
+        await model.approveOnPhone("ce_1")
+        XCTAssertEqual(WatchOpenedNotice.shared.key, "ce_1", "on that call")
+    }
+
     /// Needs you as shown leaves out a held call past its end on the watch's own clock, and its count, as the Inbox does,
     /// before the phone's next push or read. A call with no end from an older phone stays.
     func testAHeldCallPastItsEndIsntShownOrCounted() {
