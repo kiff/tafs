@@ -62,6 +62,8 @@ enum class OnboardingPage {
   }
 
   val next: OnboardingPage? get() = entries.getOrNull(ordinal + 1)
+
+  val previous: OnboardingPage? get() = entries.getOrNull(ordinal - 1)
 }
 
 /** Where the person is in the cards: Next goes on, the last card's Get started ends them, and Skip ends them from any card. */
@@ -71,6 +73,12 @@ data class OnboardingSteps(val page: OnboardingPage = OnboardingPage.Tafs, val f
   fun advanced(): OnboardingSteps = page.next?.let { copy(page = it) } ?: copy(finished = true)
 
   fun skipped(): OnboardingSteps = copy(finished = true)
+
+  /**
+   * A swipe moves one card on ([forward]) or back, and never past either end: past the last or before the first it stays
+   * where it is. It never ends the cards, as Get started does (the iPhone's swipe between its cards, tafs#2255).
+   */
+  fun swiped(forward: Boolean): OnboardingSteps = (if (forward) page.next else page.previous)?.let { copy(page = it) } ?: this
 }
 
 /**

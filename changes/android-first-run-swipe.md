@@ -1,0 +1,1 @@
+- **Android: swipe between the first-run cards (Android).** As on the iPhone, a swipe moves to the next or previous card, never past either end and never ending the cards as Get started does. In a right-to-left language the next card is a swipe to the right, and with the system's Remove animations on the cards change in place (docs/onboarding.md).
