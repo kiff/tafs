@@ -466,7 +466,7 @@ enum KIFFMapping {
                 fields[key].map { argumentLines(visible(key), $0, depth: depth + 1) } ?? []
             }
         case .text(let t): return ["\(pad)\(label): \(t.isEmpty ? "\"\"" : visible(t))"]
-        case .number(let n): return ["\(pad)\(label): \(n)"]
+        case .number(let n): return ["\(pad)\(label): \(HeldArgumentsReader.plainLiteral(n))"]
         case .flag(let b): return ["\(pad)\(label): \(b ? "true" : "false")"]
         case .null: return ["\(pad)\(label): null"]
         }

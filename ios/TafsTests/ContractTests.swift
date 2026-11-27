@@ -75,13 +75,21 @@ final class ContractTests: XCTestCase {
     /// A held call's arguments under Details, every case of contracts/held-arguments.json: the lines every app writes,
     /// exactly. Nothing is ever shortened to "…" (red-team, 27 Nov: a held browse_act's steps showed as "steps: …").
     func testAHeldCallsArgumentsAreTheContractsLinesExactly() throws {
-        for c in try cases("held-arguments.json") {
-            let name = try XCTUnwrap(c["name"] as? String)
-            let arguments = try JSONSerialization.data(withJSONObject: try XCTUnwrap(c["arguments"]), options: [.fragmentsAllowed])
-            let held = #"{"id":"ce_c","subject":"a","action":"x","entity_id":"e","status":"held","breaches":[],"created_at":"2026-11-27T16:00:00Z","arguments":"#
-                + String(decoding: arguments, as: UTF8.self) + "}"
-            let e = try KIFFClient.decoder.decode(KIFFClient.CardException.self, from: Data(held.utf8))
-            XCTAssertEqual(KIFFMapping.details(of: e), try XCTUnwrap(c["lines"] as? [String]), name)
+        // The vector read as KIFF's bytes are read (`HeldArgumentsReader`), each number as written: JSONSerialization
+        // would read it through NSNumber and round the long ones (case 6).
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("contracts/held-arguments.json")
+        guard case .object(let file)? = HeldArgumentsReader.parse(try Data(contentsOf: url)), case .list(let cases)? = file["cases"]
+        else { return XCTFail("held-arguments.json doesn't read") }
+        XCTAssertFalse(cases.isEmpty)
+        for case .object(let c) in cases {
+            guard case .text(let name)? = c["name"], case .object(let arguments)? = c["arguments"], case .list(let lines)? = c["lines"]
+            else { return XCTFail("a case of held-arguments.json doesn't read") }
+            let held = #"{"exceptions":[{"id":"ce_c","subject":"a","action":"x","entity_id":"e","status":"held","breaches":[],"created_at":"2026-11-27T16:00:00Z","arguments":{}}]}"#
+            var e = try XCTUnwrap(KIFFClient.heldList(Data(held.utf8)).first)
+            e.arguments = arguments
+            let want = lines.compactMap { line -> String? in if case .text(let t) = line { return t }; return nil }
+            XCTAssertEqual(KIFFMapping.details(of: e), want, name)
         }
     }
 

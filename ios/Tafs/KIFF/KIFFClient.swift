@@ -702,7 +702,7 @@ final class KIFFClient {
             var text: String {
                 switch self {
                 case .text(let t): return t
-                case .number(let n): return n
+                case .number(let n): return HeldArgumentsReader.plainLiteral(n)
                 case .flag(let b): return b ? "true" : "false"
                 case .null, .list, .object: return ""
                 }
@@ -1172,13 +1172,26 @@ final class KIFFClient {
     }
 
     func heldCalls() async throws -> [CardException] {
+        let raw: RawBody = try await send("GET", "/v1/me/card-exceptions?status=held")
+        return try Self.heldList(raw.data)
+    }
+
+    /// The held list as KIFF sends it, each call's arguments read from KIFF's own bytes (`HeldArgumentsReader`), so a
+    /// number keeps every digit sent; a call whose bytes don't read keeps what `JSONDecoder` read.
+    static func heldList(_ data: Data) throws -> [CardException] {
         struct Response: Decodable { let exceptions: [CardException] }
-        let response: Response = try await send("GET", "/v1/me/card-exceptions?status=held")
-        return response.exceptions
+        let (rest, byID) = HeldArgumentsReader.apart(data)
+        var list = try decoder.decode(Response.self, from: rest).exceptions
+        for i in list.indices { if let arguments = byID[list[i].id] { list[i].arguments = arguments } }
+        return list
     }
 
     func cardException(_ id: String) async throws -> CardException {
-        try await send("GET", "/v1/me/card-exceptions/\(escaped(id))")
+        let raw: RawBody = try await send("GET", "/v1/me/card-exceptions/\(escaped(id))")
+        let (rest, byID) = HeldArgumentsReader.apart(raw.data)
+        var held = try Self.decoder.decode(CardException.self, from: rest)
+        if let arguments = byID[held.id] { held.arguments = arguments }
+        return held
     }
 
     /// The phone's signature on an answer, as KIFF checks it.
