@@ -117,11 +117,12 @@ never starts `release` or `wear-release`.
   - Coach: the person's line (`sample.coach.ask`) in the chat's own bubble, then Coach's answer, connect first, with the plan
     line;
   - the Card: the Card tab's `TafCardFace` ("Support replies · Zendesk", 12 of 40 replies), and under it a call it holds as
-    Needs you draws it: nothing is sent, and **Approve once** with the screen lock's name;
+    Needs you draws it: nothing is sent, and **Approve once** naming the fingerprint (`Biometry.approvingWith`, never the
+    screen lock);
   - Credits: Plan & usage's Solo line and meter, and Coach's own work counted apart.
 
   Their lines: `onboarding.tafs_lead`; `onboarding.home_lead`; `onboarding.card_lead` then
-  `onboarding.control_lead_android`, which names the screen lock, each its own paragraph (`OnboardingPage.lines`: Japanese
+  `onboarding.control_lead_android` ("You approve with your fingerprint or face"), each its own paragraph (`OnboardingPage.lines`: Japanese
   and Chinese put no space after a full stop, so the app never joins two sentences); `billing.credits_buy`. The pictures are hidden from
   TalkBack. They show full screen once per device after signing in (`CARDS_SEEN_KEY`), and Back is Skip.
 - **The first Home** (`HomeView`, step 4): with no taf and no recipes listed, for anyone who may use Coach. It shows

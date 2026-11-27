@@ -63,8 +63,8 @@ class OnboardingCardsTest {
   @Test fun skipEndsFromAnyCard() = OnboardingPage.entries.forEach { assertTrue(OnboardingSteps(it).skipped().finished) }
 
   /**
-   * First run v2's four cards, as the iPhone and the Mac: the Card's line ends with Android's own way to approve, the screen lock,
-   * never Face ID; Coach's says what Coach does; the credits' what they pay for.
+   * First run v2's four cards, as the iPhone and the Mac: the Card's line ends with how this phone approves (a fingerprint or
+   * face, never the screen lock); Coach's says what Coach does; the credits' what they pay for.
    */
   @Test fun theFourCardsSayTheirLines() {
     assertEquals(listOf(OnboardingPage.Tafs, OnboardingPage.Coach, OnboardingPage.Card, OnboardingPage.Credits), OnboardingPage.entries)

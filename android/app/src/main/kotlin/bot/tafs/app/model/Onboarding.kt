@@ -51,8 +51,8 @@ enum class OnboardingPage {
 
   /**
    * The card's lines, each its own paragraph: no language joins two sentences with a space it may not use (Japanese and Chinese
-   * put none after a full stop), as the iPhone's `OnboardingPage.lines`. The Card's ends with Android's own way to approve: the
-   * screen lock.
+   * put none after a full stop), as the iPhone's `OnboardingPage.lines`. The Card's ends with how this phone approves: a
+   * fingerprint or face, never the screen lock.
    */
   val lines: List<String> get() = when (this) {
     Tafs -> listOf(Words.Onboarding.tafsLead)
