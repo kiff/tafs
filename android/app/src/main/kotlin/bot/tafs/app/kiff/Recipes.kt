@@ -122,7 +122,17 @@ data class Recipe(
   /** As sent: read leniently, so a value that isn't words draws nothing and never fails the whole gallery. */
   @kotlinx.serialization.SerialName("proved") val provedSent: kotlinx.serialization.json.JsonElement? = null,
   @kotlinx.serialization.SerialName("sample") val sampleSent: kotlinx.serialization.json.JsonElement? = null,
+  @kotlinx.serialization.SerialName("guide") val guideSent: kotlinx.serialization.json.JsonElement? = null,
 ) {
+  /**
+   * How the job goes, step by step, as tafs cloud sends it (`guide`, only with a proof run): each step's title and its Do, You see
+   * and If lines. A step that isn't one, or has no title, is left out; an unreadable guide is none.
+   */
+  val guide: List<GuideStep>
+    get() = (guideSent as? kotlinx.serialization.json.JsonArray).orEmpty().mapNotNull { step ->
+      runCatching { KiffClient.json.decodeFromJsonElement(GuideStep.serializer(), step) }.getOrNull()?.takeIf { it.title.isNotBlank() }
+    }
+
   /** tafs cloud's line for where the job was proved ("Proved on a test help desk."); empty when it wasn't, or isn't words. */
   val proved: String get() = words(provedSent)
 
@@ -131,6 +141,20 @@ data class Recipe(
 
   private fun words(sent: kotlinx.serialization.json.JsonElement?): String =
     (sent as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content?.trim().orEmpty()
+}
+
+/** One step of a job's guide: a title, then what the person does, what appears, and the one thing that goes wrong most. */
+@Serializable
+data class GuideStep(
+  val title: String = "",
+  @kotlinx.serialization.SerialName("do") val doLine: String? = null,
+  @kotlinx.serialization.SerialName("see") val seeLine: String? = null,
+  @kotlinx.serialization.SerialName("if") val ifLine: String? = null,
+) {
+  /** The step's lines that came, each with its label from [labels], in tafs cloud's order: Do, You see, If. */
+  fun lines(labels: RecipeLabels): List<Pair<String, String>> =
+    listOf(labels.guideDo to doLine, labels.guideSee to seeLine, labels.guideIf to ifLine)
+      .mapNotNull { (label, line) -> line?.trim()?.takeIf { it.isNotEmpty() }?.let { label to it } }
 }
 
 /** The Card a recipe's taf would have, as its file says it: what it does on its own, asks first, and never does. */
@@ -151,4 +175,17 @@ data class RecipesHome(
 
 /** The recipe sheet's words, in the person's language. */
 @Serializable
-data class RecipeLabels(val allows: String = "", val holds: String = "", val never: String = "", val hand: String = "")
+data class RecipeLabels(
+  val allows: String = "",
+  val holds: String = "",
+  val never: String = "",
+  val hand: String = "",
+  /** The heading over a job's guide ("How it goes") and the labels of its three kinds of line. Absent from an older tafs cloud. */
+  val guide: String = "",
+  @kotlinx.serialization.SerialName("guide_do") val guideDo: String = "",
+  @kotlinx.serialization.SerialName("guide_see") val guideSee: String = "",
+  @kotlinx.serialization.SerialName("guide_if") val guideIf: String = "",
+) {
+  /** [recipe]'s guide as the sheet draws it: none without its heading, so an older tafs cloud never shows an empty section. */
+  fun guideOf(recipe: Recipe): List<GuideStep> = if (guide.isBlank()) emptyList() else recipe.guide
+}

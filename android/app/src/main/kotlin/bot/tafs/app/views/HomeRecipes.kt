@@ -231,8 +231,38 @@ internal fun RecipeSheet(
       Zone(labels.never, recipe.card.never)
       // What it reported after that proof run, as sent.
       if (recipe.sample.isNotBlank()) Zone(sampleLabel, listOf(recipe.sample))
+      // How it goes, step by step, as tafs cloud sends it and in its words; nothing without both.
+      GuideZone(labels, labels.guideOf(recipe))
       val action = tryWords ?: labels.hand
       if (canHand && action.isNotBlank()) PrimaryButton(action, onHand, Modifier.fillMaxWidth())
+    }
+  }
+}
+
+/** The job's guide under its heading: each step's title, then its lines, each led by its label. None with no steps. */
+@Composable
+private fun GuideZone(labels: RecipeLabels, steps: List<bot.tafs.app.kiff.GuideStep>) {
+  if (steps.isEmpty()) return
+  Panel {
+    Eyebrow(labels.guide)
+    steps.forEachIndexed { i, step ->
+      Column(Modifier.padding(top = if (i == 0) 0.dp else 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(step.title, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+        step.lines(labels).forEach { (label, line) ->
+          Text(
+            androidx.compose.ui.text.buildAnnotatedString {
+              if (label.isNotBlank()) {
+                pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.SemiBold, color = Theme.soft))
+                append(label)
+                pop()
+                append("  ")
+              }
+              append(line)
+            },
+            style = scaled(14, color = Theme.ink),
+          )
+        }
+      }
     }
   }
 }
