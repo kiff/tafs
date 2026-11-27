@@ -7,7 +7,7 @@ import { FULL_LANGUAGES, LANGUAGES, withLanguage, wordsIn } from "../src/cloud/w
 import { ja } from "../src/cloud/words/ja.js";
 import { ko } from "../src/cloud/words/ko.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
-import { sweepBriefs, approvalWaits, COACH_FIXES, retriedResults, type ThreadComponent, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { sweepBriefs, approvalWaits, COACH_FIXES, retriedResults, type ThreadComponent, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, upgradeTenants, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -3299,6 +3299,36 @@ describe("upgrading running tafs (kiff/tafs#69)", () => {
     const again = await upgradeDefinitions(depsOf(w), { dryRun: false });
     expect(again.every((o) => o.outcome === "current")).toBe(true);
     expect(w.agents.calls.filter((c) => c.startsWith("putAgent") || c.startsWith("getAgent"))).toEqual([]);
+  });
+
+  // The owner's test-account upgrade (27 Nov): definitions no Eval measured may reach the accounts the run names, and
+  // never any other. An empty list writes nothing, and a list that isn't one is refused before anything is read.
+  it("upgrades only the accounts a test-account run names, and none for an empty list", async () => {
+    const w = world();
+    const old = definition(RAE, jobById("refunds"), { budgetCents: 150 });
+    await w.agents.api.putAgent("t_acme", RAE, { ...old, instructions: old.instructions.replace("five ways", "four ways") });
+    const maxOld = definition(MAX, jobById("refunds"), { budgetCents: 150 });
+    await w.agents.api.putAgent("t_other", MAX, { ...maxOld, instructions: maxOld.instructions.replace("five ways", "four ways") });
+    w.agents.calls.length = 0;
+
+    const none = await upgradeDefinitions(depsOf(w), { dryRun: false, tenants: [] });
+    expect(none).toEqual([]);
+    expect(w.agents.calls.filter((c) => c.startsWith("putAgent"))).toEqual([]);
+
+    const only = await upgradeDefinitions(depsOf(w), { dryRun: false, tenants: ["t_other", "t_nobody"] });
+    expect(only.map((o) => o.tenant)).toEqual(only.map(() => "t_other"));
+    expect(only.find((o) => o.taf === MAX)?.outcome).toBe("written");
+    expect(w.agents.calls.filter((c) => c.startsWith("putAgent"))).toEqual([`putAgent ${MAX}`]);
+    // The account it didn't name is as it was, read by no one.
+    expect((await w.agents.api.getAgent("t_acme", RAE))?.instructions).toContain("four ways");
+    expect((await w.tafs.get("t_acme", RAE))?.definition).toBeUndefined();
+
+    // The Lambda's event: absent is every account (the plain gate's run), a list is those accounts, anything else refused.
+    expect(upgradeTenants({ dry_run: true })).toBeUndefined();
+    expect(upgradeTenants({ tenants: [" t_acme ", "t_other"] })).toEqual(["t_acme", "t_other"]);
+    for (const bad of [[], [""], ["  "], "t_acme", [1], null, {}]) {
+      expect(() => upgradeTenants({ tenants: bad }), JSON.stringify(bad)).toThrow(/one or more ids/);
+    }
   });
 
   it("builds Setup from its own definition, skips a taf being removed, and says why one fails", async () => {

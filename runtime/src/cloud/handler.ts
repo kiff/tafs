@@ -8113,10 +8113,31 @@ export function upgradeFailure(err: unknown): string {
  * prompt cache.
  * The definition is the agent's text, model and caps: its KIFF key and Cards
  * are never touched.
+ *
+ * With tenants, only those accounts: the workflow's test-account upgrade (its
+ * list from a repository secret), which may roll out definitions no Eval
+ * measured, so it never reaches any other account. An empty list upgrades
+ * nothing, never every account.
  */
-export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }): Promise<UpgradeOutcome[]> {
+/**
+ * The accounts an upgrade event names (upgrade.yml's test_accounts_only), when it names any: a list of
+ * one or more non-empty ids. Anything else is an error, never read as every account.
+ */
+export function upgradeTenants(upgrade: { tenants?: unknown }): string[] | undefined {
+  if (!("tenants" in upgrade)) return undefined;
+  const t = upgrade.tenants;
+  if (!Array.isArray(t) || t.length === 0 || !t.every((x) => typeof x === "string" && x.trim() !== "")) {
+    throw new Error("upgrade.tenants names the accounts to upgrade: a list of one or more ids");
+  }
+  return t.map((x: string) => x.trim());
+}
+
+export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean; tenants?: readonly string[] }): Promise<UpgradeOutcome[]> {
   const out: UpgradeOutcome[] = [];
+  const only = opts.tenants ? new Set(opts.tenants) : undefined;
+  if (only && only.size === 0) return out;
   for (const tenant of await deps.tafs.tenants()) {
+    if (only && !only.has(tenant)) continue;
     for (const taf of await deps.tafs.list(tenant)) {
       if (taf.removing) continue;
       const one: UpgradeOutcome = { tenant, taf: taf.id, job: taf.job, outcome: "current" };

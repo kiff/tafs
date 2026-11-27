@@ -27,6 +27,10 @@ on:
         description: "Only with a named owner decision on the thread: \"<base Eval run id> <check run id> <touched run ids, comma-separated, or -> <reason>\" (blank: none)"
         type: string
         default: ""
+      test_accounts_only:
+        description: "Only the test accounts (the UPGRADE_TEST_TENANTS secret), with or without an Eval on these definitions: no other account is written"
+        type: boolean
+        default: false
       eval_report_only:
         description: "Only with the owner's go on the thread, before launch (until 28 Nov 2026): \"<the latest completed Eval run id> <reason>\", that run read as a report, not a gate (blank: the gate stands)"
         type: string
@@ -154,8 +158,10 @@ jobs:
             echo "::warning::Not evaluated: the nightly didn't pass, or the definition sources changed since kiff/tafs@${ref:0:12}. Only a dry run goes ahead."
             git diff --stat "$ref" HEAD -- $sources || true
           fi
+      # The owner's test-account upgrade (27 Nov): definitions no Eval measured may reach the test accounts, and only them;
+      # every other account waits for the plain gate, measured by the weekly Eval.
       - name: Refuse a real run that wasn't evaluated
-        if: ${{ !inputs.dry_run && steps.gate.outputs.evaluated != 'true' }}
+        if: ${{ !inputs.dry_run && !inputs.test_accounts_only && steps.gate.outputs.evaluated != 'true' }}
         run: |
           echo "::error::The evals haven't passed on these definitions. Move kiff/agents' eval/tafs.ref here and let the nightly pass, or run dry."
           exit 1
@@ -167,9 +173,19 @@ jobs:
       - name: Upgrade the definitions
         env:
           DRY_RUN: ${{ inputs.dry_run }}
+          TEST_ONLY: ${{ inputs.test_accounts_only }}
+          # Comma-separated account ids, kept out of this public repository and its log.
+          TEST_TENANTS: ${{ secrets.UPGRADE_TEST_TENANTS }}
         run: |
           set -euo pipefail
           payload=$(jq -cn --argjson dry "$DRY_RUN" '{upgrade: {dry_run: $dry}}')
+          if [ "$TEST_ONLY" = true ]; then
+            tenants=$(jq -cn --arg s "$TEST_TENANTS" '$s | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0)) | unique')
+            n=$(jq length <<<"$tenants")
+            [ "$n" -gt 0 ] || { echo "::error::test_accounts_only, but the UPGRADE_TEST_TENANTS secret names no account"; exit 1; }
+            payload=$(jq -cn --argjson dry "$DRY_RUN" --argjson tenants "$tenants" '{upgrade: {dry_run: $dry, tenants: $tenants}}')
+            echo "test accounts only: $n accounts"
+          fi
           aws lambda invoke --function-name tafs-cloud --cli-binary-format raw-in-base64-out \
             --payload "$payload" out.json >/dev/null
           if jq -e '.errorMessage' out.json >/dev/null; then

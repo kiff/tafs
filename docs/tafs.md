@@ -73,7 +73,12 @@ tafs cloud stores one agent definition per taf in kiff/agents
 
 When main changes what a definition is built from, the **Upgrade** workflow
 (`.github/workflows/upgrade.yml`, by hand, after kiff/agents' eval passed on the same
-sources) rewrites each running taf's definition, from its next run.
+sources) rewrites each running taf's definition, from its next run. With
+`test_accounts_only`, it upgrades only the test accounts the `UPGRADE_TEST_TENANTS`
+secret lists (comma-separated ids, never in the public log, which prints their count),
+and may do so before an Eval measured those definitions. Every other account waits for
+the plain gate. tafs cloud upgrades exactly the accounts the run names (`upgrade.tenants`).
+A list that names none is refused, never read as every account.
 
 ## Starting a taf
 
