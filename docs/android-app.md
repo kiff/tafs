@@ -424,7 +424,9 @@ KIFF keeps, 120 and 280 code points, so an emoji is never cut in half. A link or
 rule or action. The gateway's own arguments (`kiff_operation_id`, `kiff_about`, `kiff_reason`)
 aren't repeated under Details, where the call's ids stay. A KIFF that keeps neither shows the card
 as before. Details writes every other argument out in full, never "…": a plain one on its line, a list's items (1, 2, …)
-and an object's fields below its name, two spaces deeper each level, in the order sent, so a held browser call's `steps`
+and an object's fields below its name, two spaces deeper each level; items in the order sent, fields sorted by key at
+every level. A nested empty string shows as `""`, a number exactly as sent (an integer past 2^53 too), and a line break in
+a value becomes a space, so a value can't draw a step of its own. A held browser call's `steps`
 (each fill, its field and value, each click) are what the owner reads before approving (`KiffMapping.details`). Every app
 writes the same lines, from the cases in `contracts/held-arguments.json`.
 

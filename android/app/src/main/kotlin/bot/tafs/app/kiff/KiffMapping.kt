@@ -548,7 +548,8 @@ object KiffMapping {
 
   /**
    * What a held gateway call is on, as KIFF keeps its arguments ("payment_intent: pi_…"): one line an argument, and a
-   * list or object written out in full below its name, each item or field on its own line, indented, in the order sent.
+   * list or object written out in full below its name, each item on its own line in the order sent, each field in its
+   * key's order at every level (a dictionary can't keep the order sent), indented.
    * Nothing the call carries is ever folded to "…": a held browser call's `steps` are what the owner signs, and a step
    * the line hid could click what the taf's words never said (red-team, 27 Nov). The amount isn't repeated (it's shown
    * above), nor the gateway's own arguments; an empty string at the top says nothing and isn't shown.
@@ -575,16 +576,19 @@ object KiffMapping {
         else listOf("$pad$label:") + value.flatMapIndexed { i, item -> argumentLines("${i + 1}", item, depth + 1) }
       is JsonObject ->
         if (value.isEmpty()) listOf("$pad$label: {}")
-        else listOf("$pad$label:") + value.entries.flatMap { (k, v) -> argumentLines(visible(k), v, depth + 1) }
+        else listOf("$pad$label:") + value.keys.sorted().flatMap { k -> argumentLines(visible(k), value[k], depth + 1) }
       else -> listOf("$pad$label: ${visible(argumentText(value))}")
     }
   }
 
-  /** One plain argument as text: a string as it is, a number or a flag written out, a null as null. */
+  /**
+   * One plain argument as text: a string as it is (an empty one as "", so a fill with nothing still shows), a number
+   * written out exactly as sent (an integer past 2^53 too), a flag as true or false, a null as null.
+   */
   fun argumentText(value: JsonElement?): String {
     val p = value as? JsonPrimitive ?: return "null"
     if (p is JsonNull) return "null"
-    if (p.isString) return p.content
+    if (p.isString) return p.content.ifEmpty { "\"\"" }
     p.content.toBooleanStrictOrNull()?.let { return it.toString() }
     // A decimal written out plainly, as sent: "0.000015", never "1.5e-05".
     return p.content.toBigDecimalOrNull()?.toPlainString() ?: p.content
