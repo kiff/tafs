@@ -12,7 +12,7 @@
     "other": "Até {count} pedidos por dia."
   },
   "door.api.draft_kind": "Nova porta · de outra aplicação",
-  "door.api.draft_scope": "{app} só pode entregar trabalho a {taf}. O que {taf} pode fazer continua a ser decidido pela sua Card.",
+  "door.api.draft_scope": "{app} só pode entregar trabalho a {taf}. O que {taf} pode fazer continua a ser decidido pelo seu Card.",
   "door.api.draft_sends": "Envia",
   "door.api.draft_will": "O que {taf} faz: {job}",
   "door.api.draft_words": "Também as próprias palavras de {taf}",

@@ -1,7 +1,7 @@
 {
   "onboarding.age": "Tem de ter pelo menos 16 anos, ou a idade de consentimento digital do seu país, se for superior.",
   "onboarding.age_n": "Tem de ter pelo menos {age} anos.",
-  "onboarding.card_lead": "Cada taf trabalha dentro de uma Card que emite: o que pode fazer, com que app e quanto. Para além disso, pergunta-lhe.",
+  "onboarding.card_lead": "Cada taf trabalha dentro de um Card que emite: o que pode fazer, com que app e quanto. Para além disso, pergunta-lhe.",
   "onboarding.card_title": "Uma Card é a sua autorização",
   "onboarding.coach_title": "O Coach configura-o consigo",
   "onboarding.consent_tick": "Aceito {kiff_terms} e {tafs_terms}.",
@@ -12,7 +12,7 @@
   "onboarding.control_title": "O controlo é seu",
   "onboarding.credits_title": "Os créditos pagam o trabalho",
   "onboarding.get_started": "Começar",
-  "onboarding.home_lead": "Diga ao Coach, por palavras suas, o que quer que seja feito. Ele configura o taf consigo e mostra-lhe a Card antes de qualquer coisa correr.",
+  "onboarding.home_lead": "Diga ao Coach, por palavras suas, o que quer que seja feito. Ele configura o taf consigo e mostra-lhe o Card antes de qualquer coisa correr.",
   "onboarding.how_it_works": "Como funciona o tafs",
   "onboarding.kiff_privacy": "Política de Privacidade da KIFF",
   "onboarding.kiff_terms": "os Termos de Serviço da KIFF",
