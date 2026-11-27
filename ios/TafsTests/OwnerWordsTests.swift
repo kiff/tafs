@@ -176,6 +176,26 @@ final class AfterTheTestTests: XCTestCase {
         XCTAssertEqual(KIFFMapping.record(calls, ids: ["refunds-k5j6m5qx": taf]).map(\.id), record.map(\.id), "the same ids on every refresh")
     }
 
+    /// kiff/tafs#2225: a held call is approved once only when KIFF carries the owner's approval as its
+    /// answer. One that went through because its Card changed is the Card's, never "approving once";
+    /// a refusal is never an approval.
+    func testAHeldCallIsApprovedOnlyWhenTheOwnerAnsweredIt() throws {
+        func entry(_ answer: String) throws -> RecordEntry {
+            let json = #"{"proposal_id":"p1","action_name":"create_refund","actor_id":"rae","outcome":"allowed","held":true,"created_at":"2026-11-27T09:00:00Z","tool_outcome":{"status":"done"}\#(answer)}"#
+            let call = try decoder.decode(KIFFClient.ActivityCall.self, from: Data(json.utf8))
+            return try XCTUnwrap(KIFFMapping.record([call], ids: ["rae": UUID()]).first)
+        }
+        let approved = try entry(#","answer":{"decision":"approved_once","you":true}"#)
+        XCTAssertEqual(approved.kind, .approved)
+        XCTAssertEqual(approved.ownerApproved, true)
+        let cardChanged = try entry("")
+        XCTAssertEqual(cardChanged.kind, .done, "no answer: the Card's")
+        XCTAssertNil(cardChanged.ownerApproved)
+        XCTAssertEqual(cardChanged.detail, Words.Record.doneWithinCard)
+        let refused = try entry(#","answer":{"decision":"refused","you":true}"#)
+        XCTAssertNil(refused.ownerApproved, "a refusal is never an approval")
+    }
+
     /// kiff/tafs#115: KIFF's decision isn't what the tool did. Only the tool's own "done" is
     /// done; a refusal, a call never sent, one still sending, and no outcome at all are not,
     /// for an ordinary call and one the owner approved alike.
