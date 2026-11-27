@@ -1,0 +1,3 @@
+• A página de um trabalho mostra como corre, passo a passo.
+• O registo diz "Aprovado uma vez" só quando aprovou.
+• Os cartões do primeiro arranque dizem com que aprova: a sua impressão digital ou o seu rosto, nunca o bloqueio de ecrã.

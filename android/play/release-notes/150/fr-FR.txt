@@ -1,0 +1,3 @@
+• La page d'une tâche montre comment elle se déroule, étape par étape.
+• Le registre dit « Approuvé une fois » seulement quand vous avez approuvé.
+• Les cartes du premier lancement disent ce qui approuve : votre empreinte ou votre visage, jamais votre verrouillage d'écran.

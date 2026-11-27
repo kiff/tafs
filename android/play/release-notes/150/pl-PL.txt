@@ -1,0 +1,3 @@
+• Strona zadania pokazuje krok po kroku, jak to wygląda.
+• Rejestr mówi „Zatwierdzone raz” tylko wtedy, gdy to Ty zatwierdziłeś.
+• Karty pierwszego uruchomienia mówią, czym zatwierdzasz: odciskiem palca lub twarzą, nigdy blokadą ekranu.
