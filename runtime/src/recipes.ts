@@ -393,6 +393,28 @@ export const RECIPES = [
     },
     "proved": "billing",
     "sample": "Four invoices are overdue and still open. I drafted a reminder for each and sent nothing.\n\nNobody is more than 30 days late. The oldest invoices were due 22 days ago.\n\nEach reminder starts with the AI disclosure line, names the invoice and the amount, and says to ignore it if it's already paid.\n\nI changed no invoice and offered no discount.",
+    "guide": [
+      {
+        "title": "Connect Stripe",
+        "do": "Open the job. Coach asks you to connect Stripe, to read your invoices only. Approve it.",
+        "see": "Stripe listed as connected, for reading only."
+      },
+      {
+        "title": "Read the rules",
+        "do": "Read the rules Coach shows you, and agree.",
+        "see": "The job never edits an invoice and never offers a credit note or a discount, and it asks you first before sending more than 20 reminders in a day."
+      },
+      {
+        "title": "Approve the Card",
+        "do": "Approve the Card for reading your Stripe invoices.",
+        "see": "The Card, with its daily limit on invoice reads."
+      },
+      {
+        "title": "Run it",
+        "do": "Open the job's chat and ask it to run.",
+        "see": "How many invoices are overdue, a reminder drafted for each, and who is more than 30 days late. Nothing is sent."
+      }
+    ],
     "languages": {
       "de": {
         "title": "Überfällige Rechnungen anmahnen",
@@ -412,7 +434,29 @@ export const RECIPES = [
             "Eine Gutschrift oder ein Rabatt"
           ]
         },
-        "sample": "Vier Rechnungen sind überfällig und noch offen. Ich habe für jede eine Erinnerung entworfen und nichts gesendet.\n\nNiemand ist mehr als 30 Tage im Rückstand. Die ältesten Rechnungen waren vor 22 Tagen fällig.\n\nJede Erinnerung beginnt mit dem Hinweis, dass eine KI sie geschrieben hat, nennt die Rechnung und den Betrag und sagt, dass man sie ignorieren kann, falls schon bezahlt wurde.\n\nIch habe keine Rechnung geändert und keinen Rabatt angeboten."
+        "sample": "Vier Rechnungen sind überfällig und noch offen. Ich habe für jede eine Erinnerung entworfen und nichts gesendet.\n\nNiemand ist mehr als 30 Tage im Rückstand. Die ältesten Rechnungen waren vor 22 Tagen fällig.\n\nJede Erinnerung beginnt mit dem Hinweis, dass eine KI sie geschrieben hat, nennt die Rechnung und den Betrag und sagt, dass man sie ignorieren kann, falls schon bezahlt wurde.\n\nIch habe keine Rechnung geändert und keinen Rabatt angeboten.",
+        "guide": [
+          {
+            "title": "Stripe verbinden",
+            "do": "Öffne den Job. Coach bittet dich, Stripe zu verbinden, nur zum Lesen deiner Rechnungen. Genehmige es.",
+            "see": "Stripe als verbunden aufgeführt, nur zum Lesen."
+          },
+          {
+            "title": "Die Regeln lesen",
+            "do": "Lies die Regeln, die Coach dir zeigt, und stimme zu.",
+            "see": "Der Job ändert nie eine Rechnung und bietet nie eine Gutschrift oder einen Rabatt an, und er fragt dich zuerst, bevor er mehr als 20 Erinnerungen an einem Tag sendet."
+          },
+          {
+            "title": "Die Card genehmigen",
+            "do": "Genehmige die Card zum Lesen deiner Stripe-Rechnungen.",
+            "see": "Die Card mit ihrem Tageslimit für das Lesen von Rechnungen."
+          },
+          {
+            "title": "Starten",
+            "do": "Öffne den Chat des Jobs und bitte ihn, zu starten.",
+            "see": "Wie viele Rechnungen überfällig sind, zu jeder eine entworfene Erinnerung und wer mehr als 30 Tage im Rückstand ist. Es wird nichts gesendet."
+          }
+        ]
       },
       "fr": {
         "title": "Relancer les factures impayées",
@@ -432,7 +476,29 @@ export const RECIPES = [
             "Un avoir ou une remise"
           ]
         },
-        "sample": "Quatre factures sont en retard et toujours ouvertes. J'ai rédigé une relance pour chacune et je n'ai rien envoyé.\n\nPersonne n'a plus de 30 jours de retard. Les plus anciennes factures étaient dues il y a 22 jours.\n\nChaque relance commence par la mention qu'une IA l'a rédigée, indique la facture et le montant, et précise qu'on peut l'ignorer si elle est déjà payée.\n\nJe n'ai modifié aucune facture et je n'ai offert aucune remise."
+        "sample": "Quatre factures sont en retard et toujours ouvertes. J'ai rédigé une relance pour chacune et je n'ai rien envoyé.\n\nPersonne n'a plus de 30 jours de retard. Les plus anciennes factures étaient dues il y a 22 jours.\n\nChaque relance commence par la mention qu'une IA l'a rédigée, indique la facture et le montant, et précise qu'on peut l'ignorer si elle est déjà payée.\n\nJe n'ai modifié aucune facture et je n'ai offert aucune remise.",
+        "guide": [
+          {
+            "title": "Connecter Stripe",
+            "do": "Ouvrez la tâche. Coach vous demande de connecter Stripe, en lecture seule pour vos factures. Approuvez.",
+            "see": "Stripe indiqué comme connecté, en lecture seule."
+          },
+          {
+            "title": "Lire les règles",
+            "do": "Lisez les règles que Coach vous montre, puis acceptez.",
+            "see": "La tâche ne modifie jamais une facture et ne propose jamais d'avoir ni de remise, et elle vous demande d'abord avant d'envoyer plus de 20 relances dans une journée."
+          },
+          {
+            "title": "Approuver la Card",
+            "do": "Approuvez la Card pour lire vos factures Stripe.",
+            "see": "La Card, avec sa limite quotidienne de lectures de factures."
+          },
+          {
+            "title": "Lancer",
+            "do": "Ouvrez la conversation de la tâche et demandez-lui de s'exécuter.",
+            "see": "Combien de factures sont en retard, une relance rédigée pour chacune et qui a plus de 30 jours de retard. Rien n'est envoyé."
+          }
+        ]
       },
       "es": {
         "title": "Reclamar facturas vencidas",
@@ -452,7 +518,29 @@ export const RECIPES = [
             "Una nota de crédito o un descuento"
           ]
         },
-        "sample": "Hay cuatro facturas vencidas y aún abiertas. He redactado un recordatorio para cada una y no he enviado nada.\n\nNadie lleva más de 30 días de retraso. Las facturas más antiguas vencieron hace 22 días.\n\nCada recordatorio empieza con la línea que avisa de que lo ha escrito una IA, indica la factura y el importe, y dice que se ignore si ya está pagada.\n\nNo he modificado ninguna factura ni he ofrecido ningún descuento."
+        "sample": "Hay cuatro facturas vencidas y aún abiertas. He redactado un recordatorio para cada una y no he enviado nada.\n\nNadie lleva más de 30 días de retraso. Las facturas más antiguas vencieron hace 22 días.\n\nCada recordatorio empieza con la línea que avisa de que lo ha escrito una IA, indica la factura y el importe, y dice que se ignore si ya está pagada.\n\nNo he modificado ninguna factura ni he ofrecido ningún descuento.",
+        "guide": [
+          {
+            "title": "Conecta Stripe",
+            "do": "Abre el trabajo. Coach te pide conectar Stripe, solo para leer tus facturas. Apruébalo.",
+            "see": "Stripe aparece como conectado, solo para lectura."
+          },
+          {
+            "title": "Lee las reglas",
+            "do": "Lee las reglas que Coach te muestra y acepta.",
+            "see": "El trabajo nunca modifica una factura ni ofrece una nota de crédito o un descuento, y te pregunta antes de enviar más de 20 recordatorios en un día."
+          },
+          {
+            "title": "Aprueba la Card",
+            "do": "Aprueba la Card para leer tus facturas de Stripe.",
+            "see": "La Card, con su límite diario de lecturas de facturas."
+          },
+          {
+            "title": "Ejecútalo",
+            "do": "Abre el chat del trabajo y pídele que se ejecute.",
+            "see": "Cuántas facturas están vencidas, un recordatorio redactado para cada una y quién lleva más de 30 días de retraso. No se envía nada."
+          }
+        ]
       },
       "it": {
         "title": "Sollecitare le fatture scadute",
@@ -472,7 +560,29 @@ export const RECIPES = [
             "Una nota di credito o uno sconto"
           ]
         },
-        "sample": "Quattro fatture sono scadute e ancora aperte. Ho scritto un sollecito per ciascuna e non ho inviato nulla.\n\nNessuno è in ritardo di più di 30 giorni. Le fatture più vecchie erano scadute 22 giorni fa.\n\nOgni sollecito inizia con la riga che avvisa che lo ha scritto un'IA, indica la fattura e l'importo, e dice di ignorarlo se è già stata pagata.\n\nNon ho modificato nessuna fattura e non ho offerto sconti."
+        "sample": "Quattro fatture sono scadute e ancora aperte. Ho scritto un sollecito per ciascuna e non ho inviato nulla.\n\nNessuno è in ritardo di più di 30 giorni. Le fatture più vecchie erano scadute 22 giorni fa.\n\nOgni sollecito inizia con la riga che avvisa che lo ha scritto un'IA, indica la fattura e l'importo, e dice di ignorarlo se è già stata pagata.\n\nNon ho modificato nessuna fattura e non ho offerto sconti.",
+        "guide": [
+          {
+            "title": "Collega Stripe",
+            "do": "Apri il lavoro. Coach ti chiede di collegare Stripe, solo per leggere le tue fatture. Approva.",
+            "see": "Stripe indicato come collegato, solo in lettura."
+          },
+          {
+            "title": "Leggi le regole",
+            "do": "Leggi le regole che Coach ti mostra e accetta.",
+            "see": "Il lavoro non modifica mai una fattura e non offre mai una nota di credito o uno sconto, e ti chiede prima di inviare più di 20 solleciti in un giorno."
+          },
+          {
+            "title": "Approva la Card",
+            "do": "Approva la Card per leggere le tue fatture Stripe.",
+            "see": "La Card, con il suo limite giornaliero di letture di fatture."
+          },
+          {
+            "title": "Avvialo",
+            "do": "Apri la chat del lavoro e chiedigli di partire.",
+            "see": "Quante fatture sono scadute, un sollecito scritto per ciascuna e chi ha più di 30 giorni di ritardo. Non viene inviato nulla."
+          }
+        ]
       },
       "pt": {
         "title": "Cobrar faturas em atraso",
@@ -492,7 +602,29 @@ export const RECIPES = [
             "Uma nota de crédito ou um desconto"
           ]
         },
-        "sample": "Há quatro faturas vencidas e ainda em aberto. Redigi um lembrete para cada uma e não enviei nada.\n\nNinguém está mais de 30 dias atrasado. As faturas mais antigas venceram há 22 dias.\n\nCada lembrete começa com a linha que avisa que foi escrito por uma IA, indica a fatura e o valor, e diz para ignorar se já estiver paga.\n\nNão alterei nenhuma fatura nem ofereci qualquer desconto."
+        "sample": "Há quatro faturas vencidas e ainda em aberto. Redigi um lembrete para cada uma e não enviei nada.\n\nNinguém está mais de 30 dias atrasado. As faturas mais antigas venceram há 22 dias.\n\nCada lembrete começa com a linha que avisa que foi escrito por uma IA, indica a fatura e o valor, e diz para ignorar se já estiver paga.\n\nNão alterei nenhuma fatura nem ofereci qualquer desconto.",
+        "guide": [
+          {
+            "title": "Liga o Stripe",
+            "do": "Abre o trabalho. O Coach pede-te para ligar o Stripe, só para ler as tuas faturas. Aprova.",
+            "see": "O Stripe aparece como ligado, só para leitura."
+          },
+          {
+            "title": "Lê as regras",
+            "do": "Lê as regras que o Coach te mostra e aceita.",
+            "see": "O trabalho nunca altera uma fatura nem oferece uma nota de crédito ou um desconto, e pergunta-te primeiro antes de enviar mais de 20 lembretes num dia."
+          },
+          {
+            "title": "Aprova o Card",
+            "do": "Aprova o Card para ler as tuas faturas do Stripe.",
+            "see": "O Card, com o seu limite diário de leituras de faturas."
+          },
+          {
+            "title": "Executa",
+            "do": "Abre o chat do trabalho e pede-lhe que execute.",
+            "see": "Quantas faturas estão vencidas, um lembrete redigido para cada uma e quem tem mais de 30 dias de atraso. Não é enviado nada."
+          }
+        ]
       },
       "nl": {
         "title": "Achterstallige facturen opvolgen",
@@ -512,7 +644,29 @@ export const RECIPES = [
             "Een creditnota of een korting"
           ]
         },
-        "sample": "Vier facturen zijn te laat en nog open. Ik heb voor elke een herinnering opgesteld en niets verstuurd.\n\nNiemand is meer dan 30 dagen te laat. De oudste facturen waren 22 dagen geleden verschuldigd.\n\nElke herinnering begint met de regel dat een AI hem heeft geschreven, noemt de factuur en het bedrag, en zegt dat je hem kunt negeren als er al betaald is.\n\nIk heb geen factuur gewijzigd en geen korting aangeboden."
+        "sample": "Vier facturen zijn te laat en nog open. Ik heb voor elke een herinnering opgesteld en niets verstuurd.\n\nNiemand is meer dan 30 dagen te laat. De oudste facturen waren 22 dagen geleden verschuldigd.\n\nElke herinnering begint met de regel dat een AI hem heeft geschreven, noemt de factuur en het bedrag, en zegt dat je hem kunt negeren als er al betaald is.\n\nIk heb geen factuur gewijzigd en geen korting aangeboden.",
+        "guide": [
+          {
+            "title": "Verbind Stripe",
+            "do": "Open de taak. Coach vraagt je Stripe te verbinden, alleen om je facturen te lezen. Keur het goed.",
+            "see": "Stripe als verbonden getoond, alleen om te lezen."
+          },
+          {
+            "title": "Lees de regels",
+            "do": "Lees de regels die Coach je toont en ga akkoord.",
+            "see": "De taak wijzigt nooit een factuur en biedt nooit een creditnota of korting aan, en vraagt het je eerst voordat hij meer dan 20 herinneringen op een dag verstuurt."
+          },
+          {
+            "title": "Keur de Card goed",
+            "do": "Keur de Card goed om je Stripe-facturen te lezen.",
+            "see": "De Card, met zijn daglimiet voor het lezen van facturen."
+          },
+          {
+            "title": "Start hem",
+            "do": "Open de chat van de taak en vraag hem te starten.",
+            "see": "Hoeveel facturen te laat zijn, voor elke een opgestelde herinnering en wie meer dan 30 dagen te laat is. Er wordt niets verstuurd."
+          }
+        ]
       },
       "pl": {
         "title": "Upominanie się o zaległe faktury",
@@ -532,7 +686,29 @@ export const RECIPES = [
             "Nota kredytowa lub rabat"
           ]
         },
-        "sample": "Cztery faktury są przeterminowane i wciąż otwarte. Napisałem przypomnienie do każdej i niczego nie wysłałem.\n\nNikt nie spóźnia się dłużej niż 30 dni. Najstarsze faktury miały termin 22 dni temu.\n\nKażde przypomnienie zaczyna się od informacji, że napisała je AI, podaje fakturę i kwotę oraz mówi, żeby je zignorować, jeśli już zapłacono.\n\nNie zmieniłem żadnej faktury i nie zaproponowałem rabatu."
+        "sample": "Cztery faktury są przeterminowane i wciąż otwarte. Napisałem przypomnienie do każdej i niczego nie wysłałem.\n\nNikt nie spóźnia się dłużej niż 30 dni. Najstarsze faktury miały termin 22 dni temu.\n\nKażde przypomnienie zaczyna się od informacji, że napisała je AI, podaje fakturę i kwotę oraz mówi, żeby je zignorować, jeśli już zapłacono.\n\nNie zmieniłem żadnej faktury i nie zaproponowałem rabatu.",
+        "guide": [
+          {
+            "title": "Połącz Stripe",
+            "do": "Otwórz zadanie. Coach prosi o połączenie Stripe, tylko do odczytu faktur. Zatwierdź.",
+            "see": "Stripe pokazany jako połączony, tylko do odczytu."
+          },
+          {
+            "title": "Przeczytaj zasady",
+            "do": "Przeczytaj zasady, które pokazuje Coach, i zgódź się.",
+            "see": "Zadanie nigdy nie zmienia faktury i nigdy nie oferuje noty kredytowej ani rabatu, a przed wysłaniem więcej niż 20 przypomnień w ciągu dnia najpierw pyta ciebie."
+          },
+          {
+            "title": "Zatwierdź Card",
+            "do": "Zatwierdź Card do odczytu faktur ze Stripe.",
+            "see": "Card z jej dziennym limitem odczytów faktur."
+          },
+          {
+            "title": "Uruchom",
+            "do": "Otwórz czat zadania i poproś o uruchomienie.",
+            "see": "Ile faktur jest przeterminowanych, przypomnienie napisane do każdej i kto spóźnia się ponad 30 dni. Nic nie jest wysyłane."
+          }
+        ]
       }
     }
   },

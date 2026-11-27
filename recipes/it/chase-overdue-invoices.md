@@ -8,6 +8,19 @@ sample:
   - Nessuno è in ritardo di più di 30 giorni. Le fatture più vecchie erano scadute 22 giorni fa.
   - Ogni sollecito inizia con la riga che avvisa che lo ha scritto un'IA, indica la fattura e l'importo, e dice di ignorarlo se è già stata pagata.
   - Non ho modificato nessuna fattura e non ho offerto sconti.
+guide:
+  - Collega Stripe
+  - - Do: Apri il lavoro. Coach ti chiede di collegare Stripe, solo per leggere le tue fatture. Approva.
+  - - You see: Stripe indicato come collegato, solo in lettura.
+  - Leggi le regole
+  - - Do: Leggi le regole che Coach ti mostra e accetta.
+  - - You see: Il lavoro non modifica mai una fattura e non offre mai una nota di credito o uno sconto, e ti chiede prima di inviare più di 20 solleciti in un giorno.
+  - Approva la Card
+  - - Do: Approva la Card per leggere le tue fatture Stripe.
+  - - You see: La Card, con il suo limite giornaliero di letture di fatture.
+  - Avvialo
+  - - Do: Apri la chat del lavoro e chiedigli di partire.
+  - - You see: Quante fatture sono scadute, un sollecito scritto per ciascuna e chi ha più di 30 giorni di ritardo. Non viene inviato nulla.
 card:
   allows:
     - Solleciti fino a 20 al giorno, al massimo uno a settimana per fattura

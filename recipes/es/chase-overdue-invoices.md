@@ -8,6 +8,19 @@ sample:
   - Nadie lleva más de 30 días de retraso. Las facturas más antiguas vencieron hace 22 días.
   - Cada recordatorio empieza con la línea que avisa de que lo ha escrito una IA, indica la factura y el importe, y dice que se ignore si ya está pagada.
   - No he modificado ninguna factura ni he ofrecido ningún descuento.
+guide:
+  - Conecta Stripe
+  - - Do: Abre el trabajo. Coach te pide conectar Stripe, solo para leer tus facturas. Apruébalo.
+  - - You see: Stripe aparece como conectado, solo para lectura.
+  - Lee las reglas
+  - - Do: Lee las reglas que Coach te muestra y acepta.
+  - - You see: El trabajo nunca modifica una factura ni ofrece una nota de crédito o un descuento, y te pregunta antes de enviar más de 20 recordatorios en un día.
+  - Aprueba la Card
+  - - Do: Aprueba la Card para leer tus facturas de Stripe.
+  - - You see: La Card, con su límite diario de lecturas de facturas.
+  - Ejecútalo
+  - - Do: Abre el chat del trabajo y pídele que se ejecute.
+  - - You see: Cuántas facturas están vencidas, un recordatorio redactado para cada una y quién lleva más de 30 días de retraso. No se envía nada.
 card:
   allows:
     - Recordatorios hasta 20 al día, como mucho uno por semana y factura

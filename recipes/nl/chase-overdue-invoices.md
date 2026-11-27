@@ -8,6 +8,19 @@ sample:
   - Niemand is meer dan 30 dagen te laat. De oudste facturen waren 22 dagen geleden verschuldigd.
   - Elke herinnering begint met de regel dat een AI hem heeft geschreven, noemt de factuur en het bedrag, en zegt dat je hem kunt negeren als er al betaald is.
   - Ik heb geen factuur gewijzigd en geen korting aangeboden.
+guide:
+  - Verbind Stripe
+  - - Do: Open de taak. Coach vraagt je Stripe te verbinden, alleen om je facturen te lezen. Keur het goed.
+  - - You see: Stripe als verbonden getoond, alleen om te lezen.
+  - Lees de regels
+  - - Do: Lees de regels die Coach je toont en ga akkoord.
+  - - You see: De taak wijzigt nooit een factuur en biedt nooit een creditnota of korting aan, en vraagt het je eerst voordat hij meer dan 20 herinneringen op een dag verstuurt.
+  - Keur de Card goed
+  - - Do: Keur de Card goed om je Stripe-facturen te lezen.
+  - - You see: De Card, met zijn daglimiet voor het lezen van facturen.
+  - Start hem
+  - - Do: Open de chat van de taak en vraag hem te starten.
+  - - You see: Hoeveel facturen te laat zijn, voor elke een opgestelde herinnering en wie meer dan 30 dagen te laat is. Er wordt niets verstuurd.
 card:
   allows:
     - Herinneringen tot 20 per dag, hoogstens één per week per factuur

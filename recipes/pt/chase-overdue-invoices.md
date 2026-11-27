@@ -8,6 +8,19 @@ sample:
   - Ninguém está mais de 30 dias atrasado. As faturas mais antigas venceram há 22 dias.
   - Cada lembrete começa com a linha que avisa que foi escrito por uma IA, indica a fatura e o valor, e diz para ignorar se já estiver paga.
   - Não alterei nenhuma fatura nem ofereci qualquer desconto.
+guide:
+  - Liga o Stripe
+  - - Do: Abre o trabalho. O Coach pede-te para ligar o Stripe, só para ler as tuas faturas. Aprova.
+  - - You see: O Stripe aparece como ligado, só para leitura.
+  - Lê as regras
+  - - Do: Lê as regras que o Coach te mostra e aceita.
+  - - You see: O trabalho nunca altera uma fatura nem oferece uma nota de crédito ou um desconto, e pergunta-te primeiro antes de enviar mais de 20 lembretes num dia.
+  - Aprova o Card
+  - - Do: Aprova o Card para ler as tuas faturas do Stripe.
+  - - You see: O Card, com o seu limite diário de leituras de faturas.
+  - Executa
+  - - Do: Abre o chat do trabalho e pede-lhe que execute.
+  - - You see: Quantas faturas estão vencidas, um lembrete redigido para cada uma e quem tem mais de 30 dias de atraso. Não é enviado nada.
 card:
   allows:
     - Lembretes até 20 por dia, no máximo um por semana e por fatura
