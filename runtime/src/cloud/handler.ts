@@ -3639,13 +3639,63 @@ const SIGNS_READ_MS = 1500;
  * before its draft can exist. `takes` says whether Approve is a tap inside an open approval window or always the
  * fingerprint (takesOf), so the apps draw KIFF's window words only where they hold. Read as the phone, with its
  * Planque-Device-Signature and what it can sign (`?can=tools_and_cards,key_and_cards`); without the proof, or when
- * the connections can't be read in time, the cards are left as they were.
+ * planque refuses the read, the cards are left as they were. A read that's late marks them from the grants this
+ * person's cards were last marked from (`grantsForMarks`), when there are any from the last 10 minutes.
  */
 async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps, agreements?: Map<string, ReturnType<typeof rulesAgreement>>): Promise<void> {
   await markSteps(event, me, taf, components, deps, agreements);
   // After the marks: a precheck on this read may have kept a waiting app's note (other_app_first), and that app's card,
   // shown without the draft, is answered on this same read rather than the next (two cards drawn in one second).
   await refuseSplitApprovals(event, me, taf, components, deps).catch((err) => console.error(`split approval: ${(err as Error).message}`));
+}
+
+/**
+ * The grants each person's waiting cards were last marked from, kept in this instance for `HELD_GRANTS_MS`. planque's read
+ * is the refresh, held to `SIGNS_READ_MS`; a refresh that's late marks the cards from these, so a waiting card isn't left
+ * unmarked while planque is slow (it took 1.8 to 4 s on 27 Nov, and a connection's card drew "Approve with your
+ * fingerprint" inside an open window). The late refresh still lands here for the next read. A read planque refuses marks
+ * nothing, as before, and drops the copy, so it only stands in for a device planque still accepts. A mark from an older
+ * copy can only be narrower than the tap or wider than it, and the apps already
+ * read again on the first and refuse the second (each tap is decided afresh by `decide`).
+ */
+const heldGrants = new Map<string, { grants?: ApprovalGrant[]; at: number; seq: number }>();
+/** Each read's place in order: a read asked earlier never overwrites what a later one held or refused. */
+let grantsReadSeq = 0;
+const HELD_GRANTS_MS = 10 * 60_000;
+const heldGrantsKey = (me: KIFFIdentity) => `${me.tenantID}#${me.subject}`;
+
+/** For tests: forget every held copy. */
+export function forgetHeldGrants(): void {
+  heldGrants.clear();
+}
+
+async function grantsForMarks(me: KIFFIdentity, proof: string, deps: Deps): Promise<ApprovalGrant[] | undefined> {
+  const now = () => (deps.now?.() ?? new Date()).getTime();
+  const key = heldGrantsKey(me);
+  // Held as of when the read was asked, never later: a copy is never younger than planque's answer.
+  const asked = now();
+  const seq = ++grantsReadSeq;
+  const later = () => { const kept = heldGrants.get(key); return !kept || kept.seq < seq; };
+  const refresh = readGrants(deps.planqueBase!, me.tenantID, proof, deps.fetch ?? fetch).then((grants) => {
+    for (const [k, v] of heldGrants) if (now() - v.at > HELD_GRANTS_MS) heldGrants.delete(k);
+    if (later()) heldGrants.set(key, { grants, at: asked, seq });
+    return grants;
+  }, (err: unknown) => {
+    // planque refused this phone's read (or couldn't answer): no copy stands in until a later read is held, so it only
+    // ever stands in for a device planque still accepts, and an earlier read landing late can't bring it back.
+    if (later()) heldGrants.set(key, { at: asked, seq });
+    throw err;
+  });
+  // In time, or refused (marks nothing); undefined only when the refresh is late.
+  const read = await within(refresh.then((grants) => ({ grants }), () => ({ grants: undefined })), SIGNS_READ_MS);
+  if (read) return read.grants;
+  const held = heldGrants.get(key);
+  if (held?.grants && now() - held.at <= HELD_GRANTS_MS) {
+    console.log(JSON.stringify({ event: "signs_from_held", age_ms: now() - held.at }));
+    return held.grants;
+  }
+  console.log(JSON.stringify({ event: "signs_unmarked", why: "grants_late" }));
+  return undefined;
 }
 
 async function markSteps(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps, agreements?: Map<string, ReturnType<typeof rulesAgreement>>): Promise<void> {
@@ -3656,7 +3706,7 @@ async function markSteps(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
   const waiting = naming("approval");
   const signIns = naming("sign_in");
   if (!waiting.length && !signIns.length) return;
-  const grants = await within(readGrants(deps.planqueBase, me.tenantID, proof, deps.fetch ?? fetch), SIGNS_READ_MS).catch(() => undefined);
+  const grants = await grantsForMarks(me, proof, deps);
   if (!grants) return;
   markWider([...waiting, ...signIns], grants, langOf(event));
   const can = (new URLSearchParams(event.rawQueryString ?? "").get("can") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
