@@ -170,6 +170,7 @@ export const sk: Words = {
   each_item_total_day: "celkom za deň",
   each_item_name: (key: string) => ({ payment_intent: "platba", payment: "platba", charge: "poplatok", invoice: "faktúra", customer: "zákazník", order: "objednávka", subscription: "predplatné", refund: "vrátenie peňazí" } as Record<string, string>)[key] ?? "položka",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} bolo nastavené dnes, takže každá zmena sa musí najprv opýtať vás; táto Card by nechala „${tool}“ bežať bez pýtania. Nič nebolo schválené. Coach ju pripraví znova.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} ešte nebolo s tafs otestované, takže každá zmena sa musí najprv opýtať vás; táto Card by nechala „${tool}“ bežať bez pýtania. Nič nebolo schválené. Coach ju pripraví znova.`,
   approval_critical_key: "Toto rozširuje, čo taf smie robiť, preto je potrebný váš odtlačok prsta. Nič nebolo schválené; schváľte znova odtlačkom prsta.",
   approval_drive_key: "Aby Coach mohol ovládať aplikáciu, je potrebný váš odtlačok prsta. Nič nezačalo; schváľte znova odtlačkom prsta.",
   remove_signed: "Odstráň ho zo svojho zariadenia: odstránenie tafu vždy vyžaduje zámku obrazovky. Nič nebolo odstránené.",

@@ -170,6 +170,7 @@ export const zhHant: Words = {
   each_item_total_day: "每天總共",
   each_item_name: (key: string) => ({ payment_intent: "付款", payment: "付款", charge: "收費", invoice: "發票", customer: "客戶", order: "訂單", subscription: "訂閱", refund: "退款" } as Record<string, string>)[key] ?? "項目",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} 今天才設定，因此每項變更都必須先詢問您；此 Card 會讓「${tool}」不經詢問就執行。未核准任何內容。Coach 會重新擬定。`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} 尚未在 tafs 上測試，因此每項變更都必須先詢問您；此 Card 會讓「${tool}」不經詢問就執行。未核准任何內容。Coach 會重新擬定。`,
   approval_critical_key: "這會擴大 taf 可以做的事，因此需要您的指紋。未核准任何內容；請用指紋再次核准。",
   approval_drive_key: "讓 Coach 操作應用程式需要您的指紋。尚未開始任何操作；請用指紋再次核准。",
   remove_signed: "請從您的裝置移除它：移除 taf 每次都需要您的螢幕鎖定。尚未移除任何東西。",

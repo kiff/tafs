@@ -176,6 +176,7 @@ export const pl: Words = {
   each_item_total_day: "łącznie dziennie",
   each_item_name: (key) => ({ payment_intent: "każdą płatność", payment: "każdą płatność", charge: "każde obciążenie", invoice: "każdą fakturę", customer: "każdego klienta", order: "każde zamówienie", subscription: "każdą subskrypcję", refund: "każdy zwrot" } as Record<string, string>)[key] ?? "każdy element",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} skonfigurowano dziś, więc każda zmiana musi najpierw zapytać Ciebie; ta Card pozwoliłaby „${tool}” działać bez pytania. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} nie zostało jeszcze przetestowane z tafs, więc każda zmiana musi najpierw zapytać Ciebie; ta Card pozwoliłaby „${tool}” działać bez pytania. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_critical_key: "To poszerza, co taf może robić, więc potrzebny jest odcisk palca. Nic nie zostało zatwierdzone; zatwierdź ponownie odciskiem palca.",
   approval_drive_key: "Pozwolenie Coachowi na obsługę aplikacji wymaga odcisku palca. Nic się nie rozpoczęło; zatwierdź ponownie odciskiem palca.",
   remove_signed: "Usuń go na urządzeniu: usunięcie tafa za każdym razem wymaga blokady ekranu. Nic nie zostało usunięte.",

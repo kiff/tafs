@@ -177,6 +177,7 @@ export const ja: Words = {
   each_item_total_day: "1日の合計",
   each_item_name: (key: string) => ({ payment_intent: "支払い", payment: "支払い", charge: "請求", invoice: "請求書", customer: "顧客", order: "注文", subscription: "サブスクリプション", refund: "返金" } as Record<string, string>)[key] ?? "項目",
   approval_on_demand: (vendor: string, tool: string) => `${vendor}は今日設定されたため、すべての変更はまずあなたに確認する必要があります。このCardでは「${tool}」が確認なしで実行されます。何も承認されていません。Coachが下書きを作り直します。`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor}はまだtafsでテストされていないため、すべての変更はまずあなたに確認する必要があります。このCardでは「${tool}」が確認なしで実行されます。何も承認されていません。Coachが下書きを作り直します。`,
   approval_critical_key: "tafができることが広がるため、指紋が必要です。何も承認されていません。指紋でもう一度承認してください。",
   approval_drive_key: "Coachにアプリを操作させるには指紋が必要です。何も開始されていません。指紋でもう一度承認してください。",
   remove_signed: "デバイスから削除してください：tafを削除するたびに画面ロックが求められます。何も削除されていません。",

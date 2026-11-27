@@ -170,6 +170,7 @@ export const id: Words = {
   each_item_total_day: "total per hari",
   each_item_name: (key: string) => ({ payment_intent: "pembayaran", payment: "pembayaran", charge: "tagihan", invoice: "faktur", customer: "pelanggan", order: "pesanan", subscription: "langganan", refund: "pengembalian dana" } as Record<string, string>)[key] ?? "butir",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} diatur hari ini, jadi setiap perubahan harus bertanya kepada Anda dulu; Card ini akan membiarkan "${tool}" berjalan tanpa bertanya. Tidak ada yang disetujui. Coach menyusunnya lagi.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} belum diuji dengan tafs, jadi setiap perubahan harus bertanya kepada Anda dulu; Card ini akan membiarkan "${tool}" berjalan tanpa bertanya. Tidak ada yang disetujui. Coach menyusunnya lagi.`,
   approval_critical_key: "Ini memperluas apa yang boleh dilakukan taf, jadi memerlukan sidik jari Anda. Tidak ada yang disetujui; setujui lagi dengan sidik jari Anda.",
   approval_drive_key: "Mengizinkan Coach mengendalikan aplikasi memerlukan sidik jari Anda. Belum ada yang dimulai; setujui lagi dengan sidik jari Anda.",
   remove_signed: "Hapus dari perangkat Anda: menghapus taf selalu meminta kunci layar Anda. Tidak ada yang dihapus.",

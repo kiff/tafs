@@ -170,6 +170,7 @@ export const ro: Words = {
   each_item_total_day: "în total pe zi",
   each_item_name: (key: string) => ({ payment_intent: "plată", payment: "plată", charge: "taxare", invoice: "factură", customer: "client", order: "comandă", subscription: "abonament", refund: "rambursare" } as Record<string, string>)[key] ?? "element",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} a fost configurat astăzi, așa că fiecare modificare trebuie să vă întrebe mai întâi; acest Card ar lăsa „${tool}” să ruleze fără a întreba. Nu s-a aprobat nimic. Coach îl redactează din nou.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} nu a fost încă testat cu tafs, așa că fiecare modificare trebuie să vă întrebe mai întâi; acest Card ar lăsa „${tool}” să ruleze fără a întreba. Nu s-a aprobat nimic. Coach îl redactează din nou.`,
   approval_critical_key: "Aceasta lărgește ce are voie să facă tafului, așa că are nevoie de amprenta dvs. Nu s-a aprobat nimic; aprobați din nou cu amprenta.",
   approval_drive_key: "Ca Coach să conducă aplicația, este nevoie de amprenta dvs. Nu a pornit nimic; aprobați din nou cu amprenta.",
   remove_signed: "Eliminați-l de pe dispozitivul dvs.: eliminarea unui taf cere de fiecare dată blocarea ecranului. Nu a fost eliminat nimic.",

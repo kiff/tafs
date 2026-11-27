@@ -170,6 +170,7 @@ export const cs: Words = {
   each_item_total_day: "celkem za den",
   each_item_name: (key: string) => ({ payment_intent: "platba", payment: "platba", charge: "poplatek", invoice: "faktura", customer: "zákazník", order: "objednávka", subscription: "předplatné", refund: "vrácení peněz" } as Record<string, string>)[key] ?? "položka",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} bylo nastaveno dnes, takže každá změna se musí nejdřív zeptat vás; tato Card by nechala „${tool}“ běžet bez ptaní. Nic nebylo schváleno. Coach ji připraví znovu.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} ještě nebylo s tafs otestováno, takže každá změna se musí nejdřív zeptat vás; tato Card by nechala „${tool}“ běžet bez ptaní. Nic nebylo schváleno. Coach ji připraví znovu.`,
   approval_critical_key: "Tohle rozšiřuje, co taf smí dělat, proto je potřeba váš otisk prstu. Nic nebylo schváleno; schvalte znovu otiskem prstu.",
   approval_drive_key: "Aby Coach mohl ovládat aplikaci, je potřeba váš otisk prstu. Nic nezačalo; schvalte znovu otiskem prstu.",
   remove_signed: "Odeber ho ze svého zařízení: odebrání tafu pokaždé vyžaduje zámek obrazovky. Nic nebylo odebráno.",
