@@ -104,15 +104,36 @@ final class ApprovalWindowTests: XCTestCase {
         let kiff = client(signed)
         kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
         kiff.signsInWindow = true
-        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (200, #"{"id":"d1","agent_id":"refunds","status":"confirmed","version":"v3"}"#)
+        StubProtocol.responses["POST /v1/me/did-this-happen/prop_1"] = (200, "{}")
         StubProtocol.responses["PUT /v1/me/time-zone"] = (200, #"{"time_zone":"UTC"}"#)
-        _ = try await kiff.confirmDraft(id: "d1", version: "v3")
+        try await kiff.answerHappened("prop_1", happened: true)
         _ = try await kiff.setTimeZone("UTC")
         XCTAssertEqual(signed.value, ["device:kiff.request.v2", "device:kiff.request.v1"])
-        let header = try XCTUnwrap(sent("POST", "/v1/me/agent-drafts/d1/confirm").first?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        let header = try XCTUnwrap(sent("POST", "/v1/me/did-this-happen/prop_1").first?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
         XCTAssertNotNil(header.range(of: "^t=[^,]+,v2=dev,w=\(win)$", options: .regularExpression), header)
         // What grants nothing is signed as before, never with the window.
         XCTAssertTrue(sent("PUT", "/v1/me/time-zone").first?.value(forHTTPHeaderField: "KIFF-Device-Signature")?.contains(",v1=dev") ?? false)
+    }
+
+    /// A Card's authority is the approval key's behind Face ID even inside a held window, in the very step that
+    /// took it: a draft confirmed, a draft made, a Card issued. Never a tap, so Approve never grants a Card
+    /// without the Face ID it names.
+    func testACardIsNeverATapInTheWindow() async throws {
+        let signed = WindowBox<[String]>([])
+        let kiff = client(signed)
+        kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
+        kiff.signsInWindow = true
+        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (200, #"{"id":"d1","agent_id":"refunds","status":"confirmed","version":"v3"}"#)
+        _ = try await kiff.confirmDraft(id: "d1", version: "v3")
+        XCTAssertEqual(signed.value, ["approval:kiff.request.v1"])
+        let header = try XCTUnwrap(sent("POST", "/v1/me/agent-drafts/d1/confirm").first?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertFalse(header.contains(",w="), header)
+        for (method, path) in [("POST", "/v1/me/agent-drafts"), ("POST", "/v1/me/agent-drafts/d1/confirm"), ("POST", "/v1/me/mandates")] {
+            XCTAssertTrue(KIFFClient.grantsCard(method, path), path)
+        }
+        for (method, path) in [("POST", "/v1/me/did-this-happen/prop_1"), ("GET", "/v1/me/agent-drafts/d1"), ("POST", "/v1/me/agent-drafts/d1/confirm/x")] {
+            XCTAssertFalse(KIFFClient.grantsCard(method, path), path)
+        }
     }
 
     /// Adding someone to a group is the approval key's even inside a held window (group changes B): KIFF
@@ -147,9 +168,9 @@ final class ApprovalWindowTests: XCTestCase {
         kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
         kiff.signsInWindow = true
         kiff.windowReconfirm = { signed.value.append("face-id") }
-        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (403, #"{"error":"critical_key_required","detail":"This takes your fingerprint"}"#)
-        StubProtocol.thenRespond["POST /v1/me/agent-drafts/d1/confirm"] = ["POST /v1/me/agent-drafts/d1/confirm": (200, #"{"id":"d1","agent_id":"refunds","status":"confirmed","version":"v3"}"#)]
-        _ = try await kiff.confirmDraft(id: "d1", version: "v3")
+        StubProtocol.responses["POST /v1/me/did-this-happen/prop_1"] = (403, #"{"error":"critical_key_required","detail":"This takes your fingerprint"}"#)
+        StubProtocol.thenRespond["POST /v1/me/did-this-happen/prop_1"] = ["POST /v1/me/did-this-happen/prop_1": (200, "{}")]
+        try await kiff.answerHappened("prop_1", happened: false)
         XCTAssertEqual(signed.value, ["device:kiff.request.v2", "face-id", "approval:kiff.request.v1"])
         XCTAssertEqual(kiff.window?.id, win)
     }
@@ -160,9 +181,9 @@ final class ApprovalWindowTests: XCTestCase {
         kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
         kiff.signsInWindow = true
         kiff.windowReconfirm = { signed.value.append("face-id") }
-        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (403, #"{"error":"window_required"}"#)
+        StubProtocol.responses["POST /v1/me/did-this-happen/prop_1"] = (403, #"{"error":"window_required"}"#)
         do {
-            _ = try await kiff.confirmDraft(id: "d1", version: "v3")
+            try await kiff.answerHappened("prop_1", happened: true)
             XCTFail("a second refusal is the service's")
         } catch KIFFClient.KIFFError.server(let status, _, _) {
             XCTAssertEqual(status, 403)
@@ -176,9 +197,9 @@ final class ApprovalWindowTests: XCTestCase {
         kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
         kiff.signsInWindow = true
         kiff.windowReconfirm = {}
-        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (403, #"{"error":"critical_key_required","detail":"This takes your fingerprint"}"#)
+        StubProtocol.responses["POST /v1/me/did-this-happen/prop_1"] = (403, #"{"error":"critical_key_required","detail":"This takes your fingerprint"}"#)
         do {
-            _ = try await kiff.confirmDraft(id: "d1", version: "v3")
+            try await kiff.answerHappened("prop_1", happened: false)
             XCTFail("refused")
         } catch let error as KIFFClient.KIFFError {
             XCTAssertEqual(error, .windowRefused(code: "critical_key_required"))

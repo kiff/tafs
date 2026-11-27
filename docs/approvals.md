@@ -210,7 +210,11 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   planque.
 - **Inside it.** What the approval key would sign goes with the device key and the window's
   id, `t=…,v2=…,w=<id>`, over `kiff.request.v2` to KIFF or `planque.request.v2` to planque,
-  the window's id last. planque's calls are signed this way only for the step that took the
+  the window's id last. **A Card's authority never goes in a window:** a draft made, a draft
+  confirmed and a Card issued (`POST /v1/me/agent-drafts`, `…/{id}/confirm`, `/v1/me/mandates`)
+  are always the approval key's, behind the fingerprint or Face ID, even in the step that took
+  the window, so an Approve that names the fingerprint never confirms a Card on a tap (iPhone and
+  iPad: `KIFFClient.grantsCard`; Android: next build). planque's calls are signed this way only for the step that took the
   window. The report to tafs cloud is signed as before (v1). On iPhone and iPad, KIFF's calls
   too are signed in the window only for that step; anywhere else the approval key signs them,
   behind Face ID, as before.

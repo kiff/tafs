@@ -1,0 +1,1 @@
+- **iPhone and iPad: a Card is never confirmed on a tap.** Inside an approval window, a draft made, a draft confirmed and a Card issued are always signed by the approval key behind Face ID, even in the step that took the window; only routine acts ("Did this happen?") go as a tap. ([approvals.md](docs/approvals.md), "One fingerprint, then taps")
