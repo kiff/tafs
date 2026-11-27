@@ -1,0 +1,1 @@
+- **Android: "Approved once by you" only when you approved it.** A held call that went through because its Card changed, or room was given, no longer reads as a one-time approval in the Record and on its receipt; it reads "Done within the Card", as KIFF's own trail says. ([approvals.md](docs/approvals.md))

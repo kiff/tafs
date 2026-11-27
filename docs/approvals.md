@@ -368,7 +368,11 @@ did**, and no Not sure. On Android: `AppModel.checkDidThisHappen`.
    again, up to 5 times; after that, the run goes on when the hold expires, as without an
    answer (`alert`, `forward.ts`).
 4. The decision stays where the card was, in the chat and in the Record:
-   "Approved once by you · 22:41 · Refund €150.00".
+   "Approved once by you · 22:41 · Refund €150.00". The Record says "approved once" only
+   when KIFF's activity carries the owner's approval as the call's `answer`. A held call
+   that went through some other way (its Card changed, room given) reads as the Card's,
+   "Done within the Card", the same as KIFF's own trail on its receipt (Android:
+   `KiffMapping.record`).
 
 ## Alerts while tafs is closed
 
