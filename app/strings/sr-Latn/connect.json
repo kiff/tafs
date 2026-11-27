@@ -74,7 +74,9 @@
     "other": "{names} takođe prestaju."
   },
   "connect.disconnect.no_taf_uses": "Nijedan taf sada ne koristi aplikaciju {vendor}.",
+  "connect.disconnect.not_revoked": "{vendor} nam ne nudi način da opozovemo prijavu: uklonite pristup tafs-a u aplikaciji {vendor} da biste je prekinuli i tamo.",
   "connect.disconnect.rest": "Ostali tafovi koji koriste aplikaciju {vendor} zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti nalog, prijava se opoziva kod pružatelja {vendor}; inače, kad se ukloni poslednji. Ponovo korišćenje aplikacije {vendor} traži da odobrite i ponovo se prijavite.",
+  "connect.disconnect.rest_deleted": "Ostali tafovi koji koriste aplikaciju {vendor} zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti nalog, prijava se briše iz tafs-a; inače, kad se ukloni poslednji. Ponovo korišćenje aplikacije {vendor} traži da odobrite i ponovo se prijavite.",
   "connect.disconnect.rest_key": "Ostali tafovi koji koriste aplikaciju {vendor} zadržavaju svoj pristup. Ključ se briše iz tafsa čim ga nijedan taf ne koristi. Ponovo korišćenje aplikacije {vendor} traži da odobrite i ponovo nalepite ključ.",
   "connect.disconnect.title": "Ukloniti pristup aplikaciji {vendor}?",
   "connect.disconnect.title_from": "Ukloniti pristup aplikaciji {vendor} za taf {taf}?",

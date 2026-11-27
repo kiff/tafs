@@ -976,7 +976,9 @@
         <item quantity="other">%2$s भी रुकता है।</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">अभी कोई taf %1$s का उपयोग नहीं करता।</string>
+    <string name="connect_disconnect_not_revoked">%1$s हमें साइन-इन रद्द करने का कोई तरीका नहीं देता, इसलिए वहाँ भी इसे खत्म करने के लिए %1$s में tafs की पहुँच हटाएँ।</string>
     <string name="connect_disconnect_rest">%1$s का उपयोग करने वाले बाकी taf अपनी पहुँच रखते हैं। यदि कोई और taf वहाँ वही खाता उपयोग नहीं करता, तो साइन-इन %1$s पर रद्द हो जाता है; नहीं तो आखिरी के हटने पर। %1$s को फिर उपयोग करने पर आपसे मंज़ूर करने और फिर साइन इन करने को कहा जाता है।</string>
+    <string name="connect_disconnect_rest_deleted">%1$s का उपयोग करने वाले बाकी taf अपनी पहुँच रखते हैं। यदि कोई और taf वहाँ वही खाता उपयोग नहीं करता, तो साइन-इन tafs से हटा दिया जाता है; नहीं तो आखिरी के हटने पर। %1$s को फिर उपयोग करने पर आपसे मंज़ूर करने और फिर साइन इन करने को कहा जाता है।</string>
     <string name="connect_disconnect_rest_key">%1$s का उपयोग करने वाले बाकी taf अपनी पहुँच रखते हैं। कोई taf उपयोग न करे तो key tafs से हट जाती है। %1$s को फिर उपयोग करने पर आपसे मंज़ूर करने और key फिर चिपकाने को कहा जाता है।</string>
     <string name="connect_disconnect_title">%1$s की पहुँच हटाएँ?</string>
     <string name="connect_disconnect_title_from">%2$s के लिए %1$s की पहुँच हटाएँ?</string>

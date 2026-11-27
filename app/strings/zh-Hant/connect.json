@@ -66,7 +66,9 @@
     "other": "{names}也會停止。"
   },
   "connect.disconnect.no_taf_uses": "目前沒有 taf 使用 {vendor}。",
+  "connect.disconnect.not_revoked": "{vendor} 未提供讓我們撤銷登入的方式：請在 {vendor} 移除 tafs 的存取權限，才能在該處一併結束。",
   "connect.disconnect.rest": "其他使用 {vendor} 的 taf 仍保有存取權限。若沒有其他 taf 在該處使用同一個帳號，登入會在 {vendor} 撤銷；否則會在最後一個被移除時撤銷。再次使用 {vendor} 時，會請您核准並重新登入。",
+  "connect.disconnect.rest_deleted": "其他使用 {vendor} 的 taf 仍保有存取權限。若沒有其他 taf 在該處使用同一個帳號，登入會從 tafs 刪除；否則會在最後一個被移除時刪除。再次使用 {vendor} 時，會請您核准並重新登入。",
   "connect.disconnect.rest_key": "其他使用 {vendor} 的 taf 仍保有存取權限。當沒有 taf 使用該金鑰時，金鑰會從 tafs 中刪除。再次使用 {vendor} 時，會請您核准並重新貼上金鑰。",
   "connect.disconnect.title": "要移除 {vendor} 的存取權限嗎？",
   "connect.disconnect.title_from": "要移除 {taf} 對 {vendor} 的存取權限嗎？",

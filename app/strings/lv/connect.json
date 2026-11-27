@@ -74,7 +74,9 @@
     "other": "Apstājas arī {names}."
   },
   "connect.disconnect.no_taf_uses": "Neviens taf tagad neizmanto {vendor}.",
+  "connect.disconnect.not_revoked": "{vendor} nedod mums iespēju atsaukt pierakstīšanos: lai to izbeigtu arī tur, noņem tafs piekļuvi {vendor}.",
   "connect.disconnect.rest": "Citi taf, kas izmanto {vendor}, patur savu piekļuvi. Ja neviens cits taf tur neizmanto to pašu kontu, pierakstīšanās {vendor} tiek atsaukta; citādi – kad tiek noņemts pēdējais. Lai atkal izmantotu {vendor}, tev būs vēlreiz jāapstiprina un jāpierakstās.",
+  "connect.disconnect.rest_deleted": "Citi taf, kas izmanto {vendor}, patur savu piekļuvi. Ja neviens cits taf tur neizmanto to pašu kontu, pierakstīšanās tiek dzēsta no tafs; citādi – kad tiek noņemts pēdējais. Lai atkal izmantotu {vendor}, tev būs vēlreiz jāapstiprina un jāpierakstās.",
   "connect.disconnect.rest_key": "Citi taf, kas izmanto {vendor}, patur savu piekļuvi. Atslēga tiek dzēsta no tafs, kad to vairs neizmanto neviens taf. Lai atkal izmantotu {vendor}, tev būs vēlreiz jāapstiprina un jāielīmē atslēga.",
   "connect.disconnect.title": "Noņemt piekļuvi: {vendor}?",
   "connect.disconnect.title_from": "Noņemt piekļuvi {vendor} šim taf: {taf}?",

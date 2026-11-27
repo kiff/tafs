@@ -976,7 +976,9 @@
         <item quantity="other">%2$s també s\'aturen.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Ara cap taf fa servir %1$s.</string>
+    <string name="connect_disconnect_not_revoked">%1$s no ens ofereix cap manera de revocar l\'inici de sessió: treu l\'accés de tafs a %1$s per acabar-lo també allà.</string>
     <string name="connect_disconnect_rest">Els altres taf que fan servir %1$s conserven l\'accés. Si cap altre taf hi fa servir el mateix compte, l\'inici de sessió es revoca a %1$s; si no, quan s\'elimini l\'últim. Tornar a fer servir %1$s et demana que aprovis i iniciïs la sessió de nou.</string>
+    <string name="connect_disconnect_rest_deleted">Els altres taf que fan servir %1$s conserven l\'accés. Si cap altre taf hi fa servir el mateix compte, l\'inici de sessió s\'elimina de tafs; si no, quan s\'elimini l\'últim. Tornar a fer servir %1$s et demana que aprovis i iniciïs la sessió de nou.</string>
     <string name="connect_disconnect_rest_key">Els altres taf que fan servir %1$s conserven l\'accés. La clau se suprimeix de tafs quan cap taf no la fa servir. Tornar a fer servir %1$s et demana que aprovis i enganxis una clau de nou.</string>
     <string name="connect_disconnect_title">Treure l\'accés a %1$s?</string>
     <string name="connect_disconnect_title_from">Treure l\'accés a %1$s per a %2$s?</string>

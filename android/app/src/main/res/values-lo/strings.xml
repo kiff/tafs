@@ -939,7 +939,9 @@
         <item quantity="other">%2$s ຢຸດນຳ.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">ດຽວນີ້ບໍ່ມີ taf ໃຊ້ %1$s.</string>
+    <string name="connect_disconnect_not_revoked">%1$s ບໍ່ມີວິທີໃຫ້ພວກເຮົາຖອນການເຂົ້າສູ່ລະບົບ, ສະນັ້ນ ກະລຸນາເອົາສິດເຂົ້າເຖິງຂອງ tafs ອອກໃນ %1$s ເພື່ອສິ້ນສຸດຢູ່ທີ່ນັ້ນນຳ.</string>
     <string name="connect_disconnect_rest">taf ອື່ນທີ່ໃຊ້ %1$s ຍັງມີສິດເຂົ້າເຖິງ. ຖ້າບໍ່ມີ taf ອື່ນໃຊ້ບັນຊີດຽວກັນຢູ່ບ່ອນນັ້ນ ການເຂົ້າສູ່ລະບົບຖືກຖອນທີ່ %1$s; ບໍ່ດັ່ງນັ້ນ, ເມື່ອອັນສຸດທ້າຍຖືກເອົາອອກ. ການໃຊ້ %1$s ອີກຂໍໃຫ້ທ່ານອະນຸມັດ ແລະ ເຂົ້າສູ່ລະບົບອີກ.</string>
+    <string name="connect_disconnect_rest_deleted">taf ອື່ນທີ່ໃຊ້ %1$s ຍັງມີສິດເຂົ້າເຖິງ. ຖ້າບໍ່ມີ taf ອື່ນໃຊ້ບັນຊີດຽວກັນຢູ່ບ່ອນນັ້ນ ການເຂົ້າສູ່ລະບົບຖືກລຶບອອກຈາກ tafs; ບໍ່ດັ່ງນັ້ນ, ເມື່ອອັນສຸດທ້າຍຖືກເອົາອອກ. ການໃຊ້ %1$s ອີກຂໍໃຫ້ທ່ານອະນຸມັດ ແລະ ເຂົ້າສູ່ລະບົບອີກ.</string>
     <string name="connect_disconnect_rest_key">taf ອື່ນທີ່ໃຊ້ %1$s ຍັງມີສິດເຂົ້າເຖິງ. ກຸນແຈຖືກລຶບຈາກ tafs ເມື່ອບໍ່ມີ taf ໃຊ້ມັນ. ການໃຊ້ %1$s ອີກຂໍໃຫ້ທ່ານອະນຸມັດ ແລະ ວາງກຸນແຈອີກ.</string>
     <string name="connect_disconnect_title">ເອົາສິດເຂົ້າເຖິງ %1$s ອອກບໍ?</string>
     <string name="connect_disconnect_title_from">ເອົາສິດເຂົ້າເຖິງ %1$s ຂອງ %2$s ອອກບໍ?</string>

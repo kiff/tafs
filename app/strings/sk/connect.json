@@ -74,7 +74,9 @@
     "other": "{names} sa zastaví tiež."
   },
   "connect.disconnect.no_taf_uses": "{vendor} teraz nepoužíva žiadny taf.",
+  "connect.disconnect.not_revoked": "{vendor} nám neponúka spôsob, ako prihlásenie odvolať: aby sa skončilo aj tam, odstráňte prístup tafs u {vendor}.",
   "connect.disconnect.rest": "Ostatné tafy, ktoré používajú {vendor}, si prístup nechajú. Ak tam rovnaký účet nepoužíva žiadny iný taf, prihlásenie sa u {vendor} odvolá; inak až po odstránení posledného. Opätovné použitie {vendor} vás požiada o schválenie a nové prihlásenie.",
+  "connect.disconnect.rest_deleted": "Ostatné tafy, ktoré používajú {vendor}, si prístup nechajú. Ak tam rovnaký účet nepoužíva žiadny iný taf, prihlásenie sa z tafs vymaže; inak až po odstránení posledného. Opätovné použitie {vendor} vás požiada o schválenie a nové prihlásenie.",
   "connect.disconnect.rest_key": "Ostatné tafy, ktoré používajú {vendor}, si prístup nechajú. Kľúč sa z tafs odstráni, keď ho žiadny taf nepoužíva. Opätovné použitie {vendor} vás požiada o schválenie a nové vloženie kľúča.",
   "connect.disconnect.title": "Odobrať prístup k {vendor}?",
   "connect.disconnect.title_from": "Odobrať prístup k {vendor} pre {taf}?",

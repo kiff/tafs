@@ -976,7 +976,9 @@
         <item quantity="other">%2$s исто така запираат.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Сега ниеден taf не го користи %1$s.</string>
+    <string name="connect_disconnect_not_revoked">%1$s не ни нуди начин да ја отповикаме најавата: отстрани го пристапот на tafs во %1$s за да заврши и таму.</string>
     <string name="connect_disconnect_rest">Другите tafови што го користат %1$s го задржуваат пристапот. Ако ниеден друг taf не ја користи истата сметка таму, најавата се отповикува кај %1$s; инаку, кога ќе се отстрани последниот. Повторното користење на %1$s бара да одобриш и да се најавиш одново.</string>
+    <string name="connect_disconnect_rest_deleted">Другите tafови што го користат %1$s го задржуваат пристапот. Ако ниеден друг taf не ја користи истата сметка таму, најавата се брише од tafs; инаку, кога ќе се отстрани последниот. Повторното користење на %1$s бара да одобриш и да се најавиш одново.</string>
     <string name="connect_disconnect_rest_key">Другите tafови што го користат %1$s го задржуваат пристапот. Клучот се брише од tafs кога ниеден taf не го користи. Повторното користење на %1$s бара да одобриш и да залепиш клуч одново.</string>
     <string name="connect_disconnect_title">Да се отстрани пристапот до %1$s?</string>
     <string name="connect_disconnect_title_from">Да се отстрани пристапот до %1$s за %2$s?</string>

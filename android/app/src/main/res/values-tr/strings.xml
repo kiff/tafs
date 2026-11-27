@@ -976,7 +976,9 @@
         <item quantity="other">%2$s de durur.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Şu anda hiçbir taf %1$s kullanmıyor.</string>
+    <string name="connect_disconnect_not_revoked">%1$s, oturum açmayı iptal etmemiz için bir yol sunmuyor: orada da sona erdirmek için %1$s içinde tafs\'ın erişimini kaldırın.</string>
     <string name="connect_disconnect_rest">%1$s kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma %1$s tarafında iptal edilir; aksi halde sonuncusu kaldırıldığında. %1$s uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister.</string>
+    <string name="connect_disconnect_rest_deleted">%1$s kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma tafs\'tan silinir; aksi halde sonuncusu kaldırıldığında. %1$s uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister.</string>
     <string name="connect_disconnect_rest_key">%1$s kullanan diğer tafs erişimini korur. Hiçbir taf kullanmadığında anahtar tafs\'tan silinir. %1$s uygulamasını tekrar kullanmak, onaylamanızı ve bir anahtarı tekrar yapıştırmanızı ister.</string>
     <string name="connect_disconnect_title">%1$s erişimi kaldırılsın mı?</string>
     <string name="connect_disconnect_title_from">%2$s taf\'ı için %1$s erişimi kaldırılsın mı?</string>

@@ -1013,7 +1013,9 @@
         <item quantity="other">Apstājas arī %2$s.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Neviens taf tagad neizmanto %1$s.</string>
+    <string name="connect_disconnect_not_revoked">%1$s nedod mums iespēju atsaukt pierakstīšanos: lai to izbeigtu arī tur, noņem tafs piekļuvi %1$s.</string>
     <string name="connect_disconnect_rest">Citi taf, kas izmanto %1$s, patur savu piekļuvi. Ja neviens cits taf tur neizmanto to pašu kontu, pierakstīšanās %1$s tiek atsaukta; citādi – kad tiek noņemts pēdējais. Lai atkal izmantotu %1$s, tev būs vēlreiz jāapstiprina un jāpierakstās.</string>
+    <string name="connect_disconnect_rest_deleted">Citi taf, kas izmanto %1$s, patur savu piekļuvi. Ja neviens cits taf tur neizmanto to pašu kontu, pierakstīšanās tiek dzēsta no tafs; citādi – kad tiek noņemts pēdējais. Lai atkal izmantotu %1$s, tev būs vēlreiz jāapstiprina un jāpierakstās.</string>
     <string name="connect_disconnect_rest_key">Citi taf, kas izmanto %1$s, patur savu piekļuvi. Atslēga tiek dzēsta no tafs, kad to vairs neizmanto neviens taf. Lai atkal izmantotu %1$s, tev būs vēlreiz jāapstiprina un jāielīmē atslēga.</string>
     <string name="connect_disconnect_title">Noņemt piekļuvi: %1$s?</string>
     <string name="connect_disconnect_title_from">Noņemt piekļuvi %1$s šim taf: %2$s?</string>

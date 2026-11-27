@@ -1013,7 +1013,9 @@
         <item quantity="other">%2$s se zastaví také.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">%1$s teď nepoužívá žádný taf.</string>
+    <string name="connect_disconnect_not_revoked">%1$s nám nenabízí žádný způsob, jak přihlášení odvolat: aby skončilo i tam, odeberte tafs přístup u %1$s.</string>
     <string name="connect_disconnect_rest">Ostatní tafy, které používají %1$s, si přístup nechají. Pokud tam stejný účet nepoužívá žádný jiný taf, přihlášení se u %1$s odvolá; jinak až po odstranění posledního. Opětovné použití %1$s vás požádá o schválení a nové přihlášení.</string>
+    <string name="connect_disconnect_rest_deleted">Ostatní tafy, které používají %1$s, si přístup nechají. Pokud tam stejný účet nepoužívá žádný jiný taf, přihlášení se z tafs smaže; jinak až po odstranění posledního. Opětovné použití %1$s vás požádá o schválení a nové přihlášení.</string>
     <string name="connect_disconnect_rest_key">Ostatní tafy, které používají %1$s, si přístup nechají. Klíč se z tafs smaže, jakmile ho žádný taf nepoužívá. Opětovné použití %1$s vás požádá o schválení a nové vložení klíče.</string>
     <string name="connect_disconnect_title">Odebrat přístup k %1$s?</string>
     <string name="connect_disconnect_title_from">Odebrat přístup k %1$s pro %2$s?</string>

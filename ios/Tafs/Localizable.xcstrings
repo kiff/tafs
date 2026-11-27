@@ -240307,6 +240307,269 @@
         }
       }
     },
+    "connect.disconnect.not_revoked": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يتيح لنا %1$@ أي طريقة لإلغاء تسجيل الدخول، لذا أزل وصول tafs في %1$@ لإنهائه هناك أيضًا."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ girişi ləğv etməyimiz üçün heç bir yol təklif etmir: orada da bitirmək üçün %1$@ daxilində tafs-ın girişini silin."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ не ни дава начин да оттеглим входа: премахнете достъпа на tafs в %1$@, за да го прекратите и там."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ আমাদের সাইন-ইন প্রত্যাহার করার কোনো উপায় দেয় না, তাই সেখানেও শেষ করতে %1$@-এ tafs-এর প্রবেশাধিকার সরিয়ে দিন।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ no ens ofereix cap manera de revocar l'inici de sessió: treu l'accés de tafs a %1$@ per acabar-lo també allà."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nám nenabízí žádný způsob, jak přihlášení odvolat: aby skončilo i tam, odeberte tafs přístup u %1$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ bietet uns keine Möglichkeit, die Anmeldung zu widerrufen. Entferne den Zugriff von tafs in %1$@, um sie auch dort zu beenden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ offers no way for us to revoke the sign-in, so remove tafs's access in %1$@ to end it there too."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ no nos ofrece ninguna forma de revocar el inicio de sesión: quita el acceso de tafs en %1$@ para terminarlo también allí."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ei paku meile võimalust sisselogimist tühistada: selle lõpetamiseks ka seal eemalda tafsi juurdepääs teenuses %1$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ne nous offre aucun moyen de révoquer l'identifiant : retirez l'accès de tafs dans %1$@ pour y mettre fin là aussi."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ לא מציע לנו דרך לבטל את הכניסה, לכן כדי לסיים אותה גם שם יש להסיר את הגישה של tafs ב-%1$@."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ हमें साइन-इन रद्द करने का कोई तरीका नहीं देता, इसलिए वहाँ भी इसे खत्म करने के लिए %1$@ में tafs की पहुँच हटाएँ।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nam ne nudi način da opozovemo prijavu: uklonite pristup tafsa u aplikaciji %1$@ da biste je prekinuli i ondje."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a szolgáltatás (%1$@) nem ad nekünk módot a bejelentkezés visszavonására: hogy ott is megszűnjön, távolítsd el ott a tafs hozzáférését."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@-ը մեզ մուտքը չեղարկելու եղանակ չի տալիս. այնտեղ էլ այն դադարեցնելու համար հեռացրեք tafs-ի հասանելիությունը %1$@-ում։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tidak menyediakan cara bagi kami untuk mencabut proses masuk: hapus akses tafs di %1$@ untuk mengakhirinya di sana juga."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ non ci offre alcun modo per revocare il login: rimuovi l'accesso di tafs in %1$@ per chiuderlo anche lì."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@にはサインインを取り消す手段がありません。そちらでも終了するには、%1$@でtafsのアクセスを削除してください。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ არ გვაძლევს შესვლის გაუქმების საშუალებას: იქაც რომ დასრულდეს, მოხსენით tafs-ის წვდომა %1$@-ში."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ មិនផ្តល់វិធីឱ្យយើងដកហូតការចូលទេ ដូច្នេះសូមដកការចូលប្រើរបស់ tafs នៅក្នុង %1$@ ដើម្បីបញ្ចប់វានៅទីនោះផងដែរ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@은(는) 로그인을 취소할 방법을 제공하지 않습니다. 그곳에서도 끝내려면 %1$@에서 tafs의 접근 권한을 제거하세요."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ບໍ່ມີວິທີໃຫ້ພວກເຮົາຖອນການເຂົ້າສູ່ລະບົບ, ສະນັ້ນ ກະລຸນາເອົາສິດເຂົ້າເຖິງຂອງ tafs ອອກໃນ %1$@ ເພື່ອສິ້ນສຸດຢູ່ທີ່ນັ້ນນຳ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nesuteikia mums būdo atšaukti prisijungimą: kad jis baigtųsi ir ten, pašalinkite tafs prieigą %1$@ pusėje."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nedod mums iespēju atsaukt pierakstīšanos: lai to izbeigtu arī tur, noņem tafs piekļuvi %1$@."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ не ни нуди начин да ја отповикаме најавата: отстрани го пристапот на tafs во %1$@ за да заврши и таму."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ нэвтрэлтийг цуцлах арга бидэнд олгодоггүй тул тэнд ч дуусгахын тулд %1$@ дээр tafs-ийн хандалтыг хасна уу."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ले हामीलाई साइन इन रद्द गर्ने कुनै उपाय दिँदैन, त्यसैले त्यहाँ पनि अन्त्य गर्न %1$@ मा tafs को पहुँच हटाउनुहोस्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ biedt ons geen manier om de aanmelding in te trekken: verwijder de toegang van tafs in %1$@ om die ook daar te beëindigen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nie daje nam możliwości cofnięcia logowania: usuń dostęp tafs w %1$@, aby zakończyć je również tam."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ não nos oferece forma de revogar o início de sessão: remova o acesso do tafs em %1$@ para o terminar também aí."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ não oferece um jeito de revogarmos o login: remova o acesso do tafs em %1$@ para encerrá-lo lá também."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nu ne oferă nicio modalitate de a revoca conectarea: eliminați accesul tafs în %1$@ ca să o încheiați și acolo."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nám neponúka spôsob, ako prihlásenie odvolať: aby sa skončilo aj tam, odstráňte prístup tafs u %1$@."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nam ne ponuja načina za preklic prijave: da se konča tudi tam, odstranite dostop tafs pri %1$@."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nuk na ofron asnjë mënyrë për të revokuar hyrjen: hiqni qasjen e tafs te %1$@ për ta përfunduar edhe atje."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nam ne nudi način da opozovemo prijavu: uklonite pristup tafs-a u aplikaciji %1$@ da biste je prekinuli i tamo."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ไม่มีวิธีให้เราเพิกถอนการเข้าสู่ระบบ โปรดนำสิทธิ์เข้าถึงของ tafs ออกใน %1$@ เพื่อสิ้นสุดที่นั่นด้วย"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ girişi ýatyrmagymyz üçin hiç hili ýol hödürlemeýär: ol ýerde hem tamamlamak üçin %1$@-da tafs-yň elýeterliligini aýyryň."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, oturum açmayı iptal etmemiz için bir yol sunmuyor: orada da sona erdirmek için %1$@ içinde tafs'ın erişimini kaldırın."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ہمیں سائن اِن منسوخ کرنے کا کوئی طریقہ نہیں دیتا، اس لیے وہاں بھی ختم کرنے کے لیے %1$@ میں tafs کی رسائی ہٹا دیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ không cho chúng tôi cách nào để thu hồi việc đăng nhập: hãy gỡ quyền truy cập của tafs trong %1$@ để kết thúc nó ở đó."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 未提供讓我們撤銷登入的方式：請在 %1$@ 移除 tafs 的存取權限，才能在該處一併結束。"
+          }
+        }
+      }
+    },
     "connect.disconnect.rest": {
       "extractionState": "manual",
       "localizations": {
@@ -240566,6 +240829,269 @@
           "stringUnit": {
             "state": "translated",
             "value": "其他使用 %1$@ 的 taf 仍保有存取權限。若沒有其他 taf 在該處使用同一個帳號，登入會在 %1$@ 撤銷；否則會在最後一個被移除時撤銷。再次使用 %1$@ 時，會請您核准並重新登入。"
+          }
+        }
+      }
+    },
+    "connect.disconnect.rest_deleted": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحتفظ بقية tafs التي تستخدم %1$@ بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُحذف تسجيل الدخول من tafs؛ وإلا فعند إزالة آخرها. يطلب منك استخدام %1$@ مرة أخرى الموافقة وتسجيل الدخول مجددًا."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ istifadə edən digər taf-lar girişlərini saxlayır. Orada eyni hesabdan başqa taf istifadə etmirsə, giriş tafs-dan silinir; əks halda sonuncu silinəndə. %1$@ xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və yenidən daxil olmağı xahiş edir."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Другите tafs, които използват %1$@, запазват достъпа си. Ако никой друг taf не използва същия акаунт там, входът се изтрива от tafs; иначе — когато бъде премахнат последният. Повторното използване на %1$@ изисква да одобрите и да влезете отново."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ব্যবহার করে এমন অন্য taf তাদের প্রবেশাধিকার রাখে। সেখানে একই অ্যাকাউন্ট অন্য কোনো taf ব্যবহার না করলে tafs থেকে সাইন-ইন মুছে ফেলা হয়; নইলে শেষটি সরানোর সময়। আবার %1$@ ব্যবহার করতে আপনাকে অনুমোদন করতে ও আবার সাইন ইন করতে বলা হয়।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Els altres taf que fan servir %1$@ conserven l'accés. Si cap altre taf hi fa servir el mateix compte, l'inici de sessió s'elimina de tafs; si no, quan s'elimini l'últim. Tornar a fer servir %1$@ et demana que aprovis i iniciïs la sessió de nou."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostatní tafy, které používají %1$@, si přístup nechají. Pokud tam stejný účet nepoužívá žádný jiný taf, přihlášení se z tafs smaže; jinak až po odstranění posledního. Opětovné použití %1$@ vás požádá o schválení a nové přihlášení."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere tafs, die %1$@ nutzen, behalten ihren Zugriff. Nutzt kein anderer taf dasselbe Konto dort, wird die Anmeldung aus tafs gelöscht; sonst, wenn der letzte entfernt wird. Wenn du %1$@ wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other tafs that use %1$@ keep their access. If no other taf uses the same account there, the sign-in is deleted from tafs; otherwise, when the last one is removed. Using %1$@ again asks you to approve and sign in again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los demás tafs que usan %1$@ conservan su acceso. Si ningún otro taf usa la misma cuenta, el inicio de sesión se elimina de tafs; si no, cuando se quita el último. Usar %1$@ de nuevo te pide aprobar e iniciar sesión otra vez."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teised tafid, mis kasutavad teenust %1$@, säilitavad oma juurdepääsu. Kui ükski teine taf ei kasuta seal sama kontot, kustutatakse sisselogimine tafsist; vastasel juhul siis, kui viimane neist eemaldatakse. Teenuse %1$@ uuesti kasutamisel pead uuesti kinnitama ja sisse logima."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les autres tafs qui utilisent %1$@ gardent leur accès. Si aucun autre taf n'utilise le même compte, l'identifiant est supprimé de tafs ; sinon, quand le dernier est retiré. Utiliser %1$@ à nouveau vous demande d'approuver et de vous reconnecter."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taf אחרים שמשתמשים ב-%1$@ שומרים על הגישה שלהם. אם אף taf אחר לא משתמש שם באותו חשבון, הכניסה נמחקת מ-tafs; אחרת, כשהאחרון יוסר. שימוש חוזר ב-%1$@ מבקש ממך לאשר ולהיכנס שוב."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ का उपयोग करने वाले बाकी taf अपनी पहुँच रखते हैं। यदि कोई और taf वहाँ वही खाता उपयोग नहीं करता, तो साइन-इन tafs से हटा दिया जाता है; नहीं तो आखिरी के हटने पर। %1$@ को फिर उपयोग करने पर आपसे मंज़ूर करने और फिर साइन इन करने को कहा जाता है।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostali tafovi koji koriste aplikaciju %1$@ zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti račun, prijava se briše iz tafsa; inače, kad se ukloni zadnji. Ponovno korištenje aplikacije %1$@ traži da odobrite i ponovno se prijavite."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A többi taf, amely ezt használja (%1$@), megtartja a hozzáférését. Ha ott egyetlen másik taf sem használja ugyanazt a fiókot, a bejelentkezést töröljük a tafsból; egyébként akkor, amikor az utolsót is eltávolítod. Ha újra használod ezt (%1$@), újra jóvá kell hagynod és be kell jelentkezned."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Մյուս taf-երը, որ օգտագործում են %1$@-ը, պահում են իրենց հասանելիությունը։ Եթե ուրիշ taf չի օգտագործում նույն հաշիվը այնտեղ, մուտքը ջնջվում է tafs-ից․ հակառակ դեպքում՝ երբ վերջինը հեռացվի։ %1$@-ը նորից օգտագործելը խնդրում է ձեզ հաստատել և նորից մուտք գործել։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taf lain yang memakai %1$@ tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk dihapus dari tafs; jika tidak, saat yang terakhir dihapus. Memakai %1$@ lagi meminta Anda menyetujui dan masuk lagi."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gli altri taf che usano %1$@ mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene eliminato da tafs; altrimenti, quando viene rimosso l'ultimo. Usare di nuovo %1$@ ti chiede di approvare e accedere di nuovo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@を使う他のtafはアクセスを保持します。同じアカウントを使う他のtafがなければ、サインインはtafsから削除されます。あれば、最後のtafを外したときに削除されます。再び%1$@を使うには、もう一度承認とサインインが必要です。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "სხვა taf-ები, რომლებიც %1$@-ს იყენებენ, წვდომას ინარჩუნებენ. თუ სხვა taf იმავე ანგარიშს იქ არ იყენებს, შესვლა იშლება tafs-იდან; სხვაგვარად, როცა ბოლო ამოიღება. %1$@-ის ხელახლა გამოყენება გთხოვთ დაამტკიცოთ და ხელახლა შეხვიდეთ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taf ផ្សេងទៀតដែលប្រើ %1$@ រក្សាការចូលប្រើរបស់ខ្លួន។ ប្រសិនបើគ្មាន taf ផ្សេងទៀតប្រើគណនីដូចគ្នានៅទីនោះទេ ការចូលត្រូវបានលុបចេញពី tafs; បើមិនដូច្នោះទេ នៅពេលចុងក្រោយត្រូវបានដកចេញ។ ការប្រើ %1$@ ម្តងទៀតសុំអ្នកអនុម័ត និងចូលម្តងទៀត។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@을(를) 쓰는 다른 tafs는 접근 권한을 유지합니다. 같은 계정을 쓰는 다른 taf가 없으면 로그인이 tafs에서 삭제되고, 있으면 마지막 taf를 제거할 때 삭제됩니다. %1$@을(를) 다시 쓰려면 다시 승인하고 로그인해야 합니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taf ອື່ນທີ່ໃຊ້ %1$@ ຍັງມີສິດເຂົ້າເຖິງ. ຖ້າບໍ່ມີ taf ອື່ນໃຊ້ບັນຊີດຽວກັນຢູ່ບ່ອນນັ້ນ ການເຂົ້າສູ່ລະບົບຖືກລຶບອອກຈາກ tafs; ບໍ່ດັ່ງນັ້ນ, ເມື່ອອັນສຸດທ້າຍຖືກເອົາອອກ. ການໃຊ້ %1$@ ອີກຂໍໃຫ້ທ່ານອະນຸມັດ ແລະ ເຂົ້າສູ່ລະບົບອີກ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiti %1$@ naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas ištrinamas iš tafs; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti %1$@, reikės dar kartą patvirtinti ir prisijungti."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Citi taf, kas izmanto %1$@, patur savu piekļuvi. Ja neviens cits taf tur neizmanto to pašu kontu, pierakstīšanās tiek dzēsta no tafs; citādi – kad tiek noņemts pēdējais. Lai atkal izmantotu %1$@, tev būs vēlreiz jāapstiprina un jāpierakstās."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Другите tafови што го користат %1$@ го задржуваат пристапот. Ако ниеден друг taf не ја користи истата сметка таму, најавата се брише од tafs; инаку, кога ќе се отстрани последниот. Повторното користење на %1$@ бара да одобриш и да се најавиш одново."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@-ийг ашигладаг бусад taf-ууд хандах эрхээ хадгална. Хэрэв тэнд ижил бүртгэлийг өөр taf ашиглахгүй бол нэвтрэлт tafs-аас устгагдана; үгүй бол сүүлчийнх нь хасагдахад. %1$@-ийг дахин ашиглахад зөвшөөрч, дахин нэвтрэхийг танаас хүснэ."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ प्रयोग गर्ने अन्य taf ले आफ्नो पहुँच राख्छन्। त्यहाँ उही खाता अर्को कुनै taf ले प्रयोग गर्दैन भने साइन इन tafs बाट मेटाइन्छ; अन्यथा, अन्तिम हटाइँदा। %1$@ फेरि प्रयोग गर्दा तपाईंलाई स्वीकृत गरेर फेरि साइन इन गर्न भनिन्छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere tafs die %1$@ gebruiken, houden hun toegang. Als geen andere taf hetzelfde account gebruikt, wordt de aanmelding uit tafs verwijderd; anders pas als de laatste wordt verwijderd. Als je %1$@ weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inne tafy, które używają %1$@, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie usunięte z tafs; w przeciwnym razie, gdy usuniesz ostatni. Ponowne użycie %1$@ poprosi Cię o zatwierdzenie i ponowne zalogowanie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os outros tafs que usam %1$@ mantêm o seu acesso. Se nenhum outro taf usar a mesma conta, o início de sessão é eliminado do tafs; caso contrário, quando o último for removido. Usar %1$@ novamente pede-lhe que aprove e inicie sessão de novo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os outros tafs que usam %1$@ mantêm o acesso deles. Se nenhum outro taf usar a mesma conta, o login é excluído do tafs; caso contrário, quando o último for removido. Usar %1$@ novamente pede que você aprove e faça login de novo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Celelalte tafuri care folosesc %1$@ își păstrează accesul. Dacă niciun alt taf nu folosește același cont acolo, conectarea este ștearsă din tafs; altfel, când este eliminat ultimul. Dacă folosiți din nou %1$@, vi se cere să aprobați și să vă conectați din nou."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostatné tafy, ktoré používajú %1$@, si prístup nechajú. Ak tam rovnaký účet nepoužíva žiadny iný taf, prihlásenie sa z tafs vymaže; inak až po odstránení posledného. Opätovné použitie %1$@ vás požiada o schválenie a nové prihlásenie."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drugi tafi, ki uporabljajo %1$@, obdržijo dostop. Če istega računa tam ne uporablja noben drug taf, se prijava izbriše iz tafs; sicer ko je odstranjen zadnji. Ponovna uporaba %1$@ vas prosi za odobritev in novo prijavo."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tafs-et e tjerë që përdorin %1$@ e mbajnë qasjen e tyre. Nëse asnjë taf tjetër nuk përdor të njëjtën llogari aty, hyrja fshihet nga tafs; përndryshe, kur të hiqet i fundit. Përdorimi i %1$@ sërish ju kërkon të miratoni dhe të hyni sërish."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostali tafovi koji koriste aplikaciju %1$@ zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti nalog, prijava se briše iz tafs-a; inače, kad se ukloni poslednji. Ponovo korišćenje aplikacije %1$@ traži da odobrite i ponovo se prijavite."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taf อื่นที่ใช้ %1$@ ยังคงมีสิทธิ์เข้าถึง หากไม่มี taf อื่นใช้บัญชีเดียวกันที่นั่น การเข้าสู่ระบบจะถูกลบออกจาก tafs มิฉะนั้นจะถูกลบเมื่อ taf สุดท้ายถูกนำออก การใช้ %1$@ อีกครั้งจะขอให้คุณอนุมัติและเข้าสู่ระบบอีกครั้ง"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@-y ulanýan beýleki taf-lar elýeterligini saklaýar. Eger başga hiç bir taf şol ýerdäki şol bir hasaby ulanmasa, giriş tafs-dan pozulýar; ýogsa soňky aýrylanda. %1$@-y täzeden ulanmak sizden tassyklamagy we täzeden girmegi soraýar."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma tafs'tan silinir; aksi halde sonuncusu kaldırıldığında. %1$@ uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ استعمال کرنے والے باقی taf اپنی رسائی رکھتے ہیں۔ اگر کوئی اور taf وہاں وہی اکاؤنٹ استعمال نہ کرے، تو سائن اِن tafs سے حذف ہو جاتا ہے؛ ورنہ آخری کے ہٹنے پر۔ %1$@ کو دوبارہ استعمال کرنے پر آپ سے منظور کرنے اور دوبارہ سائن اِن کرنے کو کہا جاتا ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Các taf khác dùng %1$@ vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị xóa khỏi tafs; nếu không, nó bị xóa khi taf cuối cùng bị gỡ. Dùng %1$@ lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他使用 %1$@ 的 taf 仍保有存取權限。若沒有其他 taf 在該處使用同一個帳號，登入會從 tafs 刪除；否則會在最後一個被移除時刪除。再次使用 %1$@ 時，會請您核准並重新登入。"
           }
         }
       }

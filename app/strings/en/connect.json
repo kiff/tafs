@@ -70,7 +70,9 @@
     "other": "{names} stop too."
   },
   "connect.disconnect.no_taf_uses": "No taf uses {vendor} now.",
+  "connect.disconnect.not_revoked": "{vendor} offers no way for us to revoke the sign-in, so remove tafs's access in {vendor} to end it there too.",
   "connect.disconnect.rest": "Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is revoked at {vendor}; otherwise, when the last one is removed. Using {vendor} again asks you to approve and sign in again.",
+  "connect.disconnect.rest_deleted": "Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is deleted from tafs; otherwise, when the last one is removed. Using {vendor} again asks you to approve and sign in again.",
   "connect.disconnect.rest_key": "Other tafs that use {vendor} keep their access. The key is deleted from tafs once no taf uses it. Using {vendor} again asks you to approve and paste a key again.",
   "connect.disconnect.title": "Remove access to {vendor}?",
   "connect.disconnect.title_from": "Remove access to {vendor} for {taf}?",

@@ -66,7 +66,9 @@
     "other": "{names} cũng dừng."
   },
   "connect.disconnect.no_taf_uses": "Hiện không taf nào dùng {vendor}.",
+  "connect.disconnect.not_revoked": "{vendor} không cho chúng tôi cách nào để thu hồi việc đăng nhập: hãy gỡ quyền truy cập của tafs trong {vendor} để kết thúc nó ở đó.",
   "connect.disconnect.rest": "Các taf khác dùng {vendor} vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị thu hồi tại {vendor}; nếu không, nó bị thu hồi khi taf cuối cùng bị gỡ. Dùng {vendor} lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại.",
+  "connect.disconnect.rest_deleted": "Các taf khác dùng {vendor} vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị xóa khỏi tafs; nếu không, nó bị xóa khi taf cuối cùng bị gỡ. Dùng {vendor} lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại.",
   "connect.disconnect.rest_key": "Các taf khác dùng {vendor} vẫn giữ quyền truy cập. Khóa bị xóa khỏi tafs khi không còn taf nào dùng nó. Dùng {vendor} lại sẽ yêu cầu bạn phê duyệt và dán lại một khóa.",
   "connect.disconnect.title": "Gỡ quyền truy cập vào {vendor}?",
   "connect.disconnect.title_from": "Gỡ quyền truy cập vào {vendor} của {taf}?",
