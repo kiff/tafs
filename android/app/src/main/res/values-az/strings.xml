@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">İlk taf-ınızı qurmaq üçün tətbiq qoşun.</string>
     <string name="home_empty_shared">Sizinlə paylaşılan taf-lar burada görünür.</string>
     <string name="home_explore_jobs">İşlərə baxın</string>
+    <string name="home_first_taf_coach">Coach ilə qurun</string>
+    <string name="home_first_taf_try">Sınamaq üçün ilk taf</string>
     <string name="home_footer">KIFF ilə daxil olunub.</string>
     <string name="home_halted_open_halt">Donduruldu. Dondurma bölməsini açın</string>
     <string name="home_labels_all">Hamısı</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Ən azı %1$s yaşınız olmalıdır.</string>
     <string name="onboarding_card_lead">Hər taf sizin verdiyiniz Card daxilində işləyir: nə edə bilər, hansı tətbiqlə və nə qədər. Ondan kənarda sizdən soruşur.</string>
     <string name="onboarding_card_title">Card sizin icazənizdir</string>
+    <string name="onboarding_coach_title">Coach onu sizinlə birlikdə qurur</string>
     <string name="onboarding_consent_tick">%1$s və %2$s ilə razıyam.</string>
     <string name="onboarding_control_lead">Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində və saatınız varsa, onda gözləyir. Face ID və ya Touch ID ilə təsdiq edirsiniz, ya da rədd edirsiniz.</string>
     <string name="onboarding_control_lead_android">Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində və saatınız varsa, onda gözləyir. Barmaq iziniz və ya üzünüzlə təsdiq edirsiniz, ya da rədd edirsiniz.</string>
     <string name="onboarding_control_lead_desktop">Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində gözləyir. Telefonunuzda, ya da bu kompüterə giriş açarı (passkey) və ya təhlükəsizlik açarı ilə daxil olmusunuzsa, bu kompüterdə təsdiq edirsiniz, ya da rədd edirsiniz.</string>
     <string name="onboarding_control_lead_mac">Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində gözləyir. Touch ID ilə və ya telefonunuzda təsdiq edirsiniz, ya da rədd edirsiniz.</string>
     <string name="onboarding_control_title">İdarə sizdə qalır</string>
+    <string name="onboarding_credits_title">İşin haqqını kreditlər ödəyir</string>
     <string name="onboarding_get_started">Başlayın</string>
     <string name="onboarding_home_lead">Coach-a nə etmək istədiyinizi öz sözlərinizlə deyin. O, taf-ı sizinlə birlikdə qurur və heç nə işləməzdən əvvəl Card-ını sizə göstərir.</string>
     <string name="onboarding_how_it_works">tafs necə işləyir</string>

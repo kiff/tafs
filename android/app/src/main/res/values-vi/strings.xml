@@ -1385,6 +1385,8 @@
     <string name="home_empty_coach">Kết nối một ứng dụng để thiết lập taf đầu tiên của bạn.</string>
     <string name="home_empty_shared">Các tafs được chia sẻ với bạn hiện ở đây.</string>
     <string name="home_explore_jobs">Khám phá các công việc</string>
+    <string name="home_first_taf_coach">Thiết lập với Coach</string>
+    <string name="home_first_taf_try">Một taf đầu tiên để thử</string>
     <string name="home_footer">Đã đăng nhập bằng KIFF.</string>
     <string name="home_halted_open_halt">Đã đóng băng. Mở Đóng băng</string>
     <string name="home_labels_all">Tất cả</string>
@@ -1565,12 +1567,14 @@
     <string name="onboarding_age_n">Bạn phải từ %1$s tuổi trở lên.</string>
     <string name="onboarding_card_lead">Mỗi taf làm việc trong một Card do bạn cấp: nó được làm gì, với ứng dụng nào và ở mức nào. Ngoài đó, nó hỏi bạn.</string>
     <string name="onboarding_card_title">Card là sự cho phép của bạn</string>
+    <string name="onboarding_coach_title">Coach cùng bạn thiết lập</string>
     <string name="onboarding_consent_tick">Tôi đồng ý với %1$s và %2$s.</string>
     <string name="onboarding_control_lead">Khi một taf cần bạn, nó chờ trong Đang chờ bạn, và trên đồng hồ của bạn nếu có. Bạn phê duyệt bằng Face ID hoặc Touch ID, hoặc từ chối.</string>
     <string name="onboarding_control_lead_android">Khi một taf cần bạn, nó chờ trong Đang chờ bạn, và trên đồng hồ của bạn nếu có. Bạn phê duyệt bằng vân tay hoặc khuôn mặt, hoặc từ chối.</string>
     <string name="onboarding_control_lead_desktop">Khi một taf cần bạn, nó chờ trong Đang chờ bạn. Bạn phê duyệt trên điện thoại, hoặc trên máy tính này nếu bạn đã đăng nhập bằng khóa truy cập hay khóa bảo mật, hoặc từ chối.</string>
     <string name="onboarding_control_lead_mac">Khi một taf cần bạn, nó chờ trong Đang chờ bạn. Bạn phê duyệt bằng Touch ID hoặc trên điện thoại, hoặc từ chối.</string>
     <string name="onboarding_control_title">Bạn luôn nắm quyền kiểm soát</string>
+    <string name="onboarding_credits_title">Tín dụng trả cho công việc</string>
     <string name="onboarding_get_started">Bắt đầu</string>
     <string name="onboarding_home_lead">Nói với Coach điều bạn muốn làm, bằng lời của bạn. Nó cùng bạn thiết lập taf và cho bạn xem Card của taf trước khi có gì chạy.</string>
     <string name="onboarding_how_it_works">tafs hoạt động thế nào</string>

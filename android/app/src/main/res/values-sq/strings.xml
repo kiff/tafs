@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Lidhni një aplikacion për të konfiguruar taf-in tuaj të parë.</string>
     <string name="home_empty_shared">Tafs-et e ndarë me ju shfaqen këtu.</string>
     <string name="home_explore_jobs">Eksploroni punët</string>
+    <string name="home_first_taf_coach">Konfiguroje me Coach</string>
+    <string name="home_first_taf_try">Një taf i parë për ta provuar</string>
     <string name="home_footer">Keni hyrë me KIFF.</string>
     <string name="home_halted_open_halt">I bllokuar. Hapni Bllokimin</string>
     <string name="home_labels_all">Të gjithë</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Duhet të jeni të paktën %1$s vjeç.</string>
     <string name="onboarding_card_lead">Çdo taf punon brenda një Card-i që lëshoni ju: çfarë mund të bëjë, me cilin aplikacion dhe sa. Përtej tij, ju pyet.</string>
     <string name="onboarding_card_title">Një Card është leja juaj</string>
+    <string name="onboarding_coach_title">Coach e konfiguron me ju</string>
     <string name="onboarding_consent_tick">Pajtohem me %1$s dhe %2$s.</string>
     <string name="onboarding_control_lead">Kur një taf ka nevojë për ju, pret te Ju pret, dhe në orën tuaj nëse keni një. Miratoni me Face ID ose Touch ID, ose refuzoni.</string>
     <string name="onboarding_control_lead_android">Kur një taf ka nevojë për ju, pret te Ju pret, dhe në orën tuaj nëse keni një. Miratoni me gjurmën e gishtit ose fytyrën, ose refuzoni.</string>
     <string name="onboarding_control_lead_desktop">Kur një taf ka nevojë për ju, pret te Ju pret. Miratoni në telefonin tuaj, ose në këtë kompjuter nëse keni hyrë në të me një çelës kalimi ose çelës sigurie, ose refuzoni.</string>
     <string name="onboarding_control_lead_mac">Kur një taf ka nevojë për ju, pret te Ju pret. Miratoni me Touch ID ose në telefonin tuaj, ose refuzoni.</string>
     <string name="onboarding_control_title">Mbetesh ju në kontroll</string>
+    <string name="onboarding_credits_title">Kreditet paguajnë punën</string>
     <string name="onboarding_get_started">Filloni</string>
     <string name="onboarding_home_lead">Tregojini Coach çfarë doni të bëhet, me fjalët tuaja. E konfiguron taf-in me ju dhe ju tregon Card-in e tij para se të ekzekutohet çdo gjë.</string>
     <string name="onboarding_how_it_works">Si funksionon tafs</string>

@@ -1385,6 +1385,8 @@
     <string name="home_empty_coach">ເຊື່ອມຕໍ່ແອັບເພື່ອຕັ້ງ taf ທຳອິດຂອງທ່ານ.</string>
     <string name="home_empty_shared">taf ທີ່ແບ່ງປັນກັບທ່ານສະແດງຢູ່ທີ່ນີ້.</string>
     <string name="home_explore_jobs">ສຳຫຼວດວຽກ</string>
+    <string name="home_first_taf_coach">ຕັ້ງກັບ Coach</string>
+    <string name="home_first_taf_try">taf ທຳອິດໃຫ້ລອງ</string>
     <string name="home_footer">ເຂົ້າສູ່ລະບົບດ້ວຍ KIFF ແລ້ວ.</string>
     <string name="home_halted_open_halt">ຢຸດແລ້ວ. ເປີດການຢຸດ</string>
     <string name="home_labels_all">ທັງໝົດ</string>
@@ -1565,12 +1567,14 @@
     <string name="onboarding_age_n">ທ່ານຕ້ອງມີອາຍຸຢ່າງໜ້ອຍ %1$s ປີ.</string>
     <string name="onboarding_card_lead">ແຕ່ລະ taf ເຮັດວຽກພາຍໃນ Card ທີ່ທ່ານອອກໃຫ້: ສິ່ງທີ່ມັນເຮັດໄດ້, ກັບແອັບໃດ ແລະ ຫຼາຍເທົ່າໃດ. ເກີນນັ້ນ ມັນຖາມທ່ານ.</string>
     <string name="onboarding_card_title">Card ແມ່ນການອະນຸຍາດຂອງທ່ານ</string>
+    <string name="onboarding_coach_title">Coach ຕັ້ງມັນກັບທ່ານ</string>
     <string name="onboarding_consent_tick">ຂ້ອຍຍອມຮັບ %1$s ແລະ %2$s.</string>
     <string name="onboarding_control_lead">ເມື່ອ taf ຕ້ອງການທ່ານ ມັນລໍຖ້າໃນ «ຕ້ອງການທ່ານ» ແລະ ໃນໂມງຂອງທ່ານຖ້າມີ. ທ່ານອະນຸມັດດ້ວຍ Face ID ຫຼື Touch ID ຫຼື ປະຕິເສດ.</string>
     <string name="onboarding_control_lead_android">ເມື່ອ taf ຕ້ອງການທ່ານ ມັນລໍຖ້າໃນ «ຕ້ອງການທ່ານ» ແລະ ໃນໂມງຂອງທ່ານຖ້າມີ. ທ່ານອະນຸມັດດ້ວຍລາຍນິ້ວມື ຫຼື ໃບໜ້າ ຫຼື ປະຕິເສດ.</string>
     <string name="onboarding_control_lead_desktop">ເມື່ອ taf ຕ້ອງການທ່ານ ມັນລໍຖ້າໃນ «ຕ້ອງການທ່ານ». ທ່ານອະນຸມັດໃນໂທລະສັບຂອງທ່ານ ຫຼື ໃນຄອມພິວເຕີນີ້ ຖ້າທ່ານເຂົ້າສູ່ລະບົບດ້ວຍ passkey ຫຼື ກະແຈຄວາມປອດໄພ ຫຼື ປະຕິເສດ.</string>
     <string name="onboarding_control_lead_mac">ເມື່ອ taf ຕ້ອງການທ່ານ ມັນລໍຖ້າໃນ «ຕ້ອງການທ່ານ». ທ່ານອະນຸມັດດ້ວຍ Touch ID ຫຼື ໃນໂທລະສັບຂອງທ່ານ ຫຼື ປະຕິເສດ.</string>
     <string name="onboarding_control_title">ທ່ານຍັງຄວບຄຸມຢູ່</string>
+    <string name="onboarding_credits_title">ເຄຣດິດຈ່າຍຄ່າວຽກ</string>
     <string name="onboarding_get_started">ເລີ່ມຕົ້ນ</string>
     <string name="onboarding_home_lead">ບອກ Coach ວ່າທ່ານຢາກໃຫ້ເຮັດຫຍັງ ດ້ວຍຄຳເວົ້າຂອງທ່ານເອງ. ມັນຕັ້ງ taf ກັບທ່ານ ແລະ ສະແດງ Card ຂອງມັນກ່ອນທີ່ຫຍັງຈະເຮັດວຽກ.</string>
     <string name="onboarding_how_it_works">tafs ເຮັດວຽກແນວໃດ</string>

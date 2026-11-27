@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Connectez une app pour configurer votre premier taf.</string>
     <string name="home_empty_shared">Les tafs partagés avec vous s\'affichent ici.</string>
     <string name="home_explore_jobs">Explorer les tâches</string>
+    <string name="home_first_taf_coach">Le mettre en place avec Coach</string>
+    <string name="home_first_taf_try">Un premier taf à essayer</string>
     <string name="home_footer">Connecté avec KIFF.</string>
     <string name="home_halted_open_halt">Bloqué. Ouvrir Bloquer</string>
     <string name="home_labels_all">Tous</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Vous devez avoir au moins %1$s ans.</string>
     <string name="onboarding_card_lead">Chaque taf travaille dans le cadre d\'une Card que vous émettez : ce qu\'il peut faire, avec quelle app et pour combien. Au-delà, il vous demande.</string>
     <string name="onboarding_card_title">Une Card est votre autorisation</string>
+    <string name="onboarding_coach_title">Coach le met en place avec vous</string>
     <string name="onboarding_consent_tick">J\'accepte %1$s et %2$s.</string>
     <string name="onboarding_control_lead">Quand un taf a besoin de vous, il attend dans « Vous attend » et, si vous en avez une, sur votre montre. Vous approuvez avec Face ID ou Touch ID, ou vous refusez.</string>
     <string name="onboarding_control_lead_android">Quand un taf a besoin de vous, il attend dans « Vous attend » et, si vous en avez une, sur votre montre. Vous approuvez avec votre empreinte digitale ou votre visage, ou vous refusez.</string>
     <string name="onboarding_control_lead_desktop">Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez sur votre téléphone, ou sur cet ordinateur si vous l\'avez connecté avec une clé d\'accès ou une clé de sécurité, ou vous refusez.</string>
     <string name="onboarding_control_lead_mac">Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez avec Touch ID ou sur votre téléphone, ou vous refusez.</string>
     <string name="onboarding_control_title">Vous gardez le contrôle</string>
+    <string name="onboarding_credits_title">Les crédits paient le travail</string>
     <string name="onboarding_get_started">Commencer</string>
     <string name="onboarding_home_lead">Dites à Coach, avec vos mots, ce que vous voulez faire faire. Il met le taf en place avec vous et vous montre sa Card avant que rien ne tourne.</string>
     <string name="onboarding_how_it_works">Comment fonctionne tafs</string>

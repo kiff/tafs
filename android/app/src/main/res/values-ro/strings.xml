@@ -1495,6 +1495,8 @@
     <string name="home_empty_coach">Conectați o aplicație pentru a configura primul taf.</string>
     <string name="home_empty_shared">Tafurile partajate cu dvs. apar aici.</string>
     <string name="home_explore_jobs">Explorați sarcinile</string>
+    <string name="home_first_taf_coach">Configurați cu Coach</string>
+    <string name="home_first_taf_try">Un prim taf de încercat</string>
     <string name="home_footer">Conectat cu KIFF.</string>
     <string name="home_halted_open_halt">Oprit. Deschideți Oprire</string>
     <string name="home_labels_all">Toate</string>
@@ -1685,12 +1687,14 @@
     <string name="onboarding_age_n">Trebuie să aveți cel puțin %1$s ani.</string>
     <string name="onboarding_card_lead">Fiecare taf lucrează în limitele unui Card pe care îl emiteți: ce poate face, cu ce aplicație și cât. Dincolo de el, vă întreabă.</string>
     <string name="onboarding_card_title">Un Card este permisiunea dvs.</string>
+    <string name="onboarding_coach_title">Coach îl configurează împreună cu dvs.</string>
     <string name="onboarding_consent_tick">Sunt de acord cu %1$s și cu %2$s.</string>
     <string name="onboarding_control_lead">Când un taf are nevoie de dvs., așteaptă în Vă așteaptă și pe ceas, dacă aveți unul. Aprobați cu Face ID sau Touch ID, ori refuzați.</string>
     <string name="onboarding_control_lead_android">Când un taf are nevoie de dvs., așteaptă în Vă așteaptă și pe ceas, dacă aveți unul. Aprobați cu amprenta sau fața sau refuzați.</string>
     <string name="onboarding_control_lead_desktop">Când un taf are nevoie de dvs., așteaptă în Vă așteaptă. Aprobați pe telefon, sau pe acest computer, dacă v-ați conectat pe el cu o cheie de acces sau o cheie de securitate, ori refuzați.</string>
     <string name="onboarding_control_lead_mac">Când un taf are nevoie de dvs., așteaptă în Vă așteaptă. Aprobați cu Touch ID sau pe telefon, ori refuzați.</string>
     <string name="onboarding_control_title">Dvs. păstrați controlul</string>
+    <string name="onboarding_credits_title">Creditele plătesc munca</string>
     <string name="onboarding_get_started">Să începem</string>
     <string name="onboarding_home_lead">Spuneți-i lui Coach ce ați vrea să se facă, cu propriile cuvinte. Configurează taful împreună cu dvs. și vă arată Cardul înainte să ruleze ceva.</string>
     <string name="onboarding_how_it_works">Cum funcționează tafs</string>

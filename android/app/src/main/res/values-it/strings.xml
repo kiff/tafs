@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Collega un\'app per configurare il tuo primo taf.</string>
     <string name="home_empty_shared">I tafs condivisi con te compaiono qui.</string>
     <string name="home_explore_jobs">Esplora i lavori</string>
+    <string name="home_first_taf_coach">Preparalo con Coach</string>
+    <string name="home_first_taf_try">Un primo taf da provare</string>
     <string name="home_footer">Accesso effettuato con KIFF.</string>
     <string name="home_halted_open_halt">Bloccato. Apri Blocca</string>
     <string name="home_labels_all">Tutti</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Devi avere almeno %1$s anni.</string>
     <string name="onboarding_card_lead">Ogni taf lavora entro una Card che emetti tu: cosa può fare, con quale app e quanto. Oltre, ti chiede.</string>
     <string name="onboarding_card_title">Una Card è il tuo permesso</string>
+    <string name="onboarding_coach_title">Coach lo prepara con te</string>
     <string name="onboarding_consent_tick">Accetto %1$s e %2$s.</string>
     <string name="onboarding_control_lead">Quando un taf ha bisogno di te, aspetta in «Ti aspetta» e, se ne hai uno, sull\'orologio. Approvi con Face ID o Touch ID, oppure rifiuti.</string>
     <string name="onboarding_control_lead_android">Quando un taf ha bisogno di te, aspetta in «Ti aspetta» e, se ne hai uno, sull\'orologio. Approvi con l\'impronta o il volto, oppure rifiuti.</string>
     <string name="onboarding_control_lead_desktop">Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi sul telefono, o su questo computer se vi hai eseguito l\'accesso con una passkey o una chiave di sicurezza, oppure rifiuti.</string>
     <string name="onboarding_control_lead_mac">Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi con Touch ID o sul telefono, oppure rifiuti.</string>
     <string name="onboarding_control_title">Il controllo resta a te</string>
+    <string name="onboarding_credits_title">I crediti pagano il lavoro</string>
     <string name="onboarding_get_started">Inizia</string>
     <string name="onboarding_home_lead">Di\' a Coach con parole tue cosa vuoi che venga fatto. Prepara il taf con te e ti mostra la sua Card prima che parta qualsiasi cosa.</string>
     <string name="onboarding_how_it_works">Come funziona tafs</string>

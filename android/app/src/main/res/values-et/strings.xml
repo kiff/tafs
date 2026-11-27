@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Ühenda rakendus, et seadistada oma esimene taf.</string>
     <string name="home_empty_shared">Sinuga jagatud tafid on siin.</string>
     <string name="home_explore_jobs">Avasta töid</string>
+    <string name="home_first_taf_coach">Seadista koos Coachiga</string>
+    <string name="home_first_taf_try">Esimene taf proovimiseks</string>
     <string name="home_footer">Sisse logitud KIFFiga.</string>
     <string name="home_halted_open_halt">Peatatud. Ava Peata</string>
     <string name="home_labels_all">Kõik</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Pead olema vähemalt %1$s-aastane.</string>
     <string name="onboarding_card_lead">Iga taf töötab sinu väljastatud Cardi piires: mida see tohib teha, millise rakendusega ja kui palju. Sellest kaugemale minnes küsib see sinult.</string>
     <string name="onboarding_card_title">Card on sinu luba</string>
+    <string name="onboarding_coach_title">Coach seadistab selle koos sinuga</string>
     <string name="onboarding_consent_tick">Nõustun tingimustega: %1$s ja %2$s.</string>
     <string name="onboarding_control_lead">Kui taf vajab sind, ootab see vaates Vajab sind ja kellas, kui sul see on. Kinnitad Face ID või Touch ID abil või keeldud.</string>
     <string name="onboarding_control_lead_android">Kui taf vajab sind, ootab see vaates Vajab sind ja kellas, kui sul see on. Kinnitad sõrmejälje või näoga või keeldud.</string>
     <string name="onboarding_control_lead_desktop">Kui taf vajab sind, ootab see vaates Vajab sind. Kinnitad telefonis või selles arvutis, kui logisid sinna sisse pääsuvõtme või turvavõtmega, või keeldud.</string>
     <string name="onboarding_control_lead_mac">Kui taf vajab sind, ootab see vaates Vajab sind. Kinnitad Touch ID abil või telefonis või keeldud.</string>
     <string name="onboarding_control_title">Otsustad sina</string>
+    <string name="onboarding_credits_title">Krediidid maksavad töö eest</string>
     <string name="onboarding_get_started">Alusta</string>
     <string name="onboarding_home_lead">Ütle Coachile oma sõnadega, mida soovid teha lasta. See seadistab tafi koos sinuga ja näitab sulle selle Cardi enne, kui midagi käivitub.</string>
     <string name="onboarding_how_it_works">Kuidas tafs töötab</string>

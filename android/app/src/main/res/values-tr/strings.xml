@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">İlk taf\'ınızı kurmak için bir uygulama bağlayın.</string>
     <string name="home_empty_shared">Sizinle paylaşılan tafs burada görünür.</string>
     <string name="home_explore_jobs">İşleri keşfet</string>
+    <string name="home_first_taf_coach">Coach ile kurun</string>
+    <string name="home_first_taf_try">Denemek için ilk taf</string>
     <string name="home_footer">KIFF ile oturum açıldı.</string>
     <string name="home_halted_open_halt">Donduruldu. Dondur\'u açın</string>
     <string name="home_labels_all">Tümü</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">En az %1$s yaşında olmalısınız.</string>
     <string name="onboarding_card_lead">Her taf, sizin verdiğiniz bir Card içinde çalışır: neyi, hangi uygulamayla ve ne kadar yapabileceği. Bunun ötesinde size sorar.</string>
     <string name="onboarding_card_title">Card sizin izninizdir</string>
+    <string name="onboarding_coach_title">Coach sizinle birlikte kurar</string>
     <string name="onboarding_consent_tick">Şunları kabul ediyorum: %1$s ve %2$s.</string>
     <string name="onboarding_control_lead">Bir taf\'ın size ihtiyacı olduğunda Sizi bekliyor\'da, varsa saatinizde bekler. Face ID veya Touch ID ile onaylar ya da reddedersiniz.</string>
     <string name="onboarding_control_lead_android">Bir taf\'ın size ihtiyacı olduğunda Sizi bekliyor\'da, varsa saatinizde bekler. Parmak izinizle ya da yüzünüzle onaylar ya da reddedersiniz.</string>
     <string name="onboarding_control_lead_desktop">Bir taf\'ın size ihtiyacı olduğunda Sizi bekliyor\'da bekler. Telefonunuzdan onaylar, ya da bu bilgisayarda geçiş anahtarı veya güvenlik anahtarıyla oturum açtıysanız burada onaylar ya da reddedersiniz.</string>
     <string name="onboarding_control_lead_mac">Bir taf\'ın size ihtiyacı olduğunda Sizi bekliyor\'da bekler. Touch ID ile veya telefonunuzdan onaylar ya da reddedersiniz.</string>
     <string name="onboarding_control_title">Kontrol sizde kalır</string>
+    <string name="onboarding_credits_title">İşi krediler öder</string>
     <string name="onboarding_get_started">Başlayın</string>
     <string name="onboarding_home_lead">Coach\'a yapılmasını istediğiniz işi kendi sözlerinizle anlatın. Taf\'ı sizinle kurar ve bir şey çalışmadan önce Card\'ını gösterir.</string>
     <string name="onboarding_how_it_works">tafs nasıl çalışır</string>

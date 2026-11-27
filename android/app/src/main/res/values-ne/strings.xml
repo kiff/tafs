@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">आफ्नो पहिलो taf सेट गर्न एप जडान गर्नुहोस्।</string>
     <string name="home_empty_shared">तपाईंसँग साझा गरिएका taf यहाँ देखिन्छन्।</string>
     <string name="home_explore_jobs">कामहरू हेर्नुहोस्</string>
+    <string name="home_first_taf_coach">Coach सँग सेट गर्नुहोस्</string>
+    <string name="home_first_taf_try">प्रयास गर्ने पहिलो taf</string>
     <string name="home_footer">KIFF बाट साइन इन गरिएको।</string>
     <string name="home_halted_open_halt">रोकिएको छ। रोक खोल्नुहोस्</string>
     <string name="home_labels_all">सबै</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">तपाईं कम्तीमा %1$s वर्षको हुनुपर्छ।</string>
     <string name="onboarding_card_lead">प्रत्येक taf तपाईंले जारी गरेको Card भित्र काम गर्छ: के गर्न सक्छ, कुन एपसँग, र कति। त्यसभन्दा बाहिर यसले तपाईंलाई सोध्छ।</string>
     <string name="onboarding_card_title">Card तपाईंको अनुमति हो</string>
+    <string name="onboarding_coach_title">Coach ले तपाईंसँगै सेट गर्छ</string>
     <string name="onboarding_consent_tick">म %1$s र %2$s मा सहमत छु।</string>
     <string name="onboarding_control_lead">कुनै taf लाई तपाईं चाहिँदा यो तपाईंको प्रतीक्षामा पर्खन्छ, र तपाईंसँग घडी भए घडीमा पनि। तपाईं Face ID वा Touch ID ले स्वीकृत गर्नुहुन्छ, वा अस्वीकार गर्नुहुन्छ।</string>
     <string name="onboarding_control_lead_android">कुनै taf लाई तपाईं चाहिँदा यो तपाईंको प्रतीक्षामा पर्खन्छ, र तपाईंसँग घडी भए घडीमा पनि। तपाईं औँठाछाप वा अनुहारले स्वीकृत गर्नुहुन्छ, वा अस्वीकार गर्नुहुन्छ।</string>
     <string name="onboarding_control_lead_desktop">कुनै taf लाई तपाईं चाहिँदा यो तपाईंको प्रतीक्षामा पर्खन्छ। तपाईं फोनमा स्वीकृत गर्नुहुन्छ, वा पासकी वा सुरक्षा कुञ्जीले साइन इन गर्नुभएको भए यो कम्प्युटरमा, वा अस्वीकार गर्नुहुन्छ।</string>
     <string name="onboarding_control_lead_mac">कुनै taf लाई तपाईं चाहिँदा यो तपाईंको प्रतीक्षामा पर्खन्छ। तपाईं Touch ID ले वा फोनमा स्वीकृत गर्नुहुन्छ, वा अस्वीकार गर्नुहुन्छ।</string>
     <string name="onboarding_control_title">नियन्त्रण तपाईंकै हातमा</string>
+    <string name="onboarding_credits_title">कामको भुक्तानी क्रेडिटले गर्छ</string>
     <string name="onboarding_get_started">सुरु गर्नुहोस्</string>
     <string name="onboarding_home_lead">तपाईं के गराउन चाहनुहुन्छ Coach लाई आफ्नै शब्दमा भन्नुहोस्। यसले तपाईंसँगै taf सेट गर्छ र केही चल्नुअघि यसको Card देखाउँछ।</string>
     <string name="onboarding_how_it_works">tafs कसरी काम गर्छ</string>
