@@ -409,7 +409,12 @@ optional `next_cursor`. Filters are `all`, `done`, `held`, or `refused`, applied
 on tafs cloud before a page is made. Held means a call waiting for an owner's answer; an allowed call still sending or with an unknown result stays in All. An allowed call with an unknown tool outcome
 is never labelled done. Entries carry their ready-to-draw `title`, `detail`,
 `time`, `day_title` and optional `amount_text`, plus KIFF's original call and
-signed evidence. `tools` (comma-separated action names) and `from` (an ISO date)
+signed evidence. `money_moved: true` is set only on a done or approved call KIFF marks as a payment
+(`call.payment`: its tool moves money by its owner-approved profile, and the call was sent). The apps say
+"{amount} moved" and count the entry under the Record's Money moved only then: an amount alone, such as
+an invoice written or a transfer requested, moved nothing, and reads "Done.". "Moved" means the call was sent and
+the tool answered done: a payment the provider later fails or reverses still reads "moved" until a later entry
+says otherwise. `tools` (comma-separated action names) and `from` (an ISO date)
 can narrow an app's seven-day Activity. The server supplies that query on the app's
 setup view; the phones do not identify apps from tool names.
 

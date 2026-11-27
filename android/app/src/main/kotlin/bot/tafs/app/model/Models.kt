@@ -642,6 +642,11 @@ data class RecordEntry(
   val readOnly: Boolean? = null,
   /** "€150.00", as the Record shows an amount. */
   val amountText: String? = null,
+  /**
+   * KIFF says the call moved money (its `payment`, or tafs cloud's `money_moved`). Only then does the receipt say "moved" and the
+   * Record count it under Money moved; an amount alone (an invoice written, a transfer requested) moved nothing.
+   */
+  val moneyMoved: Boolean? = null,
   /** The amount as KIFF recorded it, value and unit: checked against the one its receipt signed. */
   val amountValue: String? = null,
   val amountUnit: String? = null,

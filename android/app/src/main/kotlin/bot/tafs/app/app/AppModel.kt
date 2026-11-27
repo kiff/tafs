@@ -10002,7 +10002,9 @@ class AppModel(
 
   private fun entry(tafId: String, kind: RecordEntry.Kind, title: String, detail: String, proposed: ProposedAction? = null, signature: String? = null) =
     RecordEntry(tafId = tafId, kind = kind, title = title, detail = detail, at = clock(), signature = signature,
-      ownerApproved = if (kind == RecordEntry.Kind.approved) true else null, amountText = proposed?.amount?.formatted)
+      ownerApproved = if (kind == RecordEntry.Kind.approved) true else null, amountText = proposed?.amount?.formatted,
+      // The sample's calls with an amount are refunds and payments: they move money.
+      moneyMoved = if (proposed?.amount != null) true else null)
 
   private fun log(tafId: String, kind: RecordEntry.Kind, title: String, detail: String, proposed: ProposedAction? = null) =
     _state.update { it.copy(record = listOf(entry(tafId, kind, title, detail, proposed)) + it.record) }
