@@ -1,0 +1,1 @@
+- **iPhone and iPad: "Money moved" only when KIFF says money moved.** A done call's receipt says "{amount} moved", and the Record counts it under Money moved and in the day's total, only when KIFF marks it a payment (`payment`, or tafs cloud's `money_moved`). An invoice written or a transfer requested reads "Done." ([api.md](docs/api.md))
