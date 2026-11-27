@@ -1,2 +1,2 @@
 • Uma chamada que espera por você mostra cada passo e cada valor por inteiro em Detalhes, nunca encurtados.
-• Primeiro uso: quatro cartões, agora com o Coach e os créditos, e um primeiro taf para testar numa tela inicial vazia.
+• Primeiro uso: quatro cartões, agora com o Coach e os créditos, e um primeiro taf para testar em uma tela inicial vazia.
