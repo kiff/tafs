@@ -10198,6 +10198,15 @@ final class AppModel: ObservableObject {
                     // A grant for the owner's own Chrome always takes Face ID: its sites are signed under it.
                     let ownChrome = grants.first { $0.id == ask.planque?.grant }?.request.browser?.driver == "extension"
                     let takesWindow = !ownChrome && ask.key == "window" && component.signs?.tap == true && windowAvailable
+                    // The window is the taf's whose step opened it: another taf's is closed, and this step's Face ID
+                    // opens this taf's own.
+                    if takesWindow, kiff.window != nil, windowTaf != s.id { await closeWindow() }
+                    // KIFF holds the window to the agent the step is for (kiff/cloud#189): a Cards step's draft's
+                    // agent, or a planque step's grant request's agent; with neither, none, and no Card goes in it.
+                    // As Android. Not the Coach's own agent, which would keep the new taf's Cards out of the window.
+                    let windowAgent = component.draft.flatMap { setupDrafts[$0]?.agentID }
+                        ?? grants.first { $0.id == ask.planque?.grant }?.request.agent
+                    guard gen == accountGeneration else { return }
                     let confirm: @MainActor () async throws -> Void = { _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true) }
                     var windowed = takesWindow && kiff.window != nil
                     do {
@@ -10211,7 +10220,7 @@ final class AppModel: ObservableObject {
                     guard gen == accountGeneration else { return }
                     kiff.setupSigner = { try signer.signConfirmed($0) }
                     // The approval key opens the window under that one Face ID.
-                    if takesWindow && !windowed { windowed = try await openWindow() }
+                    if takesWindow && !windowed { windowed = try await openWindow(for: s.id, agent: windowAgent) }
                     guard gen == accountGeneration else { return }
                     useWindow(windowed, reconfirm: confirm)
                     var made = await makeAskedCall(ask, tenant: tenant, gen: gen)
@@ -10228,7 +10237,7 @@ final class AppModel: ObservableObject {
                         }
                         guard gen == accountGeneration else { return }
                         var reopened = false
-                        if windowAvailable { reopened = try await openWindow() }
+                        if windowAvailable { reopened = try await openWindow(for: s.id, agent: windowAgent) }
                         guard gen == accountGeneration else { return }
                         useWindow(reopened, reconfirm: confirm)
                         made = await makeAskedCall(ask, tenant: tenant, gen: gen)
@@ -10624,14 +10633,21 @@ final class AppModel: ObservableObject {
     /// where tafs cloud marks its Approve a tap (`SetupComponent.windowWords`).
     @Published private(set) var windowWords: String?
 
+    /// The taf whose approval step opened the window this phone holds: the window is that taf's alone. Another
+    /// taf's step closes it and takes Face ID, which opens that taf's own. Nil for a window a connection opened
+    /// outside Coach's chat, which no card uses.
+    @Published private(set) var windowTaf: String?
+
+    /// KIFF's window words for a card of [taf]: only while the window this phone holds is that taf's, so a card
+    /// says Approve is a tap only where it is one.
+    func windowWords(forTaf taf: String?) -> String? {
+        guard let taf, windowTaf == taf else { return nil }
+        return windowWords
+    }
+
     /// How long an approval window is asked for: KIFF takes five minutes at most, and restarts it with
     /// each approval in it.
     nonisolated static let windowSeconds: TimeInterval = 300
-    /// How long the app may be away before the window it holds is closed (kiff/tafs#494).
-    nonisolated static let windowAwaySeconds: TimeInterval = 30
-    /// The wait before that close, as a task's sleep: shorter in tests.
-    var windowAwayNanoseconds: UInt64 = 30_000_000_000
-
     /// Whether an approval may take a window at all: not while Coach drives the app (every confirming
     /// signature asks for Face ID then, docs/drive.md), and only with the approval key KIFF holds for
     /// this session. Otherwise the step signs as it did.
@@ -10640,12 +10656,13 @@ final class AppModel: ObservableObject {
     /// Opens an approval window at KIFF for five minutes, signed by the approval key under the Face ID
     /// this step just took, and shows KIFF's words for it. False for a KIFF without windows (404, 405):
     /// the step then goes on as before.
-    private func openWindow() async throws -> Bool {
+    private func openWindow(for taf: String? = nil, agent: String? = nil) async throws -> Bool {
         let expires = ISO8601DateFormatter().string(from: clock().addingTimeInterval(Self.windowSeconds))
         let nonce = (0..<16).map { _ in String(format: "%02x", UInt8.random(in: 0...255)) }.joined()
         do {
-            let opened = try await kiff.openWindow(expires: expires, nonce: nonce)
+            let opened = try await kiff.openWindow(expires: expires, nonce: nonce, agent: agent)
             windowWords = opened.words
+            windowTaf = taf
             return true
         } catch KIFFClient.KIFFError.server(let status, _, _) where status == 404 || status == 405 {
             return false
@@ -10677,22 +10694,18 @@ final class AppModel: ObservableObject {
     }
 
     private var windowClosing: Task<Void, Never>?
-    /// When the app went away while holding a window.
-    private var awaySince: Date?
 
-    /// The app went to the background: after 30 seconds away, the window this phone holds is closed at
-    /// KIFF. Back sooner, it stays.
+    /// The app left the foreground: the window this phone holds is closed at KIFF at once, so the next
+    /// approval takes Face ID again.
     func wentToBackground() {
-        guard kiff.window != nil else { return }
         windowClosing?.cancel()
-        awaySince = clock()
-        let gen = accountGeneration
-        let wait = windowAwayNanoseconds
-        windowClosing = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: wait)
-            guard !Task.isCancelled, let self, gen == self.accountGeneration else { return }
-            await self.closeWindow()
-        }
+        windowClosing = nil
+        guard kiff.window != nil else { return }
+        // Its words and its taf go now, not when KIFF answers the close: back on screen at once, no card says
+        // Approve is a tap, and no step uses the window (another taf's step closes it first).
+        windowWords = nil
+        windowTaf = nil
+        windowClosing = Task { [weak self] in await self?.closeWindow() }
     }
 
     /// A language picked in the app (Account › Language): every screen draws its lines again in it, and
@@ -10703,19 +10716,11 @@ final class AppModel: ObservableObject {
         Task { await refresh() }
     }
 
-    /// Back on screen: a close waiting on the background is called off, and KIFF's words read again.
-    /// iOS may have suspended the app before its 30 seconds were up: away that long, it closes now.
+    /// Back on screen: a window still held (one the background's close didn't reach yet is gone by
+    /// then) has KIFF's words read again.
     func cameToForeground() {
-        windowClosing?.cancel()
-        windowClosing = nil
-        let away = awaySince
-        awaySince = nil
-        guard kiff.window != nil else { return }
-        if let away, clock().timeIntervalSince(away) >= Self.windowAwaySeconds {
-            windowClosing = Task { [weak self] in await self?.closeWindow() }
-        } else {
-            Task { [weak self] in await self?.readWindowWords() }
-        }
+        guard kiff.window != nil, windowClosing == nil else { return }
+        Task { [weak self] in await self?.readWindowWords() }
     }
 
     /// The screen locked: the window this phone holds is closed at once.
@@ -10723,6 +10728,8 @@ final class AppModel: ObservableObject {
         windowClosing?.cancel()
         windowClosing = nil
         guard kiff.window != nil else { return }
+        windowWords = nil
+        windowTaf = nil
         windowClosing = Task { [weak self] in await self?.closeWindow() }
     }
 
@@ -10732,6 +10739,8 @@ final class AppModel: ObservableObject {
         let signer = self.signer
         try? await kiff.closeWindow(signedBy: { try signer.signConfirmed($0) })
         windowWords = nil
+        windowTaf = nil
+        windowClosing = nil
     }
 
     /// The window is the session's: a new sign-in opens its own, and KIFF ends it at sign-out.
@@ -10739,8 +10748,8 @@ final class AppModel: ObservableObject {
         kiff.window = nil
         windowClosing?.cancel()
         windowClosing = nil
-        awaySince = nil
         windowWords = nil
+        windowTaf = nil
         useWindow(false, reconfirm: {})
     }
 
