@@ -179,21 +179,34 @@ describe("connections no taf uses", () => {
     expect(connectionLines([{ ...qonto, agent: "hidden" }], new Map(), new Set(["hidden"]))).toEqual([]);
   });
 
-  it("are ended with the chat that asked for them: its own successful requests, from the day it began, never a live taf's", () => {
-    const call = (id: string, name: string, action = "request") => ({ kind: "tool_call", body: { call_id: id, tool: "planque", input: { action, name } } });
-    const result = (id: string, is_error = false) => ({ kind: "tool_result", body: { call_id: id, text: "ok", ...(is_error ? { is_error } : {}) } });
-    const events = [call("c1", "qonto-balance"), result("c1"), call("c2", "refused-one"), result("c2", true), call("c3", "cb", "status"), result("c3"),
-      { kind: "tool_call", body: { call_id: "c4", tool: "other", input: { action: "request", name: "other-tool" } } }, result("c4")];
+  // By the agent the request's answer names, never by the `name` Coach sent: kiff/agents makes the id from taf_name and a
+  // random part (27 Nov: matched by `name`, a chat's Qonto sign-in stayed after its delete).
+  it("are ended with the chat that asked for them: the agents its own successful requests' answers name, never a live taf's", () => {
+    const call = (id: string, name: string, action = "request") => ({ kind: "tool_call", body: { call_id: id, tool: "planque", input: { action, name, taf_name: "Qonto balance" } } });
+    const result = (id: string, agent: string, is_error = false) => ({ kind: "tool_result", body: { call_id: id, text: JSON.stringify({ id: `grt_${id}`, status: "pending", agent }), ...(is_error ? { is_error } : {}) } });
+    const events = [call("c1", "qonto-morning"), result("c1", "qonto-balance-k3f9x2a1"), call("c2", "refused-one"), result("c2", "refused-one", true),
+      call("c3", "cb", "status"), result("c3", "cb"),
+      { kind: "tool_call", body: { call_id: "c4", tool: "other", input: { action: "request", name: "other-tool" } } }, result("c4", "other-tool"),
+      // A browser request's answer nests its grant.
+      call("c5", "shop"), { kind: "tool_result", body: { call_id: "c5", text: JSON.stringify({ grant: { id: "grt_c5", agent: "shop-runner-ab12cd34" } }) } },
+      // An answer that isn't JSON, or names an agent no id could be, names none.
+      call("c6", "odd"), { kind: "tool_result", body: { call_id: "c6", text: "agent: qonto-morning" } },
+      call("c7", "odd"), result("c7", "Not An Id!"),
+      // An answer cut short after its agent, inside the guide that follows it, still names it.
+      call("c8", "cut"), { kind: "tool_result", body: { call_id: "c8", text: '{"agent":"cut-short-zz99yy88","guide":{"text":"Qonto is' } }];
     const conns: AccountConnection[] = [
       qonto,
-      { ...qonto, agent: "qonto-balance", since: "2026-11-26" },
+      // The name Coach sent is no agent of this chat's.
+      { ...qonto, agent: "qonto-morning" },
       { ...qonto, agent: "refused-one" },
       { ...qonto, agent: "other-tool" },
+      { ...qonto, agent: "shop-runner-ab12cd34", kind: "browser" },
+      { ...qonto, agent: "cut-short-zz99yy88" },
       { ...stripe, since: "2026-11-27" },
     ];
-    expect(chatLeftAgents(events, conns, new Set(["cb"]), "2026-11-27T20:44:00.000Z")).toEqual(["qonto-balance-k3f9x2a1"]);
+    expect(chatLeftAgents(events, conns, new Set(["cb"]), "2026-11-27T20:44:00.000Z")).toEqual(["qonto-balance-k3f9x2a1", "shop-runner-ab12cd34", "cut-short-zz99yy88"]);
     // The taf it made is live: its connections stay.
-    expect(chatLeftAgents(events, conns, new Set(["qonto-balance-k3f9x2a1"]), "2026-11-27T20:44:00.000Z")).toEqual([]);
+    expect(chatLeftAgents(events, conns, new Set(["qonto-balance-k3f9x2a1"]), "2026-11-27T20:44:00.000Z")).toEqual(["shop-runner-ab12cd34", "cut-short-zz99yy88"]);
     // An agent with one connection asked before the chat began isn't the chat's alone.
     expect(chatLeftAgents(events, [qonto, { ...qonto, since: "2026-11-26" }], new Set(), "2026-11-27T20:44:00.000Z")).toEqual([]);
     expect(chatLeftAgents([], conns, new Set(), "2026-11-27T20:44:00.000Z")).toEqual([]);

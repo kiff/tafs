@@ -1,0 +1,1 @@
+- **Deleting a Coach conversation now ends the sign-ins it made that no taf uses (tafs cloud).** The delete matched the conversation's connections by the name Coach sent, but the connection's agent is named from the taf's name with a random part, so it found none and a Qonto sign-in stayed signed in. It now takes the agent each request's answer names (docs/api.md).
