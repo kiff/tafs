@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AGREE_FIRST, askedInSession, checkDraft, type DecideContext, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, KIFFS_OWN_TOTAL, MONEY_NEVER_CANT, MONEY_UNBUILT, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
 import { unpinnedConnection } from "../src/cloud/rules.js";
-import { approvalAnswerWords, checkedOnReadFor, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { approvalAnswerWords, checkedOnReadFor, forgetHeldGrants, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { contract } from "./contract.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -53,6 +53,10 @@ interface Services {
   agents?: Array<{ id: string; archived_at?: string }>;
   /** KIFF's draft read failing (a status), as when it's slow past the chat's read. */
   draftDown?: number;
+  /** How long planque takes to answer the grants read, as when it's slow past the chat's read (27 Nov: 1.8 to 4 s). */
+  grantsDelayMs?: number;
+  /** planque refusing the grants read (a status). */
+  grantsDown?: number;
 }
 
 function services(): Services {
@@ -65,7 +69,10 @@ function net(s: Services) {
     if (url.startsWith("https://planque.test/")) {
       s.proofs.push(headers["Planque-Device-Signature"] ?? "");
       if (!headers["Planque-Device-Signature"]) return new Response("{}", { status: 401 });
-      return new Response(JSON.stringify({ grants: s.grants }), { status: 200 });
+      const grants = s.grants;
+      if (s.grantsDelayMs) await new Promise((resolve) => setTimeout(resolve, s.grantsDelayMs));
+      if (s.grantsDown) return new Response("{}", { status: s.grantsDown });
+      return new Response(JSON.stringify({ grants }), { status: 200 });
     }
     const token = String(headers.authorization ?? "").replace("Bearer ", "");
     // ana-ro: Ana on a session whose role can't manage Cards (view only).
@@ -1786,6 +1793,35 @@ describe("each waiting approval card says what its fingerprint signs", () => {
     s.grants = [grant({ status: "pending" })];
     expect(await signs(await world(s))).toMatchObject({ takes: "tap" });
   });
+
+  // 27 Nov: planque took 3.1 s at a connection's tap, past the 1.5 s read, and the card came unmarked: inside the open window
+  // it drew "Approve with your fingerprint". A late read marks from the grants this person's cards were last marked from.
+  it("marks a connection's card as a tap from the grants already held when planque's read is late", async () => {
+    forgetHeldGrants();
+    const s = services();
+    s.grants = [grant({ status: "pending" })];
+    const w = await world(s);
+    // Nothing held yet: a late read leaves the card unmarked, as before.
+    s.grantsDelayMs = 1800;
+    expect(await signs(w)).toBeUndefined();
+    // planque in time: the card is marked, and its grants are held.
+    s.grantsDelayMs = 0;
+    expect(await signs(w)).toEqual({ card: false, words: "Its Card: you approve it next", takes: "tap" });
+    // Late again, as at 08:11: marked from what's held, a tap.
+    s.grantsDelayMs = 1800;
+    expect(await signs(w)).toEqual({ card: false, words: "Its Card: you approve it next", takes: "tap" });
+    // A read planque refuses marks nothing, held or not.
+    s.grantsDelayMs = 0;
+    s.grantsDown = 503;
+    expect(await signs(w)).toBeUndefined();
+    // Held for 10 minutes only: an older copy marks nothing.
+    s.grantsDown = undefined;
+    expect(await signs(w)).toMatchObject({ takes: "tap" });
+    w.at(new Date(NOW.getTime() + 11 * 60_000));
+    s.grantsDelayMs = 1800;
+    expect(await signs(w)).toBeUndefined();
+    forgetHeldGrants();
+  }, 20_000);
 
   it("leaves the card as it was without the phone's proof, when the connections can't be read, or once answered", async () => {
     const s = services();
