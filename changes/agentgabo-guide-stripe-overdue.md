@@ -1,0 +1,1 @@
+- **"Chase overdue invoices" now shows a step-by-step guide (tafs cloud).** Four steps in all 8 recipe languages: connect Stripe for reading, read the rules, approve the Card, run it from the job's chat. It matches what the proof run did: it drafts a reminder for each overdue invoice and sends nothing (recipes/chase-overdue-invoices.md).

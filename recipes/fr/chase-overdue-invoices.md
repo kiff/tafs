@@ -8,6 +8,19 @@ sample:
   - Personne n'a plus de 30 jours de retard. Les plus anciennes factures étaient dues il y a 22 jours.
   - Chaque relance commence par la mention qu'une IA l'a rédigée, indique la facture et le montant, et précise qu'on peut l'ignorer si elle est déjà payée.
   - Je n'ai modifié aucune facture et je n'ai offert aucune remise.
+guide:
+  - Connecter Stripe
+  - - Do: Ouvrez la tâche. Coach vous demande de connecter Stripe, en lecture seule pour vos factures. Approuvez.
+  - - You see: Stripe indiqué comme connecté, en lecture seule.
+  - Lire les règles
+  - - Do: Lisez les règles que Coach vous montre, puis acceptez.
+  - - You see: La tâche ne modifie jamais une facture et ne propose jamais d'avoir ni de remise, et elle vous demande d'abord avant d'envoyer plus de 20 relances dans une journée.
+  - Approuver la Card
+  - - Do: Approuvez la Card.
+  - - You see: La Card : ce que la tâche fait seule, ce qu'elle vous demande d'abord et ce qu'elle ne fait jamais.
+  - Lancer
+  - - Do: Ouvrez la conversation de la tâche et demandez-lui de se lancer.
+  - - You see: Combien de factures sont en retard, une relance rédigée pour chacune et qui a plus de 30 jours de retard. Rien n'est envoyé : aucune appli de messagerie n'est connectée.
 card:
   allows:
     - Relances jusqu'à 20 par jour, au plus une par semaine et par facture
