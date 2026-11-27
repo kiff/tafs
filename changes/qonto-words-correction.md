@@ -1,0 +1,1 @@
+- **Docs: what Coach asked Qonto for, said right.** The Coach page and a test's notes said Coach made up the tool name `list_bank_accounts` and that `get_organization` gives balances. `list_bank_accounts` is Qonto's own balance read, which planque doesn't serve on Qonto's sign-in, and `get_organization` gives the business's identity only (docs/coach.md). No behaviour changes.
