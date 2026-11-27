@@ -192,6 +192,7 @@ enum KIFFMapping {
                 entry.refusedBy = c.toolOutcome?.refusedBy == "connection" ? Words.Record.theConnection : vendors[c.actionName]
             }
             entry.amount = c.amount
+            if c.payment == true, kind == .done || kind == .approved { entry.moneyMoved = true }
             entry.readOnly = c.readOnly
             entry.entityID = c.entityID.map(visible)
             entry.action = c.actionName

@@ -574,6 +574,10 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     /// owner's answer, and its receipt. What it acted on is KIFF's hash of it; its value is
     /// tafs' own (the run's call_ref, 30 days), shown only when it matches KIFF's hash.
     var amount: KIFFClient.ActivityCall.Amount?
+    /// KIFF says the call moved money (its `payment`, or tafs cloud's `money_moved`). Only then does the receipt say
+    /// "moved" and the Record count it under Money moved; an amount alone (an invoice written, a transfer requested)
+    /// moved nothing.
+    var moneyMoved: Bool? = nil
     var readOnly: Bool?
     var entityID: String?
     /// The tool as KIFF names it ("list_inboxes_k3f9"): which connection it went through.
