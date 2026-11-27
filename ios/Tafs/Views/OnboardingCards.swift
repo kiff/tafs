@@ -1,35 +1,40 @@
 import SwiftUI
 
-/// The three cards on how tafs works (docs/onboarding.md): after signing in, before the first Home, and again from How
-/// tafs works. Each draws the app's own components with the sample's words, so the person knows them a minute later
-/// and reads them in their language. Off with `Onboarding.on`.
+/// The four cards on how tafs works (docs/onboarding.md, first-run v2): after signing in, before the first Home, and
+/// again from How tafs works. Each draws the app's own components with the sample's words, so the person knows them a
+/// minute later and reads them in their language and theme. Off with `Onboarding.on`.
 enum OnboardingPage: Int, CaseIterable, Identifiable {
-    case tafs, card, control
+    case tafs, coach, card, credits
 
     var id: Int { rawValue }
 
     var title: String {
         switch self {
         case .tafs: return Words.Onboarding.tafsTitle
+        case .coach: return Words.Onboarding.coachTitle
         case .card: return Words.Onboarding.cardTitle
-        case .control: return Words.Onboarding.controlTitle
+        case .credits: return Words.Onboarding.creditsTitle
         }
     }
 
-    /// The last card names this device's own way to approve: a Mac approves with Touch ID or on the phone, since a Mac
-    /// without a Secure Enclave can't approve; an iPhone or iPad with Face ID or Touch ID.
-    func lead(isMac: Bool = ThisDevice.isMac) -> String {
+    /// The card's lines, each its own paragraph (no language joins two sentences with a space it may not use). The Card
+    /// card ends with this device's own way to approve: a Mac approves with Touch ID or on the phone, since a Mac without
+    /// a Secure Enclave can't approve; an iPhone or iPad with Face ID or Touch ID.
+    func lines(isMac: Bool = ThisDevice.isMac) -> [String] {
         switch self {
-        case .tafs: return Words.Onboarding.tafsLead
-        case .card: return Words.Onboarding.cardLead
-        case .control: return isMac ? Words.Onboarding.controlLeadMac : Words.Onboarding.controlLead
+        case .tafs: return [Words.Onboarding.tafsLead]
+        case .coach: return [Words.Onboarding.homeLead]
+        case .card: return [Words.Onboarding.cardLead, isMac ? Words.Onboarding.controlLeadMac : Words.Onboarding.controlLead]
+        case .credits: return [Words.Billing.creditsBuy]
         }
     }
 
     var next: OnboardingPage? { OnboardingPage(rawValue: rawValue + 1) }
+    var previous: OnboardingPage? { OnboardingPage(rawValue: rawValue - 1) }
 }
 
-/// Where the person is in the cards: Next goes on, the last card's button ends them, and Skip ends them from any card.
+/// Where the person is in the cards: Next (or a swipe left) goes on, a swipe right goes back, the last card's button
+/// ends them, and Skip ends them from any card.
 struct OnboardingSteps: Equatable {
     private(set) var page: OnboardingPage
     private(set) var finished = false
@@ -41,6 +46,16 @@ struct OnboardingSteps: Equatable {
     /// Next, or Get started on the last card.
     mutating func advance() {
         if let next = page.next { page = next } else { finished = true }
+    }
+
+    /// A swipe left: the next card, never past the last (only its button ends the cards).
+    mutating func swipeForward() {
+        if let next = page.next { page = next }
+    }
+
+    /// A swipe right: the card before, never before the first.
+    mutating func back() {
+        if let previous = page.previous { page = previous }
     }
 
     mutating func skip() { finished = true }
@@ -79,10 +94,12 @@ struct OnboardingCards: View {
                     .foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                Text(steps.page.lead())
-                    .scaledFont(16)
-                    .foregroundColor(Theme.soft)
-                    .fixedSize(horizontal: false, vertical: true)
+                ForEach(Array(steps.page.lines().enumerated()), id: \.offset) { _, line in
+                    Text(line)
+                        .scaledFont(16)
+                        .foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
             HStack(spacing: 8) {
@@ -96,7 +113,7 @@ struct OnboardingCards: View {
             .accessibilityHidden(true)
 
             Button(steps.isLast ? Words.Onboarding.getStarted : Words.Common.next) {
-                withAnimation(.easeInOut(duration: 0.2)) { steps.advance() }
+                move { steps.advance() }
             }
             .buttonStyle(PrimaryButtonStyle())
             .accessibilityIdentifier("onboarding.next")
@@ -108,7 +125,23 @@ struct OnboardingCards: View {
         .frame(maxWidth: 520)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .screenBackground()
+        // A swipe left goes on, a swipe right goes back, as the buttons do (the spec's phones swipe as well).
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
+            guard abs(drag.translation.width) > abs(drag.translation.height) else { return }
+            let forward = drag.translation.width < 0
+            move {
+                if forward { steps.swipeForward() } else { steps.back() }
+            }
+        })
         .onChange(of: steps.finished) { if $0 { done() } }
+    }
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// A step to another card: with reduced motion, no slide.
+    private func move(_ step: () -> Void) {
+        if reduceMotion { step() } else { withAnimation(.easeInOut(duration: 0.2)) { step() } }
     }
 }
 
@@ -119,8 +152,13 @@ struct OnboardingPicture: View {
     var body: some View {
         switch page {
         case .tafs: tafs
-        case .card: card
-        case .control: control
+        case .coach: coach
+        case .card:
+            VStack(spacing: 14) {
+                card
+                held
+            }
+        case .credits: credits
         }
     }
 
@@ -151,17 +189,49 @@ struct OnboardingPicture: View {
             .frame(maxWidth: TafCardFace.width)
     }
 
-    /// Needs you's card: the sample's Deploys asks, nothing is sent until you approve, and the three answers.
-    private var control: some View {
+    /// Coach's first exchange: the sample's ask in, Coach's answer back, as Coach's chat draws them.
+    private var coach: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Spacer(minLength: 40)
+                Text(Words.Sample.Coach.ask)
+                    .scaledFont(15).foregroundColor(Theme.onFill)
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .background(Theme.ink)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Eyebrow(text: Words.Sample.Coach.planLine)
+                    Text(Words.Sample.Coach.connectFirst).scaledFont(15).foregroundColor(Theme.ink)
+                }
+                .padding(14)
+                .background(Theme.raised)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                Spacer(minLength: 40)
+            }
+        }
+        .frame(maxWidth: 420)
+    }
+
+    /// Needs you's card, short: the sample's Deploys asks, nothing is sent until you approve, and the answer.
+    private var held: some View {
         Panel {
             Eyebrow(text: Words.Sample.Deploys.name)
             Text(Words.Sample.Deploys.deployApi).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
-            Text(Words.Sample.Deploys.deployApiWhy).scaledFont(14).foregroundColor(Theme.soft)
             Text(Words.NeedsYou.nothingSent).scaledFont(13).foregroundColor(Theme.dim)
-            // As Needs you marks them: a driven touch on either is refused, though the picture takes no taps at all.
+            // As Needs you marks it: a driven touch is refused, though the picture takes no taps at all.
             Button(Self.approveLabel) {}.buttonStyle(PrimaryButtonStyle()).confirming()
-            Button(Words.Sample.Deploys.nextStep) {}.buttonStyle(OutlineButtonStyle())
-            Button(Words.NeedsYou.refuse) {}.buttonStyle(OutlineButtonStyle(color: Theme.no)).confirming()
+        }
+        .frame(maxWidth: 420)
+    }
+
+    /// Plan & usage's credits: the sample's Solo, its credits left this period, and its meter.
+    private var credits: some View {
+        Panel {
+            Text(Words.Sample.Credits.balanceWords).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+            Meter(fraction: 260.0 / 500.0)
+            Text(Words.Sample.Credits.note).scaledFont(13).foregroundColor(Theme.dim)
         }
         .frame(maxWidth: 420)
     }
@@ -187,7 +257,7 @@ struct OnboardingPicture: View {
     }
 }
 
-/// How tafs works, any time (Account): the three cards again, each opening where it's tapped, and the privacy and
+/// How tafs works, any time (Account): the four cards again, each opening where it's tapped, and the privacy and
 /// terms pages, KIFF's and tafs's.
 struct HowTafsWorksView: View {
     @EnvironmentObject private var model: AppModel

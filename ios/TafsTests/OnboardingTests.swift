@@ -1,22 +1,40 @@
 import XCTest
 @testable import Tafs
 
-/// The three cards after signing in (docs/onboarding.md).
+/// The four cards after signing in (docs/onboarding.md, first-run v2).
 final class OnboardingTests: XCTestCase {
-    /// Next goes card by card; the last card's button ends them, and nothing goes past the last card.
+    /// Next goes card by card, in the v2 order: tafs, Coach, the Card, credits. The last card's button ends them, and
+    /// nothing goes past the last card.
     func testNextGoesCardByCardThenGetStartedEnds() {
         var steps = OnboardingSteps()
+        XCTAssertEqual(OnboardingPage.allCases, [.tafs, .coach, .card, .credits])
         XCTAssertEqual(steps.page, .tafs)
-        XCTAssertFalse(steps.isLast)
-        steps.advance()
-        XCTAssertEqual(steps.page, .card)
-        steps.advance()
-        XCTAssertEqual(steps.page, .control)
+        for page in [OnboardingPage.coach, .card, .credits] {
+            XCTAssertFalse(steps.isLast)
+            steps.advance()
+            XCTAssertEqual(steps.page, page)
+        }
         XCTAssertTrue(steps.isLast, "the last card's button is Get started")
         XCTAssertFalse(steps.finished)
         steps.advance()
         XCTAssertTrue(steps.finished)
-        XCTAssertEqual(steps.page, .control, "Get started ends on the last card, never past it")
+        XCTAssertEqual(steps.page, .credits, "Get started ends on the last card, never past it")
+    }
+
+    /// A swipe left goes on and a swipe right goes back, never past either end; only the last card's button, or Skip,
+    /// ends the cards.
+    func testSwipesMoveBetweenCardsButNeverEndThem() {
+        var steps = OnboardingSteps()
+        steps.back()
+        XCTAssertEqual(steps.page, .tafs, "nothing before the first card")
+        steps.swipeForward()
+        XCTAssertEqual(steps.page, .coach)
+        steps.back()
+        XCTAssertEqual(steps.page, .tafs)
+        var last = OnboardingSteps(start: .credits)
+        last.swipeForward()
+        XCTAssertEqual(last.page, .credits)
+        XCTAssertFalse(last.finished, "a swipe never ends the cards: Get started does")
     }
 
     /// Skip ends the cards from any card.
@@ -30,16 +48,41 @@ final class OnboardingTests: XCTestCase {
 
     /// Reopened from How tafs works, the cards open on the one tapped.
     func testHowItWorksOpensOnTheCardTapped() {
-        XCTAssertEqual(OnboardingSteps(start: .card).page, .card)
-        XCTAssertEqual(OnboardingSteps(start: .control).page, .control)
+        for page in OnboardingPage.allCases {
+            XCTAssertEqual(OnboardingSteps(start: page).page, page)
+        }
     }
 
-    /// The last card names each device's own way to approve: a Mac with Touch ID or on the phone, never Face ID.
-    func testTheLastCardNamesThisDevicesWayToApprove() {
-        XCTAssertEqual(OnboardingPage.control.lead(isMac: false), Words.Onboarding.controlLead)
-        XCTAssertEqual(OnboardingPage.control.lead(isMac: true), Words.Onboarding.controlLeadMac)
+    /// Each card says its shared lines: the Coach card today's Home lead, the credits card what credits buy, and the Card
+    /// card ends with this device's own way to approve (a Mac with Touch ID or on the phone, never Face ID), each line
+    /// its own paragraph.
+    func testEachCardSaysItsLinesAndTheCardCardNamesThisDevicesWayToApprove() {
+        XCTAssertEqual(OnboardingPage.tafs.lines(isMac: false), [Words.Onboarding.tafsLead])
+        XCTAssertEqual(OnboardingPage.coach.lines(isMac: false), [Words.Onboarding.homeLead])
+        XCTAssertEqual(OnboardingPage.credits.lines(isMac: false), [Words.Billing.creditsBuy])
+        XCTAssertEqual(OnboardingPage.card.lines(isMac: false), [Words.Onboarding.cardLead, Words.Onboarding.controlLead])
+        XCTAssertEqual(OnboardingPage.card.lines(isMac: true), [Words.Onboarding.cardLead, Words.Onboarding.controlLeadMac])
         XCTAssertNotEqual(Words.Onboarding.controlLead, Words.Onboarding.controlLeadMac)
-        XCTAssertEqual(OnboardingPage.tafs.lead(isMac: true), OnboardingPage.tafs.lead(isMac: false), "the other cards read the same everywhere")
+        for page in OnboardingPage.allCases where page != .card {
+            XCTAssertEqual(page.lines(isMac: true), page.lines(isMac: false), "\(page) reads the same everywhere")
+        }
+        XCTAssertEqual(OnboardingPage.coach.title, Words.Onboarding.coachTitle)
+        XCTAssertEqual(OnboardingPage.credits.title, Words.Onboarding.creditsTitle)
+    }
+
+    /// A first taf to try is the first recipe tafs cloud lists with a proof, in its words; none proved, or the
+    /// suggestions off, and there's none. The app never writes a job of its own.
+    func testTheFirstTafToTryIsTheFirstProvedRecipe() {
+        typealias R = TafsCloud.Recipes.Recipe
+        let unproved = R(id: "a", title: "Late parcels", line: "Chases late parcels.", say: "Chase late parcels")
+        let proved = R(id: "b", title: "Acknowledge every ticket", line: "Acknowledges each new ticket.", say: "Acknowledge tickets",
+                       proved: "Ran on 25 Nov")
+        let alsoProved = R(id: "c", title: "Lead follow-ups", line: "Follows up leads.", say: "Follow up leads", proved: "Ran on 26 Nov")
+        XCTAssertEqual(TafsCloud.Recipes(recipes: [unproved, proved, alsoProved]).firstToTry?.id, "b", "the first proved, in tafs cloud's order")
+        XCTAssertNil(TafsCloud.Recipes(recipes: [unproved]).firstToTry, "none proved: no card")
+        XCTAssertNil(TafsCloud.Recipes(recipes: [proved], shown: false).firstToTry, "suggestions off: no card")
+        let noWords = R(id: "d", title: "Acknowledge every ticket", line: "Acknowledges each new ticket.", say: " ", proved: "Ran")
+        XCTAssertNil(TafsCloud.Recipes(recipes: [noWords]).firstToTry, "nothing for Coach's box: no card")
     }
 
     /// The cards follow the celebration once on this device, and only with the new onboarding on.

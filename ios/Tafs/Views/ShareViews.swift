@@ -262,7 +262,13 @@ struct OverviewView: View {
                 if model.needsYouCount > 0 { needsYou }
                 // The labels' chips (Missions draft), filtering the table below.
                 if showsFirstHome {
-                    VStack(alignment: .leading, spacing: 16) { FirstHome(showingHowItWorks: $showingHowItWorks) }
+                    VStack(alignment: .leading, spacing: 16) {
+                        // A first taf to try (first-run v2), above the first Home, as Home draws it.
+                        if let first = model.recipes?.firstToTry {
+                            FirstTafCard(recipe: first) { model.handRecipeToCoach(first) }
+                        }
+                        FirstHome(showingHowItWorks: $showingHowItWorks)
+                    }
                         .frame(maxWidth: 520, alignment: .leading)
                 } else {
                     if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.labelsAllWords) { model.filterList($0) } }

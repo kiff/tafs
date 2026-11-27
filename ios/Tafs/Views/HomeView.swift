@@ -127,6 +127,11 @@ struct HomeView: View {
                 }
 
                 if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
+                    // A first taf to try (first-run v2): the first recipe tafs cloud lists with a proof, for
+                    // someone who may use Coach; with none proved, nothing here.
+                    if model.mayUseCoach, let first = model.recipes?.firstToTry {
+                        FirstTafCard(recipe: first) { model.handRecipeToCoach(first) }
+                    }
                     // tafs cloud says what Home shows with no taf: the recipes under its line, or
                     // its empty line (docs/ios-app.md).
                     if let recipes = model.recipes, recipes.homeListsRecipes {
@@ -455,6 +460,28 @@ struct TafRow: View {
 
 /// The first Home (docs/onboarding.md): tafs cloud's line, else the app's; Ask Coach; the cards again. One block for the
 /// phone's Home and the iPad's wide Overview, so both say the same thing with no taf.
+/// A first taf to try (first-run v2, docs/onboarding.md): the first recipe tafs cloud lists with a proof, its title and
+/// line in tafs cloud's words; Set it up with Coach opens Coach with the recipe's words in the box, to edit and send.
+/// Nothing is sent.
+struct FirstTafCard: View {
+    let recipe: TafsCloud.Recipes.Recipe
+    let setUp: () -> Void
+
+    var body: some View {
+        Panel {
+            Eyebrow(text: Words.Home.firstTafTry)
+            Text(recipe.title).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(recipe.line).scaledFont(14).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+            Button(Words.Home.firstTafCoach, action: setUp)
+                .buttonStyle(PrimaryButtonStyle())
+                .accessibilityIdentifier("home.firstTaf")
+        }
+        .accessibilityElement(children: .contain)
+    }
+}
+
 struct FirstHome: View {
     @EnvironmentObject private var model: AppModel
     @Binding var showingHowItWorks: Bool

@@ -126,10 +126,16 @@ struct HomeSplitView: View {
                     // No taf yet: the recipes take the pane beside the sidebar, which is
                     // narrow for a headline (docs/ios-app.md).
                     ScrollView {
-                        HomeRecipes(recipes: model.recipes ?? TafsCloud.Recipes(), logo: { model.cloud.logoURL($0) },
-                                    ownWords: model.mayUseCoach ? { model.startNewTaf() } : nil) { openRecipe = $0 }
-                            .padding(.horizontal, 24).padding(.vertical, 20)
-                            .pageColumn(PageWidth.gallery)
+                        VStack(alignment: .leading, spacing: 16) {
+                            // A first taf to try (first-run v2), above the list, as Home draws it.
+                            if model.mayUseCoach, let first = model.recipes?.firstToTry {
+                                FirstTafCard(recipe: first) { model.handRecipeToCoach(first) }
+                            }
+                            HomeRecipes(recipes: model.recipes ?? TafsCloud.Recipes(), logo: { model.cloud.logoURL($0) },
+                                        ownWords: model.mayUseCoach ? { model.startNewTaf() } : nil) { openRecipe = $0 }
+                        }
+                        .padding(.horizontal, 24).padding(.vertical, 20)
+                        .pageColumn(PageWidth.gallery)
                     }
                     .screenBackground()
                 case nil:

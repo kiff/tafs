@@ -2301,6 +2301,15 @@ final class TafsCloud {
         var homeListsRecipes: Bool { home?.shown == true && labels != nil && !byCategory.isEmpty }
         /// "Say it in your own words", leading Home's list; nil when tafs cloud sent none.
         var homeOwnWords: Home.OwnWords? { home?.ownWords }
+        /// A first taf to try (first-run v2): the first recipe tafs cloud lists with a proof (`proved`), in its own
+        /// words. Nil when none is proved, or when the one proved has no title, line or words for Coach: the app never
+        /// writes a job of its own here.
+        var firstToTry: Recipe? {
+            guard shown else { return nil }
+            return recipes.first { r in
+                [r.proved, r.title, r.line, r.say].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            }
+        }
         /// tafs cloud's line for Home with no taf; nil when it sent none.
         var homeWords: String? {
             guard let w = home?.words.trimmingCharacters(in: .whitespacesAndNewlines), !w.isEmpty else { return nil }
