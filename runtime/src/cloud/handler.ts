@@ -1,7 +1,7 @@
 import { checkMisfitSeen } from "./checkseen.js";
 import { anotherConnectionsTool, connectionsOfJob, connectionTail, grantSuffix, rulesAgreement } from "./rules.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
+import { CUSTOM, DISCLOSE_MAX, discloseOf, ID_PLACEHOLDER, type Job, JOBS, jobById, ownJob, type Source, sourcesOf, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, type AISource, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
@@ -120,7 +120,7 @@ import { chromeBegan, chromeMayCall, chromeOf, chromeRunChats, chromeRunsOf, mar
  *   GET  /v1/setup                      the account's Setup (Coach), or null
  *   POST /v1/setup                      {draft_id, claim_secret}: start it once (kiff/agents#91)
  *   GET  /v1/tafs
- *   POST /v1/tafs                       {name, draft_id + claim_secret | from_setup + draft_id | agent_key, summary?, kickoff, instructions?, cron | unscheduled, timezone?, budget_cents?, notes?, recipe?}: a taf with its own job (kiff/tafs#476); `job` names one of the five starter jobs instead, never with from_setup
+ *   POST /v1/tafs                       {name, draft_id + claim_secret | from_setup + draft_id | agent_key, summary?, kickoff, instructions?, sources?, cron | unscheduled, timezone?, budget_cents?, notes?, recipe?}: a taf with its own job (kiff/tafs#476); `job` names one of the five starter jobs instead, never with from_setup
  *   POST /v1/tafs/{id}/pause | resume | run
  *   PUT  /v1/tafs/{id}/promise          {hours | null}: how long a case may wait before the owner is told (waiting.ts)
  *   GET | POST | DELETE /v1/tafs/{id}/halt  one taf's halt
@@ -403,7 +403,7 @@ export interface Taf {
    * to do (its kickoff, the first instruction) and how it works. A taf with one has the job `custom`;
    * one of the five starter jobs has none.
    */
-  work?: { kickoff: string; instructions?: string };
+  work?: { kickoff: string; instructions?: string; sources?: Source[] };
   /**
    * Where the AI disclosure goes in its calls that write outside the company, as Coach's results named
    * it (kiff/tafs#476, gap 9): at creation, and added to by improvements, never taken away. Merged with
@@ -1691,6 +1691,14 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
     if (!kickoff || kickoff.length > MAX_KICKOFF) throw new HTTPError(400, `a job of its own says what each run does (kickoff), in ${MAX_KICKOFF} characters at most`);
     const instructions = body.instructions === undefined ? undefined : str(body.instructions).trim();
     if (instructions !== undefined && instructions.length > MAX_KICKOFF) throw new HTTPError(400, `keep the job's instructions to ${MAX_KICKOFF} characters`);
+    // What the job works from (a form, a sheet, a folder, a board), each by its id (kiff/tafs#2227): resolved
+    // during setup, never left for the taf's first run to ask for. An id left as a placeholder is refused too.
+    let sources: Source[] | undefined;
+    try { sources = sourcesOf(body.sources); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+    const placeholder = [kickoff, instructions ?? ""].map((t) => t.match(ID_PLACEHOLDER)?.[0]).find(Boolean);
+    if (placeholder) {
+      throw new HTTPError(400, `the job leaves an id to fill in (${placeholder}): find it in its connection's list by name, or ask the owner, and give it in sources as {kind, name, id}`);
+    }
     if (body.cron === undefined && !unscheduled) throw new HTTPError(400, "a job of its own says when it runs (cron), or that it works from its chat (unscheduled)");
     try { disclose = discloseOf(body.disclose); } catch (err) { throw new HTTPError(400, (err as Error).message); }
     tools = Array.isArray(body.tools) ? body.tools.filter((t): t is string => typeof t === "string") : [];
@@ -1708,8 +1716,8 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
       const unknown = disclose.filter((d) => !tools.includes(d.tool)).map((d) => d.tool);
       if (unknown.length) throw new HTTPError(400, `disclose names ${unknown.join(", ")}, which isn't among the taf's tools (${tools.join(", ") || "none named"}): name each as the result's tools do`);
     }
-    work = { kickoff, ...(instructions ? { instructions } : {}) };
-    job = ownJob({ name, summary: summary ?? "", kickoff, instructions, disclose });
+    work = { kickoff, ...(instructions ? { instructions } : {}), ...(sources?.length ? { sources } : {}) };
+    job = ownJob({ name, summary: summary ?? "", kickoff, instructions, sources, disclose });
   } else {
     if (body.check !== undefined) throw new HTTPError(400, "check is for a job of its own, which says what it checks first; a starter job has none");
     try { job = jobById(str(body.job)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
@@ -2056,7 +2064,7 @@ const MAX_KICKOFF = 2_000;
 
 /** The taf's job: its own, as Coach drafted it (kiff/tafs#476), or one of the five starter jobs. Throws for a job id tafs doesn't know. */
 export function jobOf(taf: Pick<Taf, "name" | "job" | "summary" | "work" | "disclose" | "writesFor" | "ownerLang">): Job {
-  const job = taf.job === CUSTOM ? ownJob({ name: taf.name, summary: taf.summary ?? "", kickoff: taf.work?.kickoff ?? "", instructions: taf.work?.instructions }) : jobById(taf.job);
+  const job = taf.job === CUSTOM ? ownJob({ name: taf.name, summary: taf.summary ?? "", kickoff: taf.work?.kickoff ?? "", instructions: taf.work?.instructions, sources: taf.work?.sources }) : jobById(taf.job);
   // The disclosure Coach named for this taf, on top of its job's own, only ever wider; and who it writes for.
   const disclose = withDisclose(job.disclose, taf.disclose);
   return { ...job, ...(disclose?.length ? { disclose } : {}), ...(taf.writesFor ? { writesFor: taf.writesFor } : {}), ...(taf.ownerLang && taf.ownerLang !== "en" ? { ownerLang: taf.ownerLang } : {}) };
@@ -10919,7 +10927,7 @@ async function sendingCheck(tenant: string, agent: string | undefined, tools: st
  * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` with the `check` its schedule reads first, or `unscheduled`. A `job` naming
  * one of the five starter jobs is refused (makeTaf), and Coach is told why.
  */
-interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; cron?: string; check?: unknown; disclose?: unknown; writes_for?: unknown; tools?: string[]; recipe?: unknown }
+interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; sources?: unknown; cron?: string; check?: unknown; disclose?: unknown; writes_for?: unknown; tools?: string[]; recipe?: unknown }
 
 async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
@@ -10949,6 +10957,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       ...(typeof taf.summary === "string" ? { summary: taf.summary } : {}),
       ...(typeof taf.kickoff === "string" ? { kickoff: taf.kickoff } : {}),
       ...(typeof taf.instructions === "string" ? { instructions: taf.instructions } : {}),
+      ...(taf.sources !== undefined ? { sources: taf.sources } : {}),
       ...(typeof taf.cron === "string" ? { cron: taf.cron } : {}),
       ...(taf.check !== undefined ? { check: taf.check } : {}),
       ...(Array.isArray(taf.disclose) ? { disclose: taf.disclose } : {}),

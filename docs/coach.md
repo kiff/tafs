@@ -223,8 +223,14 @@ then shows its plan. Then, each step behind the owner's yes:
    waits for an admin to confirm it in KIFF.
 4. **Start the taf.** The result card hands over the taf, with its job as Coach drafted it
    from the owner's words, any job at all (kiff/tafs#476): `summary`, one line on what this
-   taf does, `kickoff`, what each run is asked to do, `instructions`, how it works, and
+   taf does, `kickoff`, what each run is asked to do, `instructions`, how it works,
+   `sources`, the form, sheet, folder or board the job names, each by its id, and
    `cron`, when it runs, with `check`, the read that lists its open work, or `unscheduled`.
+   Coach finds each source's id while the owner is there (`set-up-a-taf@16`): by name from
+   the connection's list, else it asks the owner which one or for its link. tafs cloud
+   refuses a source with no id, and a job that leaves an id to fill in (`[form ID]`), so a
+   taf never reaches its first run without what it reads (kiff/tafs#2227); its definition
+   lists each source by id.
    Every schedule checks first: each firing makes that read without the model, and the
    AI runs only when it lists something new, so a quiet schedule costs nothing. `first:
    "all"` makes the first check hand the queue already there. Before the result, Coach

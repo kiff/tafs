@@ -580,12 +580,12 @@ export const CUSTOM = "custom";
  * words. Its schedule is the taf's own, so `cron` is empty: a job of its own says when it runs
  * when it starts, or works from its chat.
  */
-export function ownJob(own: { name: string; summary: string; kickoff: string; instructions?: string; disclose?: Job["disclose"]; writesFor?: string }): Job {
+export function ownJob(own: { name: string; summary: string; kickoff: string; instructions?: string; sources?: Source[]; disclose?: Job["disclose"]; writesFor?: string }): Job {
   const summary = own.summary.trim();
   const how = own.instructions?.trim();
   return {
     id: CUSTOM, name: own.name, summary, kickoff: own.kickoff, cron: "",
-    instructions: [summary ? `What this job does: ${summary}` : "", how].filter(Boolean).join("\n\n")
+    instructions: [summary ? `What this job does: ${summary}` : "", how, sourceLines(own.sources)].filter(Boolean).join("\n\n")
       || `You do this job for the company: ${own.name}.`,
     // Where the AI disclosure goes in its calls that write outside, as Coach named it (kiff/tafs#476, gap 9).
     ...(own.disclose?.length ? { disclose: own.disclose } : {}),
@@ -653,4 +653,56 @@ export function systemPrompt(job: Job): string {
   const lines = Object.entries(disclosureLines(job)).map(([lang, line]) => `${lang} "${line}"`).join(", ");
   const owner = job.ownerLang ? ownerLanguageLine(job.ownerLang) : undefined;
   return `${SHARED_INSTRUCTIONS}\n\nYour job: ${job.name}.\n\nYour disclosure line: "${disclosureLine(job)}"${lines ? `\nIn other languages: ${lines}` : ""}${owner ? `\n\n${owner}` : ""}\n\n${job.instructions}`;
+}
+
+/**
+ * One thing a taf's job works from, named in its job (a form, a sheet, a folder, a board), by the id its
+ * connection gives it (kiff/tafs#2227). Setup resolves it while the owner is there, from the connection's
+ * list by name or the link the owner gives; the taf's definition carries the id, so no run starts without
+ * it and no run has to find it by name, which its tools may not do.
+ */
+export interface Source { kind: SourceKind; name: string; id: string }
+export const SOURCE_KINDS = ["form", "sheet", "folder", "board"] as const;
+export type SourceKind = (typeof SOURCE_KINDS)[number];
+/** The most sources a job names, and the longest name and id. */
+export const SOURCES_MAX = { sources: 5, name: 120, id: 200 } as const;
+
+/**
+ * A job's `sources` as Coach's result gives them, checked. Each names its kind, its name as the owner knows
+ * it, and its id. Throws, in words for Coach, when one doesn't fit: above all a source with no id, which
+ * Setup finds from the connection's list by name, or asks the owner for, before the taf is set up.
+ */
+export function sourcesOf(v: unknown): Source[] | undefined {
+  if (v === undefined) return undefined;
+  if (!Array.isArray(v) || v.length > SOURCES_MAX.sources) throw new Error(`sources is a list of at most ${SOURCES_MAX.sources}, each {kind, name, id}: the form, sheet, folder or board the job works from`);
+  const seen = new Set<string>();
+  return v.map((s) => {
+    const kind = typeof s?.kind === "string" ? s.kind.trim() : "";
+    if (!(SOURCE_KINDS as readonly string[]).includes(kind)) throw new Error(`sources: kind is one of ${SOURCE_KINDS.join(", ")}`);
+    const name = typeof s?.name === "string" ? s.name.replace(/\s+/g, " ").trim() : "";
+    if (!name || name.length > SOURCES_MAX.name) throw new Error(`sources: each ${kind} has its name as the owner knows it, at most ${SOURCES_MAX.name} characters`);
+    const id = typeof s?.id === "string" ? s.id.trim() : "";
+    if (!id) {
+      throw new Error(`sources: the ${kind} "${name}" has no id. Find it in its connection's list by name (one match), or ask the owner which one or for its link, and give its id: a taf can't start without it`);
+    }
+    if (id.length > SOURCES_MAX.id || /[\s\p{Cc}]/u.test(id) || ID_PLACEHOLDER.test(id) || ID_STAND_IN.test(id)) {
+      throw new Error(`sources: the ${kind} "${name}" has an id that isn't one (${id.slice(0, 40)}): give the id its connection returns, at most ${SOURCES_MAX.id} characters, no spaces`);
+    }
+    const key = `${kind}\u0000${id}`;
+    if (seen.has(key)) throw new Error(`sources: the ${kind} ${id} is named twice`);
+    seen.add(key);
+    return { kind: kind as SourceKind, name, id };
+  });
+}
+
+/** An id left to fill in, in a job's words or as an id: "<form id>", "{form_id}", "[FORM ID]". */
+export const ID_PLACEHOLDER = /[<{[]\s*[\w .-]*?(?:\bid|_id)\b[\w .-]*[>}\]]/i;
+/** An id value that only stands for one: "FORM_ID", "your_sheet_id", "xxx". */
+const ID_STAND_IN = /^(?:[a-z_]*_id|x{3,}|id)$/i;
+
+/** What a taf's definition says about its sources: each by id, to use as it is. */
+export function sourceLines(sources: Source[] | undefined): string {
+  if (!sources?.length) return "";
+  return ["What this job works from, each by its id. Use these ids as they are; never look these up by name, and never ask the owner for them:",
+    ...sources.map((s) => `- the ${s.kind} "${s.name}": id ${s.id}`)].join("\n");
 }
