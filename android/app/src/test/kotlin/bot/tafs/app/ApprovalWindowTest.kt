@@ -39,6 +39,21 @@ class ApprovalWindowTest {
     assertTrue(v1.contentEquals(PlanqueClient.message("https://planque.example", "t_01", "POST", "/v1/accounts/t_01/grants/g1/approve", body, "2026-11-05T11:00:00Z")))
   }
 
+  /** The taf whose step opens the window goes in the opening, signed with the rest; a blank one is left out. */
+  @Test fun theOpeningNamesTheTafWhoseStepOpensIt() = runTest {
+    val c = client().also {
+      it.setupSigner = { "dev" }
+      it.approvalSigner = { "app" }
+    }
+    transport.answer("POST /v1/me/window", 201, """{"window":{"id":"$window","open":true}}""")
+    transport.answer("POST /v1/me/window", 201, """{"window":{"id":"$window","open":true}}""")
+    c.openWindow("2026-11-05T11:05:00Z", "0123456789abcdef0123456789abcdef", agent = "refunds-1")
+    c.openWindow("2026-11-05T11:05:00Z", "0123456789abcdef0123456789abcdef", agent = " ")
+    val (named, blank) = transport.requestsTo("POST /v1/me/window").map { String(it.body!!) }
+    assertEquals("""{"message":"kiff.window.v1","expires":"2026-11-05T11:05:00Z","nonce":"0123456789abcdef0123456789abcdef","agent":"refunds-1"}""", named)
+    assertEquals("""{"message":"kiff.window.v1","expires":"2026-11-05T11:05:00Z","nonce":"0123456789abcdef0123456789abcdef"}""", blank)
+  }
+
   @Test fun openingIsSignedByTheApprovalKeyWithKiffsMessageAndHoldsTheWindow() = runTest {
     val signed = mutableListOf<String>()
     val c = client().also {

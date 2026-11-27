@@ -6129,7 +6129,7 @@ class AppModel(
               // behind the fingerprint, as the button said.
               // A window is one setup's (one taf's): one held for another is closed, and this step opens its own behind the fingerprint.
               if (chromeGrant == null && asked.key == "window" && kiff.window != null && _state.value.windowSetup != shownSetup) closeWindow()
-              windowed = chromeGrant == null && asked.key == "window" && (kiff.window == null || shownAsTap) && holdWindow(asked.reason, shownSetup)
+              windowed = chromeGrant == null && asked.key == "window" && (kiff.window == null || shownAsTap) && holdWindow(asked.reason, shownSetup, stepAgent(asked))
               // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
               if (!windowed) {
                 when {
@@ -6157,7 +6157,7 @@ class AppModel(
             if (windowed && made == Came.WindowEnded) {
               kiff.window = null
               try {
-                holdWindow(asked.reason, shownSetup)
+                holdWindow(asked.reason, shownSetup, stepAgent(asked))
               } catch (e: SignerException) {
                 note(c.id, notSigned(e, Words.Common.notDoneUnconfirmed))
                 return true
@@ -6350,7 +6350,7 @@ class AppModel(
   /** A message's one id (`client_message_id`, docs/api.md), made when the owner sends it. */
   private fun newMessageId(): String = java.util.UUID.randomUUID().toString()
 
-  private suspend fun holdWindow(reason: String, setup: String? = null): Boolean {
+  private suspend fun holdWindow(reason: String, setup: String? = null, agent: String? = null): Boolean {
     // While Coach drives, the approval window is suspended: every confirming signature asks for the fingerprint (docs/drive.md).
     if (drive.on) return false
     if (!sessionHasApprovalKey || kiff.approvalSigner == null) return false
@@ -6361,13 +6361,24 @@ class AppModel(
     val expires = DateTimeFormatter.ISO_INSTANT.format(clock().plusSeconds(WINDOW_SECONDS).truncatedTo(ChronoUnit.SECONDS))
     val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }
     return try {
-      val opened = kiff.openWindow(expires, nonce)
+      val opened = kiff.openWindow(expires, nonce, agent)
       _state.update { it.copy(windowWords = opened.words, windowSetup = setup) }
       true
     } catch (e: KiffError.Server) {
       // A KIFF from before the window has no such route: the step goes on as before.
       if (e.status == 404 || e.status == 405) false else throw e
     }
+  }
+
+  /**
+   * The KIFF agent of the taf whose step [asked] is: its planque grant's agent, else the agent of KIFF's draft it confirms (read
+   * from KIFF). None when neither says, and the window then confirms no Card. Read only when a window is opened.
+   */
+  private suspend fun stepAgent(asked: bot.tafs.app.kiff.ApprovalAsk): String? {
+    if (kiff.window != null) return null
+    asked.planque?.grant?.let { id -> _state.value.grants.firstOrNull { it.id == id }?.request?.agent?.takeIf { it.isNotBlank() }?.let { return it } }
+    val draft = asked.kiff?.draft ?: return null
+    return runCatching { kiff.draft(draft).agentId }.getOrNull()?.takeIf { it.isNotBlank() }
   }
 
   /** KIFF's words for the next approval, while a window is held; none once it's gone. */
