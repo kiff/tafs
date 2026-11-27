@@ -1759,6 +1759,7 @@
     <string name="receipt_refused_by">Ditolak oleh %1$s</string>
     <string name="receipt_share">Bagikan</string>
     <string name="receipt_show_full">Tampilkan tanda terima lengkap</string>
+    <string name="receipt_signed_in_window_why">Dengan satu ketukan, dalam jendela yang dibuka dengan %1$s, oleh kunci yang tidak pernah meninggalkan perangkat ini.</string>
     <string name="receipt_signed_on_device_why">Dengan %1$s, oleh kunci yang tidak pernah meninggalkan perangkat ini.</string>
     <string name="receipt_signed_on_phone">✓ Ditandatangani di ponsel ini</string>
     <string name="receipt_signed_on_phone_why">Oleh kunci yang tidak pernah meninggalkan ponsel ini.</string>

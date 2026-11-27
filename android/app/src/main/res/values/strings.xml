@@ -1820,6 +1820,7 @@
     <string name="receipt_refused_by">Refused by %1$s</string>
     <string name="receipt_share">Share</string>
     <string name="receipt_show_full">Show the full receipt</string>
+    <string name="receipt_signed_in_window_why">With a tap, in a window opened with %1$s, by a key that never leaves this device.</string>
     <string name="receipt_signed_on_device_why">With %1$s, by a key that never leaves this device.</string>
     <string name="receipt_signed_on_phone">✓ Signed on this phone</string>
     <string name="receipt_signed_on_phone_why">By a key that never leaves this phone.</string>

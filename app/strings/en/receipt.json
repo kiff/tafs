@@ -60,6 +60,7 @@
   "receipt.refused_by": "Refused by {who}",
   "receipt.share": "Share",
   "receipt.show_full": "Show the full receipt",
+  "receipt.signed_in_window_why": "With a tap, in a window opened with {biometry}, by a key that never leaves this device.",
   "receipt.signed_on_device_why": "With {biometry}, by a key that never leaves this device.",
   "receipt.signed_on_phone": "✓ Signed on this phone",
   "receipt.signed_on_phone_why": "By a key that never leaves this phone.",

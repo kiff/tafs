@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who}拒絕",
   "receipt.share": "分享",
   "receipt.show_full": "顯示完整收據",
+  "receipt.signed_in_window_why": "在以{biometry}開啟的時段內輕點一下，由一把永遠不會離開這部裝置的金鑰簽署。",
   "receipt.signed_on_device_why": "以{biometry}，由一把永遠不會離開這部裝置的金鑰簽署。",
   "receipt.signed_on_phone": "✓ 已在這部手機上簽署",
   "receipt.signed_on_phone_why": "由一把永遠不會離開這部手機的金鑰簽署。",

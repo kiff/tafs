@@ -1820,6 +1820,7 @@
     <string name="receipt_refused_by">Refuzuar nga %1$s</string>
     <string name="receipt_share">Ndajeni</string>
     <string name="receipt_show_full">Shfaqni dëftesën e plotë</string>
+    <string name="receipt_signed_in_window_why">Me një prekje, brenda një dritareje të hapur me %1$s, nga një çelës që nuk largohet kurrë nga kjo pajisje.</string>
     <string name="receipt_signed_on_device_why">Me %1$s, nga një çelës që nuk largohet kurrë nga kjo pajisje.</string>
     <string name="receipt_signed_on_phone">✓ Nënshkruar në këtë telefon</string>
     <string name="receipt_signed_on_phone_why">Nga një çelës që nuk largohet kurrë nga ky telefon.</string>

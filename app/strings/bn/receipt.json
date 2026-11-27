@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who} প্রত্যাখ্যান করেছেন",
   "receipt.share": "শেয়ার করুন",
   "receipt.show_full": "পুরো রসিদ দেখান",
+  "receipt.signed_in_window_why": "একটি ট্যাপে, {biometry} দিয়ে খোলা একটি সময়সীমার মধ্যে, এমন একটি কী দিয়ে যা এই ডিভাইস কখনও ছাড়ে না।",
   "receipt.signed_on_device_why": "{biometry} দিয়ে, এমন একটি কী দিয়ে যা এই ডিভাইস কখনও ছাড়ে না।",
   "receipt.signed_on_phone": "✓ এই ফোনে সই করা",
   "receipt.signed_on_phone_why": "এমন একটি কী দিয়ে যা এই ফোন কখনও ছাড়ে না।",

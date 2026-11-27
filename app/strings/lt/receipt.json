@@ -60,6 +60,7 @@
   "receipt.refused_by": "Atmetė {who}",
   "receipt.share": "Bendrinti",
   "receipt.show_full": "Rodyti visą kvitą",
+  "receipt.signed_in_window_why": "Bakstelėjimu, lange, atvertame: {biometry} · raktu, kuris niekada nepalieka šio įrenginio.",
   "receipt.signed_on_device_why": "{biometry} · raktu, kuris niekada nepalieka šio įrenginio.",
   "receipt.signed_on_phone": "✓ Pasirašyta šiame telefone",
   "receipt.signed_on_phone_why": "Raktu, kuris niekada nepalieka šio telefono.",

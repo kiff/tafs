@@ -60,6 +60,7 @@
   "receipt.refused_by": "Rechazado por {who}",
   "receipt.share": "Compartir",
   "receipt.show_full": "Mostrar el recibo completo",
+  "receipt.signed_in_window_why": "Con un toque, dentro de una ventana abierta con {biometry}, con una clave que nunca sale de este dispositivo.",
   "receipt.signed_on_device_why": "Con {biometry}, con una clave que nunca sale de este dispositivo.",
   "receipt.signed_on_phone": "✓ Firmado en este teléfono",
   "receipt.signed_on_phone_why": "Con una clave que nunca sale de este teléfono.",

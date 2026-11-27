@@ -1881,6 +1881,7 @@
     <string name="receipt_refused_by">Atteica: %1$s</string>
     <string name="receipt_share">Kopīgot</string>
     <string name="receipt_show_full">Rādīt visu kvīti</string>
+    <string name="receipt_signed_in_window_why">Ar pieskārienu, logā, kas atvērts ar %1$s, ar atslēgu, kas nekad neatstāj šo ierīci.</string>
     <string name="receipt_signed_on_device_why">Ar %1$s, ar atslēgu, kas nekad neatstāj šo ierīci.</string>
     <string name="receipt_signed_on_phone">✓ Parakstīts šajā tālrunī</string>
     <string name="receipt_signed_on_phone_why">Ar atslēgu, kas nekad neatstāj šo tālruni.</string>

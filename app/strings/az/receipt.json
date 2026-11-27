@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who} rədd etdi",
   "receipt.share": "Paylaşın",
   "receipt.show_full": "Tam qəbzi göstərin",
+  "receipt.signed_in_window_why": "Bir toxunuşla, {biometry} ilə açılmış pəncərədə, bu cihazı heç vaxt tərk etməyən açarla.",
   "receipt.signed_on_device_why": "{biometry} ilə, bu cihazı heç vaxt tərk etməyən açarla.",
   "receipt.signed_on_phone": "✓ Bu telefonda imzalandı",
   "receipt.signed_on_phone_why": "Bu telefonu heç vaxt tərk etməyən açarla.",

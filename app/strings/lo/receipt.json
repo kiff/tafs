@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who} ປະຕິເສດ",
   "receipt.share": "ແບ່ງປັນ",
   "receipt.show_full": "ສະແດງໃບຮັບເງິນເຕັມ",
+  "receipt.signed_in_window_why": "ດ້ວຍການແຕະ, ພາຍໃນຊ່ວງເວລາທີ່ເປີດດ້ວຍ {biometry}, ດ້ວຍກຸນແຈທີ່ບໍ່ເຄີຍອອກຈາກອຸປະກອນນີ້.",
   "receipt.signed_on_device_why": "ດ້ວຍ {biometry}, ດ້ວຍກຸນແຈທີ່ບໍ່ເຄີຍອອກຈາກອຸປະກອນນີ້.",
   "receipt.signed_on_phone": "✓ ລົງລາຍເຊັນໃນໂທລະສັບນີ້",
   "receipt.signed_on_phone_why": "ດ້ວຍກຸນແຈທີ່ບໍ່ເຄີຍອອກຈາກໂທລະສັບນີ້.",

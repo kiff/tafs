@@ -1881,6 +1881,7 @@
     <string name="receipt_refused_by">Atmetė %1$s</string>
     <string name="receipt_share">Bendrinti</string>
     <string name="receipt_show_full">Rodyti visą kvitą</string>
+    <string name="receipt_signed_in_window_why">Bakstelėjimu, lange, atvertame: %1$s · raktu, kuris niekada nepalieka šio įrenginio.</string>
     <string name="receipt_signed_on_device_why">%1$s · raktu, kuris niekada nepalieka šio įrenginio.</string>
     <string name="receipt_signed_on_phone">✓ Pasirašyta šiame telefone</string>
     <string name="receipt_signed_on_phone_why">Raktu, kuris niekada nepalieka šio telefono.</string>
