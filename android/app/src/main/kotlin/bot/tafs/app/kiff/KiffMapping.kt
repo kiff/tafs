@@ -594,6 +594,8 @@ object KiffMapping {
     if (p.isString) return p.content.ifEmpty { "\"\"" }
     p.content.toBooleanStrictOrNull()?.let { return it.toString() }
     // A decimal written out plainly: "0.000015", never "1.5e-05"; "1.5", never "1.50" (the iPhone reads a Double).
+    // A zero is one written digit, whatever its exponent, even one too large to read ("0e99999999999999999999" is 0).
+    if (ZERO.matches(p.content)) return "0"
     // Dropping the zeros can overflow the scale ("1000e2147483647" throws): then it's written as sent.
     val n = runCatching { p.content.toBigDecimalOrNull()?.stripTrailingZeros() }.getOrNull() ?: return p.content
     // Counted in Long: a scale near Int.MIN_VALUE can't wrap the count round to a small one.
@@ -602,6 +604,9 @@ object KiffMapping {
     val written = if (scale <= 0) precision - scale else maxOf(precision, scale + 1)
     return if (written > PLAIN_DIGITS_MAX) p.content else n.toPlainString()
   }
+
+  /** A JSON number whose digits are all zeros, with any exponent. */
+  private val ZERO = Regex("-?0+(\\.0*)?([eE][+-]?[0-9]+)?")
 
   /** The most digits a held call's number is written out in; past it, it's written as sent. */
   const val PLAIN_DIGITS_MAX = 100L

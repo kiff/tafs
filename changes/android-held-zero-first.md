@@ -1,0 +1,1 @@
+- **Android: a held call's zero reads 0, whatever its exponent.** A zero sent with an exponent too large to read (`0e99999999999999999999`) showed as sent; it now reads `0`, as KIFF and every app write it.
