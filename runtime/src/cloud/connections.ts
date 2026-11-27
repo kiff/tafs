@@ -148,14 +148,25 @@ export function checkAppOf(conns: AccountConnection[], agent: string): string | 
   return apps.size === 1 ? [...apps][0] : undefined;
 }
 
+/** The statuses of a connection no taf uses that a new conversation may go on with: signed in, so no new sign-in. */
+const UNUSED_OFFERED = new Set(["listed", "connected"]);
+
 /**
  * The lines for the tafs the person may see, each naming its taf: "- Stripe, for Chargebacks: vendor_sign_in,
  * server https://…". None when there's nothing to say. `tafs` maps a taf's KIFF agent to its name.
+ *
+ * With `live` (every live taf's KIFF agent, whether or not the person may see it), also the account's signed-in
+ * connections no taf uses, left by an earlier conversation that made no taf: "- Qonto, for no taf yet (asked
+ * 2026-11-27): vendor_sign_in, …; listed", so a new conversation offers that sign-in by its vendor instead of asking
+ * for a new one (connect-an-app@38). Never one under a live taf's agent or the other form of its name, one that
+ * isn't signed in, or one with no day it was asked.
  */
-export function connectionLines(conns: AccountConnection[], tafs: Map<string, string>): string[] {
+export function connectionLines(conns: AccountConnection[], tafs: Map<string, string>, live?: Set<string>): string[] {
   const out: string[] = [];
   for (const c of conns) {
-    const taf = tafs.get(c.agent);
+    const unused = live !== undefined && !live.has(c.agent) && ![...live].some((k) => otherForm(c.agent, k))
+      && UNUSED_OFFERED.has(c.status) && c.since !== undefined;
+    const taf = unused ? `no taf yet (asked ${c.since})` : tafs.get(c.agent);
     if (!taf) continue;
     const how = c.kind === "vendor_sign_in" && c.server ? `, server ${c.server}`
       : c.kind === "provider" && c.entry ? `, entry ${c.entry}`
@@ -365,5 +376,37 @@ export function leftoverAgents(conns: AccountConnection[], live: Set<string>, ar
   return [...byAgent.entries()]
     .filter(([a, cs]) => ![...live].some((k) => otherForm(a, k))
       && cs.every((c) => c.since !== undefined && c.since < before && removedAgent(a, archived, live, c.since)))
+    .map(([a]) => a);
+}
+
+/**
+ * The agents a Coach chat's own connection requests were asked under that no live taf runs: what deleting the chat
+ * ends (deleteChat), so a sign-in nobody uses (a bank's, say) never outlives the chat that made it. Taken from the
+ * chat's own successful `planque` `request` calls (the agent name Coach gave, `name`), matched to the account's
+ * connections by that name or its suffixed form (otherForm), and only connections asked on or after the chat began
+ * (`since`, by day), so another chat's connection under the same name made earlier is never taken. Never an agent a
+ * live taf runs, nor the other form of one; the end route itself keeps a sign-in another taf still uses.
+ */
+export function chatLeftAgents(events: ReadonlyArray<{ kind: string; body: unknown }>, conns: AccountConnection[], live: Set<string>, chatStarted: string): string[] {
+  const asked = new Map<string, string>();
+  const names = new Set<string>();
+  for (const e of events) {
+    const b = (e.body ?? {}) as { tool?: unknown; input?: unknown; call_id?: unknown; is_error?: unknown };
+    if (typeof b.call_id !== "string") continue;
+    const input = (b.input ?? {}) as { action?: unknown; name?: unknown };
+    if (e.kind === "tool_call" && b.tool === "planque" && input.action === "request" && typeof input.name === "string" && input.name.trim()) {
+      asked.set(b.call_id, input.name.trim());
+    } else if (e.kind === "tool_result" && asked.has(b.call_id) && b.is_error !== true) {
+      names.add(asked.get(b.call_id)!);
+    }
+  }
+  const day = chatStarted.slice(0, 10);
+  if (names.size === 0 || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return [];
+  const byAgent = new Map<string, AccountConnection[]>();
+  for (const c of conns) byAgent.set(c.agent, [...(byAgent.get(c.agent) ?? []), c]);
+  return [...byAgent.entries()]
+    .filter(([a, cs]) => !live.has(a) && ![...live].some((k) => otherForm(a, k))
+      && [...names].some((n) => n === a || otherForm(a, n))
+      && cs.every((c) => c.since !== undefined && c.since >= day))
     .map(([a]) => a);
 }

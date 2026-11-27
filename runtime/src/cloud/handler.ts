@@ -37,7 +37,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, browserLine, chromeLine, tafPageSites } from "./connections.js";
+import { type AccountConnection, type AppGuide, accountConnections, chatLeftAgents, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, browserLine, chromeLine, tafPageSites } from "./connections.js";
 import { maskedPath, normalHost, onSites, pageSiteRefused } from "./page-sites.js";
 import { maskedCodes } from "./page-codes.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
@@ -132,7 +132,7 @@ import { chromeBegan, chromeMayCall, chromeOf, chromeRunChats, chromeRunsOf, mar
  *   POST /v1/tafs/{id}/chats/{session}/archive  hide a chat from the list and the thread (kiff/tafs#82)
  *   GET  /v1/tafs/{id}/chats/archived   the chats the owner archived, to find and reopen one (kiff/tafs#97)
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
- *   DELETE /v1/tafs/{id}/chats/{session}  the person deletes one of their own chats for good (deleteChat)
+ *   DELETE /v1/tafs/{id}/chats/{session}  the person deletes one of their own chats for good, and the connections it asked for that no taf uses end (deleteChat)
  *   POST /v1/tafs/{id}/messages         {text, attachments?, session?, new_chat?, new_chat_after_handover?}: into the live chat, a chosen one, or a new one (a Coach chat that handed a taf over, a new one)
  *   POST /v1/tafs/{id}/messages/stream  the same, its answer streamed (handleStream)
  *   POST /v1/tafs/{id}/messages/{message}/report  {reason, note?, session?}: reports an answer of the taf's (reportRoute)
@@ -1234,7 +1234,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return unarchive(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 5 && method === "DELETE" && action === "chats" && parts[4] !== "archived") {
-    return deleteChat(me, taf, parts[4] ?? "", deps, langOf(event));
+    return deleteChat(me, taf, parts[4] ?? "", deps, langOf(event), bearer(event));
   }
   if (parts.length === 4 && method === "POST" && action === "stop") {
     need(me, "cards.manage");
@@ -5061,7 +5061,9 @@ async function startConnections(me: KIFFIdentity, event: HTTPEvent, deps: Deps):
     const guides = await heldGuides(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token, conns, tafs).catch(() => []);
     // The owner's own Chrome, only while planque offers a taf in one: Coach offers it only then. planque's hosted browser
     // likewise, with whether it pays, so Coach's rules for a browser that can't pay carry no payment line (kiff/tafs#2238).
-    return { lines: [...connectionLines(conns, tafs), ...chromeLine(chromes), ...browserLine(browser)], guides };
+    // A signed-in connection no taf uses (an earlier conversation's, whose taf was never made) is offered too, by its vendor.
+    const live = new Set(records.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent!));
+    return { lines: [...connectionLines(conns, tafs, live), ...chromeLine(chromes), ...browserLine(browser)], guides };
   } catch (err) {
     console.error(`coach connections for ${me.tenantID}:`, err);
     return { lines: [], guides: [] };
@@ -7027,7 +7029,7 @@ function deleteWords(lang: Lang): { item: string; confirm_title: string; confirm
  * and the delete finishes into a thread that's gone: nothing it writes is kept. What happened stays on record: the runs'
  * records, the usage they counted and the KIFF record of every call are not part of a chat. A second delete answers 404.
  */
-async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Deps, lang: Lang): Promise<unknown> {
+async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Deps, lang: Lang, token = ""): Promise<unknown> {
   const { session: chat, events } = await ownChatRead(me, taf, session, deps);
   const active = await agentsCall(() => deps.agents.runs(me.tenantID, taf.id, true));
   if (active.some((r) => r.session === chat.id)) {
@@ -7061,7 +7063,31 @@ async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Dep
       ...drives.flatMap((d) => [driveKeys.recap(me.tenantID, d), driveKeys.steps(me.tenantID, d)]), driveKeys.recaps(me.tenantID, chat.id)];
     await Promise.all(kept.map((key) => coach.remove(key).catch((err) => console.error(`delete chat: a kept note stays until it ends: ${(err as Error).message}`))));
   }
+  await endChatConnections(me, chat.started, events, deps, token);
   return { session: chat.id, deleted: true };
+}
+
+/**
+ * The connections a deleted chat asked for that no taf uses end with it (chatLeftAgents), with the person's own
+ * session, through the route a taf's removal uses: a sign-in another taf still uses stays. Best effort, after the chat
+ * is gone: one that can't be read or ended is left as it was, and logged with counts only. 27 Nov: a Qonto sign-in
+ * made in a chat the owner deleted, for a taf never made, stayed signed in, with no door left to end it.
+ */
+async function endChatConnections(me: KIFFIdentity, started: string, events: ReadonlyArray<{ kind: string; body: unknown }>, deps: Deps, token: string): Promise<void> {
+  if (!deps.planqueBase || !token) return;
+  try {
+    const [conns, tafs] = await Promise.all([accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token), deps.tafs.list(me.tenantID)]);
+    const live = new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent!));
+    const agents = chatLeftAgents(events, conns, live, iso(started));
+    let ended = 0;
+    for (const agent of agents) {
+      const r = await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, agent, token).catch(() => null);
+      ended += r?.ended.length ?? 0;
+    }
+    if (agents.length) console.log(JSON.stringify({ event: "chat_connections_ended", tenant: me.tenantID, agents: agents.length, ended }));
+  } catch (err) {
+    console.error(`delete chat: its connections weren't read: ${(err as Error).message}`);
+  }
 }
 
 /**

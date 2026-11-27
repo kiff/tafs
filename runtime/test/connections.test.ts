@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type AccountConnection, accountConnections, accountConnectionsAndChromes, browserLine, chromeLine, connectionLines, MAX_CHROMES, GUIDES_LINES, heldGuides, MAX_CONNECTIONS, MAX_GUIDES, withConnections } from "../src/cloud/connections.js";
+import { type AccountConnection, accountConnections, accountConnectionsAndChromes, browserLine, chatLeftAgents, chromeLine, connectionLines, MAX_CHROMES, GUIDES_LINES, heldGuides, MAX_CONNECTIONS, MAX_GUIDES, withConnections } from "../src/cloud/connections.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { entryOf } from "../src/cloud/coach-skills.js";
 
@@ -154,5 +154,49 @@ describe("the guides of the apps the account already holds, as Coach starts with
     expect(got.every((g) => g.guide.length <= 9000)).toBe(true);
     const down = (async () => { throw new Error("planque down"); }) as never;
     expect(await heldGuides(down, "https://planque.test", "t_acme", "ana", conns, tafs)).toEqual([]);
+  });
+});
+
+describe("connections no taf uses", () => {
+  const qonto: AccountConnection = { agent: "qonto-balance-k3f9x2a1", vendor: "Qonto", kind: "vendor_sign_in", server: "https://mcp.qonto.com", status: "listed", since: "2026-11-27" };
+
+  it("are offered to a new conversation by their vendor when signed in, never a live taf's or one not signed in", () => {
+    const conns: AccountConnection[] = [
+      qonto,
+      { ...stripe, since: "2026-11-20" },
+      // The other form of a live taf's agent name is that taf's.
+      { ...qonto, agent: "cb-k3f9x2a1", vendor: "Stripe" },
+      { ...qonto, agent: "waiting", status: "pending" },
+      { ...qonto, agent: "no-day", since: undefined },
+    ];
+    expect(connectionLines(conns, new Map([["cb", "Chargebacks"]]), new Set(["cb"]))).toEqual([
+      "- Qonto, for no taf yet (asked 2026-11-27): vendor_sign_in, server https://mcp.qonto.com; listed",
+      "- Stripe, for Chargebacks: vendor_sign_in, server https://mcp.stripe.com",
+    ]);
+    // Without the live tafs, as before: only the tafs the person may see.
+    expect(connectionLines(conns, new Map([["cb", "Chargebacks"]]))).toEqual(["- Stripe, for Chargebacks: vendor_sign_in, server https://mcp.stripe.com"]);
+    // A live taf the person may not see is still a taf's: never offered as no taf's.
+    expect(connectionLines([{ ...qonto, agent: "hidden" }], new Map(), new Set(["hidden"]))).toEqual([]);
+  });
+
+  it("are ended with the chat that asked for them: its own successful requests, from the day it began, never a live taf's", () => {
+    const call = (id: string, name: string, action = "request") => ({ kind: "tool_call", body: { call_id: id, tool: "planque", input: { action, name } } });
+    const result = (id: string, is_error = false) => ({ kind: "tool_result", body: { call_id: id, text: "ok", ...(is_error ? { is_error } : {}) } });
+    const events = [call("c1", "qonto-balance"), result("c1"), call("c2", "refused-one"), result("c2", true), call("c3", "cb", "status"), result("c3"),
+      { kind: "tool_call", body: { call_id: "c4", tool: "other", input: { action: "request", name: "other-tool" } } }, result("c4")];
+    const conns: AccountConnection[] = [
+      qonto,
+      { ...qonto, agent: "qonto-balance", since: "2026-11-26" },
+      { ...qonto, agent: "refused-one" },
+      { ...qonto, agent: "other-tool" },
+      { ...stripe, since: "2026-11-27" },
+    ];
+    expect(chatLeftAgents(events, conns, new Set(["cb"]), "2026-11-27T20:44:00.000Z")).toEqual(["qonto-balance-k3f9x2a1"]);
+    // The taf it made is live: its connections stay.
+    expect(chatLeftAgents(events, conns, new Set(["qonto-balance-k3f9x2a1"]), "2026-11-27T20:44:00.000Z")).toEqual([]);
+    // An agent with one connection asked before the chat began isn't the chat's alone.
+    expect(chatLeftAgents(events, [qonto, { ...qonto, since: "2026-11-26" }], new Set(), "2026-11-27T20:44:00.000Z")).toEqual([]);
+    expect(chatLeftAgents([], conns, new Set(), "2026-11-27T20:44:00.000Z")).toEqual([]);
+    expect(chatLeftAgents(events, conns, new Set(), "")).toEqual([]);
   });
 });

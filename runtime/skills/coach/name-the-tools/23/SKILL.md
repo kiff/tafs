@@ -16,6 +16,11 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   A long catalog is never a reason to stop: catalog {grant, q} searches it by
   words from the job across its pages;
   catalog {grant, cursor} reads on. Never say a list was too long to read.
+  Name a tool only as planque lists it (catalog, status, a refusal), never
+  from memory or the vendor's docs: find a read by the job's words (catalog
+  {grant, q: "balance"}) and its fields. A name planque refused as not served:
+  choose again from the tools it lists, and ask again; only when none
+  answers the job, say so.
   Choose, from the vendor's own catalog, the tools the whole job needs:
   to find the work (list or search), to check one item (read it), and to act
   (the write). Choose each read by the fields that answer the job's question, not by its name. Pin with fixed_arguments what must never
