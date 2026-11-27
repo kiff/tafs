@@ -204,6 +204,17 @@
         "                                                            a:",
         "                                                              a: 1"
       ]
+    },
+    {
+      "name": "keys past U+FFFF in code point order: U+FF01 before an emoji, though UTF-16 order puts the emoji's surrogate first",
+      "arguments": {"😀": 1, "！": 2, "a": {"\ud83d\ude00": 3, "\uff01": 4}},
+      "lines": [
+        "a:",
+        "  ！: 4",
+        "  😀: 3",
+        "！: 2",
+        "😀: 1"
+      ]
     }
   ]
 }

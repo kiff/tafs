@@ -4,3 +4,4 @@
   - arguments nested 32 levels, the deepest KIFF holds.
 
   Every app reads the number's own text, never through a double.
+- **And a fourth:** keys past U+FFFF in Unicode code point order at every level. U+FF01 comes before an emoji, though UTF-16 order puts the emoji's surrogate first, which Android now follows too (#2261).
