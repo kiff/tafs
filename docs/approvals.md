@@ -211,9 +211,14 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
 - **Inside it.** What the approval key would sign goes with the device key and the window's
   id, `t=…,v2=…,w=<id>`, over `kiff.request.v2` to KIFF or `planque.request.v2` to planque,
   the window's id last. planque's calls are signed this way only for the step that took the
-  window. The report to tafs cloud is signed as before (v1). On iPhone and iPad, KIFF's calls
-  too are signed in the window only for that step; anywhere else the approval key signs them,
-  behind Face ID, as before.
+  window. The report to tafs cloud is signed as before (v1). KIFF's calls too are signed in the
+  window only for that step: on iPhone and iPad, and on Android around the one call whose
+  Approve was a tap (`KiffClient.signsInWindow`, set by `AppModel.approveCoach`); anywhere else
+  the approval key signs them, behind the fingerprint or Face ID, as before, and the window
+  stays held. On Android a Card's authority never goes in a window: a draft made or confirmed
+  (`POST /v1/me/agent-drafts`, `…/{id}/confirm`, `KiffClient.grantsCard`) is always the
+  approval key's, behind the fingerprint, even in that call, and a card whose step confirms a
+  draft (`signs.card`) never reads as a tap (`CoachWords.approvesAsTap`).
 - **Refused.** KIFF's `critical_key_required` (the act takes the fingerprint every time, such
   as **No** to "Did this happen?") is signed again by the approval key, once (on iPhone and
   iPad behind a new Face ID: the approval key signs only under one). KIFF's

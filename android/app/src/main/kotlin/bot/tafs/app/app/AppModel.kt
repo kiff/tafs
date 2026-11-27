@@ -6143,6 +6143,9 @@ class AppModel(
             if (generation != accountGeneration) return true
             planque.signer = sign
             if (windowed) planque.window = kiff.window?.id
+            // KIFF's own requests ride the window only where the button said "Approve" (a tap) or this step opened the window;
+            // under "Approve with your fingerprint" every one asks for it.
+            kiff.signsInWindow = windowed || shownAsTap
             var made = makeAskedCall(asked, sitesSig)
             // planque says the window ended before anything was done: a new one, behind the fingerprint, and the call once more.
             if (windowed && made == Came.WindowEnded) {
@@ -6200,6 +6203,7 @@ class AppModel(
     } finally {
       planque.signer = null
       planque.window = null
+      kiff.signsInWindow = false
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
       if (generation == accountGeneration) readWindowWords()

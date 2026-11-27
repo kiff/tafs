@@ -1,0 +1,1 @@
+- **Android: a Card is never confirmed on a tap.** A held approval window signs only the one call whose Approve was a tap, and never a draft made or confirmed: those always ask for the fingerprint (the approval key). A card that confirms a draft never reads as a tap. ([approvals.md](docs/approvals.md), "One fingerprint, then taps")

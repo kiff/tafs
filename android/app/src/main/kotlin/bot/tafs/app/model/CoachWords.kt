@@ -299,7 +299,9 @@ object CoachWords {
    * docs/chat.md) and KIFF's window words are here. The button says "Approve" then, and "Approve with your fingerprint"
    * otherwise; signing follows the same answer, so what the button says is what happens.
    */
-  fun approvesAsTap(c: SetupComponent, windowWords: String?): Boolean = windowWords != null && c.signs?.tap == true
+  fun approvesAsTap(c: SetupComponent, windowWords: String?): Boolean =
+    // A card that grants a Card (its step confirms a draft) always asks for the fingerprint: never a tap in a window.
+    windowWords != null && c.signs?.tap == true && c.signs?.card != true
 
   /** Taken by tafs cloud, before the thread shows it in kiff/agents' words. */
   val TAKEN get() = Words.Coach.answered

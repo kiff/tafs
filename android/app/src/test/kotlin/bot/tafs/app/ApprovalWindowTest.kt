@@ -61,16 +61,52 @@ class ApprovalWindowTest {
       it.setupSigner = { m -> signed += "device:" + String(m).lines().first(); "dev" }
       it.approvalSigner = { built -> signed += "approval:" + String(built()).lines().first(); "app" }
       it.window = ApprovalWindow(window, open = true)
+      it.signsInWindow = true
     }
-    transport.answer("POST /v1/me/agent-drafts/d1/confirm", 200)
+    transport.answer("POST /v1/agents/a1/resume", 200)
     transport.answer("POST /v1/me/time-zone", 200)
-    c.send("POST", "/v1/me/agent-drafts/d1/confirm")
+    c.send("POST", "/v1/agents/a1/resume")
     c.send("POST", "/v1/me/time-zone", mapOf("time_zone" to "UTC"))
     assertEquals(listOf("device:kiff.request.v2", "device:kiff.request.v1"), signed)
-    val header = transport.requestsTo("POST /v1/me/agent-drafts/d1/confirm").single().headers["KIFF-Device-Signature"]!!
+    val header = transport.requestsTo("POST /v1/agents/a1/resume").single().headers["KIFF-Device-Signature"]!!
     assertTrue(header, Regex("^t=[^,]+,v2=dev,w=$window$").matches(header))
     // What grants nothing is signed as before, never with the window.
     assertTrue(transport.requestsTo("POST /v1/me/time-zone").single().headers["KIFF-Device-Signature"]!!.contains(",v1=dev"))
+  }
+
+  /** A Card is never granted in a window, even inside the call that said "Approve": a draft's confirm is the approval key's. */
+  @Test fun aCardsConfirmIsNeverATapEvenWhereTheWindowSigns() = runTest {
+    val signed = mutableListOf<String>()
+    val c = client().also {
+      it.setupSigner = { m -> signed += "device:" + String(m).lines().first(); "dev" }
+      it.approvalSigner = { built -> signed += "approval:" + String(built()).lines().first(); "app" }
+      it.window = ApprovalWindow(window, open = true)
+      it.signsInWindow = true
+    }
+    transport.answer("POST /v1/me/agent-drafts/d1/confirm", 200)
+    transport.answer("POST /v1/me/agent-drafts", 200)
+    c.send("POST", "/v1/me/agent-drafts/d1/confirm")
+    c.send("POST", "/v1/me/agent-drafts", mapOf("name" to "x"))
+    assertEquals(listOf("approval:kiff.request.v1", "approval:kiff.request.v1"), signed)
+  }
+
+  /**
+   * A window held from an earlier approval signs nothing on its own: outside the call whose button said "Approve", a draft's
+   * confirm asks for the fingerprint (the approval key), even while the window is open.
+   */
+  @Test fun aHeldWindowSignsNothingOutsideTheCallThatSaidApprove() = runTest {
+    val signed = mutableListOf<String>()
+    val c = client().also {
+      it.setupSigner = { m -> signed += "device:" + String(m).lines().first(); "dev" }
+      it.approvalSigner = { built -> signed += "approval:" + String(built()).lines().first(); "app" }
+      it.window = ApprovalWindow(window, open = true)
+    }
+    transport.answer("POST /v1/me/agent-drafts/d1/confirm", 200)
+    c.send("POST", "/v1/me/agent-drafts/d1/confirm")
+    assertEquals(listOf("approval:kiff.request.v1"), signed)
+    val header = transport.requestsTo("POST /v1/me/agent-drafts/d1/confirm").single().headers["KIFF-Device-Signature"]!!
+    assertTrue(header, Regex("^t=[^,]+,v1=app$").matches(header))
+    assertEquals("the window stays held for a later tap", window, c.window?.id)
   }
 
   /** Adding someone to a group is the approval key's even inside a held window: never a tap, and the window stays for the rest. */
@@ -80,13 +116,14 @@ class ApprovalWindowTest {
       it.setupSigner = { m -> signed += "device:" + String(m).lines().first(); "dev" }
       it.approvalSigner = { built -> signed += "approval:" + String(built()).lines().first(); "app" }
       it.window = ApprovalWindow(window, open = true)
+      it.signsInWindow = true
     }
     transport.answer("PUT /v1/groups/g1/members/s1", 200)
     transport.answer("DELETE /v1/groups/g1/members/s1", 200)
-    transport.answer("POST /v1/me/agent-drafts/d1/confirm", 200)
+    transport.answer("POST /v1/agents/a1/resume", 200)
     c.send("PUT", "/v1/groups/g1/members/s1", mapOf("role" to "member"))
     c.send("DELETE", "/v1/groups/g1/members/s1")
-    c.send("POST", "/v1/me/agent-drafts/d1/confirm")
+    c.send("POST", "/v1/agents/a1/resume")
     assertEquals(listOf("approval:kiff.request.v1", "device:kiff.request.v1", "device:kiff.request.v2"), signed)
     val add = transport.requestsTo("PUT /v1/groups/g1/members/s1").single().headers["KIFF-Device-Signature"]!!
     assertTrue(add, Regex("^t=[^,]+,v1=app$").matches(add))
@@ -102,6 +139,7 @@ class ApprovalWindowTest {
       it.setupSigner = { m -> signed += "device:" + String(m).lines().first(); "dev" }
       it.approvalSigner = { built -> signed += "approval:" + String(built()).lines().first(); "app" }
       it.window = ApprovalWindow(window, open = true)
+      it.signsInWindow = true
     }
     transport.answer("POST /v1/me/did-this-happen/p1", 403, """{"error":"critical_key_required","detail":"No takes your fingerprint"}""")
     transport.answer("POST /v1/me/did-this-happen/p1", 200)
@@ -116,6 +154,7 @@ class ApprovalWindowTest {
       it.setupSigner = { m -> signed += "device:" + String(m).lines().first(); "dev" }
       it.approvalSigner = { built -> signed += "approval:" + String(built()).lines().first(); "app" }
       it.window = ApprovalWindow(window, open = true)
+      it.signsInWindow = true
     }
     transport.answer("POST /v1/agents/a1/resume", 403, """{"error":"window_required"}""")
     transport.answer("POST /v1/agents/a1/resume", 403, """{"error":"window_required"}""")
@@ -133,6 +172,7 @@ class ApprovalWindowTest {
     val c = client().also {
       it.setupSigner = { "dev" }
       it.window = ApprovalWindow(window, open = true)
+      it.signsInWindow = true
     }
     transport.answer("POST /v1/agents/a1/resume", 403, """{"error":"critical_key_required","detail":"Resuming takes your fingerprint"}""")
     try {
@@ -146,7 +186,8 @@ class ApprovalWindowTest {
   }
 
   @Test fun closingIsDeviceSignedAndForgetsTheWindowWhateverKiffAnswers() = runTest {
-    val c = client().also { it.window = ApprovalWindow(window, open = true) }
+    val c = client().also { it.window = ApprovalWindow(window, open = true)
+      it.signsInWindow = true }
     transport.answer("POST /v1/me/window/$window/close", 503)
     runCatching { c.closeWindow { "dev" } }
     assertNull(c.window)
