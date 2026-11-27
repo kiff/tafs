@@ -232,11 +232,20 @@ function cursorOf(raw: string | null, scope: string): Cursor | undefined {
   } catch { throw new ActivityError(400, "the cursor belongs to another activity view; refresh this view"); }
 }
 
+/**
+ * The owner approved this held call once: KIFF carries their approval as its answer (kiff/tafs#2225). A held call that
+ * went through some other way (its Card changed, room given) has none, and is the Card's, as KIFF's own trail says.
+ */
+function approvedOnce(c: ActivityCall): boolean {
+  const decision = (c.answer as { decision?: unknown } | null | undefined)?.decision;
+  return c.held === true && typeof decision === "string" && decision !== "refused";
+}
+
 function kindOf(c: ActivityCall): ActivityEntry["kind"] {
   if (c.outcome === "owner_required" || c.outcome === "approval_required") return "held";
   if (c.outcome !== "allowed") return "refused";
   switch (c.tool_outcome?.status) {
-    case "done": return c.held ? "approved" : "done";
+    case "done": return approvedOnce(c) ? "approved" : "done";
     case "refused_by_tool": case "not_sent": return "not_done";
     case "sending": return "sending";
     default: return "unknown";

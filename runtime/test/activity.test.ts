@@ -83,7 +83,12 @@ describe("Activity pages from the source", () => {
     expect(activityEntry(vendor, "UTC", now, undefined, "en", true).detail).toBe(`The app refused it: "Refused by planque: nothing was sent"`);
     expect(activityEntry(vendor, "UTC", now).kind).toBe("not_done");
     expect(activityEntry({ ...original, tool_outcome: { ...original.tool_outcome, code: "future_reason" } }, "UTC", now).detail).toBe("The connection refused it before sending. Nothing was sent.");
-    expect(activityEntry({ ...original, tool_outcome: { ...original.tool_outcome, status: "done" } }, "UTC", now).kind).toBe("approved");
+    // Approved once only when KIFF carries the owner's approval as its answer (kiff/tafs#2225): a held call that went
+    // through because its Card changed has none, and is the Card's; a refusal is never an approval.
+    const done = { ...original, tool_outcome: { ...original.tool_outcome, status: "done" } };
+    expect(activityEntry({ ...done, answer: { decision: "approved_once", you: true } }, "UTC", now).kind).toBe("approved");
+    expect(activityEntry(done, "UTC", now).kind).toBe("done");
+    expect(activityEntry({ ...done, answer: { decision: "refused" } }, "UTC", now).kind).toBe("done");
   });
   // kiff/tafs#476, gap 10: the owner read "The app refused it" with no reason, though KIFF kept the vendor's.
   // "Unanswered emails" (16 Nov): Activity quoted Gmail's whole error body, JSON and all. An app's body can carry the account's
