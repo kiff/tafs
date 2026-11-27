@@ -975,6 +975,7 @@
         <item quantity="one">%2$s पनि रोकिन्छ।</item>
         <item quantity="other">%2$s पनि रोकिन्छन्।</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">तपाईंले %1$s मा नमेटाएसम्म कुञ्जी त्यहाँ काम गरिरहन्छ।</string>
     <string name="connect_disconnect_no_taf_uses">अहिले कुनै taf ले %1$s प्रयोग गर्दैन।</string>
     <string name="connect_disconnect_not_revoked">%1$s ले हामीलाई साइन इन रद्द गर्ने कुनै उपाय दिँदैन, त्यसैले त्यहाँ पनि अन्त्य गर्न %1$s मा tafs को पहुँच हटाउनुहोस्।</string>
     <string name="connect_disconnect_rest">%1$s प्रयोग गर्ने अन्य taf ले आफ्नो पहुँच राख्छन्। त्यहाँ उही खाता अर्को कुनै taf ले प्रयोग गर्दैन भने साइन इन %1$s मा रद्द हुन्छ; अन्यथा, अन्तिम हटाइँदा। %1$s फेरि प्रयोग गर्दा तपाईंलाई स्वीकृत गरेर फेरि साइन इन गर्न भनिन्छ।</string>

@@ -77,6 +77,7 @@
     "few": "{names} se ustavijo tudi.",
     "other": "{names} se ustavijo tudi."
   },
+  "connect.disconnect.key_not_revoked": "Ključ pri {vendor} deluje naprej, dokler ga tam ne izbrišete.",
   "connect.disconnect.no_taf_uses": "{vendor} zdaj ne uporablja noben taf.",
   "connect.disconnect.not_revoked": "{vendor} nam ne ponuja načina za preklic prijave: da se konča tudi tam, odstranite dostop tafs pri {vendor}.",
   "connect.disconnect.rest": "Drugi tafi, ki uporabljajo {vendor}, obdržijo dostop. Če istega računa tam ne uporablja noben drug taf, se prijava pri {vendor} odvzame; sicer ko je odstranjen zadnji. Ponovna uporaba {vendor} vas prosi za odobritev in novo prijavo.",

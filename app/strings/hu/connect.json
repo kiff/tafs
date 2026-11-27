@@ -69,6 +69,7 @@
     "one": "{names} is leáll.",
     "other": "{names} is leállnak."
   },
+  "connect.disconnect.key_not_revoked": "A kulcs ott ({vendor}) tovább működik, amíg ott nem törlöd.",
   "connect.disconnect.no_taf_uses": "Most egyetlen taf sem használja ezt: {vendor}.",
   "connect.disconnect.not_revoked": "Ez a szolgáltatás ({vendor}) nem ad nekünk módot a bejelentkezés visszavonására: hogy ott is megszűnjön, távolítsd el ott a tafs hozzáférését.",
   "connect.disconnect.rest": "A többi taf, amely ezt használja ({vendor}), megtartja a hozzáférését. Ha ott egyetlen másik taf sem használja ugyanazt a fiókot, a bejelentkezés visszavonásra kerül itt: {vendor}; egyébként akkor, amikor az utolsót is eltávolítod. Ha újra használod ezt ({vendor}), újra jóvá kell hagynod és be kell jelentkezned.",

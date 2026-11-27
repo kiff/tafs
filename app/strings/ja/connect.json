@@ -65,6 +65,7 @@
   "connect.disconnect.also_stops": {
     "other": "{names}も止まります。"
   },
+  "connect.disconnect.key_not_revoked": "キーは、{vendor}で削除するまでそちらで使える状態のままです。",
   "connect.disconnect.no_taf_uses": "現在{vendor}を使っているtafはありません。",
   "connect.disconnect.not_revoked": "{vendor}にはサインインを取り消す手段がありません。そちらでも終了するには、{vendor}でtafsのアクセスを削除してください。",
   "connect.disconnect.rest": "{vendor}を使う他のtafはアクセスを保持します。同じアカウントを使う他のtafがなければ、{vendor}でサインインが取り消されます。あれば、最後のtafを外したときに取り消されます。再び{vendor}を使うには、もう一度承認とサインインが必要です。",

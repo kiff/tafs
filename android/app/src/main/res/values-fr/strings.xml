@@ -975,6 +975,7 @@
         <item quantity="one">%2$s s\'arrête aussi.</item>
         <item quantity="other">%2$s s\'arrêtent aussi.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">La clé reste valable chez %1$s jusqu\'à ce que vous l\'y supprimiez.</string>
     <string name="connect_disconnect_no_taf_uses">Aucun taf n\'utilise %1$s désormais.</string>
     <string name="connect_disconnect_not_revoked">%1$s ne nous offre aucun moyen de révoquer l\'identifiant : retirez l\'accès de tafs dans %1$s pour y mettre fin là aussi.</string>
     <string name="connect_disconnect_rest">Les autres tafs qui utilisent %1$s gardent leur accès. Si aucun autre taf n\'utilise le même compte, l\'identifiant est révoqué chez %1$s ; sinon, quand le dernier est retiré. Utiliser %1$s à nouveau vous demande d\'approuver et de vous reconnecter.</string>

@@ -975,6 +975,7 @@
         <item quantity="one">%2$s também para.</item>
         <item quantity="other">%2$s também param.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">A chave continua a funcionar em %1$s até que a elimine lá.</string>
     <string name="connect_disconnect_no_taf_uses">Nenhum taf usa %1$s agora.</string>
     <string name="connect_disconnect_not_revoked">%1$s não nos oferece forma de revogar o início de sessão: remova o acesso do tafs em %1$s para o terminar também aí.</string>
     <string name="connect_disconnect_rest">Os outros tafs que usam %1$s mantêm o seu acesso. Se nenhum outro taf usar a mesma conta, o início de sessão é revogado em %1$s; caso contrário, quando o último for removido. Usar %1$s novamente pede-lhe que aprove e inicie sessão de novo.</string>

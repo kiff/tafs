@@ -1012,6 +1012,7 @@
         <item quantity="few">Se opresc și %2$s.</item>
         <item quantity="other">Se opresc și %2$s.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Cheia funcționează în continuare la %1$s până când o ștergeți acolo.</string>
     <string name="connect_disconnect_no_taf_uses">Niciun taf nu mai folosește %1$s.</string>
     <string name="connect_disconnect_not_revoked">%1$s nu ne oferă nicio modalitate de a revoca conectarea: eliminați accesul tafs în %1$s ca să o încheiați și acolo.</string>
     <string name="connect_disconnect_rest">Celelalte tafuri care folosesc %1$s își păstrează accesul. Dacă niciun alt taf nu folosește același cont acolo, conectarea este revocată la %1$s; altfel, când este eliminat ultimul. Dacă folosiți din nou %1$s, vi se cere să aprobați și să vă conectați din nou.</string>

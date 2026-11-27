@@ -69,6 +69,7 @@
     "one": "{names} también se detiene.",
     "other": "{names} también se detienen."
   },
+  "connect.disconnect.key_not_revoked": "La clave sigue funcionando en {vendor} hasta que la elimines allí.",
   "connect.disconnect.no_taf_uses": "Ningún taf usa {vendor} ahora.",
   "connect.disconnect.not_revoked": "{vendor} no nos ofrece ninguna forma de revocar el inicio de sesión: quita el acceso de tafs en {vendor} para terminarlo también allí.",
   "connect.disconnect.rest": "Los demás tafs que usan {vendor} conservan su acceso. Si ningún otro taf usa la misma cuenta, el inicio de sesión se revoca en {vendor}; si no, cuando se quita el último. Usar {vendor} de nuevo te pide aprobar e iniciar sesión otra vez.",

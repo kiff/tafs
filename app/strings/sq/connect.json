@@ -69,6 +69,7 @@
     "one": "Ndalon edhe {names}.",
     "other": "Ndalojnë edhe {names}."
   },
+  "connect.disconnect.key_not_revoked": "Çelësi vazhdon të funksionojë te {vendor} derisa ta fshini atje.",
   "connect.disconnect.no_taf_uses": "Asnjë taf nuk përdor {vendor} tani.",
   "connect.disconnect.not_revoked": "{vendor} nuk na ofron asnjë mënyrë për të revokuar hyrjen: hiqni qasjen e tafs te {vendor} për ta përfunduar edhe atje.",
   "connect.disconnect.rest": "Tafs-et e tjerë që përdorin {vendor} e mbajnë qasjen e tyre. Nëse asnjë taf tjetër nuk përdor të njëjtën llogari aty, hyrja revokohet te {vendor}; përndryshe, kur të hiqet i fundit. Përdorimi i {vendor} sërish ju kërkon të miratoni dhe të hyni sërish.",

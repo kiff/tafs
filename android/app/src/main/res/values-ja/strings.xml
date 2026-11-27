@@ -938,6 +938,7 @@
     <plurals name="connect_disconnect_also_stops">
         <item quantity="other">%2$sも止まります。</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">キーは、%1$sで削除するまでそちらで使える状態のままです。</string>
     <string name="connect_disconnect_no_taf_uses">現在%1$sを使っているtafはありません。</string>
     <string name="connect_disconnect_not_revoked">%1$sにはサインインを取り消す手段がありません。そちらでも終了するには、%1$sでtafsのアクセスを削除してください。</string>
     <string name="connect_disconnect_rest">%1$sを使う他のtafはアクセスを保持します。同じアカウントを使う他のtafがなければ、%1$sでサインインが取り消されます。あれば、最後のtafを外したときに取り消されます。再び%1$sを使うには、もう一度承認とサインインが必要です。</string>

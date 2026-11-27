@@ -1012,6 +1012,7 @@
         <item quantity="few">%2$s taip pat sustos.</item>
         <item quantity="other">%2$s taip pat sustos.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Raktas toliau veikia %1$s pusėje, kol jo ten neištrinsite.</string>
     <string name="connect_disconnect_no_taf_uses">Dabar joks taf nenaudoja %1$s.</string>
     <string name="connect_disconnect_not_revoked">%1$s nesuteikia mums būdo atšaukti prisijungimą: kad jis baigtųsi ir ten, pašalinkite tafs prieigą %1$s pusėje.</string>
     <string name="connect_disconnect_rest">Kiti %1$s naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas atšaukiamas %1$s pusėje; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti %1$s, reikės dar kartą patvirtinti ir prisijungti.</string>

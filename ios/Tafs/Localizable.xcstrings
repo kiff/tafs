@@ -240044,6 +240044,269 @@
         }
       }
     },
+    "connect.disconnect.key_not_revoked": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يظل المفتاح يعمل لدى %1$@ إلى أن تحذفه هناك."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açar siz onu orada silənədək %1$@ daxilində işləməyə davam edir."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключът продължава да работи в %1$@, докато не го изтриете там."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আপনি %1$@-এ মুছে না ফেলা পর্যন্ত কী-টি সেখানে কাজ করতে থাকে।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clau continua funcionant a %1$@ fins que l'hi eliminis."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klíč u %1$@ funguje dál, dokud ho tam nesmažete."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Schlüssel funktioniert bei %1$@ weiter, bis du ihn dort löschst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key still works at %1$@ until you delete it there."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clave sigue funcionando en %1$@ hasta que la elimines allí."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Võti töötab teenuses %1$@ edasi, kuni sa selle seal kustutad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé reste valable chez %1$@ jusqu'à ce que vous l'y supprimiez."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "המפתח ממשיך לעבוד ב-%1$@ עד שימחקו אותו שם."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जब तक आप उसे %1$@ में नहीं हटाते, कुंजी वहाँ काम करती रहती है।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ključ i dalje radi u aplikaciji %1$@ dok ga ondje ne izbrišete."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kulcs ott (%1$@) tovább működik, amíg ott nem törlöd."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Բանալին շարունակում է աշխատել %1$@-ում, մինչև այն այնտեղ ջնջեք։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kunci tetap berfungsi di %1$@ sampai Anda menghapusnya di sana."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave continua a funzionare su %1$@ finché non la elimini lì."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キーは、%1$@で削除するまでそちらで使える状態のままです。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "გასაღები %1$@-ში მუშაობას აგრძელებს, სანამ იქ არ წაშლით."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "សោនៅតែដំណើរការនៅ %1$@ រហូតដល់អ្នកលុបវានៅទីនោះ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "키는 %1$@에서 삭제할 때까지 그곳에서 계속 작동합니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ກະແຈຍັງໃຊ້ໄດ້ຢູ່ %1$@ ຈົນກວ່າທ່ານຈະລຶບມັນຢູ່ທີ່ນັ້ນ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raktas toliau veikia %1$@ pusėje, kol jo ten neištrinsite."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atslēga %1$@ darbojas, līdz tu to tur izdzēs."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клучот продолжува да работи во %1$@ додека не го избришеш таму."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Түлхүүр %1$@ дээр та устгах хүртэл ажилласаар байна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "तपाईंले %1$@ मा नमेटाएसम्म कुञ्जी त्यहाँ काम गरिरहन्छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De sleutel blijft werken bij %1$@ tot je hem daar verwijdert."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz nadal działa w %1$@, dopóki go tam nie usuniesz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave continua a funcionar em %1$@ até que a elimine lá."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave continua funcionando em %1$@ até você excluí-la lá."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cheia funcționează în continuare la %1$@ până când o ștergeți acolo."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kľúč u %1$@ funguje ďalej, kým ho tam nevymažete."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ključ pri %1$@ deluje naprej, dokler ga tam ne izbrišete."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çelësi vazhdon të funksionojë te %1$@ derisa ta fshini atje."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ključ i dalje radi u aplikaciji %1$@ dok ga tamo ne izbrišete."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "คีย์ยังใช้งานได้ที่ %1$@ จนกว่าคุณจะลบที่นั่น"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açar siz ony ol ýerde pozýançaňyz %1$@-da işlemegini dowam edýär."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anahtar, siz %1$@ içinde silene kadar orada çalışmaya devam eder."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جب تک آپ اسے %1$@ میں حذف نہیں کرتے، کلید وہاں کام کرتی رہتی ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khóa vẫn hoạt động ở %1$@ cho đến khi bạn xóa nó ở đó."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在您於 %1$@ 刪除金鑰之前，該金鑰在那裡仍可使用。"
+          }
+        }
+      }
+    },
     "connect.disconnect.no_taf_uses": {
       "extractionState": "manual",
       "localizations": {

@@ -69,6 +69,7 @@
     "one": "{names} stoppt ebenfalls.",
     "other": "{names} stoppen ebenfalls."
   },
+  "connect.disconnect.key_not_revoked": "Der Schlüssel funktioniert bei {vendor} weiter, bis du ihn dort löschst.",
   "connect.disconnect.no_taf_uses": "Kein taf nutzt {vendor} mehr.",
   "connect.disconnect.not_revoked": "{vendor} bietet uns keine Möglichkeit, die Anmeldung zu widerrufen. Entferne den Zugriff von tafs in {vendor}, um sie auch dort zu beenden.",
   "connect.disconnect.rest": "Andere tafs, die {vendor} nutzen, behalten ihren Zugriff. Nutzt kein anderer taf dasselbe Konto dort, wird die Anmeldung bei {vendor} widerrufen; sonst, wenn der letzte entfernt wird. Wenn du {vendor} wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden.",

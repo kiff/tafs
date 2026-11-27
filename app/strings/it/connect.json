@@ -69,6 +69,7 @@
     "one": "Si ferma anche {names}.",
     "other": "Si fermano anche {names}."
   },
+  "connect.disconnect.key_not_revoked": "La chiave continua a funzionare su {vendor} finché non la elimini lì.",
   "connect.disconnect.no_taf_uses": "Nessun taf usa {vendor} ora.",
   "connect.disconnect.not_revoked": "{vendor} non ci offre alcun modo per revocare il login: rimuovi l'accesso di tafs in {vendor} per chiuderlo anche lì.",
   "connect.disconnect.rest": "Gli altri taf che usano {vendor} mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene revocato presso {vendor}; altrimenti, quando viene rimosso l'ultimo. Usare di nuovo {vendor} ti chiede di approvare e accedere di nuovo.",

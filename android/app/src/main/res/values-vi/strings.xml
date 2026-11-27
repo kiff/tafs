@@ -938,6 +938,7 @@
     <plurals name="connect_disconnect_also_stops">
         <item quantity="other">%2$s cũng dừng.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Khóa vẫn hoạt động ở %1$s cho đến khi bạn xóa nó ở đó.</string>
     <string name="connect_disconnect_no_taf_uses">Hiện không taf nào dùng %1$s.</string>
     <string name="connect_disconnect_not_revoked">%1$s không cho chúng tôi cách nào để thu hồi việc đăng nhập: hãy gỡ quyền truy cập của tafs trong %1$s để kết thúc nó ở đó.</string>
     <string name="connect_disconnect_rest">Các taf khác dùng %1$s vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị thu hồi tại %1$s; nếu không, nó bị thu hồi khi taf cuối cùng bị gỡ. Dùng %1$s lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại.</string>

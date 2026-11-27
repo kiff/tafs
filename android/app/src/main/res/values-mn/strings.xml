@@ -975,6 +975,7 @@
         <item quantity="one">%2$s бас зогсоно.</item>
         <item quantity="other">%2$s бас зогсоно.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Түлхүүр %1$s дээр та устгах хүртэл ажилласаар байна.</string>
     <string name="connect_disconnect_no_taf_uses">Одоо ямар ч taf %1$s-ийг ашиглаагүй байна.</string>
     <string name="connect_disconnect_not_revoked">%1$s нэвтрэлтийг цуцлах арга бидэнд олгодоггүй тул тэнд ч дуусгахын тулд %1$s дээр tafs-ийн хандалтыг хасна уу.</string>
     <string name="connect_disconnect_rest">%1$s-ийг ашигладаг бусад taf-ууд хандах эрхээ хадгална. Хэрэв тэнд ижил бүртгэлийг өөр taf ашиглахгүй бол нэвтрэлт %1$s дээр хүчингүй болно; үгүй бол сүүлчийнх нь хасагдахад. %1$s-ийг дахин ашиглахад зөвшөөрч, дахин нэвтрэхийг танаас хүснэ.</string>

@@ -1012,6 +1012,7 @@
         <item quantity="two">גם %2$s נעצרים.</item>
         <item quantity="other">גם %2$s נעצרים.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">המפתח ממשיך לעבוד ב-%1$s עד שימחקו אותו שם.</string>
     <string name="connect_disconnect_no_taf_uses">אף taf לא משתמש כעת ב-%1$s.</string>
     <string name="connect_disconnect_not_revoked">%1$s לא מציע לנו דרך לבטל את הכניסה, לכן כדי לסיים אותה גם שם יש להסיר את הגישה של tafs ב-%1$s.</string>
     <string name="connect_disconnect_rest">taf אחרים שמשתמשים ב-%1$s שומרים על הגישה שלהם. אם אף taf אחר לא משתמש שם באותו חשבון, הכניסה מבוטלת אצל %1$s; אחרת, כשהאחרון יוסר. שימוש חוזר ב-%1$s מבקש ממך לאשר ולהיכנס שוב.</string>

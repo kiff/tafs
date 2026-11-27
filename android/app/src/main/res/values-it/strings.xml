@@ -975,6 +975,7 @@
         <item quantity="one">Si ferma anche %2$s.</item>
         <item quantity="other">Si fermano anche %2$s.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">La chiave continua a funzionare su %1$s finché non la elimini lì.</string>
     <string name="connect_disconnect_no_taf_uses">Nessun taf usa %1$s ora.</string>
     <string name="connect_disconnect_not_revoked">%1$s non ci offre alcun modo per revocare il login: rimuovi l\'accesso di tafs in %1$s per chiuderlo anche lì.</string>
     <string name="connect_disconnect_rest">Gli altri taf che usano %1$s mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene revocato presso %1$s; altrimenti, quando viene rimosso l\'ultimo. Usare di nuovo %1$s ti chiede di approvare e accedere di nuovo.</string>

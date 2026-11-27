@@ -1868,6 +1868,8 @@ enum Words {
             static func alsoCards(names: String) -> String { Words.line("connect.disconnect.also_cards", names) }
             /// {names} stop too.
             static func alsoStops(count: Int, names: String) -> String { Words.count("connect.disconnect.also_stops", count, names) }
+            /// The key still works at {vendor} until you delete it there.
+            static func keyNotRevoked(vendor: String) -> String { Words.line("connect.disconnect.key_not_revoked", vendor) }
             /// No taf uses {vendor} now.
             static func noTafUses(vendor: String) -> String { Words.line("connect.disconnect.no_taf_uses", vendor) }
             /// {vendor} offers no way for us to revoke the sign-in, so remove tafs's access in {vendor} to end it there too.

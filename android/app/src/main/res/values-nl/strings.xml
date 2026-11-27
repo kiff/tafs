@@ -975,6 +975,7 @@
         <item quantity="one">%2$s stopt ook.</item>
         <item quantity="other">%2$s stoppen ook.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">De sleutel blijft werken bij %1$s tot je hem daar verwijdert.</string>
     <string name="connect_disconnect_no_taf_uses">Geen taf gebruikt %1$s nu.</string>
     <string name="connect_disconnect_not_revoked">%1$s biedt ons geen manier om de aanmelding in te trekken: verwijder de toegang van tafs in %1$s om die ook daar te beëindigen.</string>
     <string name="connect_disconnect_rest">Andere tafs die %1$s gebruiken, houden hun toegang. Als geen andere taf hetzelfde account gebruikt, wordt de aanmelding bij %1$s ingetrokken; anders pas als de laatste wordt verwijderd. Als je %1$s weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden.</string>

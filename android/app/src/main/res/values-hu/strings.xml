@@ -975,6 +975,7 @@
         <item quantity="one">%2$s is leáll.</item>
         <item quantity="other">%2$s is leállnak.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">A kulcs ott (%1$s) tovább működik, amíg ott nem törlöd.</string>
     <string name="connect_disconnect_no_taf_uses">Most egyetlen taf sem használja ezt: %1$s.</string>
     <string name="connect_disconnect_not_revoked">Ez a szolgáltatás (%1$s) nem ad nekünk módot a bejelentkezés visszavonására: hogy ott is megszűnjön, távolítsd el ott a tafs hozzáférését.</string>
     <string name="connect_disconnect_rest">A többi taf, amely ezt használja (%1$s), megtartja a hozzáférését. Ha ott egyetlen másik taf sem használja ugyanazt a fiókot, a bejelentkezés visszavonásra kerül itt: %1$s; egyébként akkor, amikor az utolsót is eltávolítod. Ha újra használod ezt (%1$s), újra jóvá kell hagynod és be kell jelentkezned.</string>

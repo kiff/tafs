@@ -65,6 +65,7 @@
   "connect.disconnect.also_stops": {
     "other": "{names} cũng dừng."
   },
+  "connect.disconnect.key_not_revoked": "Khóa vẫn hoạt động ở {vendor} cho đến khi bạn xóa nó ở đó.",
   "connect.disconnect.no_taf_uses": "Hiện không taf nào dùng {vendor}.",
   "connect.disconnect.not_revoked": "{vendor} không cho chúng tôi cách nào để thu hồi việc đăng nhập: hãy gỡ quyền truy cập của tafs trong {vendor} để kết thúc nó ở đó.",
   "connect.disconnect.rest": "Các taf khác dùng {vendor} vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị thu hồi tại {vendor}; nếu không, nó bị thu hồi khi taf cuối cùng bị gỡ. Dùng {vendor} lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại.",

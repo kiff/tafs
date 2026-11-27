@@ -65,6 +65,7 @@
   "connect.disconnect.also_stops": {
     "other": "{names} หยุดไปด้วย"
   },
+  "connect.disconnect.key_not_revoked": "คีย์ยังใช้งานได้ที่ {vendor} จนกว่าคุณจะลบที่นั่น",
   "connect.disconnect.no_taf_uses": "ตอนนี้ไม่มี taf ใดใช้ {vendor}",
   "connect.disconnect.not_revoked": "{vendor} ไม่มีวิธีให้เราเพิกถอนการเข้าสู่ระบบ โปรดนำสิทธิ์เข้าถึงของ tafs ออกใน {vendor} เพื่อสิ้นสุดที่นั่นด้วย",
   "connect.disconnect.rest": "taf อื่นที่ใช้ {vendor} ยังคงมีสิทธิ์เข้าถึง หากไม่มี taf อื่นใช้บัญชีเดียวกันที่นั่น การเข้าสู่ระบบจะถูกเพิกถอนที่ {vendor} มิฉะนั้นจะถูกเพิกถอนเมื่อ taf สุดท้ายถูกนำออก การใช้ {vendor} อีกครั้งจะขอให้คุณอนุมัติและเข้าสู่ระบบอีกครั้ง",

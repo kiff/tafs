@@ -1049,6 +1049,7 @@
         <item quantity="few">%2$s se ustavijo tudi.</item>
         <item quantity="other">%2$s se ustavijo tudi.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Ključ pri %1$s deluje naprej, dokler ga tam ne izbrišete.</string>
     <string name="connect_disconnect_no_taf_uses">%1$s zdaj ne uporablja noben taf.</string>
     <string name="connect_disconnect_not_revoked">%1$s nam ne ponuja načina za preklic prijave: da se konča tudi tam, odstranite dostop tafs pri %1$s.</string>
     <string name="connect_disconnect_rest">Drugi tafi, ki uporabljajo %1$s, obdržijo dostop. Če istega računa tam ne uporablja noben drug taf, se prijava pri %1$s odvzame; sicer ko je odstranjen zadnji. Ponovna uporaba %1$s vas prosi za odobritev in novo prijavo.</string>

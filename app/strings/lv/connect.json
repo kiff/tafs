@@ -73,6 +73,7 @@
     "one": "Apstājas arī {names}.",
     "other": "Apstājas arī {names}."
   },
+  "connect.disconnect.key_not_revoked": "Atslēga {vendor} darbojas, līdz tu to tur izdzēs.",
   "connect.disconnect.no_taf_uses": "Neviens taf tagad neizmanto {vendor}.",
   "connect.disconnect.not_revoked": "{vendor} nedod mums iespēju atsaukt pierakstīšanos: lai to izbeigtu arī tur, noņem tafs piekļuvi {vendor}.",
   "connect.disconnect.rest": "Citi taf, kas izmanto {vendor}, patur savu piekļuvi. Ja neviens cits taf tur neizmanto to pašu kontu, pierakstīšanās {vendor} tiek atsaukta; citādi – kad tiek noņemts pēdējais. Lai atkal izmantotu {vendor}, tev būs vēlreiz jāapstiprina un jāpierakstās.",

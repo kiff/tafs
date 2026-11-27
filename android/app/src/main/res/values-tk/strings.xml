@@ -975,6 +975,7 @@
         <item quantity="one">%2$s hem durýar.</item>
         <item quantity="other">%2$s hem durýar.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Açar siz ony ol ýerde pozýançaňyz %1$s-da işlemegini dowam edýär.</string>
     <string name="connect_disconnect_no_taf_uses">Häzir hiç bir taf %1$s-y ulanmaýar.</string>
     <string name="connect_disconnect_not_revoked">%1$s girişi ýatyrmagymyz üçin hiç hili ýol hödürlemeýär: ol ýerde hem tamamlamak üçin %1$s-da tafs-yň elýeterliligini aýyryň.</string>
     <string name="connect_disconnect_rest">%1$s-y ulanýan beýleki taf-lar elýeterligini saklaýar. Eger başga hiç bir taf şol ýerdäki şol bir hasaby ulanmasa, giriş %1$s-da ýatyrylýar; ýogsa soňky aýrylanda. %1$s-y täzeden ulanmak sizden tassyklamagy we täzeden girmegi soraýar.</string>

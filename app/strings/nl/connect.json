@@ -69,6 +69,7 @@
     "one": "{names} stopt ook.",
     "other": "{names} stoppen ook."
   },
+  "connect.disconnect.key_not_revoked": "De sleutel blijft werken bij {vendor} tot je hem daar verwijdert.",
   "connect.disconnect.no_taf_uses": "Geen taf gebruikt {vendor} nu.",
   "connect.disconnect.not_revoked": "{vendor} biedt ons geen manier om de aanmelding in te trekken: verwijder de toegang van tafs in {vendor} om die ook daar te beëindigen.",
   "connect.disconnect.rest": "Andere tafs die {vendor} gebruiken, houden hun toegang. Als geen andere taf hetzelfde account gebruikt, wordt de aanmelding bij {vendor} ingetrokken; anders pas als de laatste wordt verwijderd. Als je {vendor} weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden.",

@@ -73,6 +73,7 @@
     "few": "{names} taip pat sustos.",
     "other": "{names} taip pat sustos."
   },
+  "connect.disconnect.key_not_revoked": "Raktas toliau veikia {vendor} pusėje, kol jo ten neištrinsite.",
   "connect.disconnect.no_taf_uses": "Dabar joks taf nenaudoja {vendor}.",
   "connect.disconnect.not_revoked": "{vendor} nesuteikia mums būdo atšaukti prisijungimą: kad jis baigtųsi ir ten, pašalinkite tafs prieigą {vendor} pusėje.",
   "connect.disconnect.rest": "Kiti {vendor} naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas atšaukiamas {vendor} pusėje; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti {vendor}, reikės dar kartą patvirtinti ir prisijungti.",

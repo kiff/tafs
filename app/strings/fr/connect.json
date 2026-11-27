@@ -69,6 +69,7 @@
     "one": "{names} s'arrête aussi.",
     "other": "{names} s'arrêtent aussi."
   },
+  "connect.disconnect.key_not_revoked": "La clé reste valable chez {vendor} jusqu'à ce que vous l'y supprimiez.",
   "connect.disconnect.no_taf_uses": "Aucun taf n'utilise {vendor} désormais.",
   "connect.disconnect.not_revoked": "{vendor} ne nous offre aucun moyen de révoquer l'identifiant : retirez l'accès de tafs dans {vendor} pour y mettre fin là aussi.",
   "connect.disconnect.rest": "Les autres tafs qui utilisent {vendor} gardent leur accès. Si aucun autre taf n'utilise le même compte, l'identifiant est révoqué chez {vendor} ; sinon, quand le dernier est retiré. Utiliser {vendor} à nouveau vous demande d'approuver et de vous reconnecter.",

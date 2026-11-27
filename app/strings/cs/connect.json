@@ -73,6 +73,7 @@
     "few": "{names} se zastaví také.",
     "other": "{names} se zastaví také."
   },
+  "connect.disconnect.key_not_revoked": "Klíč u {vendor} funguje dál, dokud ho tam nesmažete.",
   "connect.disconnect.no_taf_uses": "{vendor} teď nepoužívá žádný taf.",
   "connect.disconnect.not_revoked": "{vendor} nám nenabízí žádný způsob, jak přihlášení odvolat: aby skončilo i tam, odeberte tafs přístup u {vendor}.",
   "connect.disconnect.rest": "Ostatní tafy, které používají {vendor}, si přístup nechají. Pokud tam stejný účet nepoužívá žádný jiný taf, přihlášení se u {vendor} odvolá; jinak až po odstranění posledního. Opětovné použití {vendor} vás požádá o schválení a nové přihlášení.",

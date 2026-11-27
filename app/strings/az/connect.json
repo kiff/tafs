@@ -69,6 +69,7 @@
     "one": "{names} də dayanır.",
     "other": "{names} də dayanır."
   },
+  "connect.disconnect.key_not_revoked": "Açar siz onu orada silənədək {vendor} daxilində işləməyə davam edir.",
   "connect.disconnect.no_taf_uses": "İndi heç bir taf {vendor} istifadə etmir.",
   "connect.disconnect.not_revoked": "{vendor} girişi ləğv etməyimiz üçün heç bir yol təklif etmir: orada da bitirmək üçün {vendor} daxilində tafs-ın girişini silin.",
   "connect.disconnect.rest": "{vendor} istifadə edən digər taf-lar girişlərini saxlayır. Orada eyni hesabdan başqa taf istifadə etmirsə, {vendor} saytında giriş ləğv edilir; əks halda sonuncu silinəndə. {vendor} xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və yenidən daxil olmağı xahiş edir.",

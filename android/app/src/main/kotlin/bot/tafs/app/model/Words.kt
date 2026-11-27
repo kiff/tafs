@@ -1009,6 +1009,7 @@ object Words {
       fun alsoCard(owner: String): String = Res.s(R.string.connect_disconnect_also_card, owner, Words.possessive(owner))
       fun alsoCards(names: String): String = Res.s(R.string.connect_disconnect_also_cards, names)
       fun alsoStops(count: Int, names: String): String = Res.p(R.plurals.connect_disconnect_also_stops, count, Res.number(count), names)
+      fun keyNotRevoked(vendor: String): String = Res.s(R.string.connect_disconnect_key_not_revoked, vendor)
       fun noTafUses(vendor: String): String = Res.s(R.string.connect_disconnect_no_taf_uses, vendor)
       fun notRevoked(vendor: String): String = Res.s(R.string.connect_disconnect_not_revoked, vendor)
       fun rest(vendor: String): String = Res.s(R.string.connect_disconnect_rest, vendor)

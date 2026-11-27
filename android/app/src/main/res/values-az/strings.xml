@@ -975,6 +975,7 @@
         <item quantity="one">%2$s də dayanır.</item>
         <item quantity="other">%2$s də dayanır.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Açar siz onu orada silənədək %1$s daxilində işləməyə davam edir.</string>
     <string name="connect_disconnect_no_taf_uses">İndi heç bir taf %1$s istifadə etmir.</string>
     <string name="connect_disconnect_not_revoked">%1$s girişi ləğv etməyimiz üçün heç bir yol təklif etmir: orada da bitirmək üçün %1$s daxilində tafs-ın girişini silin.</string>
     <string name="connect_disconnect_rest">%1$s istifadə edən digər taf-lar girişlərini saxlayır. Orada eyni hesabdan başqa taf istifadə etmirsə, %1$s saytında giriş ləğv edilir; əks halda sonuncu silinəndə. %1$s xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və yenidən daxil olmağı xahiş edir.</string>

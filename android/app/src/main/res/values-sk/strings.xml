@@ -1012,6 +1012,7 @@
         <item quantity="few">%2$s sa zastavia tiež.</item>
         <item quantity="other">%2$s sa zastaví tiež.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Kľúč u %1$s funguje ďalej, kým ho tam nevymažete.</string>
     <string name="connect_disconnect_no_taf_uses">%1$s teraz nepoužíva žiadny taf.</string>
     <string name="connect_disconnect_not_revoked">%1$s nám neponúka spôsob, ako prihlásenie odvolať: aby sa skončilo aj tam, odstráňte prístup tafs u %1$s.</string>
     <string name="connect_disconnect_rest">Ostatné tafy, ktoré používajú %1$s, si prístup nechajú. Ak tam rovnaký účet nepoužíva žiadny iný taf, prihlásenie sa u %1$s odvolá; inak až po odstránení posledného. Opätovné použitie %1$s vás požiada o schválenie a nové prihlásenie.</string>

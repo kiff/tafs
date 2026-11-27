@@ -975,6 +975,7 @@
         <item quantity="one">%2$sও থামে।</item>
         <item quantity="other">%2$sও থামে।</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">আপনি %1$s-এ মুছে না ফেলা পর্যন্ত কী-টি সেখানে কাজ করতে থাকে।</string>
     <string name="connect_disconnect_no_taf_uses">এখন কোনো taf %1$s ব্যবহার করে না।</string>
     <string name="connect_disconnect_not_revoked">%1$s আমাদের সাইন-ইন প্রত্যাহার করার কোনো উপায় দেয় না, তাই সেখানেও শেষ করতে %1$s-এ tafs-এর প্রবেশাধিকার সরিয়ে দিন।</string>
     <string name="connect_disconnect_rest">%1$s ব্যবহার করে এমন অন্য taf তাদের প্রবেশাধিকার রাখে। সেখানে একই অ্যাকাউন্ট অন্য কোনো taf ব্যবহার না করলে %1$s-এ সাইন-ইন প্রত্যাহার করা হয়; নইলে শেষটি সরানোর সময়। আবার %1$s ব্যবহার করতে আপনাকে অনুমোদন করতে ও আবার সাইন ইন করতে বলা হয়।</string>

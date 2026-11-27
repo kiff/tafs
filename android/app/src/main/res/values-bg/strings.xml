@@ -975,6 +975,7 @@
         <item quantity="one">%2$s също спира.</item>
         <item quantity="other">%2$s също спират.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Ключът продължава да работи в %1$s, докато не го изтриете там.</string>
     <string name="connect_disconnect_no_taf_uses">Никой taf не използва %1$s сега.</string>
     <string name="connect_disconnect_not_revoked">%1$s не ни дава начин да оттеглим входа: премахнете достъпа на tafs в %1$s, за да го прекратите и там.</string>
     <string name="connect_disconnect_rest">Другите tafs, които използват %1$s, запазват достъпа си. Ако никой друг taf не използва същия акаунт там, входът се оттегля в %1$s; иначе — когато бъде премахнат последният. Повторното използване на %1$s изисква да одобрите и да влезете отново.</string>

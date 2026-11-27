@@ -73,6 +73,7 @@
     "two": "גם {names} נעצרים.",
     "other": "גם {names} נעצרים."
   },
+  "connect.disconnect.key_not_revoked": "המפתח ממשיך לעבוד ב-{vendor} עד שימחקו אותו שם.",
   "connect.disconnect.no_taf_uses": "אף taf לא משתמש כעת ב-{vendor}.",
   "connect.disconnect.not_revoked": "{vendor} לא מציע לנו דרך לבטל את הכניסה, לכן כדי לסיים אותה גם שם יש להסיר את הגישה של tafs ב-{vendor}.",
   "connect.disconnect.rest": "taf אחרים שמשתמשים ב-{vendor} שומרים על הגישה שלהם. אם אף taf אחר לא משתמש שם באותו חשבון, הכניסה מבוטלת אצל {vendor}; אחרת, כשהאחרון יוסר. שימוש חוזר ב-{vendor} מבקש ממך לאשר ולהיכנס שוב.",
