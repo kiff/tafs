@@ -590,6 +590,10 @@ final class ApprovalWindowTests: XCTestCase {
 
         // Leaving the app closes it at once, device-signed, and its words go.
         model.wentToBackground()
+        // Its words and its taf go before KIFF answers: back on screen at once, no card says Approve is a tap.
+        XCTAssertNil(model.windowWords)
+        XCTAssertNil(model.windowTaf)
+        XCTAssertNil(model.windowWords(forTaf: "taf-setup"))
         try await waitFor { !self.closes().isEmpty && model.windowWords == nil }
         let closed = try XCTUnwrap(closes().first)
         XCTAssertTrue(closed.value(forHTTPHeaderField: "KIFF-Device-Signature")?.contains(",v1=current") ?? false)
@@ -606,6 +610,7 @@ final class ApprovalWindowTests: XCTestCase {
         // A new window, then the screen locks: closed at once.
         try await approveCard(model)
         model.screenLocked()
+        XCTAssertNil(model.windowWords(forTaf: "taf-setup"))
         try await waitFor { self.closes().count == 2 && model.windowWords == nil }
         XCTAssertEqual(closes().count, 2)
         XCTAssertNil(model.windowWords)

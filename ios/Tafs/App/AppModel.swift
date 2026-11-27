@@ -10696,6 +10696,10 @@ final class AppModel: ObservableObject {
         windowClosing?.cancel()
         windowClosing = nil
         guard kiff.window != nil else { return }
+        // Its words and its taf go now, not when KIFF answers the close: back on screen at once, no card says
+        // Approve is a tap, and no step uses the window (another taf's step closes it first).
+        windowWords = nil
+        windowTaf = nil
         windowClosing = Task { [weak self] in await self?.closeWindow() }
     }
 
@@ -10719,6 +10723,8 @@ final class AppModel: ObservableObject {
         windowClosing?.cancel()
         windowClosing = nil
         guard kiff.window != nil else { return }
+        windowWords = nil
+        windowTaf = nil
         windowClosing = Task { [weak self] in await self?.closeWindow() }
     }
 
