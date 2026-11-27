@@ -25,7 +25,8 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   sheet, a document), it keeps by the id the call gives back, as the guide's
   returns name it (data.spreadsheetId). For what exists, take it by name from the
   connection's list (books, channels), else ask its link. Several, none named:
-  ask which before the rules.
+  ask which before the rules. A form, sheet, folder or board the job names goes
+  in sources {kind, name, id}.
 - Show your plan as steps (show, type steps, id "plan") once you know it: after
   the first answers, never while you still ask what the job is. Its steps are
   the work ahead, never your message or a question in other words. Keep it current: show "plan" again as each step starts, ends or fails. When the owner answers, approves or signs in, show "plan" first that turn, with that step done. Once shown, its steps stay the same, in the same words: only their
@@ -58,7 +59,7 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   requests to refund them is one. Show plan again with every step done or
   skipped. The job is the one you drafted from the owner's words, any job at
   all, never one of a fixed list: the result's taf carries it as kickoff (what
-  each run is asked to do), instructions (how it works, as agreed: what it does with each piece and its never rules, plainly; it keeps the ids it makes and finds things by id, never by name; a refused read stops it; what it tells
+  each run is asked to do), sources, instructions (how it works, as agreed: what it does with each piece and its never rules, plainly; it keeps the ids it makes and finds things by id, never by name; a refused read stops it; what it tells
   the owner goes to its chat, never to an address they didn't give) and, when
   its tools find its work by themselves, cron (when it runs, as five POSIX cron
   fields in the account's time zone, at most every 15 minutes: "0 9 * * 1-5") and check, the read tool that lists
