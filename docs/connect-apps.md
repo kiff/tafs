@@ -128,6 +128,14 @@ connection, which stops too (“Chargebacks stops too.”).
 **Other connections** comes last: connections the app can't put under a taf you see. It
 doesn't say the taf was removed, because it may be one you don't see.
 
+Every sign-in the account holds is under **Yours**, one no taf uses included: a sign-in Coach
+made in a chat whose actions are still to choose (planque's `signed_in`) reads “Sign in ·
+Signed in · Not used by any taf”, and a connected app no taf uses says “Not used by any taf”
+too. It opens the same connections, where its row has **Remove unfinished connection** (or
+**Disconnect**, once it has actions), so the owner can always end it. “Not used by any taf” is
+said only when no live taf uses the app, one you can't see included; when tafs cloud can't
+read the connections, nothing is said.
+
 ### Connections from removed tafs
 
 When you remove a taf for good, tafs cloud ends its connections with it, under the same

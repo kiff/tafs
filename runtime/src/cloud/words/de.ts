@@ -203,6 +203,7 @@ export const de: Words = {
   apps_not_connected: "Nicht verbunden",
   apps_needs_setup: "Muss erst eingerichtet werden",
   apps_used_by: (names: string) => `Genutzt von ${names}`,
+  apps_used_by_none: "Von keinem taf genutzt",
   apps_whose_yours: "Deins",
   apps_whose_company: "Firma",
   approval_confirm_first: "Deine Anmeldung hat geklappt, ist aber noch nicht bestätigt. Tippe erneut auf Genehmigen, um sie zu bestätigen.",

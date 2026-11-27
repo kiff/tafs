@@ -197,6 +197,7 @@ export const zhHant: Words = {
   apps_not_connected: "未連接",
   apps_needs_setup: "需要設定",
   apps_used_by: (names: string) => `使用者：${names}`,
+  apps_used_by_none: "沒有 taf 使用",
   apps_whose_yours: "您的",
   apps_whose_company: "公司的",
   approval_confirm_first: "您的登入已完成，但尚未確認。請再次核准以確認。",

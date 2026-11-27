@@ -20,7 +20,11 @@ export interface CatalogApp {
   icon?: string;
   how: "oauth" | "key";
   /** `needs_setup`: the app needs setting up by an operator before anyone can connect it; the apps say so and offer no Connect. */
-  state: "available" | "connected" | "needs_reconnect" | "needs_setup";
+  /**
+   * `signed_in`: planque holds a sign-in that no taf's actions are in KIFF for yet (one Coach made, its actions still to
+   * choose); the apps list it under the account's own, so it can always be disconnected.
+   */
+  state: "available" | "connected" | "needs_reconnect" | "signed_in" | "needs_setup";
   /** For `needs_setup`: the line the apps show in place of Connect. */
   words?: string;
   grant?: string;
@@ -130,7 +134,7 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
   const apps: CatalogApp[] = [];
   for (const e of entries as Record<string, unknown>[]) {
     const how = e.how === "key" ? "key" : e.how === "oauth" ? "oauth" : undefined;
-    const state = e.state === "connected" || e.state === "needs_reconnect" || e.state === "needs_setup" ? e.state : "available";
+    const state = e.state === "connected" || e.state === "needs_reconnect" || e.state === "signed_in" || e.state === "needs_setup" ? e.state : "available";
     if (typeof e.entry !== "string" || !ENTRY.test(e.entry) || typeof e.title !== "string" || !how) continue;
     const vendor = typeof e.vendor === "string" ? e.vendor : e.title;
     apps.push({
@@ -203,7 +207,7 @@ function firstRank(a: CatalogApp): number {
 
 /**
  * A page in the order a person looks for an app: the account's own connections first (one to sign in again
- * before one connected), then, for a search, apps whose name starts with it, then whose name has it, then the
+ * before one connected, then a sign-in no taf uses yet), then, for a search, apps whose name starts with it, then whose name has it, then the
  * rest, each in planque's order; with no search, the first apps people connect (FIRST_APPS), then the rest
  * by name. Only within the page: planque pages its catalog.
  */
@@ -212,13 +216,14 @@ function ordered(apps: CatalogApp[], q: string): CatalogApp[] {
   const rank = (a: CatalogApp): number => {
     if (a.state === "needs_reconnect") return 0;
     if (a.state === "connected") return 1;
-    if (!want) return 2;
+    if (a.state === "signed_in") return 2;
+    if (!want) return 3;
     const name = `${a.title} ${a.vendor}`.toLowerCase();
-    return a.title.toLowerCase().startsWith(want) || a.vendor.toLowerCase().startsWith(want) ? 2 : name.includes(want) ? 3 : 4;
+    return a.title.toLowerCase().startsWith(want) || a.vendor.toLowerCase().startsWith(want) ? 3 : name.includes(want) ? 4 : 5;
   };
   const discover = (x: CatalogApp, y: CatalogApp): number =>
     want ? 0 : firstRank(x) - firstRank(y) || x.title.localeCompare(y.title, "en", { sensitivity: "base" });
-  return apps.map((a, i) => ({ a, i, r: rank(a) })).sort((x, y) => x.r - y.r || (x.r === 2 ? discover(x.a, y.a) : 0) || x.i - y.i).map((x) => x.a);
+  return apps.map((a, i) => ({ a, i, r: rank(a) })).sort((x, y) => x.r - y.r || (x.r === 3 ? discover(x.a, y.a) : 0) || x.i - y.i).map((x) => x.a);
 }
 
 /**

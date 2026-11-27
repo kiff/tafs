@@ -197,6 +197,7 @@ export const th: Words = {
   apps_not_connected: "ยังไม่ได้เชื่อมต่อ",
   apps_needs_setup: "ต้องตั้งค่า",
   apps_used_by: (names: string) => `ใช้โดย: ${names}`,
+  apps_used_by_none: "ไม่มี taf ใดใช้",
   apps_whose_yours: "ของคุณ",
   apps_whose_company: "ของบริษัท",
   approval_confirm_first: "การเข้าสู่ระบบของคุณสำเร็จ แต่ยังไม่ได้ยืนยัน โปรดอนุมัติอีกครั้งเพื่อยืนยัน",

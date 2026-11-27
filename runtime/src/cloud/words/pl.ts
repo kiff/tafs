@@ -203,6 +203,7 @@ export const pl: Words = {
   apps_not_connected: "Niepołączona",
   apps_needs_setup: "Najpierw wymaga konfiguracji",
   apps_used_by: (names: string) => `Używa jej ${names}`,
+  apps_used_by_none: "Nie używa jej żaden taf",
   apps_whose_yours: "Twoja",
   apps_whose_company: "Firma",
   approval_confirm_first: "Logowanie się udało, ale nie jest jeszcze potwierdzone. Zatwierdź ponownie, aby je potwierdzić.",

@@ -197,6 +197,7 @@ export const hu: Words = {
   apps_not_connected: "Nincs csatlakoztatva",
   apps_needs_setup: "Beállítást igényel",
   apps_used_by: (names: string) => `Használja: ${names}`,
+  apps_used_by_none: "Egyik taf sem használja",
   apps_whose_yours: "Tiéd",
   apps_whose_company: "A cégé",
   approval_confirm_first: "A bejelentkezésed sikerült, de még nincs megerősítve. Hagyd jóvá újra a megerősítéshez.",

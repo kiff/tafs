@@ -46,6 +46,22 @@
         "misplaced": []
       },
       {
+        "entry": "connector:p:pipedrive",
+        "vendor": "pipedrive",
+        "title": "Pipedrive",
+        "name": "Pipedrive",
+        "how": "oauth",
+        "state": "signed_in",
+        "grant": "g-pipedrive",
+        "connected": false,
+        "method": "sign_in",
+        "whose": "Company",
+        "used_by": [],
+        "line": "Sign in · Signed in · Not used by any taf",
+        "needed_by": [],
+        "misplaced": []
+      },
+      {
         "entry": "qonto@2",
         "vendor": "Qonto",
         "title": "Qonto invoicing: reads and drafts",

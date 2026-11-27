@@ -2114,6 +2114,8 @@ describe("Connect apps' contracts", () => {
       { entry: "stripe@3", vendor: "Stripe", title: "Stripe", how: "oauth", state: "connected", grant: "g-stripe", icon: "https://logos.example.com/stripe.png" },
       { entry: "connector:p:gmail", vendor: "gmail", title: "Gmail", how: "oauth", state: "needs_reconnect", grant: "g-gmail" },
       { entry: "qonto@2", vendor: "Qonto", title: "Qonto invoicing: reads and drafts", how: "key", state: "available" },
+      // A sign-in Coach made in a chat, its actions still to choose: the account's own, and no taf uses it.
+      { entry: "connector:p:pipedrive", vendor: "pipedrive", title: "Pipedrive", how: "oauth", state: "signed_in", grant: "g-pipedrive" },
       { entry: "connector:p:typeform", vendor: "typeform", title: "Typeform", how: "oauth", state: "available" },
       { entry: "connector:p:crm", vendor: "crm", title: "Example CRM", how: "oauth", state: "needs_setup" },
     ], by_key: true, provider: "p", next_cursor: "cur_2" };
@@ -2133,6 +2135,8 @@ describe("Connect apps' contracts", () => {
           if (url === "https://planque.test/v1/accounts/t_acme/connections") return ok({ connections: [
             { agent: "rae", vendor: "Stripe", kind: "vendor_sign_in", server: "https://mcp.stripe.com", status: "connected" },
             { agent: "rae", vendor: "gmail", kind: "provider", entry: "connector:p:gmail", status: "needs_reconnect" },
+            // A chat's connection isn't a taf's: it doesn't count as a use.
+            { agent: "coach-chat-1", vendor: "pipedrive", kind: "provider", entry: "connector:p:pipedrive", status: "listed" },
           ] });
           if (url === "https://planque.test/v1/accounts/t_acme/grants") return ok({ grants: [
             { id: "g-old-stripe", status: "connected", tools: ["stripe.refund"], request: { agent: "old-refunds" } },
@@ -2148,11 +2152,14 @@ describe("Connect apps' contracts", () => {
     };
 
     const page = await get("");
-    expect(page.apps.map((a) => a.name)).toEqual(["Gmail", "Stripe", "Qonto", "Example CRM", "Typeform"]);
+    expect(page.apps.map((a) => a.name)).toEqual(["Gmail", "Stripe", "Pipedrive", "Qonto", "Example CRM", "Typeform"]);
+    // Every sign-in the account holds is its own, one no taf uses included, and says so.
+    expect(page.apps.find((a) => a.name === "Pipedrive")).toMatchObject({ state: "signed_in", connected: false, whose: "Company", line: "Sign in · Signed in · Not used by any taf" });
+    expect(page.apps.find((a) => a.name === "Stripe")!.line).toBe("Sign in · Connected · Used by Rae");
     expect(page).toMatchObject({ by_key: true, provider: "p", next_cursor: "cur_2" });
     expect(page.apps.find((a) => a.name === "Stripe")!.logo).toMatch(/^\/v1\/logos\/[0-9a-f]{32}$/);
     expect(page.apps.find((a) => a.name === "Qonto")!.subtitle).toBe("Invoicing: reads and drafts");
-    contract("connect-apps", "GET /v1/connect/apps for someone who manages the account's Cards: the first page, with two of the account's own apps (one to sign in again), three to connect (one not set up for anyone yet), and the provider's next page to ask for.", page);
+    contract("connect-apps", "GET /v1/connect/apps for someone who manages the account's Cards: the first page, with three of the account's own apps (one to sign in again, and one signed in that no taf uses), three to connect (one not set up for anyone yet), and the provider's next page to ask for.", page);
 
     const found = await get("q=mail");
     expect(found.apps.map((a) => a.name)).toEqual(["Gmail"]);

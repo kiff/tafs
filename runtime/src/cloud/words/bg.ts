@@ -197,6 +197,7 @@ export const bg: Words = {
   apps_not_connected: "Не е свързано",
   apps_needs_setup: "Иска настройка",
   apps_used_by: (names: string) => `Използва се от: ${names}`,
+  apps_used_by_none: "Не се използва от нито един taf",
   apps_whose_yours: "Ваше",
   apps_whose_company: "На фирмата",
   approval_confirm_first: "Входът ви мина, но още не е потвърден. Одобрете отново, за да го потвърдите.",

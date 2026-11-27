@@ -197,6 +197,7 @@ export const sl: Words = {
   apps_not_connected: "Ni povezano",
   apps_needs_setup: "Potrebna je nastavitev",
   apps_used_by: (names: string) => `Uporablja: ${names}`,
+  apps_used_by_none: "Ne uporablja je noben taf",
   apps_whose_yours: "Tvoje",
   apps_whose_company: "Podjetja",
   approval_confirm_first: "Vaša prijava je uspela, a še ni potrjena. Odobrite znova, da jo potrdite.",

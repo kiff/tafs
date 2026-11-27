@@ -197,6 +197,7 @@ export const lv: Words = {
   apps_not_connected: "Nav pievienots",
   apps_needs_setup: "Jāiestata",
   apps_used_by: (names: string) => `Izmanto: ${names}`,
+  apps_used_by_none: "Neizmanto neviens taf",
   apps_whose_yours: "Tavs",
   apps_whose_company: "Uzņēmuma",
   approval_confirm_first: "Tava pierakstīšanās izdevās, bet vēl nav apstiprināta. Apstiprini vēlreiz, lai to apstiprinātu.",

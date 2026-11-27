@@ -197,6 +197,7 @@ export const et: Words = {
   apps_not_connected: "Ühendamata",
   apps_needs_setup: "Vajab seadistamist",
   apps_used_by: (names: string) => `Kasutajad: ${names}`,
+  apps_used_by_none: "Ükski taf seda ei kasuta",
   apps_whose_yours: "Sinu oma",
   apps_whose_company: "Ettevõtte",
   approval_confirm_first: "Sinu sisselogimine läks läbi, aga seda pole veel kinnitatud. Kinnita uuesti, et see kinnitada.",

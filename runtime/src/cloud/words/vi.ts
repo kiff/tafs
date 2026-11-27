@@ -197,6 +197,7 @@ export const vi: Words = {
   apps_not_connected: "Chưa kết nối",
   apps_needs_setup: "Cần thiết lập",
   apps_used_by: (names: string) => `Được dùng bởi: ${names}`,
+  apps_used_by_none: "Không taf nào dùng",
   apps_whose_yours: "Của bạn",
   apps_whose_company: "Của công ty",
   approval_confirm_first: "Đăng nhập của bạn đã thành công, nhưng chưa được xác nhận. Hãy phê duyệt lại để xác nhận.",

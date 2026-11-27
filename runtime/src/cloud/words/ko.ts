@@ -201,6 +201,7 @@ export const ko: Words = {
   apps_not_connected: "연결 안 됨",
   apps_needs_setup: "설정 필요",
   apps_used_by: (names: string) => `사용 중: ${names}`,
+  apps_used_by_none: "사용하는 taf 없음",
   apps_whose_yours: "내 것",
   apps_whose_company: "회사",
   approval_confirm_first: "로그인은 되었지만 아직 확인되지 않았습니다. 확인하려면 다시 승인하세요.",

@@ -1,5 +1,5 @@
 {
-  "about": "GET /v1/connect/apps for someone who manages the account's Cards: the first page, with two of the account's own apps (one to sign in again), three to connect (one not set up for anyone yet), and the provider's next page to ask for. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "about": "GET /v1/connect/apps for someone who manages the account's Cards: the first page, with three of the account's own apps (one to sign in again, and one signed in that no taf uses), three to connect (one not set up for anyone yet), and the provider's next page to ask for. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
   "answer": {
     "apps": [
       {
@@ -41,6 +41,21 @@
           }
         ],
         "line": "Sign in · Connected · Used by Rae",
+        "needed_by": []
+      },
+      {
+        "entry": "connector:p:pipedrive",
+        "vendor": "pipedrive",
+        "title": "Pipedrive",
+        "name": "Pipedrive",
+        "how": "oauth",
+        "state": "signed_in",
+        "grant": "g-pipedrive",
+        "connected": false,
+        "method": "sign_in",
+        "whose": "Company",
+        "used_by": [],
+        "line": "Sign in · Signed in · Not used by any taf",
         "needed_by": []
       },
       {
