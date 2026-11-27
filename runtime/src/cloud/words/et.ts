@@ -353,7 +353,7 @@ export const et: Words = {
   gallery_try: "Proovi Coachiga",
   gallery_sample: "Mida see pärast katsekäivitust teatas",
   gallery_guide: "Kuidas see läheb",
-  gallery_guide_do: "Sina teed",
+  gallery_guide_do: "Sa teed",
   gallery_guide_see: "Sa näed",
   gallery_guide_if: "Kui",
   recipes_proved_help_desk: "Tõestatud katsekasutajatoel.",

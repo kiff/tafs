@@ -353,7 +353,7 @@ export const hu: Words = {
   gallery_try: "Próbáld ki a Coachcsal",
   gallery_sample: "Mit jelentett a próbafutása után",
   gallery_guide: "Hogyan megy",
-  gallery_guide_do: "Te teszed",
+  gallery_guide_do: "Teendő",
   gallery_guide_see: "Ezt látod",
   gallery_guide_if: "Ha",
   recipes_proved_help_desk: "Teszt ügyfélszolgálaton kipróbálva.",
