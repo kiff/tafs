@@ -1993,8 +1993,9 @@ struct SetupApproval: View {
                 .disabled(busy || (answered && !state.isFailure))
                 CardNote(id: component.id)
                 // Face ID named only where Approve still asks for it: on a card tafs cloud marks a tap, while
-                // this phone holds an approval window, KIFF's words for the next tap instead (as Android).
-                if let line = Self.approveLine(component, held: model.windowWords, approving: model.connecting != nil) {
+                // this phone holds this taf's approval window, KIFF's words for the next tap instead (as Android).
+                // Another taf's window doesn't count: the tap would close it and ask for Face ID.
+                if let line = Self.approveLine(component, held: model.windowWords(forTaf: model.setupTaf?.id), approving: model.connecting != nil) {
                     Text(line).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
                 }
             }

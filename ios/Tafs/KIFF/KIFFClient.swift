@@ -225,17 +225,6 @@ final class KIFFClient {
         return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
     }
 
-    /// A Card's authority: a draft made (`POST /v1/me/agent-drafts`), a draft confirmed
-    /// (`POST /v1/me/agent-drafts/{id}/confirm`), or a Card issued (`POST /v1/me/mandates`). Always the approval
-    /// key's, behind Face ID, never a tap in an approval window: a Card's authority is granted only with the
-    /// owner's own Face ID, whatever the window covers, so what Approve says is what it takes.
-    static func grantsCard(_ method: String, _ path: String) -> Bool {
-        guard method == "POST" else { return false }
-        if path == "/v1/me/agent-drafts" || path == "/v1/me/mandates" { return true }
-        let parts = path.split(separator: "/", omittingEmptySubsequences: false)
-        return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
-    }
-
     /// Adding someone to a group, or changing their role in it: `PUT /v1/groups/{group}/members/{subject}`,
     /// exactly six parts with both ids set. Always the approval key's, never a tap in an approval window: KIFF
     /// takes a window-named signature on this route as the device key's, so in a window it would count as a
@@ -1852,7 +1841,7 @@ final class KIFFClient {
         // sign goes with the device key and the window's id: a tap (kiff/tafs#494). Opening a window is
         // never signed in one.
         let held = inWindow && signsInWindow && authority && presigned == nil && path != Self.windowPath
-            && !Self.addsGroupMember(method, path) && !Self.grantsCard(method, path) ? window?.id : nil
+            && !Self.addsGroupMember(method, path) ? window?.id : nil
         let signer = signedBy ?? setupSigner.map { current in
             authority && held == nil ? (approvalSigner ?? current) : current
         }

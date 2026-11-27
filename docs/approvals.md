@@ -210,14 +210,15 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   planque.
 - **Inside it.** What the approval key would sign goes with the device key and the window's
   id, `t=…,v2=…,w=<id>`, over `kiff.request.v2` to KIFF or `planque.request.v2` to planque,
-  the window's id last. **A Card's authority never goes in a window:** a draft made, a draft
-  confirmed and a Card issued (`POST /v1/me/agent-drafts`, `…/{id}/confirm`, `/v1/me/mandates`)
-  are always the approval key's, behind the fingerprint or Face ID, even in the step that took
-  the window, so an Approve that names the fingerprint never confirms a Card on a tap (iPhone and
-  iPad: `KIFFClient.grantsCard`; Android: next build). planque's calls are signed this way only for the step that took the
+  the window's id last. planque's calls are signed this way only for the step that took the
   window. The report to tafs cloud is signed as before (v1). On iPhone and iPad, KIFF's calls
   too are signed in the window only for that step; anywhere else the approval key signs them,
   behind Face ID, as before.
+- **One taf.** On iPhone and iPad the window is the taf's whose step opened it
+  (`AppModel.windowTaf`). That taf's next steps are a tap, a Card's confirm KIFF marks routine
+  included. Another taf's step closes the window and takes Face ID, which opens that taf's own,
+  and until then its card names Face ID (`windowWords(forTaf:)`). Widening always takes Face ID,
+  window or not: KIFF's `critical_key_required`, below.
 - **Refused.** KIFF's `critical_key_required` (the act takes the fingerprint every time, such
   as **No** to "Did this happen?") is signed again by the approval key, once (on iPhone and
   iPad behind a new Face ID: the approval key signs only under one). KIFF's
@@ -233,10 +234,10 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   by it; on iPhone and iPad the line under Approve is KIFF's words on a `"tap"` card while a
   window is held (`SetupComponent.windowWords`, `SetupApproval.approveLine`), and names Face ID
   anywhere else.
-- **Closing.** After 30 seconds in the background, and at once when the screen turns off, the
-  app closes it (`POST /v1/me/window/{id}/close`, device-signed); before a drive starts too. iOS
-  may suspend the app before its 30 seconds: then it closes on coming back, if that was 30
-  seconds or more. The app forgets it at sign-out and at a new sign-in. KIFF ends it itself at sign-out,
+- **Closing.** On iPhone and iPad, at once when the app goes to the background or the screen
+  turns off; on Android, after 30 seconds in the background, and at once when the screen turns
+  off. The app closes it (`POST /v1/me/window/{id}/close`, device-signed); before a drive starts
+  too. The app forgets it at sign-out and at a new sign-in. KIFF ends it itself at sign-out,
   at its cap (15 minutes from the fingerprint), on a halt or a new approval key. Whether a window
   is open is never decided on the phone: an ended one comes back as `window_required`.
 

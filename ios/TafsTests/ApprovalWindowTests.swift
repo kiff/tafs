@@ -104,36 +104,15 @@ final class ApprovalWindowTests: XCTestCase {
         let kiff = client(signed)
         kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
         kiff.signsInWindow = true
-        StubProtocol.responses["POST /v1/me/did-this-happen/prop_1"] = (200, "{}")
+        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (200, #"{"id":"d1","agent_id":"refunds","status":"confirmed","version":"v3"}"#)
         StubProtocol.responses["PUT /v1/me/time-zone"] = (200, #"{"time_zone":"UTC"}"#)
-        try await kiff.answerHappened("prop_1", happened: true)
+        _ = try await kiff.confirmDraft(id: "d1", version: "v3")
         _ = try await kiff.setTimeZone("UTC")
         XCTAssertEqual(signed.value, ["device:kiff.request.v2", "device:kiff.request.v1"])
-        let header = try XCTUnwrap(sent("POST", "/v1/me/did-this-happen/prop_1").first?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        let header = try XCTUnwrap(sent("POST", "/v1/me/agent-drafts/d1/confirm").first?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
         XCTAssertNotNil(header.range(of: "^t=[^,]+,v2=dev,w=\(win)$", options: .regularExpression), header)
         // What grants nothing is signed as before, never with the window.
         XCTAssertTrue(sent("PUT", "/v1/me/time-zone").first?.value(forHTTPHeaderField: "KIFF-Device-Signature")?.contains(",v1=dev") ?? false)
-    }
-
-    /// A Card's authority is the approval key's behind Face ID even inside a held window, in the very step that
-    /// took it: a draft confirmed, a draft made, a Card issued. Never a tap, so Approve never grants a Card
-    /// without the Face ID it names.
-    func testACardIsNeverATapInTheWindow() async throws {
-        let signed = WindowBox<[String]>([])
-        let kiff = client(signed)
-        kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
-        kiff.signsInWindow = true
-        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (200, #"{"id":"d1","agent_id":"refunds","status":"confirmed","version":"v3"}"#)
-        _ = try await kiff.confirmDraft(id: "d1", version: "v3")
-        XCTAssertEqual(signed.value, ["approval:kiff.request.v1"])
-        let header = try XCTUnwrap(sent("POST", "/v1/me/agent-drafts/d1/confirm").first?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
-        XCTAssertFalse(header.contains(",w="), header)
-        for (method, path) in [("POST", "/v1/me/agent-drafts"), ("POST", "/v1/me/agent-drafts/d1/confirm"), ("POST", "/v1/me/mandates")] {
-            XCTAssertTrue(KIFFClient.grantsCard(method, path), path)
-        }
-        for (method, path) in [("POST", "/v1/me/did-this-happen/prop_1"), ("GET", "/v1/me/agent-drafts/d1"), ("POST", "/v1/me/agent-drafts/d1/confirm/x")] {
-            XCTAssertFalse(KIFFClient.grantsCard(method, path), path)
-        }
     }
 
     /// Adding someone to a group is the approval key's even inside a held window (group changes B): KIFF
@@ -168,9 +147,9 @@ final class ApprovalWindowTests: XCTestCase {
         kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
         kiff.signsInWindow = true
         kiff.windowReconfirm = { signed.value.append("face-id") }
-        StubProtocol.responses["POST /v1/me/did-this-happen/prop_1"] = (403, #"{"error":"critical_key_required","detail":"This takes your fingerprint"}"#)
-        StubProtocol.thenRespond["POST /v1/me/did-this-happen/prop_1"] = ["POST /v1/me/did-this-happen/prop_1": (200, "{}")]
-        try await kiff.answerHappened("prop_1", happened: false)
+        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (403, #"{"error":"critical_key_required","detail":"This takes your fingerprint"}"#)
+        StubProtocol.thenRespond["POST /v1/me/agent-drafts/d1/confirm"] = ["POST /v1/me/agent-drafts/d1/confirm": (200, #"{"id":"d1","agent_id":"refunds","status":"confirmed","version":"v3"}"#)]
+        _ = try await kiff.confirmDraft(id: "d1", version: "v3")
         XCTAssertEqual(signed.value, ["device:kiff.request.v2", "face-id", "approval:kiff.request.v1"])
         XCTAssertEqual(kiff.window?.id, win)
     }
@@ -181,9 +160,9 @@ final class ApprovalWindowTests: XCTestCase {
         kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
         kiff.signsInWindow = true
         kiff.windowReconfirm = { signed.value.append("face-id") }
-        StubProtocol.responses["POST /v1/me/did-this-happen/prop_1"] = (403, #"{"error":"window_required"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (403, #"{"error":"window_required"}"#)
         do {
-            try await kiff.answerHappened("prop_1", happened: true)
+            _ = try await kiff.confirmDraft(id: "d1", version: "v3")
             XCTFail("a second refusal is the service's")
         } catch KIFFClient.KIFFError.server(let status, _, _) {
             XCTAssertEqual(status, 403)
@@ -197,9 +176,9 @@ final class ApprovalWindowTests: XCTestCase {
         kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
         kiff.signsInWindow = true
         kiff.windowReconfirm = {}
-        StubProtocol.responses["POST /v1/me/did-this-happen/prop_1"] = (403, #"{"error":"critical_key_required","detail":"This takes your fingerprint"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (403, #"{"error":"critical_key_required","detail":"This takes your fingerprint"}"#)
         do {
-            try await kiff.answerHappened("prop_1", happened: false)
+            _ = try await kiff.confirmDraft(id: "d1", version: "v3")
             XCTFail("refused")
         } catch let error as KIFFClient.KIFFError {
             XCTAssertEqual(error, .windowRefused(code: "critical_key_required"))
@@ -582,7 +561,7 @@ final class ApprovalWindowTests: XCTestCase {
 
     private func closes() -> [URLRequest] { sent("POST", "/v1/me/window/\(win)/close") }
 
-    func testTheWindowClosesAfterThirtySecondsAwayAndAtOnceWhenTheScreenLocks() async throws {
+    func testTheWindowClosesAtOnceWhenTheAppLeavesOrTheScreenLocks() async throws {
         let signer = TwoKeySigner()
         let now = WindowBox(Date(timeIntervalSince1970: 1_800_000_000))
         let model = await model(signer, clock: { now.value })
@@ -594,42 +573,66 @@ final class ApprovalWindowTests: XCTestCase {
         // The window asked for runs five minutes from the Face ID, by this phone's clock.
         XCTAssertEqual(json(sent("POST", "/v1/me/window").first)["expires"] as? String, "2027-01-15T08:05:00Z")
 
-        // Back within 30 seconds: it stays, and KIFF's words are read again.
-        model.windowAwayNanoseconds = 60_000_000_000
+        // Leaving the app closes it at once, device-signed, and its words go.
         model.wentToBackground()
-        now.value += 20
-        let reads = sent("GET", "/v1/me/window").count
-        model.cameToForeground()
-        try await waitFor { self.sent("GET", "/v1/me/window").count > reads }
-        try await Task.sleep(nanoseconds: 50_000_000) // its answer lands
-        XCTAssertTrue(closes().isEmpty)
-        XCTAssertNotNil(model.kiff.window)
-
-        // Away for longer: closed, device-signed, and its words gone.
-        model.windowAwayNanoseconds = 10_000_000
-        model.wentToBackground()
-        try await waitFor { !self.closes().isEmpty }
+        try await waitFor { !self.closes().isEmpty && model.windowWords == nil }
         let closed = try XCTUnwrap(closes().first)
         XCTAssertTrue(closed.value(forHTTPHeaderField: "KIFF-Device-Signature")?.contains(",v1=current") ?? false)
-        try await waitFor { model.windowWords == nil }
-        XCTAssertNil(model.windowWords)
         XCTAssertNil(model.kiff.window)
+        XCTAssertNil(model.windowTaf)
 
-        // iOS suspended the app before its 30 seconds: back after them, it closes then.
-        try await approveCard(model)
-        model.windowAwayNanoseconds = 60_000_000_000
-        model.wentToBackground()
-        now.value += 31
+        // Back on screen, nothing is held: the next approval takes Face ID again.
         model.cameToForeground()
-        try await waitFor { self.closes().count == 2 }
-        XCTAssertEqual(closes().count, 2)
+        let prompted = signer.currentPrompted.count
+        try await approveCard(model)
+        XCTAssertEqual(signer.currentPrompted.count, prompted + 1)
+        XCTAssertEqual(closes().count, 1)
 
         // A new window, then the screen locks: closed at once.
         try await approveCard(model)
         model.screenLocked()
-        try await waitFor { self.closes().count == 3 && model.windowWords == nil }
-        XCTAssertEqual(closes().count, 3)
+        try await waitFor { self.closes().count == 2 && model.windowWords == nil }
+        XCTAssertEqual(closes().count, 2)
         XCTAssertNil(model.windowWords)
+    }
+
+    /// The window is the taf's whose step opened it: that taf's next step is a tap,
+    /// and its card says so; another taf's card names Face ID, and its step closes the window and takes Face ID,
+    /// which opens that taf's own.
+    func testAnotherTafsStepClosesTheWindowAndTakesFaceID() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        StubProtocol.responses[askRoute] = (200, ask(key: "window"))
+        StubProtocol.responses["POST /v1/me/window"] = (201, windowOpened)
+        StubProtocol.responses["GET /v1/me/window"] = (200, windowOpened)
+        StubProtocol.responses["POST /v1/me/window/\(win)/close"] = (200, #"{"window":{"id":"\#(win)","open":false}}"#)
+        try await approveCard(model)
+        XCTAssertEqual(model.windowTaf, "taf-setup")
+        XCTAssertEqual(model.windowWords(forTaf: "taf-setup"), "No fingerprint for the next 5 minutes")
+        XCTAssertNil(model.windowWords(forTaf: "taf-other"))
+        XCTAssertNil(model.windowWords(forTaf: nil))
+        let card = try SetupTests.component(#"{"type":"approval","id":"connect-stripe","grant":"g_01","signs":{"card":false,"takes":"tap"}}"#)
+        XCTAssertEqual(SetupApproval.approveLine(card, held: model.windowWords(forTaf: "taf-other"), approving: false),
+                       Words.Coach.approvingAsks(biometry: "\(Biometry.name)"), "another taf's card names Face ID")
+
+        // The same taf's next step: a tap in its window.
+        let prompted = signer.currentPrompted.count
+        try await approveCard(model)
+        XCTAssertEqual(signer.currentPrompted.count, prompted, "a tap")
+        XCTAssertTrue(closes().isEmpty)
+
+        // Another taf's step: the window is closed, Face ID is asked, and the window it opens is that taf's.
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":{"id":"taf-other","name":"Other","job":"setup","kiff_agent":"other","status":"active","next_run":null,"last_run":null}}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-other/conversation"] = (200, #"{"messages":[],"components":[]}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-other/components/connect-stripe/approval"] = (200, ask(key: "window"))
+        StubProtocol.responses["POST /v1/tafs/taf-other/components/connect-stripe/approval/ask_1"] = (200, #"{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}"#)
+        await model.loadSetup()
+        XCTAssertEqual(model.setupTaf?.id, "taf-other")
+        try await approveCard(model)
+        XCTAssertEqual(closes().count, 1)
+        XCTAssertEqual(signer.currentPrompted.count, prompted + 1, "Face ID for the other taf")
+        XCTAssertEqual(sent("POST", "/v1/me/window").count, 2)
+        XCTAssertEqual(model.windowTaf, "taf-other")
     }
 
     func testSigningOutDropsTheWindow() async throws {
