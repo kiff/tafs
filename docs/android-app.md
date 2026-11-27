@@ -124,7 +124,10 @@ person's language.
 - **A job's sheet** (`RecipeSheet`) creates nothing. It shows the headline, the line, what it
   costs today, where it was proved (`proved`, "Proved on a test help desk."), its apps with
   their logos, its Card as does / asks / never, and what it reported after that proof run
-  (`sample`, under `words.sample`). A job with no proof run has neither. Its one action hands
+  (`sample`, under `words.sample`), then how it goes, step by step (`guide`, under the gallery's `words.guide`: each
+  step's title and its Do, You see and If lines, each led by `words.guide_do`, `guide_see` or
+  `guide_if`; a line that didn't come isn't drawn, and without the heading the section isn't
+  either, `GalleryWords.guideOf`). A job with no proof run has none of these. Its one action hands
   it to Coach: "Try it with Coach" (`words.try`) when opened while browsing, else `labels.hand`,
   and only for someone who may use Coach.
 - **The words** are tafs cloud's; the app's own (`HomeWords`) stand in only while it sends none.

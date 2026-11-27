@@ -212,6 +212,8 @@ internal fun RecipeSheet(
   tryWords: String? = null,
   /** The label over the sample report, in tafs cloud's words or the app's. */
   sampleLabel: String = bot.tafs.app.model.Words.Home.sampleLabel,
+  /** The gallery's words, for the guide's heading and labels; none (Home's list before the gallery is read) shows no guide. */
+  galleryWords: bot.tafs.app.kiff.GalleryWords? = null,
 ) {
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(
@@ -231,8 +233,38 @@ internal fun RecipeSheet(
       Zone(labels.never, recipe.card.never)
       // What it reported after that proof run, as sent.
       if (recipe.sample.isNotBlank()) Zone(sampleLabel, listOf(recipe.sample))
+      // How it goes, step by step, as tafs cloud sends it and in its words; nothing without both.
+      galleryWords?.let { GuideZone(it, it.guideOf(recipe)) }
       val action = tryWords ?: labels.hand
       if (canHand && action.isNotBlank()) PrimaryButton(action, onHand, Modifier.fillMaxWidth())
+    }
+  }
+}
+
+/** The job's guide under its heading: each step's title, then its lines, each led by its label. None with no steps. */
+@Composable
+private fun GuideZone(words: bot.tafs.app.kiff.GalleryWords, steps: List<bot.tafs.app.kiff.GuideStep>) {
+  if (steps.isEmpty()) return
+  Panel {
+    Eyebrow(words.guide)
+    steps.forEachIndexed { i, step ->
+      Column(Modifier.padding(top = if (i == 0) 0.dp else 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(step.title, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+        step.lines(words).forEach { (label, line) ->
+          Text(
+            androidx.compose.ui.text.buildAnnotatedString {
+              if (label.isNotBlank()) {
+                pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.SemiBold, color = Theme.soft))
+                append(label)
+                pop()
+                append("  ")
+              }
+              append(line)
+            },
+            style = scaled(14, color = Theme.ink),
+          )
+        }
+      }
     }
   }
 }
