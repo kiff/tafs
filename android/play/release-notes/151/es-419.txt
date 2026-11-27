@@ -1,0 +1,2 @@
+• Una llamada que te espera muestra cada paso y cada valor completos en Detalles, nunca recortados.
+• Primer uso: cuatro tarjetas, ahora con Coach y los créditos, y un primer taf para probar en un Inicio vacío.
