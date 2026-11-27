@@ -168,6 +168,24 @@ class ApprovalWindowTest {
     assertNull(c.window)
   }
 
+  /** KIFF refuses a window opened for another taf (`window_scope`): the approval key signs it once more, and the window stays. */
+  @Test fun anotherTafsWindowIsRefusedAndTheApprovalKeySignsAgain() = runTest {
+    val signed = mutableListOf<String>()
+    val c = client().also {
+      it.setupSigner = { m -> signed += "device:" + String(m).lines().first(); "dev" }
+      it.approvalSigner = { built -> signed += "approval:" + String(built()).lines().first(); "app" }
+      it.window = ApprovalWindow(window, open = true)
+      it.signsInWindow = true
+    }
+    transport.answer("POST /v1/me/agent-drafts/d1/confirm", 403, """{"error":"window_scope"}""")
+    transport.answer("POST /v1/me/agent-drafts/d1/confirm", 200)
+    c.send("POST", "/v1/me/agent-drafts/d1/confirm")
+    assertEquals(listOf("device:kiff.request.v2", "approval:kiff.request.v1"), signed)
+    val second = transport.requestsTo("POST /v1/me/agent-drafts/d1/confirm").last().headers["KIFF-Device-Signature"]!!
+    assertTrue(second, Regex("^t=[^,]+,v1=app$").matches(second))
+    assertEquals(window, c.window?.id)
+  }
+
   @Test fun withNoApprovalKeyARefusalInTheWindowKeepsKiffsCodeAndSaysItInTheAppsWords() = runTest {
     val c = client().also {
       it.setupSigner = { "dev" }
