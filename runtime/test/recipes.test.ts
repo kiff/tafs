@@ -159,6 +159,24 @@ Bezahle meine Rechnungen unter 100 EUR.
     }
   });
 
+  it("offers a first taf to try: the first proved job, written in the person's language, only to who manages", () => {
+    const en = recipesFor(undefined, "en", true, null);
+    const expected = en.recipes.find((r) => r.proved)!;
+    expect(en.home.first_taf).toEqual({ title: expected.title, line: expected.headline, say: expected.say });
+    expect(en.home.first_taf!.line).not.toBe("");
+    // Written in German: German words, the same job.
+    const de = recipesFor(undefined, "de", true, null);
+    const deFirst = de.recipes.find((r) => r.id === expected.id)!;
+    expect(de.home.first_taf).toEqual({ title: deFirst.title, line: deFirst.headline, say: deFirst.say });
+    expect(de.home.first_taf!.title).not.toBe(expected.title);
+    // A language the recipes aren't written in reads them in English, so it gets no first taf at all.
+    for (const lang of ["ko", "ja", "tr"] as const) expect(recipesFor(undefined, lang, true, null).home.first_taf, lang).toBeUndefined();
+    // Someone who doesn't manage the tafs can't set one up: no card.
+    expect(recipesFor(undefined, "en", false, null).home.first_taf).toBeUndefined();
+    // No proved job connects: none.
+    expect(recipesFor([], "en", true, null).home.first_taf).toBeUndefined();
+  });
+
   it("reads the recipes in English in Korean, until they're written in it", () => {
     const ko = recipesFor(undefined, "ko", true, null);
     const enView = recipesFor(undefined, "en", true, null);
@@ -196,7 +214,9 @@ Bezahle meine Rechnungen unter 100 EUR.
       connections: [["gorgias", "intercom", "gmail"], ["stripe"]],
     });
     expect(fr.labels).toEqual({ allows: "Fait seul", holds: "Vous demande d'abord", never: "Ne fait jamais", hand: "Confier à Coach" });
-    expect(fr.home).toEqual({ shown: true, words: "Choisissez une tâche pour votre premier taf.", own_words: { title: "Dites-la avec vos mots", line: "Coach construit le taf avec vous." } });
+    const { first_taf: frFirst, ...frHome } = fr.home;
+    expect(frHome).toEqual({ shown: true, words: "Choisissez une tâche pour votre premier taf.", own_words: { title: "Dites-la avec vos mots", line: "Coach construit le taf avec vous." } });
+    expect(frFirst?.title).toBe("Relancer les factures impayées");
     expect(fr.suggestions.words).toBe("Les suggestions s'affichent dans une nouvelle conversation avec Coach tant que le compte n'a pas son premier taf.");
     // Every language has its own words for the categories and the sheet.
     for (const lang of LANGS) {
@@ -227,7 +247,9 @@ Bezahle meine Rechnungen unter 100 EUR.
   });
 
   it("leads Home with the recipes only for a person who manages tafs, and only with one to lead with", () => {
-    expect(recipesFor(undefined).home).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } });
+    const { first_taf: enFirst, ...enHome } = recipesFor(undefined).home;
+    expect(enHome).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } });
+    expect(enFirst?.title).toBe("Chase overdue invoices");
     expect(recipesFor(undefined, "en", false).home).toEqual({ shown: false, words: "No tafs yet. Tafs shared with you show here." });
     expect(recipesFor([], "en", true).home).toEqual({ shown: false, words: "No tafs yet. Tell Coach the job a taf should do.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } });
     // Home is the gallery now: "Say it in your own words" leads it for a person who manages tafs, never for someone a taf is only shared with.
