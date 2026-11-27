@@ -591,7 +591,7 @@ object KiffMapping {
     if (p.isString) return p.content.ifEmpty { "\"\"" }
     p.content.toBooleanStrictOrNull()?.let { return it.toString() }
     // A decimal written out plainly, as sent: "0.000015", never "1.5e-05".
-    return p.content.toBigDecimalOrNull()?.toPlainString() ?: p.content
+    return p.content.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString() ?: p.content
   }
 
   /**
