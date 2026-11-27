@@ -13,6 +13,7 @@ import org.junit.Test
  */
 class WindowWordsTest {
   private val words = "No fingerprint for the next 4 minutes"
+  private fun windowWordsFor(c: SetupComponent, words: String?) = windowWordsFor(c, words, "s1", "s1")
   private fun card(signs: String?) = KiffClient.json.decodeFromString<SetupComponent>(
     """{"type":"approval","id":"a1","grant":"g1"${signs?.let { ",\"signs\":$it" } ?: ""}}""")
 
@@ -29,6 +30,14 @@ class WindowWordsTest {
 
   @Test fun noWindowNoWords() {
     assertNull(windowWordsFor(card("""{"card":false,"takes":"tap"}"""), null))
+  }
+
+  // A window is one setup's: another setup's card asks for the fingerprint, and one opened outside a setup covers none.
+  @Test fun theWordsShowOnlyForTheSetupWhoseStepOpenedTheWindow() {
+    val tap = card("""{"card":true,"takes":"tap"}""")
+    assertEquals(words, windowWordsFor(tap, words, "s1", "s1"))
+    assertNull(windowWordsFor(tap, words, "s1", "s2"))
+    assertNull(windowWordsFor(tap, words, null, "s1"))
   }
 
   // A card's buttons are held by its own approval, or by another card's still on its vendor's page; one the owner came back

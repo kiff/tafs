@@ -948,7 +948,7 @@ class KiffClient(
     // (kiff/tafs#494). Opening a window is never signed in one, and neither is adding someone to a group: KIFF would take a
     // window-named signature on that route as the device key's, so it's the approval key's, behind its fingerprint, always.
     // A Card's authority (a draft created or confirmed) is never granted in a window: always the approval key, behind its fingerprint.
-    val held = window?.id?.takeIf { inWindow && signsInWindow && authority && path != WINDOW && !(method == "PUT" && isGroupMember(path)) && !grantsCard(method, path) }
+    val held = window?.id?.takeIf { inWindow && signsInWindow && authority && path != WINDOW && !(method == "PUT" && isGroupMember(path)) }
     val signer = if (held != null) plain else if (authority) approvalSigner ?: plain else plain
     val account = tenant
     if (method in WRITES && signed && signer != null && account != null) {
@@ -1095,14 +1095,6 @@ class KiffClient(
       // Sharing a taf gives people its use. Taking it away is the current key.
       if (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "grants" && parts[3].isNotEmpty()) return true
       if (path == "/v1/resume" || (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "resume" && parts[3].isNotEmpty())) return true
-      return parts.size == 6 && path.startsWith("/v1/me/agent-drafts/") && parts[5] == "confirm" && parts[4].isNotEmpty()
-    }
-
-    /** A draft created or confirmed: it issues a Card, so it's never a tap in an approval window. */
-    fun grantsCard(method: String, path: String): Boolean {
-      if (method != "POST") return false
-      if (path == "/v1/me/agent-drafts") return true
-      val parts = path.split("/")
       return parts.size == 6 && path.startsWith("/v1/me/agent-drafts/") && parts[5] == "confirm" && parts[4].isNotEmpty()
     }
 

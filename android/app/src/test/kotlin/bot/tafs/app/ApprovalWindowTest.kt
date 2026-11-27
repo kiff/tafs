@@ -74,8 +74,8 @@ class ApprovalWindowTest {
     assertTrue(transport.requestsTo("POST /v1/me/time-zone").single().headers["KIFF-Device-Signature"]!!.contains(",v1=dev"))
   }
 
-  /** A Card is never granted in a window, even inside the call that said "Approve": a draft's confirm is the approval key's. */
-  @Test fun aCardsConfirmIsNeverATapEvenWhereTheWindowSigns() = runTest {
+  /** Inside the call that said "Approve", a Card's confirm for the same setup is a tap too: the window signs it. */
+  @Test fun aCardsConfirmInTheTappedCallIsSignedInTheWindow() = runTest {
     val signed = mutableListOf<String>()
     val c = client().also {
       it.setupSigner = { m -> signed += "device:" + String(m).lines().first(); "dev" }
@@ -84,10 +84,10 @@ class ApprovalWindowTest {
       it.signsInWindow = true
     }
     transport.answer("POST /v1/me/agent-drafts/d1/confirm", 200)
-    transport.answer("POST /v1/me/agent-drafts", 200)
     c.send("POST", "/v1/me/agent-drafts/d1/confirm")
-    c.send("POST", "/v1/me/agent-drafts", mapOf("name" to "x"))
-    assertEquals(listOf("approval:kiff.request.v1", "approval:kiff.request.v1"), signed)
+    assertEquals(listOf("device:kiff.request.v2"), signed)
+    val header = transport.requestsTo("POST /v1/me/agent-drafts/d1/confirm").single().headers["KIFF-Device-Signature"]!!
+    assertTrue(header, Regex("^t=[^,]+,v2=dev,w=$window$").matches(header))
   }
 
   /**
