@@ -320,7 +320,9 @@ things (`runtime/src/cloud/approval.ts`):
   An app set up on demand (kiff/planque#87) asks the owner for every change: a draft
   that would let one of its write or money tools run without asking is answered
   `failed: …` too, naming the tool, so Coach drafts it again with that tool held (0 a
-  day); the owner widens it later as a version.
+  day); the owner widens it later as a version. A managed app no recorded run has proved yet
+  (planque's `unproved: true`, kiff/planque#457) is held the same way, and its note says so
+  ("… hasn't been tested with tafs yet …") rather than "set up today".
   A draft that leaves one of the taf's tools on no Card is answered `failed: …` too, naming
   the tool, when no Card in force for the taf's agent covers it either (KIFF's
   `GET /v1/me/mandates`): KIFF refuses every call no Card covers (`no_mandate_issued`), reads

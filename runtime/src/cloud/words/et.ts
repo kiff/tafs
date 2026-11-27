@@ -170,6 +170,7 @@ export const et: Words = {
   each_item_total_day: "kokku päevas",
   each_item_name: (key: string) => ({ payment_intent: "makse", payment: "makse", charge: "tasu", invoice: "arve", customer: "kliendi", order: "tellimuse", subscription: "tellimuse", refund: "tagasimakse" } as Record<string, string>)[key] ?? "kirje",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} seadistati täna, seega iga muudatus peab sinult enne luba küsima; see Card laseks „${tool}” töötada küsimata. Midagi ei kinnitatud. Coach koostab selle uuesti.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} pole tafsiga veel testitud, seega iga muudatus peab sinult enne luba küsima; see Card laseks „${tool}” töötada küsimata. Midagi ei kinnitatud. Coach koostab selle uuesti.`,
   approval_critical_key: "See laiendab seda, mida taf tohib teha, seega vajab see sinu sõrmejälge. Midagi ei kinnitatud; kinnita see uuesti oma sõrmejäljega.",
   approval_drive_key: "Coachi lubamine rakendust juhtida vajab sinu sõrmejälge. Midagi ei alanud; kinnita see uuesti oma sõrmejäljega.",
   remove_signed: "Eemalda see oma seadmest: tafi eemaldamine küsib iga kord sinu ekraanilukku. Midagi ei eemaldatud.",

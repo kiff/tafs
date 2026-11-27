@@ -253,11 +253,14 @@ class KiffClient(
    * Opens an approval window with the approval key, behind its fingerprint: KIFF's `kiff.window.v1`, to [expires] at most five
    * minutes ahead, with a fresh [nonce]; KIFF takes the signer's own session and device. The window is held once KIFF answers it.
    */
-  suspend fun openWindow(expires: String, nonce: String): ApprovalWindow {
+  suspend fun openWindow(expires: String, nonce: String, agent: String? = null): ApprovalWindow {
     val body = buildJsonObject {
       put("message", WINDOW_MESSAGE)
       put("expires", expires)
       put("nonce", nonce)
+      // The taf whose step opens it (its KIFF agent), signed with the rest: KIFF holds the window to that taf and confirms no
+      // other's Card in it. Left out for a window no taf's step opens, which confirms no Card.
+      agent?.takeIf { it.isNotBlank() }?.let { put("agent", it) }
     }
     val opened = json.decodeFromString<WindowRead>(String(sendJson("POST", WINDOW, body))).window ?: throw KiffError.Server(0, Words.Error.kiffOpenedNoWindow)
     window = opened

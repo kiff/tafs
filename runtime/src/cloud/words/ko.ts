@@ -174,6 +174,7 @@ export const ko: Words = {
   each_item_total_day: "하루 합계",
   each_item_name: (key: string) => ({ payment_intent: "결제", payment: "결제", charge: "청구", invoice: "인보이스", customer: "고객", order: "주문", subscription: "구독", refund: "환불" } as Record<string, string>)[key] ?? "항목",
   approval_on_demand: (vendor: string, tool: string) => `${vendor}은(는) 오늘 설정되었으므로 모든 변경은 먼저 나에게 물어야 합니다. 이 Card는 "${tool}"을(를) 묻지 않고 실행하게 합니다. 승인된 것은 없습니다. Coach가 다시 초안을 작성합니다.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor}은(는) 아직 tafs에서 테스트되지 않았으므로 모든 변경은 먼저 나에게 물어야 합니다. 이 Card는 "${tool}"을(를) 묻지 않고 실행하게 합니다. 승인된 것은 없습니다. Coach가 다시 초안을 작성합니다.`,
   approval_critical_key: "taf가 할 수 있는 일을 넓히므로 내 지문이 필요합니다. 승인된 것은 없습니다. 지문으로 다시 승인하세요.",
   approval_drive_key: "Coach가 앱을 조작하게 하려면 내 지문이 필요합니다. 시작된 것은 없습니다. 지문으로 다시 승인하세요.",
   remove_signed: "기기에서 삭제하세요. taf를 삭제할 때마다 화면 잠금을 요청합니다. 삭제된 것은 없습니다.",

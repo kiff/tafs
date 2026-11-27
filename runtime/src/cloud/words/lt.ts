@@ -170,6 +170,7 @@ export const lt: Words = {
   each_item_total_day: "iš viso per dieną",
   each_item_name: (key: string) => ({ payment_intent: "mokėjimas", payment: "mokėjimas", charge: "mokestis", invoice: "sąskaita faktūra", customer: "klientas", order: "užsakymas", subscription: "prenumerata", refund: "grąžinimas" } as Record<string, string>)[key] ?? "elementas",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} buvo nustatyta šiandien, todėl kiekvienas pakeitimas pirmiausia turi paklausti jūsų; šis Card leistų „${tool}“ veikti nepaklausus. Niekas nebuvo patvirtinta. Coach parengia jį iš naujo.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} dar neišbandyta su tafs, todėl kiekvienas pakeitimas pirmiausia turi paklausti jūsų; šis Card leistų „${tool}“ veikti nepaklausus. Niekas nebuvo patvirtinta. Coach parengia jį iš naujo.`,
   approval_critical_key: "Tai išplečia, ką taf gali daryti, todėl reikia jūsų piršto antspaudo. Niekas nebuvo patvirtinta; patvirtinkite dar kartą savo piršto antspaudu.",
   approval_drive_key: "Kad Coach valdytų programėlę, reikia jūsų piršto antspaudo. Niekas neprasidėjo; patvirtinkite dar kartą savo piršto antspaudu.",
   remove_signed: "Pašalinkite jį iš savo įrenginio: taf pašalinimas kaskart prašo jūsų ekrano užrakto. Nieko nepašalinta.",

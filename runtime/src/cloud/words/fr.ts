@@ -176,6 +176,7 @@ export const fr: Words = {
   each_item_total_day: "au total par jour",
   each_item_name: (key) => ({ payment_intent: "paiement", payment: "paiement", charge: "débit", invoice: "facture", customer: "client", order: "commande", subscription: "abonnement", refund: "remboursement" } as Record<string, string>)[key] ?? "élément",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} a été configuré aujourd'hui : chaque modification doit d'abord vous être demandée, et cette Card laisserait « ${tool} » s'exécuter sans demander. Rien n'a été approuvé. Coach la rédige à nouveau.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} n'a pas encore été testé avec tafs : chaque modification doit d'abord vous être demandée, et cette Card laisserait « ${tool} » s'exécuter sans demander. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_critical_key: "Cela élargit ce que le taf peut faire, il faut donc votre empreinte digitale. Rien n'a été approuvé ; approuvez à nouveau avec votre empreinte digitale.",
   approval_drive_key: "Laisser Coach piloter l'app demande votre empreinte digitale. Rien n'a démarré ; approuvez à nouveau avec votre empreinte digitale.",
   remove_signed: "Supprimez-le depuis votre appareil : supprimer un taf demande chaque fois le verrouillage de l'écran. Rien n'a été supprimé.",
