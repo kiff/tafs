@@ -35,8 +35,9 @@ class SetupWordsTest {
     assertEquals(listOf("Reply to the sender", "Notion · Support log"), resultsSummary(knob, AppState()))
   }
 
-  private fun call(kind: RecordEntry.Kind, value: String?, unit: String?) =
-    RecordEntry(tafId = "refunds-1", kind = kind, title = "Refund", detail = "", at = Instant.parse("2026-11-03T09:00:00Z"), amountValue = value, amountUnit = unit, amountText = value?.let { "$it ${unit ?: ""}" })
+  // Refunds: KIFF marks each one as moving money (its payment flag).
+  private fun call(kind: RecordEntry.Kind, value: String?, unit: String?, moved: Boolean? = true) =
+    RecordEntry(tafId = "refunds-1", kind = kind, title = "Refund", detail = "", at = Instant.parse("2026-11-03T09:00:00Z"), amountValue = value, amountUnit = unit, amountText = value?.let { "$it ${unit ?: ""}" }, moneyMoved = moved)
 
   /** Approve's note names the device it's on (setup.approve_note_device): this phone, or this tablet. */
   @Test fun approvesNoteNamesThisDevice() {
@@ -49,6 +50,8 @@ class SetupWordsTest {
     val spent = spentOn(day)!!
     assertEquals("refused money didn't move", true, spent.contains("120") && !spent.contains("620"))
     assertNull("nothing moved", spentOn(listOf(call(RecordEntry.Kind.refused, "5.00", "EUR"))))
+    // An amount KIFF didn't mark as moving money (an invoice written) isn't spent.
+    assertNull("an invoice moved nothing", spentOn(listOf(call(RecordEntry.Kind.done, "120.00", "EUR", moved = null))))
     assertEquals("two units, both said", 2, spentOn(day + call(RecordEntry.Kind.done, "30", "USD"))!!.split(" + ").size)
     // In the app's words for it, with the amounts in their place (record.day_spent).
     assertEquals(bot.tafs.app.model.Words.Record.daySpent(spent.removeSuffix(" spent")), spent)
