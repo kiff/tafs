@@ -221,8 +221,9 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   window or not: KIFF's `critical_key_required`, below.
 - **Refused.** KIFF's `critical_key_required` (the act takes the fingerprint every time, such
   as **No** to "Did this happen?") is signed again by the approval key, once (on iPhone and
-  iPad behind a new Face ID: the approval key signs only under one). KIFF's
-  `window_required` forgets the window and does the same. planque's `window_required` on an
+  iPad behind a new Face ID: the approval key signs only under one). On iPhone and iPad, KIFF's
+  `window_scope` (a window-signed act for another taf than the window's) is signed again the same
+  way, and the window stays. KIFF's `window_required` forgets the window and does the same. planque's `window_required` on an
   approval card opens a new window, one fingerprint, and the call is made once more; on
   Android's direct connect, only the call it refused (most often the confirm, after a vendor
   sign-in that outlasted the window), never the approve again.

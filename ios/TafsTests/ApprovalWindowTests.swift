@@ -154,6 +154,21 @@ final class ApprovalWindowTests: XCTestCase {
         XCTAssertEqual(kiff.window?.id, win)
     }
 
+    /// KIFF refuses a window-signed act for another taf than the window's (`window_scope`): the approval key
+    /// signs it again behind Face ID, once, and the window stays for its own taf.
+    func testAnActOutsideTheWindowsTafIsSignedAgainByTheApprovalKeyAfterFaceID() async throws {
+        let signed = WindowBox<[String]>([])
+        let kiff = client(signed)
+        kiff.window = KIFFClient.ApprovalWindow(id: win, open: true)
+        kiff.signsInWindow = true
+        kiff.windowReconfirm = { signed.value.append("face-id") }
+        StubProtocol.responses["POST /v1/me/agent-drafts/d1/confirm"] = (403, #"{"error":"window_scope"}"#)
+        StubProtocol.thenRespond["POST /v1/me/agent-drafts/d1/confirm"] = ["POST /v1/me/agent-drafts/d1/confirm": (200, #"{"id":"d1","agent_id":"refunds","status":"confirmed","version":"v3"}"#)]
+        _ = try await kiff.confirmDraft(id: "d1", version: "v3")
+        XCTAssertEqual(signed.value, ["device:kiff.request.v2", "face-id", "approval:kiff.request.v1"])
+        XCTAssertEqual(kiff.window?.id, win)
+    }
+
     func testAWindowThatEndedIsForgottenAndTheApprovalKeySignsAgainOnce() async throws {
         let signed = WindowBox<[String]>([])
         let kiff = client(signed)
