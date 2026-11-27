@@ -173,9 +173,40 @@ class MappingTest {
          "arguments":{"b_flag":true,"a_small":1.5e-05,"c_count":50,"d_name":"Ana","e_list":[1,2],"f_null":null,"g_empty":""}}]}""",
     )[0]
     assertEquals(
-      listOf("a_small: 0.000015", "b_flag: true", "c_count: 50", "d_name: Ana", "e_list: …", "f_null: …"),
+      listOf("a_small: 0.000015", "b_flag: true", "c_count: 50", "d_name: Ana", "e_list:", "  1: 1", "  2: 2", "f_null: null"),
       KiffMapping.details(e),
     )
+  }
+
+  // Red-team, 27 Nov: a held browser call's steps showed as "steps: …", so the owner signed steps they never saw; a step the
+  // line hid could have clicked Submit while the taf's words said only "fill". Every step is written out, in order, indented.
+  @Test fun aHeldBrowserCallsStepsAreWrittenOutInFullNeverFolded() {
+    val e = exceptions(
+      """{"exceptions":[{"id":"ce_6b","subject":"a","action":"browse_act","entity_id":"e","created_at":"2026-11-27T16:35:00Z",
+         "arguments":{"kiff_reason":"Owner asked to fill customer name Test","url":"https://www.httpbin.org/forms/post",
+           "steps":[{"kind":"fill","selector":"input[name=custname]","value":"Test"},{"kind":"click","text":"Submit order"}],
+           "options":{},"tags":[]}}]}""",
+    )[0]
+    val lines = KiffMapping.details(e)
+    assertEquals(
+      listOf(
+        "options: {}",
+        "steps:",
+        "  1:",
+        "    kind: fill",
+        "    selector: input[name=custname]",
+        "    value: Test",
+        "  2:",
+        "    kind: click",
+        "    text: Submit order",
+        "tags: []",
+        "url: https://www.httpbin.org/forms/post",
+      ),
+      lines,
+    )
+    // Nothing is folded, and the taf's own words stay out of the call's lines.
+    assertTrue(lines.none { "…" in it })
+    assertTrue(lines.none { "Owner asked" in it })
   }
 
   @Test fun aHoldKiffsWordsAreTheLastResort() {

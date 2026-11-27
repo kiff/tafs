@@ -21,7 +21,10 @@ import java.math.RoundingMode
 import java.time.Duration
 import java.util.Currency
 import java.util.UUID
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
@@ -544,28 +547,51 @@ object KiffMapping {
   fun ordinal(n: Long): String = bot.tafs.app.model.Res.ordinal(n)
 
   /**
-   * What a held gateway call is on, one line an argument, as KIFF keeps them ("payment_intent: pi_…"). The
-   * amount isn't repeated (it's shown above), nor KIFF's own operation id.
+   * What a held gateway call is on, as KIFF keeps its arguments ("payment_intent: pi_…"): one line an argument, and a
+   * list or object written out in full below its name, each item on its own line in the order sent, each field in its
+   * key's order at every level (a dictionary can't keep the order sent), indented.
+   * Nothing the call carries is ever folded to "…": a held browser call's `steps` are what the owner signs, and a step
+   * the line hid could click what the taf's words never said (red-team, 27 Nov). The amount isn't repeated (it's shown
+   * above), nor the gateway's own arguments; an empty string at the top says nothing and isn't shown.
    */
   fun details(e: CardException): List<String> {
     val arguments = e.arguments ?: return emptyList()
     val shown = (e.parameterUnits?.keys.orEmpty() + e.parameters?.keys.orEmpty()).map { it.lowercase() }.toSet()
-    return arguments.keys.sorted().mapNotNull { key ->
+    return arguments.keys.sorted().flatMap { key ->
       val k = key.lowercase()
       // The gateway's own arguments: the operation's id, and the taf's words, which show under "The taf says".
-      if (k in shown || k == "kiff_operation_id" || k == "kiff_reason" || k == "kiff_about") return@mapNotNull null
-      val text = argumentText(arguments[key]).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-      "${visible(key)}: ${visible(text)}"
+      if (k in shown || k == "kiff_operation_id" || k == "kiff_reason" || k == "kiff_about") return@flatMap emptyList()
+      val value = arguments[key]
+      if ((value as? JsonPrimitive)?.let { it.isString && it.content.isEmpty() } == true) return@flatMap emptyList()
+      argumentLines(visible(key), value, 0)
     }
   }
 
-  /** One argument of a held call, as text: a string as it is, a number or a flag written out, anything else left as "…". */
+  /** [label]'s [value] as lines: a plain value on its label's line; a list's items (1, 2, …) and an object's fields below it, two spaces deeper each level. */
+  fun argumentLines(label: String, value: JsonElement?, depth: Int): List<String> {
+    val pad = "  ".repeat(depth)
+    return when (value) {
+      is JsonArray ->
+        if (value.isEmpty()) listOf("$pad$label: []")
+        else listOf("$pad$label:") + value.flatMapIndexed { i, item -> argumentLines("${i + 1}", item, depth + 1) }
+      is JsonObject ->
+        if (value.isEmpty()) listOf("$pad$label: {}")
+        else listOf("$pad$label:") + value.keys.sorted().flatMap { k -> argumentLines(visible(k), value[k], depth + 1) }
+      else -> listOf("$pad$label: ${visible(argumentText(value))}")
+    }
+  }
+
+  /**
+   * One plain argument as text: a string as it is (an empty one as "", so a fill with nothing still shows), a number
+   * written out exactly as sent (an integer past 2^53 too), a flag as true or false, a null as null.
+   */
   fun argumentText(value: JsonElement?): String {
-    val p = value as? JsonPrimitive ?: return "…"
-    if (p.isString) return p.content
+    val p = value as? JsonPrimitive ?: return "null"
+    if (p is JsonNull) return "null"
+    if (p.isString) return p.content.ifEmpty { "\"\"" }
     p.content.toBooleanStrictOrNull()?.let { return it.toString() }
     // A decimal written out plainly, as sent: "0.000015", never "1.5e-05".
-    return p.content.toBigDecimalOrNull()?.toPlainString() ?: "…"
+    return p.content.toBigDecimalOrNull()?.toPlainString() ?: p.content
   }
 
   /**
