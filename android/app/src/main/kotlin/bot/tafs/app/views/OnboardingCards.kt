@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +38,7 @@ import bot.tafs.app.design.OutlineButton
 import bot.tafs.app.design.Panel
 import bot.tafs.app.design.PrimaryButton
 import bot.tafs.app.design.Theme
+import bot.tafs.app.design.brandBackground
 import bot.tafs.app.design.scaled
 import bot.tafs.app.design.tapping
 import bot.tafs.app.drive.confirms
@@ -51,7 +53,7 @@ import bot.tafs.app.model.Window
 import bot.tafs.app.model.Words
 
 /**
- * The three cards on how tafs works (docs/onboarding.md, step 3): after signing in, before the first Home, and again from How
+ * The four cards on how tafs works (docs/onboarding.md, step 3): after signing in, before the first Home, and again from How
  * tafs works ([start]). Each picture is the app's own view over the sample's words, so the person knows it a minute later and
  * reads it in their language. Skip and Get started call [done].
  */
@@ -97,17 +99,35 @@ internal fun OnboardingPicture(page: OnboardingPage) {
     OnboardingPage.Tafs -> Column(Modifier.widthIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
       onboardingSampleTafs().forEach { TafRow(it, showState = false) {} }
     }
-    OnboardingPage.Card -> TafCardFace(onboardingSampleCard(), issuedBy = Words.Common.you, color = Theme.tafColor(0), modifier = Modifier.widthIn(max = 420.dp))
-    OnboardingPage.Control -> Panel(Modifier.widthIn(max = 420.dp)) {
-      Eyebrow(Words.Sample.Deploys.name)
-      Text(Words.Sample.Deploys.deployApi, style = scaled(16, FontWeight.SemiBold, Theme.ink))
-      Text(Words.Sample.Deploys.deployApiWhy, style = scaled(14, color = Theme.soft))
-      Text(Words.NeedsYou.nothingSent, style = scaled(13, color = Theme.dim))
-      // As Needs you words and marks them on this phone (a driven touch on either is refused); the picture takes no taps.
-      // It never says the screen lock approves: with no strong biometric, it names the fingerprint the phone would need.
-      PrimaryButton(Words.NeedsYou.approveOnceWith(bot.tafs.app.signing.Biometry.approvingWith(LocalBiometry.current)), {}, Modifier.padding(top = 8.dp).confirms())
-      OutlineButton(Words.Sample.Deploys.nextStep, {}, Modifier.fillMaxWidth())
-      OutlineButton(Words.NeedsYou.refuse, {}, Modifier.fillMaxWidth().confirms(), color = Theme.no)
+    // Coach's first exchange, as its chat draws it: the job in one line, then Coach's first answer.
+    OnboardingPage.Coach -> Column(Modifier.widthIn(max = 420.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      Text(
+        Words.Sample.Coach.ask, style = scaled(15, color = androidx.compose.ui.graphics.Color.White),
+        modifier = Modifier.align(Alignment.End).clip(RoundedCornerShape(18.dp)).brandBackground().padding(horizontal = 10.dp, vertical = 8.dp),
+      )
+      Panel(Modifier.fillMaxWidth()) {
+        Eyebrow(Words.Coach.title)
+        Text(Words.Sample.Coach.connectFirst, style = scaled(15, color = Theme.ink))
+        Text(Words.Sample.Coach.planLine, style = scaled(13, color = Theme.dim))
+      }
+    }
+    // The Card, and under it a call it holds, as Needs you draws it: nothing is sent until the person approves once.
+    OnboardingPage.Card -> Column(Modifier.widthIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+      TafCardFace(onboardingSampleCard(), issuedBy = Words.Common.you, color = Theme.tafColor(0))
+      Panel(Modifier.fillMaxWidth()) {
+        Eyebrow(Words.Sample.Deploys.name)
+        Text(Words.Sample.Deploys.deployApi, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+        Text(Words.NeedsYou.nothingSent, style = scaled(13, color = Theme.dim))
+        // As Needs you words and marks it on this phone (a driven touch is refused); the picture takes no taps.
+        // It never says the screen lock approves: with no strong biometric, it names the fingerprint the phone would need.
+        PrimaryButton(Words.NeedsYou.approveOnceWith(bot.tafs.app.signing.Biometry.approvingWith(LocalBiometry.current)), {}, Modifier.padding(top = 8.dp).confirms())
+      }
+    }
+    // The credits, as Plan & usage draws them: Solo's month and its meter, and Coach's own work counted apart.
+    OnboardingPage.Credits -> Panel(Modifier.widthIn(max = 420.dp).fillMaxWidth()) {
+      Text(Words.Billing.soloOn, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+      Box(Modifier.padding(vertical = 6.dp)) { bot.tafs.app.design.Meter(0.52) }
+      Text(Words.Sample.Credits.notCountedCoach, style = scaled(13, color = Theme.soft))
     }
   }
 }
@@ -124,7 +144,7 @@ internal fun onboardingSampleCard(): TafCard =
     calls = CardTotal(limit = 40, used = 12, window = Window.day))
 
 /**
- * How tafs works, any time (docs/onboarding.md): the three cards again, each opening where it's tapped, and the four legal pages
+ * How tafs works, any time (docs/onboarding.md): the four cards again, each opening where it's tapped, and the four legal pages
  * titled as their pages are (`onboarding.row_*`, never the tick line's link words, which sit inside its sentence). Then two
  * short sections, as iOS's: Chrome only where planque offers it ([chrome]), the emailed code only where KIFF can send it
  * ([code]), so the app says nothing about what the person can't use.
