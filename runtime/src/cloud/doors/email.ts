@@ -52,6 +52,26 @@ export class EmailError extends Error {
 
 const API = "https://api.resend.com";
 
+/**
+ * The email provider's API the deployment uses: Resend's, unless the doors secret names another (`email_api_base`),
+ * such as a self-hosted inbox that answers the same two routes (`GET /emails/receiving/{id}`, `POST /emails`) and signs
+ * its deliveries the same way. Only an https origin, with a path or none: anything else is undefined, and the email
+ * door isn't offered, so the deployment's key is never sent where it wasn't meant to go (to Resend in place of the one
+ * named, or over plain http).
+ */
+export function emailAPIBase(named: unknown): string | undefined {
+  if (named === undefined || named === "") return API;
+  if (typeof named !== "string") return undefined;
+  let u: URL;
+  try {
+    u = new URL(named.trim());
+  } catch {
+    return undefined;
+  }
+  if (u.protocol !== "https:" || u.username || u.password || u.search || u.hash || !u.hostname) return undefined;
+  return `${u.origin}${u.pathname}`.replace(/\/+$/, "");
+}
+
 /** The provider's HTTP API, with the deployment's key. */
 export function emailProvider(apiKey: string, doFetch: Fetch = fetch, base = API): EmailProvider {
   const headers = { authorization: `Bearer ${apiKey}`, accept: "application/json" };

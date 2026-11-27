@@ -7,7 +7,7 @@ import { coachTool, type Deps, handle, type HTTPEvent, sweepHeld, sweepReplies, 
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
 import { localPart, parseDoorMessage, replyText } from "../src/cloud/doors/doors.js";
-import { type EmailProvider, emailArrival, type OutgoingEmail, parseReceived, type ReceivedEmail } from "../src/cloud/doors/email.js";
+import { emailAPIBase, type EmailProvider, emailArrival, emailProvider, type OutgoingEmail, parseReceived, type ReceivedEmail } from "../src/cloud/doors/email.js";
 import { doorKeys, type DoorSecrets, type DoorStore } from "../src/cloud/doors/model.js";
 import { signedWebhook, whatsappSigned } from "../src/cloud/doors/sign.js";
 import { cut, htmlText, ownText } from "../src/cloud/doors/text.js";
@@ -221,6 +221,29 @@ async function finish(w: World, run: Run, answer: string, status: "COMPLETED" | 
 }
 
 describe("the email door", () => {
+  // A self-hosted inbox can stand in for Resend by answering the same two routes: the deployment names its API in the
+  // doors secret (email_api_base). Resend stays the default, and a named API that isn't https turns the door off rather
+  // than sending its key to Resend, or anywhere in clear.
+  it("uses Resend's API unless the deployment names another, and only an https one", async () => {
+    expect(emailAPIBase(undefined)).toBe("https://api.resend.com");
+    expect(emailAPIBase("")).toBe("https://api.resend.com");
+    expect(emailAPIBase("https://mail.example.test")).toBe("https://mail.example.test");
+    expect(emailAPIBase(" https://mail.example.test/api/ ")).toBe("https://mail.example.test/api");
+    for (const bad of ["http://mail.example.test", "mail.example.test", "https://user:pw@mail.example.test", "https://mail.example.test/?x=1",
+      "https://mail.example.test/#a", "ftp://mail.example.test", 42, null, {}, ["https://mail.example.test"]]) {
+      expect(emailAPIBase(bad), JSON.stringify(bad)).toBeUndefined();
+    }
+    // The named API gets both calls, with the deployment's key, and Resend gets none.
+    const asked: string[] = [];
+    const provider = emailProvider("k_test", (async (url: string, init?: RequestInit) => {
+      asked.push(`${init?.method ?? "GET"} ${url} ${(init?.headers as Record<string, string>).authorization}`);
+      return new Response(JSON.stringify({ id: "m-1" }));
+    }) as never, emailAPIBase("https://mail.example.test/api/")!);
+    await provider.received("m-1");
+    await provider.send({ from: "a@example.test", to: "b@example.test", subject: "Re: hi", text: "ok", idempotencyKey: "k1" });
+    expect(asked).toEqual(["GET https://mail.example.test/api/emails/receiving/m-1 Bearer k_test", "POST https://mail.example.test/api/emails Bearer k_test"]);
+  });
+
   it("gets an address made from the taf's name, with the owner's own email paired", async () => {
     const w = world();
     const door = await emailDoor(w);

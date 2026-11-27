@@ -271,6 +271,12 @@ Nothing here is on until the deployment sets it up. tafs cloud reads:
   `email_api_key`, `email_webhook_secret`; `whatsapp_app_id`, `whatsapp_app_secret`,
   `whatsapp_config_id`, `whatsapp_verify_token`; `planque_handoff_secret`, the value
   planque signs Slack and Telegram messages with. A provider whose keys aren't there isn't offered.
+  The email provider is Resend unless the secret names another API in `email_api_base`: an
+  https URL (with a path or none, no user, query or fragment) that answers Resend's two routes,
+  `GET /emails/receiving/{id}` and `POST /emails` with an `idempotency-key`, and signs its
+  deliveries to `/v1/doors/email` the same way, such as a self-hosted inbox (`emailAPIBase`).
+  One named that isn't such a URL turns the email door off, logged, and never falls back to
+  Resend with the other provider's key.
 - `DOORS_WHATSAPP_REGION`: where WhatsApp stores a number's message content, set at
   its registration.
 

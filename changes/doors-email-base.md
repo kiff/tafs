@@ -1,0 +1,1 @@
+- **The email door can use another provider than Resend (tafs cloud).** A deployment names its provider's API in the doors secret (`email_api_base`, https only), for a self-hosted inbox that answers the same routes. Resend stays the default, and a named API that isn't an https URL turns the email door off rather than sending the key elsewhere (docs/doors.md).

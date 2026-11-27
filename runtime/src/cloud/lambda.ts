@@ -19,7 +19,7 @@ import { type AccountData, type Accounts, type Archived, type Claims, type Deps,
 import { routing, silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
 import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
-import { emailProvider } from "./doors/email.js";
+import { emailAPIBase, emailProvider } from "./doors/email.js";
 import type { DoorSecrets, DoorStore } from "./doors/model.js";
 import { whatsappClient } from "./doors/whatsapp.js";
 import { eventLog } from "./events.js";
@@ -636,10 +636,17 @@ function readDoorsConfig(): Promise<DoorsConfig> {
       publicURL: (process.env.DOORS_PUBLIC_URL ?? "").replace(/\/+$/, ""),
       secretsPrefix: process.env.DOORS_SECRETS_PREFIX ?? "tafs-doors/",
     };
+    // The provider's API: Resend's unless the secret names another (email_api_base, https only). One it names that isn't
+    // a usable https URL turns the email door off, never back to Resend with the other provider's key.
+    const emailBase = emailAPIBase(k.email_api_base);
     if (process.env.DOORS_EMAIL_DOMAIN && str("email_api_key") && str("email_webhook_secret")) {
-      cfg.emailDomain = process.env.DOORS_EMAIL_DOMAIN;
-      cfg.email = emailProvider(str("email_api_key"));
-      cfg.emailWebhookSecret = str("email_webhook_secret");
+      if (emailBase === undefined) {
+        console.error("doors: email_api_base isn't an https URL, so the email door is off");
+      } else {
+        cfg.emailDomain = process.env.DOORS_EMAIL_DOMAIN;
+        cfg.email = emailProvider(str("email_api_key"), fetch, emailBase);
+        cfg.emailWebhookSecret = str("email_webhook_secret");
+      }
     }
     if (str("whatsapp_app_id") && str("whatsapp_app_secret") && str("whatsapp_config_id") && str("whatsapp_verify_token")) {
       cfg.whatsapp = {
