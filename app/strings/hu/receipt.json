@@ -60,7 +60,7 @@
   "receipt.refused_by": "Elutasította: {who}",
   "receipt.share": "Megosztás",
   "receipt.show_full": "A teljes nyugta megjelenítése",
-  "receipt.signed_on_device_why": "Ezzel: {biometry}, egy kulccsal, amely soha nem hagyja el ezt az eszközt.",
+  "receipt.signed_on_device_why": "Egy kulccsal, amely soha nem hagyja el ezt az eszközt.",
   "receipt.signed_on_phone": "✓ Aláírva ezen a telefonon",
   "receipt.signed_on_phone_why": "Egy kulccsal, amely soha nem hagyja el ezt a telefont.",
   "receipt.signs_within": "A KIFF a döntést követő egy percen belül aláírja a nyugtákat. Nézd meg újra hamarosan.",

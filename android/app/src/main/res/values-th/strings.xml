@@ -1759,7 +1759,7 @@
     <string name="receipt_refused_by">%1$s ปฏิเสธ</string>
     <string name="receipt_share">แชร์</string>
     <string name="receipt_show_full">แสดงใบเสร็จฉบับเต็ม</string>
-    <string name="receipt_signed_on_device_why">ด้วย %1$s โดยกุญแจที่ไม่เคยออกจากอุปกรณ์นี้</string>
+    <string name="receipt_signed_on_device_why">โดยกุญแจที่ไม่เคยออกจากอุปกรณ์นี้</string>
     <string name="receipt_signed_on_phone">✓ ลงนามบนโทรศัพท์เครื่องนี้แล้ว</string>
     <string name="receipt_signed_on_phone_why">โดยกุญแจที่ไม่เคยออกจากโทรศัพท์เครื่องนี้</string>
     <string name="receipt_signs_within">KIFF ลงนามใบเสร็จภายในหนึ่งนาทีหลังตัดสินใจ ตรวจสอบอีกครั้งในอีกสักครู่</string>

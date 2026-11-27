@@ -60,7 +60,7 @@
   "receipt.refused_by": "Ditolak oleh {who}",
   "receipt.share": "Bagikan",
   "receipt.show_full": "Tampilkan tanda terima lengkap",
-  "receipt.signed_on_device_why": "Dengan {biometry}, oleh kunci yang tidak pernah meninggalkan perangkat ini.",
+  "receipt.signed_on_device_why": "Oleh kunci yang tidak pernah meninggalkan perangkat ini.",
   "receipt.signed_on_phone": "✓ Ditandatangani di ponsel ini",
   "receipt.signed_on_phone_why": "Oleh kunci yang tidak pernah meninggalkan ponsel ini.",
   "receipt.signs_within": "KIFF menandatangani tanda terima dalam semenit setelah memutuskan. Periksa lagi sebentar lagi.",

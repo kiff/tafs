@@ -60,7 +60,7 @@
   "receipt.refused_by": "{who} نے مسترد کیا",
   "receipt.share": "شیئر کریں",
   "receipt.show_full": "پوری رسید دکھائیں",
-  "receipt.signed_on_device_why": "{biometry} کے ساتھ، ایسی کلید سے جو اس ڈیوائس سے کبھی باہر نہیں جاتی۔",
+  "receipt.signed_on_device_why": "ایسی کلید سے جو اس ڈیوائس سے کبھی باہر نہیں جاتی۔",
   "receipt.signed_on_phone": "✓ اس فون پر دستخط ہوئے",
   "receipt.signed_on_phone_why": "ایسی کلید سے جو اس فون سے کبھی باہر نہیں جاتی۔",
   "receipt.signs_within": "KIFF فیصلے کے ایک منٹ کے اندر رسیدوں پر دستخط کرتا ہے۔ تھوڑی دیر میں دوبارہ جانچیں۔",

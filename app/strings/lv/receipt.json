@@ -60,7 +60,7 @@
   "receipt.refused_by": "Atteica: {who}",
   "receipt.share": "Kopīgot",
   "receipt.show_full": "Rādīt visu kvīti",
-  "receipt.signed_on_device_why": "Ar {biometry}, ar atslēgu, kas nekad neatstāj šo ierīci.",
+  "receipt.signed_on_device_why": "Ar atslēgu, kas nekad neatstāj šo ierīci.",
   "receipt.signed_on_phone": "✓ Parakstīts šajā tālrunī",
   "receipt.signed_on_phone_why": "Ar atslēgu, kas nekad neatstāj šo tālruni.",
   "receipt.signs_within": "KIFF paraksta kvītis minūtes laikā pēc lēmuma. Drīz pārbaudi vēlreiz.",

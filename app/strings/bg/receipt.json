@@ -60,7 +60,7 @@
   "receipt.refused_by": "Отказано от {who}",
   "receipt.share": "Споделяне",
   "receipt.show_full": "Показване на цялата разписка",
-  "receipt.signed_on_device_why": "С {biometry}, с ключ, който никога не напуска това устройство.",
+  "receipt.signed_on_device_why": "С ключ, който никога не напуска това устройство.",
   "receipt.signed_on_phone": "✓ Подписано на този телефон",
   "receipt.signed_on_phone_why": "С ключ, който никога не напуска този телефон.",
   "receipt.signs_within": "KIFF подписва разписките до минута след решението. Проверете отново скоро.",

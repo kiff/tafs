@@ -60,7 +60,7 @@
   "receipt.refused_by": "{who} đã từ chối",
   "receipt.share": "Chia sẻ",
   "receipt.show_full": "Hiện biên nhận đầy đủ",
-  "receipt.signed_on_device_why": "Bằng {biometry}, với một khóa không bao giờ rời thiết bị này.",
+  "receipt.signed_on_device_why": "Bằng một khóa không bao giờ rời thiết bị này.",
   "receipt.signed_on_phone": "✓ Đã ký trên điện thoại này",
   "receipt.signed_on_phone_why": "Bằng một khóa không bao giờ rời điện thoại này.",
   "receipt.signs_within": "KIFF ký biên nhận trong vòng một phút sau khi quyết định. Hãy kiểm tra lại sau.",

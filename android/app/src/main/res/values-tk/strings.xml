@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">%1$s ret etdi</string>
     <string name="receipt_share">Paýlaşyň</string>
     <string name="receipt_show_full">Doly kwitansiýany görkeziň</string>
-    <string name="receipt_signed_on_device_why">%1$s bilen, bu enjamdan hiç haçan çykmaýan açar bilen.</string>
+    <string name="receipt_signed_on_device_why">Bu enjamdan hiç haçan çykmaýan açar bilen.</string>
     <string name="receipt_signed_on_phone">✓ Bu telefonda gol çekildi</string>
     <string name="receipt_signed_on_phone_why">Bu telefondan hiç haçan çykmaýan açar bilen.</string>
     <string name="receipt_signs_within">KIFF kararyndan soň bir minutyň içinde kwitansiýalara gol çekýär. Birazdan täzeden barlaň.</string>

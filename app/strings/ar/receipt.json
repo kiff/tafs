@@ -60,7 +60,7 @@
   "receipt.refused_by": "رفضه {who}",
   "receipt.share": "مشاركة",
   "receipt.show_full": "عرض الإيصال الكامل",
-  "receipt.signed_on_device_why": "بـ {biometry}، بمفتاح لا يغادر هذا الجهاز أبدًا.",
+  "receipt.signed_on_device_why": "بمفتاح لا يغادر هذا الجهاز أبدًا.",
   "receipt.signed_on_phone": "✓ وُقّع على هذا الهاتف",
   "receipt.signed_on_phone_why": "بمفتاح لا يغادر هذا الهاتف أبدًا.",
   "receipt.signs_within": "يوقّع KIFF الإيصالات خلال دقيقة من اتخاذ القرار. تحقق مرة أخرى بعد قليل.",

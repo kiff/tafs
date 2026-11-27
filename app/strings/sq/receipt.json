@@ -60,7 +60,7 @@
   "receipt.refused_by": "Refuzuar nga {who}",
   "receipt.share": "Ndajeni",
   "receipt.show_full": "Shfaqni dëftesën e plotë",
-  "receipt.signed_on_device_why": "Me {biometry}, nga një çelës që nuk largohet kurrë nga kjo pajisje.",
+  "receipt.signed_on_device_why": "Nga një çelës që nuk largohet kurrë nga kjo pajisje.",
   "receipt.signed_on_phone": "✓ Nënshkruar në këtë telefon",
   "receipt.signed_on_phone_why": "Nga një çelës që nuk largohet kurrë nga ky telefon.",
   "receipt.signs_within": "KIFF i nënshkruan dëftesat brenda një minute nga vendimi. Kontrolloni sërish së shpejti.",

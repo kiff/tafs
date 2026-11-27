@@ -1942,7 +1942,7 @@
     <string name="receipt_refused_by">Zavrnil(a) %1$s</string>
     <string name="receipt_share">Deli</string>
     <string name="receipt_show_full">Prikaži celotno potrdilo</string>
-    <string name="receipt_signed_on_device_why">Z %1$s, s ključem, ki nikoli ne zapusti te naprave.</string>
+    <string name="receipt_signed_on_device_why">S ključem, ki nikoli ne zapusti te naprave.</string>
     <string name="receipt_signed_on_phone">✓ Podpisano v tem telefonu</string>
     <string name="receipt_signed_on_phone_why">S ključem, ki nikoli ne zapusti tega telefona.</string>
     <string name="receipt_signs_within">KIFF podpiše potrdila v minuti po odločitvi. Kmalu preverite znova.</string>

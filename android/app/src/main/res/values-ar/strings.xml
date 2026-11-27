@@ -2064,7 +2064,7 @@
     <string name="receipt_refused_by">رفضه %1$s</string>
     <string name="receipt_share">مشاركة</string>
     <string name="receipt_show_full">عرض الإيصال الكامل</string>
-    <string name="receipt_signed_on_device_why">بـ %1$s، بمفتاح لا يغادر هذا الجهاز أبدًا.</string>
+    <string name="receipt_signed_on_device_why">بمفتاح لا يغادر هذا الجهاز أبدًا.</string>
     <string name="receipt_signed_on_phone">✓ وُقّع على هذا الهاتف</string>
     <string name="receipt_signed_on_phone_why">بمفتاح لا يغادر هذا الهاتف أبدًا.</string>
     <string name="receipt_signs_within">يوقّع KIFF الإيصالات خلال دقيقة من اتخاذ القرار. تحقق مرة أخرى بعد قليل.</string>

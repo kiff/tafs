@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">Geweigerd door %1$s</string>
     <string name="receipt_share">Delen</string>
     <string name="receipt_show_full">Het volledige ontvangstbewijs tonen</string>
-    <string name="receipt_signed_on_device_why">Met %1$s, door een sleutel die dit apparaat nooit verlaat.</string>
+    <string name="receipt_signed_on_device_why">Door een sleutel die dit apparaat nooit verlaat.</string>
     <string name="receipt_signed_on_phone">✓ Ondertekend op deze telefoon</string>
     <string name="receipt_signed_on_phone_why">Door een sleutel die deze telefoon nooit verlaat.</string>
     <string name="receipt_signs_within">KIFF ondertekent ontvangstbewijzen binnen een minuut na de beslissing. Controleer het zo opnieuw.</string>

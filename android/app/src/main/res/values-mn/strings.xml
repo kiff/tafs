@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">%1$s татгалзсан</string>
     <string name="receipt_share">Хуваалцах</string>
     <string name="receipt_show_full">Бүтэн баримтыг харуулах</string>
-    <string name="receipt_signed_on_device_why">%1$s-ээр, энэ төхөөрөмжөөс хэзээ ч гардаггүй түлхүүрээр.</string>
+    <string name="receipt_signed_on_device_why">Энэ төхөөрөмжөөс хэзээ ч гардаггүй түлхүүрээр.</string>
     <string name="receipt_signed_on_phone">✓ Энэ утсан дээр гарын үсэг зурсан</string>
     <string name="receipt_signed_on_phone_why">Энэ утаснаас хэзээ ч гардаггүй түлхүүрээр.</string>
     <string name="receipt_signs_within">KIFF шийдсэнээс хойш нэг минутын дотор баримтад гарын үсэг зурдаг. Түр хүлээгээд дахин шалгана уу.</string>

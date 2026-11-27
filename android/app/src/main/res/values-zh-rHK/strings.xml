@@ -1759,7 +1759,7 @@
     <string name="receipt_refused_by">%1$s拒絕</string>
     <string name="receipt_share">分享</string>
     <string name="receipt_show_full">顯示完整收據</string>
-    <string name="receipt_signed_on_device_why">以%1$s，由一把永遠不會離開這部裝置的金鑰簽署。</string>
+    <string name="receipt_signed_on_device_why">由一把永遠不會離開這部裝置的金鑰簽署。</string>
     <string name="receipt_signed_on_phone">✓ 已在這部手機上簽署</string>
     <string name="receipt_signed_on_phone_why">由一把永遠不會離開這部手機的金鑰簽署。</string>
     <string name="receipt_signs_within">KIFF 會在做出決定後一分鐘內簽署收據。請稍後再檢查。</string>

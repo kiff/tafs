@@ -60,7 +60,7 @@
   "receipt.refused_by": "{who} rədd etdi",
   "receipt.share": "Paylaşın",
   "receipt.show_full": "Tam qəbzi göstərin",
-  "receipt.signed_on_device_why": "{biometry} ilə, bu cihazı heç vaxt tərk etməyən açarla.",
+  "receipt.signed_on_device_why": "Bu cihazı heç vaxt tərk etməyən açarla.",
   "receipt.signed_on_phone": "✓ Bu telefonda imzalandı",
   "receipt.signed_on_phone_why": "Bu telefonu heç vaxt tərk etməyən açarla.",
   "receipt.signs_within": "KIFF qəbzləri qərardan sonra bir dəqiqə ərzində imzalayır. Bir azdan yenidən yoxlayın.",

@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">Recusado por %1$s</string>
     <string name="receipt_share">Partilhar</string>
     <string name="receipt_show_full">Mostrar o recibo completo</string>
-    <string name="receipt_signed_on_device_why">Com %1$s, por uma chave que nunca sai deste dispositivo.</string>
+    <string name="receipt_signed_on_device_why">Por uma chave que nunca sai deste dispositivo.</string>
     <string name="receipt_signed_on_phone">✓ Assinado neste telefone</string>
     <string name="receipt_signed_on_phone_why">Por uma chave que nunca sai deste telefone.</string>
     <string name="receipt_signs_within">O KIFF assina os recibos no prazo de um minuto após decidir. Verifique novamente daqui a pouco.</string>

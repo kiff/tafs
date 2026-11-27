@@ -60,7 +60,7 @@
   "receipt.refused_by": "Rechazado por {who}",
   "receipt.share": "Compartir",
   "receipt.show_full": "Mostrar el recibo completo",
-  "receipt.signed_on_device_why": "Con {biometry}, con una clave que nunca sale de este dispositivo.",
+  "receipt.signed_on_device_why": "Con una clave que nunca sale de este dispositivo.",
   "receipt.signed_on_phone": "✓ Firmado en este teléfono",
   "receipt.signed_on_phone_why": "Con una clave que nunca sale de este teléfono.",
   "receipt.signs_within": "KIFF firma los recibos en menos de un minuto tras decidir. Vuelve a comprobarlo en breve.",

@@ -1897,7 +1897,7 @@ object Words {
     fun refusedBy(who: String): String = Res.s(R.string.receipt_refused_by, who)
     val share: String get() = Res.s(R.string.receipt_share)
     val showFull: String get() = Res.s(R.string.receipt_show_full)
-    fun signedOnDeviceWhy(biometry: String): String = Res.s(R.string.receipt_signed_on_device_why, biometry)
+    val signedOnDeviceWhy: String get() = Res.s(R.string.receipt_signed_on_device_why)
     val signedOnPhone: String get() = Res.s(R.string.receipt_signed_on_phone)
     val signedOnPhoneWhy: String get() = Res.s(R.string.receipt_signed_on_phone_why)
     val signsWithin: String get() = Res.s(R.string.receipt_signs_within)

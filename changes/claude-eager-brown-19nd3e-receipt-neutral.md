@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: a signed receipt no longer names Face ID or Touch ID.** It says "By a key that never leaves this device.", which is true whether the approval took Face ID or was a tap in an open approval window (docs/approvals.md).

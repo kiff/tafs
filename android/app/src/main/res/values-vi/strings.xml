@@ -1759,7 +1759,7 @@
     <string name="receipt_refused_by">%1$s đã từ chối</string>
     <string name="receipt_share">Chia sẻ</string>
     <string name="receipt_show_full">Hiện biên nhận đầy đủ</string>
-    <string name="receipt_signed_on_device_why">Bằng %1$s, với một khóa không bao giờ rời thiết bị này.</string>
+    <string name="receipt_signed_on_device_why">Bằng một khóa không bao giờ rời thiết bị này.</string>
     <string name="receipt_signed_on_phone">✓ Đã ký trên điện thoại này</string>
     <string name="receipt_signed_on_phone_why">Bằng một khóa không bao giờ rời điện thoại này.</string>
     <string name="receipt_signs_within">KIFF ký biên nhận trong vòng một phút sau khi quyết định. Hãy kiểm tra lại sau.</string>

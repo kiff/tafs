@@ -60,7 +60,7 @@
   "receipt.refused_by": "{who}が拒否",
   "receipt.share": "共有",
   "receipt.show_full": "領収書全体を表示",
-  "receipt.signed_on_device_why": "{biometry}で、このデバイスから出ないキーにより署名。",
+  "receipt.signed_on_device_why": "このデバイスから出ないキーにより署名。",
   "receipt.signed_on_phone": "✓ このスマートフォンで署名",
   "receipt.signed_on_phone_why": "このスマートフォンから出ないキーにより署名。",
   "receipt.signs_within": "KIFFは決定から1分以内に領収書に署名します。少し待ってからもう一度確認してください。",

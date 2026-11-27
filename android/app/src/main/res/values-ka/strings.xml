@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">უარყო: %1$s</string>
     <string name="receipt_share">გაზიარება</string>
     <string name="receipt_show_full">აჩვენეთ სრული ქვითარი</string>
-    <string name="receipt_signed_on_device_why">%1$s-ით, გასაღებით, რომელიც ამ მოწყობილობას არასოდეს ტოვებს.</string>
+    <string name="receipt_signed_on_device_why">გასაღებით, რომელიც ამ მოწყობილობას არასოდეს ტოვებს.</string>
     <string name="receipt_signed_on_phone">✓ ხელი მოეწერა ამ ტელეფონზე</string>
     <string name="receipt_signed_on_phone_why">გასაღებით, რომელიც ამ ტელეფონს არასოდეს ტოვებს.</string>
     <string name="receipt_signs_within">KIFF ქვითრებს გადაწყვეტიდან ერთ წუთში აწერს ხელს. შეამოწმეთ ხელახლა მალე.</string>

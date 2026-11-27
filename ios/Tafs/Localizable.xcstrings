@@ -451293,259 +451293,259 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "بـ %1$@، بمفتاح لا يغادر هذا الجهاز أبدًا."
+            "value": "بمفتاح لا يغادر هذا الجهاز أبدًا."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ilə, bu cihazı heç vaxt tərk etməyən açarla."
+            "value": "Bu cihazı heç vaxt tərk etməyən açarla."
           }
         },
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "С %1$@, с ключ, който никога не напуска това устройство."
+            "value": "С ключ, който никога не напуска това устройство."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ দিয়ে, এমন একটি কী দিয়ে যা এই ডিভাইস কখনও ছাড়ে না।"
+            "value": "এমন একটি কী দিয়ে যা এই ডিভাইস কখনও ছাড়ে না।"
           }
         },
         "ca": {
           "stringUnit": {
             "state": "translated",
-            "value": "Amb %1$@, per una clau que no surt mai d'aquest dispositiu."
+            "value": "Per una clau que no surt mai d'aquest dispositiu."
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Přes %1$@, klíčem, který nikdy neopustí toto zařízení."
+            "value": "Klíčem, který nikdy neopustí toto zařízení."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mit %1$@, durch einen Schlüssel, der dieses Gerät nie verlässt."
+            "value": "Durch einen Schlüssel, der dieses Gerät nie verlässt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "With %1$@, by a key that never leaves this device."
+            "value": "By a key that never leaves this device."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Con %1$@, con una clave que nunca sale de este dispositivo."
+            "value": "Con una clave que nunca sale de este dispositivo."
           }
         },
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ abil, võtmega, mis ei lahku kunagi sellest seadmest."
+            "value": "Võtmega, mis ei lahku kunagi sellest seadmest."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Avec %1$@, par une clé qui ne quitte jamais cet appareil."
+            "value": "Par une clé qui ne quitte jamais cet appareil."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "באמצעות %1$@, במפתח שאף פעם לא עוזב את ההתקן הזה."
+            "value": "במפתח שאף פעם לא עוזב את ההתקן הזה."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ से, एक कुंजी से जो इस डिवाइस से कभी बाहर नहीं जाती।"
+            "value": "एक कुंजी से जो इस डिवाइस से कभी बाहर नहीं जाती।"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uz: %1$@, ključem koji nikad ne napušta ovaj uređaj."
+            "value": "Ključem koji nikad ne napušta ovaj uređaj."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ezzel: %1$@, egy kulccsal, amely soha nem hagyja el ezt az eszközt."
+            "value": "Egy kulccsal, amely soha nem hagyja el ezt az eszközt."
           }
         },
         "hy": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@-ով, բանալիով, որը երբեք չի լքում այս սարքը։"
+            "value": "Բանալիով, որը երբեք չի լքում այս սարքը։"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dengan %1$@, oleh kunci yang tidak pernah meninggalkan perangkat ini."
+            "value": "Oleh kunci yang tidak pernah meninggalkan perangkat ini."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Con %1$@, con una chiave che non lascia mai questo dispositivo."
+            "value": "Con una chiave che non lascia mai questo dispositivo."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@で、このデバイスから出ないキーにより署名。"
+            "value": "このデバイスから出ないキーにより署名。"
           }
         },
         "ka": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@-ით, გასაღებით, რომელიც ამ მოწყობილობას არასოდეს ტოვებს."
+            "value": "გასაღებით, რომელიც ამ მოწყობილობას არასოდეს ტოვებს."
           }
         },
         "km": {
           "stringUnit": {
             "state": "translated",
-            "value": "ដោយ %1$@ ដោយកូនសោដែលមិនដែលចាកចេញពីឧបករណ៍នេះ។"
+            "value": "ដោយកូនសោដែលមិនដែលចាកចេញពីឧបករណ៍នេះ។"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@(으)로, 이 기기를 떠나지 않는 키로 서명했습니다."
+            "value": "이 기기를 떠나지 않는 키로 서명했습니다."
           }
         },
         "lo": {
           "stringUnit": {
             "state": "translated",
-            "value": "ດ້ວຍ %1$@, ດ້ວຍກຸນແຈທີ່ບໍ່ເຄີຍອອກຈາກອຸປະກອນນີ້."
+            "value": "ດ້ວຍກຸນແຈທີ່ບໍ່ເຄີຍອອກຈາກອຸປະກອນນີ້."
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · raktu, kuris niekada nepalieka šio įrenginio."
+            "value": "Raktu, kuris niekada nepalieka šio įrenginio."
           }
         },
         "lv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ar %1$@, ar atslēgu, kas nekad neatstāj šo ierīci."
+            "value": "Ar atslēgu, kas nekad neatstāj šo ierīci."
           }
         },
         "mk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Со %1$@, со клуч што никогаш не го напушта овој уред."
+            "value": "Со клуч што никогаш не го напушта овој уред."
           }
         },
         "mn": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@-ээр, энэ төхөөрөмжөөс хэзээ ч гардаггүй түлхүүрээр."
+            "value": "Энэ төхөөрөмжөөс хэзээ ч гардаггүй түлхүүрээр."
           }
         },
         "ne": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ले, यो उपकरणबाट कहिल्यै बाहिर नजाने कुञ्जीद्वारा।"
+            "value": "यो उपकरणबाट कहिल्यै बाहिर नजाने कुञ्जीद्वारा।"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Met %1$@, door een sleutel die dit apparaat nooit verlaat."
+            "value": "Door een sleutel die dit apparaat nooit verlaat."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Przez %1$@, kluczem, który nigdy nie opuszcza tego urządzenia."
+            "value": "Kluczem, który nigdy nie opuszcza tego urządzenia."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Com %1$@, por uma chave que nunca sai deste dispositivo."
+            "value": "Por uma chave que nunca sai deste dispositivo."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Com %1$@, por uma chave que nunca sai deste dispositivo."
+            "value": "Por uma chave que nunca sai deste dispositivo."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cu %1$@, printr-o cheie care nu părăsește niciodată acest dispozitiv."
+            "value": "Printr-o cheie care nu părăsește niciodată acest dispozitiv."
           }
         },
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cez %1$@, kľúčom, ktorý nikdy neopustí toto zariadenie."
+            "value": "Kľúčom, ktorý nikdy neopustí toto zariadenie."
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Z %1$@, s ključem, ki nikoli ne zapusti te naprave."
+            "value": "S ključem, ki nikoli ne zapusti te naprave."
           }
         },
         "sq": {
           "stringUnit": {
             "state": "translated",
-            "value": "Me %1$@, nga një çelës që nuk largohet kurrë nga kjo pajisje."
+            "value": "Nga një çelës që nuk largohet kurrë nga kjo pajisje."
           }
         },
         "sr-Latn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uz: %1$@, ključem koji nikad ne napušta ovaj uređaj."
+            "value": "Ključem koji nikad ne napušta ovaj uređaj."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ด้วย %1$@ โดยกุญแจที่ไม่เคยออกจากอุปกรณ์นี้"
+            "value": "โดยกุญแจที่ไม่เคยออกจากอุปกรณ์นี้"
           }
         },
         "tk": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ bilen, bu enjamdan hiç haçan çykmaýan açar bilen."
+            "value": "Bu enjamdan hiç haçan çykmaýan açar bilen."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ile, bu cihazdan asla çıkmayan bir anahtarla."
+            "value": "Bu cihazdan asla çıkmayan bir anahtarla."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ کے ساتھ، ایسی کلید سے جو اس ڈیوائس سے کبھی باہر نہیں جاتی۔"
+            "value": "ایسی کلید سے جو اس ڈیوائس سے کبھی باہر نہیں جاتی۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bằng %1$@, với một khóa không bao giờ rời thiết bị này."
+            "value": "Bằng một khóa không bao giờ rời thiết bị này."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "以%1$@，由一把永遠不會離開這部裝置的金鑰簽署。"
+            "value": "由一把永遠不會離開這部裝置的金鑰簽署。"
           }
         }
       }

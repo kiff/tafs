@@ -60,7 +60,7 @@
   "receipt.refused_by": "Odbio: {who}",
   "receipt.share": "Podijelite",
   "receipt.show_full": "Prikažite cijelu potvrdu",
-  "receipt.signed_on_device_why": "Uz: {biometry}, ključem koji nikad ne napušta ovaj uređaj.",
+  "receipt.signed_on_device_why": "Ključem koji nikad ne napušta ovaj uređaj.",
   "receipt.signed_on_phone": "✓ Potpisano na ovom telefonu",
   "receipt.signed_on_phone_why": "Ključem koji nikad ne napušta ovaj telefon.",
   "receipt.signs_within": "KIFF potpisuje potvrde unutar minute od odluke. Provjerite ponovno uskoro.",

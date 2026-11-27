@@ -408,7 +408,7 @@ struct ReceiptView: View {
                         Panel(stroke: Theme.ok.opacity(0.4)) {
                             Label(Words.Record.signedOnDevice(device: "\(ThisDevice.kind)"), systemImage: "checkmark.seal.fill")
                                 .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
-                            Text(Words.Receipt.signedOnDeviceWhy(biometry: "\(Biometry.name)"))
+                            Text(Words.Receipt.signedOnDeviceWhy)
                                 .scaledFont(13).foregroundColor(Theme.soft)
                             Text(signature)
                                 .scaledFont(11, design: .monospaced).foregroundColor(Theme.dim)

@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">Отказано от %1$s</string>
     <string name="receipt_share">Споделяне</string>
     <string name="receipt_show_full">Показване на цялата разписка</string>
-    <string name="receipt_signed_on_device_why">С %1$s, с ключ, който никога не напуска това устройство.</string>
+    <string name="receipt_signed_on_device_why">С ключ, който никога не напуска това устройство.</string>
     <string name="receipt_signed_on_phone">✓ Подписано на този телефон</string>
     <string name="receipt_signed_on_phone_why">С ключ, който никога не напуска този телефон.</string>
     <string name="receipt_signs_within">KIFF подписва разписките до минута след решението. Проверете отново скоро.</string>

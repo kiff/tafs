@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">Elutasította: %1$s</string>
     <string name="receipt_share">Megosztás</string>
     <string name="receipt_show_full">A teljes nyugta megjelenítése</string>
-    <string name="receipt_signed_on_device_why">Ezzel: %1$s, egy kulccsal, amely soha nem hagyja el ezt az eszközt.</string>
+    <string name="receipt_signed_on_device_why">Egy kulccsal, amely soha nem hagyja el ezt az eszközt.</string>
     <string name="receipt_signed_on_phone">✓ Aláírva ezen a telefonon</string>
     <string name="receipt_signed_on_phone_why">Egy kulccsal, amely soha nem hagyja el ezt a telefont.</string>
     <string name="receipt_signs_within">A KIFF a döntést követő egy percen belül aláírja a nyugtákat. Nézd meg újra hamarosan.</string>

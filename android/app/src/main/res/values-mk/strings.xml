@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">Одбиено од %1$s</string>
     <string name="receipt_share">Сподели</string>
     <string name="receipt_show_full">Прикажи ја целата признаница</string>
-    <string name="receipt_signed_on_device_why">Со %1$s, со клуч што никогаш не го напушта овој уред.</string>
+    <string name="receipt_signed_on_device_why">Со клуч што никогаш не го напушта овој уред.</string>
     <string name="receipt_signed_on_phone">✓ Потпишано на овој телефон</string>
     <string name="receipt_signed_on_phone_why">Со клуч што никогаш не го напушта овој телефон.</string>
     <string name="receipt_signs_within">KIFF ги потпишува признаниците во рок од една минута по одлуката. Провери повторно наскоро.</string>

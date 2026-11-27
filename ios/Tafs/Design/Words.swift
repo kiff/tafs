@@ -3529,8 +3529,8 @@ enum Words {
         static var share: String { Words.line("receipt.share") }
         /// Show the full receipt
         static var showFull: String { Words.line("receipt.show_full") }
-        /// With {biometry}, by a key that never leaves this device.
-        static func signedOnDeviceWhy(biometry: String) -> String { Words.line("receipt.signed_on_device_why", biometry) }
+        /// By a key that never leaves this device.
+        static var signedOnDeviceWhy: String { Words.line("receipt.signed_on_device_why") }
         /// ✓ Signed on this phone
         static var signedOnPhone: String { Words.line("receipt.signed_on_phone") }
         /// By a key that never leaves this phone.

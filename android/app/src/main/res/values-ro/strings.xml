@@ -1881,7 +1881,7 @@
     <string name="receipt_refused_by">Refuzat de %1$s</string>
     <string name="receipt_share">Distribuiți</string>
     <string name="receipt_show_full">Afișați chitanța completă</string>
-    <string name="receipt_signed_on_device_why">Cu %1$s, printr-o cheie care nu părăsește niciodată acest dispozitiv.</string>
+    <string name="receipt_signed_on_device_why">Printr-o cheie care nu părăsește niciodată acest dispozitiv.</string>
     <string name="receipt_signed_on_phone">✓ Semnat pe acest telefon</string>
     <string name="receipt_signed_on_phone_why">Printr-o cheie care nu părăsește niciodată acest telefon.</string>
     <string name="receipt_signs_within">KIFF semnează chitanțele în cel mult un minut de la decizie. Verificați din nou în curând.</string>

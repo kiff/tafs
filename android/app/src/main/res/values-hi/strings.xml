@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">%1$s ने अस्वीकार किया</string>
     <string name="receipt_share">साझा करें</string>
     <string name="receipt_show_full">पूरी रसीद दिखाएँ</string>
-    <string name="receipt_signed_on_device_why">%1$s से, एक कुंजी से जो इस डिवाइस से कभी बाहर नहीं जाती।</string>
+    <string name="receipt_signed_on_device_why">एक कुंजी से जो इस डिवाइस से कभी बाहर नहीं जाती।</string>
     <string name="receipt_signed_on_phone">✓ इस फ़ोन पर हस्ताक्षरित</string>
     <string name="receipt_signed_on_phone_why">एक कुंजी से जो इस फ़ोन से कभी बाहर नहीं जाती।</string>
     <string name="receipt_signs_within">KIFF निर्णय के एक मिनट के भीतर रसीदों पर हस्ताक्षर करता है। थोड़ी देर में फिर जाँचें।</string>

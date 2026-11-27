@@ -60,7 +60,7 @@
   "receipt.refused_by": "Refusé par {who}",
   "receipt.share": "Partager",
   "receipt.show_full": "Afficher le reçu complet",
-  "receipt.signed_on_device_why": "Avec {biometry}, par une clé qui ne quitte jamais cet appareil.",
+  "receipt.signed_on_device_why": "Par une clé qui ne quitte jamais cet appareil.",
   "receipt.signed_on_phone": "✓ Signé sur ce téléphone",
   "receipt.signed_on_phone_why": "Par une clé qui ne quitte jamais ce téléphone.",
   "receipt.signs_within": "KIFF signe les reçus dans la minute qui suit sa décision. Vérifiez à nouveau d'ici peu.",

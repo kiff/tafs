@@ -60,7 +60,7 @@
   "receipt.refused_by": "{who} បានបដិសេធ",
   "receipt.share": "ចែករំលែក",
   "receipt.show_full": "បង្ហាញបង្កាន់ដៃពេញ",
-  "receipt.signed_on_device_why": "ដោយ {biometry} ដោយកូនសោដែលមិនដែលចាកចេញពីឧបករណ៍នេះ។",
+  "receipt.signed_on_device_why": "ដោយកូនសោដែលមិនដែលចាកចេញពីឧបករណ៍នេះ។",
   "receipt.signed_on_phone": "✓ បានចុះហត្ថលេខានៅលើទូរសព្ទនេះ",
   "receipt.signed_on_phone_why": "ដោយកូនសោដែលមិនដែលចាកចេញពីទូរសព្ទនេះ។",
   "receipt.signs_within": "KIFF ចុះហត្ថលេខាលើបង្កាន់ដៃក្នុងរយៈពេលមួយនាទីបន្ទាប់ពីការសម្រេច។ ពិនិត្យម្តងទៀតក្នុងពេលឆាប់ៗនេះ។",

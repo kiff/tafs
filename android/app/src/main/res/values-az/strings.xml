@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">%1$s rədd etdi</string>
     <string name="receipt_share">Paylaşın</string>
     <string name="receipt_show_full">Tam qəbzi göstərin</string>
-    <string name="receipt_signed_on_device_why">%1$s ilə, bu cihazı heç vaxt tərk etməyən açarla.</string>
+    <string name="receipt_signed_on_device_why">Bu cihazı heç vaxt tərk etməyən açarla.</string>
     <string name="receipt_signed_on_phone">✓ Bu telefonda imzalandı</string>
     <string name="receipt_signed_on_phone_why">Bu telefonu heç vaxt tərk etməyən açarla.</string>
     <string name="receipt_signs_within">KIFF qəbzləri qərardan sonra bir dəqiqə ərzində imzalayır. Bir azdan yenidən yoxlayın.</string>

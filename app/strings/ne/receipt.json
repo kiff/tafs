@@ -60,7 +60,7 @@
   "receipt.refused_by": "{who} ले अस्वीकार गर्नुभयो",
   "receipt.share": "साझा गर्नुहोस्",
   "receipt.show_full": "पूरा रसिद देखाउनुहोस्",
-  "receipt.signed_on_device_why": "{biometry} ले, यो उपकरणबाट कहिल्यै बाहिर नजाने कुञ्जीद्वारा।",
+  "receipt.signed_on_device_why": "यो उपकरणबाट कहिल्यै बाहिर नजाने कुञ्जीद्वारा।",
   "receipt.signed_on_phone": "✓ यो फोनमा हस्ताक्षर गरियो",
   "receipt.signed_on_phone_why": "यो फोनबाट कहिल्यै बाहिर नजाने कुञ्जीद्वारा।",
   "receipt.signs_within": "KIFF ले निर्णयको एक मिनेटभित्र रसिदमा हस्ताक्षर गर्छ। केही बेरमा फेरि जाँच्नुहोस्।",

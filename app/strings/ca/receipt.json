@@ -60,7 +60,7 @@
   "receipt.refused_by": "Rebutjat per {who}",
   "receipt.share": "Comparteix",
   "receipt.show_full": "Mostra el rebut complet",
-  "receipt.signed_on_device_why": "Amb {biometry}, per una clau que no surt mai d'aquest dispositiu.",
+  "receipt.signed_on_device_why": "Per una clau que no surt mai d'aquest dispositiu.",
   "receipt.signed_on_phone": "✓ Signat en aquest telèfon",
   "receipt.signed_on_phone_why": "Per una clau que no surt mai d'aquest telèfon.",
   "receipt.signs_within": "KIFF signa els rebuts en un minut des que decideix. Torna a comprovar d'aquí a una estona.",

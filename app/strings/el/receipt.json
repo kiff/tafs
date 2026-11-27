@@ -60,7 +60,7 @@
   "receipt.refused_by": "Άρνηση από {who}",
   "receipt.share": "Κοινοποίηση",
   "receipt.show_full": "Εμφάνιση πλήρους απόδειξης",
-  "receipt.signed_on_device_why": "Με {biometry}, από κλειδί που δεν φεύγει ποτέ από αυτή τη συσκευή.",
+  "receipt.signed_on_device_why": "Από κλειδί που δεν φεύγει ποτέ από αυτή τη συσκευή.",
   "receipt.signed_on_phone": "✓ Υπογράφηκε σε αυτό το τηλέφωνο",
   "receipt.signed_on_phone_why": "Από κλειδί που δεν φεύγει ποτέ από αυτό το τηλέφωνο.",
   "receipt.signs_within": "Η KIFF υπογράφει τις αποδείξεις μέσα σε ένα λεπτό από την απόφαση. Έλεγξε ξανά σε λίγο.",

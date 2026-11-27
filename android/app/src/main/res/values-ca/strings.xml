@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">Rebutjat per %1$s</string>
     <string name="receipt_share">Comparteix</string>
     <string name="receipt_show_full">Mostra el rebut complet</string>
-    <string name="receipt_signed_on_device_why">Amb %1$s, per una clau que no surt mai d\'aquest dispositiu.</string>
+    <string name="receipt_signed_on_device_why">Per una clau que no surt mai d\'aquest dispositiu.</string>
     <string name="receipt_signed_on_phone">✓ Signat en aquest telèfon</string>
     <string name="receipt_signed_on_phone_why">Per una clau que no surt mai d\'aquest telèfon.</string>
     <string name="receipt_signs_within">KIFF signa els rebuts en un minut des que decideix. Torna a comprovar d\'aquí a una estona.</string>

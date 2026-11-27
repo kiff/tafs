@@ -1820,7 +1820,7 @@
     <string name="receipt_refused_by">%1$s نے مسترد کیا</string>
     <string name="receipt_share">شیئر کریں</string>
     <string name="receipt_show_full">پوری رسید دکھائیں</string>
-    <string name="receipt_signed_on_device_why">%1$s کے ساتھ، ایسی کلید سے جو اس ڈیوائس سے کبھی باہر نہیں جاتی۔</string>
+    <string name="receipt_signed_on_device_why">ایسی کلید سے جو اس ڈیوائس سے کبھی باہر نہیں جاتی۔</string>
     <string name="receipt_signed_on_phone">✓ اس فون پر دستخط ہوئے</string>
     <string name="receipt_signed_on_phone_why">ایسی کلید سے جو اس فون سے کبھی باہر نہیں جاتی۔</string>
     <string name="receipt_signs_within">KIFF فیصلے کے ایک منٹ کے اندر رسیدوں پر دستخط کرتا ہے۔ تھوڑی دیر میں دوبارہ جانچیں۔</string>

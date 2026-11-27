@@ -60,7 +60,7 @@
   "receipt.refused_by": "უარყო: {who}",
   "receipt.share": "გაზიარება",
   "receipt.show_full": "აჩვენეთ სრული ქვითარი",
-  "receipt.signed_on_device_why": "{biometry}-ით, გასაღებით, რომელიც ამ მოწყობილობას არასოდეს ტოვებს.",
+  "receipt.signed_on_device_why": "გასაღებით, რომელიც ამ მოწყობილობას არასოდეს ტოვებს.",
   "receipt.signed_on_phone": "✓ ხელი მოეწერა ამ ტელეფონზე",
   "receipt.signed_on_phone_why": "გასაღებით, რომელიც ამ ტელეფონს არასოდეს ტოვებს.",
   "receipt.signs_within": "KIFF ქვითრებს გადაწყვეტიდან ერთ წუთში აწერს ხელს. შეამოწმეთ ხელახლა მალე.",

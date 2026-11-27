@@ -1759,7 +1759,7 @@
     <string name="receipt_refused_by">%1$s បានបដិសេធ</string>
     <string name="receipt_share">ចែករំលែក</string>
     <string name="receipt_show_full">បង្ហាញបង្កាន់ដៃពេញ</string>
-    <string name="receipt_signed_on_device_why">ដោយ %1$s ដោយកូនសោដែលមិនដែលចាកចេញពីឧបករណ៍នេះ។</string>
+    <string name="receipt_signed_on_device_why">ដោយកូនសោដែលមិនដែលចាកចេញពីឧបករណ៍នេះ។</string>
     <string name="receipt_signed_on_phone">✓ បានចុះហត្ថលេខានៅលើទូរសព្ទនេះ</string>
     <string name="receipt_signed_on_phone_why">ដោយកូនសោដែលមិនដែលចាកចេញពីទូរសព្ទនេះ។</string>
     <string name="receipt_signs_within">KIFF ចុះហត្ថលេខាលើបង្កាន់ដៃក្នុងរយៈពេលមួយនាទីបន្ទាប់ពីការសម្រេច។ ពិនិត្យម្តងទៀតក្នុងពេលឆាប់ៗនេះ។</string>

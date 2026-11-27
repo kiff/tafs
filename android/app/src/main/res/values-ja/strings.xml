@@ -1759,7 +1759,7 @@
     <string name="receipt_refused_by">%1$sが拒否</string>
     <string name="receipt_share">共有</string>
     <string name="receipt_show_full">領収書全体を表示</string>
-    <string name="receipt_signed_on_device_why">%1$sで、このデバイスから出ないキーにより署名。</string>
+    <string name="receipt_signed_on_device_why">このデバイスから出ないキーにより署名。</string>
     <string name="receipt_signed_on_phone">✓ このスマートフォンで署名</string>
     <string name="receipt_signed_on_phone_why">このスマートフォンから出ないキーにより署名。</string>
     <string name="receipt_signs_within">KIFFは決定から1分以内に領収書に署名します。少し待ってからもう一度確認してください。</string>

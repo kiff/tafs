@@ -1759,7 +1759,7 @@
     <string name="receipt_refused_by">%1$s이(가) 거절함</string>
     <string name="receipt_share">공유</string>
     <string name="receipt_show_full">전체 영수증 보기</string>
-    <string name="receipt_signed_on_device_why">%1$s(으)로, 이 기기를 떠나지 않는 키로 서명했습니다.</string>
+    <string name="receipt_signed_on_device_why">이 기기를 떠나지 않는 키로 서명했습니다.</string>
     <string name="receipt_signed_on_phone">✓ 이 휴대폰에서 서명됨</string>
     <string name="receipt_signed_on_phone_why">이 휴대폰을 떠나지 않는 키로 서명했습니다.</string>
     <string name="receipt_signs_within">KIFF는 결정 후 1분 이내에 영수증에 서명합니다. 잠시 후 다시 확인하세요.</string>
