@@ -60,6 +60,7 @@
   "receipt.refused_by": "უარყო: {who}",
   "receipt.share": "გაზიარება",
   "receipt.show_full": "აჩვენეთ სრული ქვითარი",
+  "receipt.signed_in_window_why": "შეხებით, {biometry}-ით გახსნილ ფანჯარაში, გასაღებით, რომელიც ამ მოწყობილობას არასოდეს ტოვებს.",
   "receipt.signed_on_device_why": "{biometry}-ით, გასაღებით, რომელიც ამ მოწყობილობას არასოდეს ტოვებს.",
   "receipt.signed_on_phone": "✓ ხელი მოეწერა ამ ტელეფონზე",
   "receipt.signed_on_phone_why": "გასაღებით, რომელიც ამ ტელეფონს არასოდეს ტოვებს.",

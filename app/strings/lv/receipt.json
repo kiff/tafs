@@ -60,6 +60,7 @@
   "receipt.refused_by": "Atteica: {who}",
   "receipt.share": "Kopīgot",
   "receipt.show_full": "Rādīt visu kvīti",
+  "receipt.signed_in_window_why": "Ar pieskārienu, logā, kas atvērts ar {biometry}, ar atslēgu, kas nekad neatstāj šo ierīci.",
   "receipt.signed_on_device_why": "Ar {biometry}, ar atslēgu, kas nekad neatstāj šo ierīci.",
   "receipt.signed_on_phone": "✓ Parakstīts šajā tālrunī",
   "receipt.signed_on_phone_why": "Ar atslēgu, kas nekad neatstāj šo tālruni.",

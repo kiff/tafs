@@ -60,6 +60,7 @@
   "receipt.refused_by": "Refuzat de {who}",
   "receipt.share": "Distribuiți",
   "receipt.show_full": "Afișați chitanța completă",
+  "receipt.signed_in_window_why": "Cu o atingere, într-o fereastră deschisă cu {biometry}, printr-o cheie care nu părăsește niciodată acest dispozitiv.",
   "receipt.signed_on_device_why": "Cu {biometry}, printr-o cheie care nu părăsește niciodată acest dispozitiv.",
   "receipt.signed_on_phone": "✓ Semnat pe acest telefon",
   "receipt.signed_on_phone_why": "Printr-o cheie care nu părăsește niciodată acest telefon.",

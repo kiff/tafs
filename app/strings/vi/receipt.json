@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who} đã từ chối",
   "receipt.share": "Chia sẻ",
   "receipt.show_full": "Hiện biên nhận đầy đủ",
+  "receipt.signed_in_window_why": "Bằng một lần chạm, trong khoảng thời gian mở bằng {biometry}, với một khóa không bao giờ rời thiết bị này.",
   "receipt.signed_on_device_why": "Bằng {biometry}, với một khóa không bao giờ rời thiết bị này.",
   "receipt.signed_on_phone": "✓ Đã ký trên điện thoại này",
   "receipt.signed_on_phone_why": "Bằng một khóa không bao giờ rời điện thoại này.",

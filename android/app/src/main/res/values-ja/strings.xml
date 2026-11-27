@@ -1759,6 +1759,7 @@
     <string name="receipt_refused_by">%1$sが拒否</string>
     <string name="receipt_share">共有</string>
     <string name="receipt_show_full">領収書全体を表示</string>
+    <string name="receipt_signed_in_window_why">%1$sで開いた時間枠内のタップで、このデバイスから出ないキーにより署名。</string>
     <string name="receipt_signed_on_device_why">%1$sで、このデバイスから出ないキーにより署名。</string>
     <string name="receipt_signed_on_phone">✓ このスマートフォンで署名</string>
     <string name="receipt_signed_on_phone_why">このスマートフォンから出ないキーにより署名。</string>

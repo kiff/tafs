@@ -60,6 +60,7 @@
   "receipt.refused_by": "Reddeden: {who}",
   "receipt.share": "Paylaş",
   "receipt.show_full": "Tam makbuzu göster",
+  "receipt.signed_in_window_why": "Bir dokunuşla, {biometry} ile açılan bir pencere içinde, bu cihazdan asla çıkmayan bir anahtarla.",
   "receipt.signed_on_device_why": "{biometry} ile, bu cihazdan asla çıkmayan bir anahtarla.",
   "receipt.signed_on_phone": "✓ Bu telefonda imzalandı",
   "receipt.signed_on_phone_why": "Bu telefondan asla çıkmayan bir anahtarla.",

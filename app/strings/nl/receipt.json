@@ -60,6 +60,7 @@
   "receipt.refused_by": "Geweigerd door {who}",
   "receipt.share": "Delen",
   "receipt.show_full": "Het volledige ontvangstbewijs tonen",
+  "receipt.signed_in_window_why": "Met een tik, binnen een venster dat met {biometry} is geopend, door een sleutel die dit apparaat nooit verlaat.",
   "receipt.signed_on_device_why": "Met {biometry}, door een sleutel die dit apparaat nooit verlaat.",
   "receipt.signed_on_phone": "✓ Ondertekend op deze telefoon",
   "receipt.signed_on_phone_why": "Door een sleutel die deze telefoon nooit verlaat.",

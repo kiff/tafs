@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who} татгалзсан",
   "receipt.share": "Хуваалцах",
   "receipt.show_full": "Бүтэн баримтыг харуулах",
+  "receipt.signed_in_window_why": "Нэг товшилтоор, {biometry}-ээр нээсэн хугацааны дотор, энэ төхөөрөмжөөс хэзээ ч гардаггүй түлхүүрээр.",
   "receipt.signed_on_device_why": "{biometry}-ээр, энэ төхөөрөмжөөс хэзээ ч гардаггүй түлхүүрээр.",
   "receipt.signed_on_phone": "✓ Энэ утсан дээр гарын үсэг зурсан",
   "receipt.signed_on_phone_why": "Энэ утаснаас хэзээ ч гардаггүй түлхүүрээр.",

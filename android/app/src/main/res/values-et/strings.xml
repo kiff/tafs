@@ -1820,6 +1820,7 @@
     <string name="receipt_refused_by">Keeldus: %1$s</string>
     <string name="receipt_share">Jaga</string>
     <string name="receipt_show_full">Näita kogu kviitungit</string>
+    <string name="receipt_signed_in_window_why">Puudutusega, %1$s abil avatud ajaaknas, võtmega, mis ei lahku kunagi sellest seadmest.</string>
     <string name="receipt_signed_on_device_why">%1$s abil, võtmega, mis ei lahku kunagi sellest seadmest.</string>
     <string name="receipt_signed_on_phone">✓ Allkirjastatud selles telefonis</string>
     <string name="receipt_signed_on_phone_why">Võtmega, mis ei lahku kunagi sellest telefonist.</string>

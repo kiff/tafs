@@ -1820,6 +1820,7 @@
     <string name="receipt_refused_by">Abgelehnt von %1$s</string>
     <string name="receipt_share">Teilen</string>
     <string name="receipt_show_full">Ganzen Beleg zeigen</string>
+    <string name="receipt_signed_in_window_why">Mit einem Tippen, in einem Zeitfenster, das mit %1$s geöffnet wurde, durch einen Schlüssel, der dieses Gerät nie verlässt.</string>
     <string name="receipt_signed_on_device_why">Mit %1$s, durch einen Schlüssel, der dieses Gerät nie verlässt.</string>
     <string name="receipt_signed_on_phone">✓ Auf diesem Telefon signiert</string>
     <string name="receipt_signed_on_phone_why">Durch einen Schlüssel, der dieses Telefon nie verlässt.</string>

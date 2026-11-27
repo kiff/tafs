@@ -1881,6 +1881,7 @@
     <string name="receipt_refused_by">Odmietol (odmietla) %1$s</string>
     <string name="receipt_share">Zdieľať</string>
     <string name="receipt_show_full">Zobraziť celé potvrdenie</string>
+    <string name="receipt_signed_in_window_why">Ťuknutím, v okne otvorenom cez %1$s, kľúčom, ktorý nikdy neopustí toto zariadenie.</string>
     <string name="receipt_signed_on_device_why">Cez %1$s, kľúčom, ktorý nikdy neopustí toto zariadenie.</string>
     <string name="receipt_signed_on_phone">✓ Podpísané v tomto telefóne</string>
     <string name="receipt_signed_on_phone_why">Kľúčom, ktorý nikdy neopustí tento telefón.</string>

@@ -1759,6 +1759,7 @@
     <string name="receipt_refused_by">%1$s ປະຕິເສດ</string>
     <string name="receipt_share">ແບ່ງປັນ</string>
     <string name="receipt_show_full">ສະແດງໃບຮັບເງິນເຕັມ</string>
+    <string name="receipt_signed_in_window_why">ດ້ວຍການແຕະ, ພາຍໃນຊ່ວງເວລາທີ່ເປີດດ້ວຍ %1$s, ດ້ວຍກຸນແຈທີ່ບໍ່ເຄີຍອອກຈາກອຸປະກອນນີ້.</string>
     <string name="receipt_signed_on_device_why">ດ້ວຍ %1$s, ດ້ວຍກຸນແຈທີ່ບໍ່ເຄີຍອອກຈາກອຸປະກອນນີ້.</string>
     <string name="receipt_signed_on_phone">✓ ລົງລາຍເຊັນໃນໂທລະສັບນີ້</string>
     <string name="receipt_signed_on_phone_why">ດ້ວຍກຸນແຈທີ່ບໍ່ເຄີຍອອກຈາກໂທລະສັບນີ້.</string>

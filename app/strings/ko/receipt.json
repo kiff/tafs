@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who}이(가) 거절함",
   "receipt.share": "공유",
   "receipt.show_full": "전체 영수증 보기",
+  "receipt.signed_in_window_why": "{biometry}(으)로 연 시간 안에 탭 한 번으로, 이 기기를 떠나지 않는 키로 서명했습니다.",
   "receipt.signed_on_device_why": "{biometry}(으)로, 이 기기를 떠나지 않는 키로 서명했습니다.",
   "receipt.signed_on_phone": "✓ 이 휴대폰에서 서명됨",
   "receipt.signed_on_phone_why": "이 휴대폰을 떠나지 않는 키로 서명했습니다.",

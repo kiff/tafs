@@ -60,6 +60,7 @@
   "receipt.refused_by": "Abgelehnt von {who}",
   "receipt.share": "Teilen",
   "receipt.show_full": "Ganzen Beleg zeigen",
+  "receipt.signed_in_window_why": "Mit einem Tippen, in einem Zeitfenster, das mit {biometry} geöffnet wurde, durch einen Schlüssel, der dieses Gerät nie verlässt.",
   "receipt.signed_on_device_why": "Mit {biometry}, durch einen Schlüssel, der dieses Gerät nie verlässt.",
   "receipt.signed_on_phone": "✓ Auf diesem Telefon signiert",
   "receipt.signed_on_phone_why": "Durch einen Schlüssel, der dieses Telefon nie verlässt.",

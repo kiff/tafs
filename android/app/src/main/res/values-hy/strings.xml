@@ -1820,6 +1820,7 @@
     <string name="receipt_refused_by">Մերժել է՝ %1$s</string>
     <string name="receipt_share">Կիսվել</string>
     <string name="receipt_show_full">Ցույց տվեք ամբողջական անդորրագիրը</string>
+    <string name="receipt_signed_in_window_why">Մեկ հպումով, %1$s-ով բացված պատուհանում, բանալիով, որը երբեք չի լքում այս սարքը։</string>
     <string name="receipt_signed_on_device_why">%1$s-ով, բանալիով, որը երբեք չի լքում այս սարքը։</string>
     <string name="receipt_signed_on_phone">✓ Ստորագրված է այս հեռախոսում</string>
     <string name="receipt_signed_on_phone_why">Բանալիով, որը երբեք չի լքում այս հեռախոսը։</string>

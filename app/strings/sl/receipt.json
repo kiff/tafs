@@ -60,6 +60,7 @@
   "receipt.refused_by": "Zavrnil(a) {who}",
   "receipt.share": "Deli",
   "receipt.show_full": "Prikaži celotno potrdilo",
+  "receipt.signed_in_window_why": "Z dotikom, v oknu, odprtem z {biometry}, s ključem, ki nikoli ne zapusti te naprave.",
   "receipt.signed_on_device_why": "Z {biometry}, s ključem, ki nikoli ne zapusti te naprave.",
   "receipt.signed_on_phone": "✓ Podpisano v tem telefonu",
   "receipt.signed_on_phone_why": "S ključem, ki nikoli ne zapusti tega telefona.",

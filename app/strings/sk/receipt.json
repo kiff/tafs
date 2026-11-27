@@ -60,6 +60,7 @@
   "receipt.refused_by": "Odmietol (odmietla) {who}",
   "receipt.share": "Zdieľať",
   "receipt.show_full": "Zobraziť celé potvrdenie",
+  "receipt.signed_in_window_why": "Ťuknutím, v okne otvorenom cez {biometry}, kľúčom, ktorý nikdy neopustí toto zariadenie.",
   "receipt.signed_on_device_why": "Cez {biometry}, kľúčom, ktorý nikdy neopustí toto zariadenie.",
   "receipt.signed_on_phone": "✓ Podpísané v tomto telefóne",
   "receipt.signed_on_phone_why": "Kľúčom, ktorý nikdy neopustí tento telefón.",

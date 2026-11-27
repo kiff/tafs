@@ -60,6 +60,7 @@
   "receipt.refused_by": "Άρνηση από {who}",
   "receipt.share": "Κοινοποίηση",
   "receipt.show_full": "Εμφάνιση πλήρους απόδειξης",
+  "receipt.signed_in_window_why": "Με ένα πάτημα, μέσα σε παράθυρο που άνοιξε με {biometry}, από κλειδί που δεν φεύγει ποτέ από αυτή τη συσκευή.",
   "receipt.signed_on_device_why": "Με {biometry}, από κλειδί που δεν φεύγει ποτέ από αυτή τη συσκευή.",
   "receipt.signed_on_phone": "✓ Υπογράφηκε σε αυτό το τηλέφωνο",
   "receipt.signed_on_phone_why": "Από κλειδί που δεν φεύγει ποτέ από αυτό το τηλέφωνο.",

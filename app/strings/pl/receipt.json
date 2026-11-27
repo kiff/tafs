@@ -60,6 +60,7 @@
   "receipt.refused_by": "Odrzucone przez: {who}",
   "receipt.share": "Udostępnij",
   "receipt.show_full": "Pokaż pełne potwierdzenie",
+  "receipt.signed_in_window_why": "Dotknięciem, w oknie otwartym przez {biometry}, kluczem, który nigdy nie opuszcza tego urządzenia.",
   "receipt.signed_on_device_why": "Przez {biometry}, kluczem, który nigdy nie opuszcza tego urządzenia.",
   "receipt.signed_on_phone": "✓ Podpisano na tym telefonie",
   "receipt.signed_on_phone_why": "Kluczem, który nigdy nie opuszcza tego telefonu.",
