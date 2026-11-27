@@ -68,9 +68,9 @@
     <string name="approval_approving_asks_none_set_up">Zum Genehmigen wird %1$s abgefragt, und auf diesem %2$s ist noch nichts davon eingerichtet. Richte es unter %3$s ein und komm dann zurück.</string>
     <string name="approval_approving_needs_none_set_up">Zum Genehmigen brauchst du %1$s, und nichts davon ist eingerichtet. Richte es unter %2$s ein.</string>
     <string name="approval_approving_needs_passcode_set_passcode">Zum Genehmigen brauchst du einen Code und %1$s. Lege unter %2$s einen Code fest und füge dann %3$s hinzu.</string>
-    <string name="approval_biometry_face">Entsperrung per Gesicht</string>
-    <string name="approval_biometry_fingerprint">deinen Fingerabdruck</string>
-    <string name="approval_biometry_screen_lock">deine Displaysperre</string>
+    <string name="approval_biometry_face">der Entsperrung per Gesicht</string>
+    <string name="approval_biometry_fingerprint">deinem Fingerabdruck</string>
+    <string name="approval_biometry_screen_lock">deiner Displaysperre</string>
     <string name="approval_biometry_timed_out">Zeitüberschreitung bei %1$s. Versuch es erneut.</string>
     <string name="approval_can_not_used_right_try">%1$s kann gerade nicht verwendet werden. Versuch es gleich noch einmal.</string>
     <string name="approval_cancelled">Abgebrochen. Nichts wurde geändert.</string>
@@ -92,7 +92,7 @@
     <string name="approval_kept">Sie bleibt unter „Braucht dich“.</string>
     <string name="approval_key_could_not_sign">Der Schlüssel konnte nicht signieren</string>
     <string name="approval_key_gone_approve_again">Deine Fingerabdrücke haben sich geändert oder keiner wurde erkannt, daher kann dieses Telefon erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst.</string>
-    <string name="approval_key_gone_biometry">Deine %1$s hat sich geändert oder wurde nicht erkannt, daher kann dieses Gerät erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst.</string>
+    <string name="approval_key_gone_biometry">Etwas an %1$s hat sich geändert oder wurde nicht erkannt, daher kann dieses Gerät erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst.</string>
     <string name="approval_key_gone_sign_in">Deine Fingerabdrücke haben sich geändert oder keiner wurde erkannt, daher kann dieses Telefon erst wieder genehmigen, wenn du dich erneut anmeldest.</string>
     <string name="approval_key_lost">Melde dich erneut mit KIFF an, um auf diesem Telefon zu genehmigen.</string>
     <string name="approval_key_not_accepted">KIFF hat den Genehmigungsschlüssel dieses Geräts nicht angenommen. Versuch es noch einmal.</string>
@@ -104,7 +104,7 @@
     <string name="approval_no_key">Kein Schlüssel zum Signieren</string>
     <string name="approval_not_confirmed">Nicht bestätigt</string>
     <string name="approval_not_recognized">Versuch es erneut oder melde dich erneut an, falls sich deine Fingerabdrücke geändert haben.</string>
-    <string name="approval_not_recognized_biometry">Versuch es erneut oder melde dich erneut an, falls sich deine %1$s geändert hat.</string>
+    <string name="approval_not_recognized_biometry">Versuch es erneut oder melde dich erneut an, falls sich an %1$s etwas geändert hat.</string>
     <string name="approval_nothing_approved_request_kept_approve">Es wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
     <string name="approval_open_settings">Einstellungen öffnen</string>
     <string name="approval_prompt_approve_on_kiff">Bei KIFF genehmigen</string>
@@ -710,7 +710,7 @@
     <string name="coach_approval_decline">Ablehnen</string>
     <string name="coach_approval_title">Coach bittet dich um Genehmigung</string>
     <string name="coach_approved_signed">Genehmigt · bei %1$s angemeldet</string>
-    <string name="coach_approving_asks">Zum Genehmigen wird %1$s abgefragt.</string>
+    <string name="coach_approving_asks">Zum Genehmigen fragt die App nach %1$s.</string>
     <string name="coach_approving_needed_finish_your_first">Dein erster taf braucht Genehmigungen auf diesem Gerät.</string>
     <string name="coach_ask">Coach fragen</string>
     <string name="coach_ask_anything">Frag alles über deine tafs</string>
@@ -851,7 +851,7 @@
     <string name="coach_sign_in_note">Die eigene Seite des Anbieters öffnet sich. Kein taf sieht deine Anmeldung.</string>
     <string name="coach_signed_reading_what_offers">Bei %1$s angemeldet · liest, was es anbietet</string>
     <string name="coach_start">Starten</string>
-    <string name="coach_starting_asks">Zum Starten wird einmal %1$s abgefragt.</string>
+    <string name="coach_starting_asks">Zum Starten fragt die App einmal nach %1$s.</string>
     <string name="coach_stopped_part_way_before_finished">Das hat mittendrin aufgehört, bevor es fertig war.</string>
     <string name="coach_taf_halted">%1$s ist angehalten</string>
     <string name="coach_taken_named">Coach kann seine Tools noch nicht bekommen: Ein anderes Tool in KIFF heißt %1$s. Benenne es in KIFF um oder entferne es.</string>
@@ -1576,14 +1576,14 @@
     <string name="needs_you_extra_room_with">Zusatzspielraum mit %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Lass dich benachrichtigen, wenn ein Aufruf auf deine Antwort wartet, auch wenn tafs geschlossen ist.</string>
     <string name="needs_you_install_from_card">Installiere sie über ihre Karte: Die Version geht live, dann erfährt Coach davon.</string>
-    <string name="needs_you_ios_asks_next_confirming_sets">Als Nächstes fragt iOS, dann %1$s.</string>
+    <string name="needs_you_ios_asks_next_confirming_sets">Als Nächstes fragt iOS, dann folgt die Bestätigung mit %1$s.</string>
     <plurals name="needs_you_knocks">
         <item quantity="one">Jemand hat an seine Tür geklopft. Es wurde nichts unternommen.</item>
         <item quantity="other">%1$s-mal wurde an seine Türen geklopft. Es wurde nichts unternommen.</item>
     </plurals>
     <string name="needs_you_know_moment_taf_needs_you">Erfahre sofort, wenn ein taf dich braucht</string>
     <string name="needs_you_left">noch %1$s</string>
-    <string name="needs_you_no_gives_card_room_back">„Nein“ gibt seiner Card den Spielraum zurück. Zum Antworten wird %1$s abgefragt.</string>
+    <string name="needs_you_no_gives_card_room_back">„Nein“ gibt seiner Card den Spielraum zurück. Zum Antworten fragt die App nach %1$s.</string>
     <string name="needs_you_nothing">Nichts braucht dich.</string>
     <string name="needs_you_nothing_sent">Nichts wird gesendet, bevor du genehmigst.</string>
     <string name="needs_you_nothing_waiting">Nichts wartet.</string>
@@ -1659,7 +1659,7 @@
     <string name="pair_keychain_refused">Dieser Mac konnte seine Anmeldung nicht im Schlüsselbund sichern (Fehler %1$s) und wurde nicht hinzugefügt. Zeig einen neuen Code und versuch es noch einmal.</string>
     <string name="pair_keyring_refused">Dieser Computer konnte seine Anmeldung nicht sichern und wurde nicht hinzugefügt: Er braucht einen laufenden, entsperrten Schlüsselbund wie GNOME Keyring, KWallet oder KeePassXC. Richte einen ein oder entsperre ihn, zeig dann einen neuen Code und versuch es noch einmal.</string>
     <string name="pair_new_code">Neuen Code zeigen</string>
-    <string name="pair_passkey_why_body">Er bleibt auf diesem %1$s, geschützt durch %2$s. Damit genehmigt dieser %1$s die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN.</string>
+    <string name="pair_passkey_why_body">Er bleibt auf diesem %1$s, geschützt mit %2$s. Damit genehmigt dieser %1$s die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN.</string>
     <string name="pair_passkey_why_go">Passkey anlegen</string>
     <string name="pair_passkey_why_title">Einen Passkey für diesen %1$s anlegen</string>
     <string name="pair_refused_key_registered">Dein Handy sagt, dass dieser %1$s schon mit deinem Konto gekoppelt ist. Zeig einen neuen Code und scanne ihn erneut.</string>

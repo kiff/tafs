@@ -37,14 +37,14 @@
   "needs_you.extra_room_with": "Zusatzspielraum mit {biometry}",
   "needs_you.get_alert_when_call_waits": "Lass dich benachrichtigen, wenn ein Aufruf auf deine Antwort wartet, auch wenn tafs geschlossen ist.",
   "needs_you.install_from_card": "Installiere sie über ihre Karte: Die Version geht live, dann erfährt Coach davon.",
-  "needs_you.ios_asks_next_confirming_sets": "Als Nächstes fragt iOS, dann {biometry}.",
+  "needs_you.ios_asks_next_confirming_sets": "Als Nächstes fragt iOS, dann folgt die Bestätigung mit {biometry}.",
   "needs_you.knocks": {
     "one": "Jemand hat an seine Tür geklopft. Es wurde nichts unternommen.",
     "other": "{count}-mal wurde an seine Türen geklopft. Es wurde nichts unternommen."
   },
   "needs_you.know_moment_taf_needs_you": "Erfahre sofort, wenn ein taf dich braucht",
   "needs_you.left": "noch {time}",
-  "needs_you.no_gives_card_room_back": "„Nein“ gibt seiner Card den Spielraum zurück. Zum Antworten wird {biometry} abgefragt.",
+  "needs_you.no_gives_card_room_back": "„Nein“ gibt seiner Card den Spielraum zurück. Zum Antworten fragt die App nach {biometry}.",
   "needs_you.nothing": "Nichts braucht dich.",
   "needs_you.nothing_sent": "Nichts wird gesendet, bevor du genehmigst.",
   "needs_you.nothing_waiting": "Nichts wartet.",

@@ -9,7 +9,7 @@
   "pair.keychain_refused": "Dieser Mac konnte seine Anmeldung nicht im Schlüsselbund sichern (Fehler {code}) und wurde nicht hinzugefügt. Zeig einen neuen Code und versuch es noch einmal.",
   "pair.keyring_refused": "Dieser Computer konnte seine Anmeldung nicht sichern und wurde nicht hinzugefügt: Er braucht einen laufenden, entsperrten Schlüsselbund wie GNOME Keyring, KWallet oder KeePassXC. Richte einen ein oder entsperre ihn, zeig dann einen neuen Code und versuch es noch einmal.",
   "pair.new_code": "Neuen Code zeigen",
-  "pair.passkey_why_body": "Er bleibt auf diesem {device}, geschützt durch {biometry}. Damit genehmigt dieser {device} die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN.",
+  "pair.passkey_why_body": "Er bleibt auf diesem {device}, geschützt mit {biometry}. Damit genehmigt dieser {device} die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN.",
   "pair.passkey_why_go": "Passkey anlegen",
   "pair.passkey_why_title": "Einen Passkey für diesen {device} anlegen",
   "pair.refused_key_registered": "Dein Handy sagt, dass dieser {device} schon mit deinem Konto gekoppelt ist. Zeig einen neuen Code und scanne ihn erneut.",
