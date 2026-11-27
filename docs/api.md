@@ -412,7 +412,9 @@ is never labelled done. Entries carry their ready-to-draw `title`, `detail`,
 signed evidence. `money_moved: true` is set only on a done or approved call KIFF marks as a payment
 (`call.payment`: its tool moves money by its owner-approved profile, and the call was sent). The apps say
 "{amount} moved" and count the entry under the Record's Money moved only then: an amount alone, such as
-an invoice written or a transfer requested, moved nothing, and reads "Done.". `tools` (comma-separated action names) and `from` (an ISO date)
+an invoice written or a transfer requested, moved nothing, and reads "Done.". "Moved" means the call was sent and
+the tool answered done: a payment the provider later fails or reverses still reads "moved" until a later entry
+says otherwise. `tools` (comma-separated action names) and `from` (an ISO date)
 can narrow an app's seven-day Activity. The server supplies that query on the app's
 setup view; the phones do not identify apps from tool names.
 
