@@ -77,8 +77,8 @@ struct TafsApp: App {
         #endif
         .onChange(of: scenePhase) { phase in
             if phase == .background { wasAway = true }
-            // The approval window this phone holds closes after 30 seconds away (kiff/tafs#494); back
-            // sooner, it stays, and KIFF's words for the next tap are read again.
+            // The approval window this phone holds closes as the app leaves (kiff/tafs#494); back on
+            // screen, KIFF's words for a window still held are read again.
             if phase == .background { model.wentToBackground() }
             if phase == .active { model.cameToForeground() }
             // Back from the browser: a re-link waiting there asks KIFF again at once.
