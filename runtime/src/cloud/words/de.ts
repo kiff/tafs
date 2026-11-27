@@ -176,6 +176,7 @@ export const de: Words = {
   each_item_total_day: "insgesamt pro Tag",
   each_item_name: (key) => ({ payment_intent: "Zahlung", payment: "Zahlung", charge: "Belastung", invoice: "Rechnung", customer: "Kunde", order: "Bestellung", subscription: "Abonnement", refund: "Erstattung" } as Record<string, string>)[key] ?? "Element",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} wurde heute eingerichtet, also muss jede Änderung dich zuerst fragen; diese Card würde „${tool}“ ohne Nachfrage laufen lassen. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} wurde noch nicht mit tafs getestet, also muss jede Änderung dich zuerst fragen; diese Card würde „${tool}“ ohne Nachfrage laufen lassen. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_critical_key: "Das erweitert, was der taf darf, also braucht es deinen Fingerabdruck. Es wurde nichts genehmigt; genehmige es erneut mit deinem Fingerabdruck.",
   approval_drive_key: "Damit Coach die App bedienen darf, braucht es deinen Fingerabdruck. Nichts wurde gestartet; genehmige es erneut mit deinem Fingerabdruck.",
   remove_signed: "Entferne ihn auf deinem Gerät: Das Entfernen eines taf fragt jedes Mal nach deiner Displaysperre. Nichts wurde entfernt.",

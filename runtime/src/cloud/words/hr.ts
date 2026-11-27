@@ -170,6 +170,7 @@ export const hr: Words = {
   each_item_total_day: "ukupno dnevno",
   each_item_name: (key: string) => ({ payment_intent: "plaćanje", payment: "plaćanje", charge: "terećenje", invoice: "račun", customer: "kupac", order: "narudžba", subscription: "pretplata", refund: "povrat novca" } as Record<string, string>)[key] ?? "stavka",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} je postavljen danas, pa vas svaka promjena mora prvo pitati; ovaj Card bi pustio „${tool}“ da radi bez pitanja. Ništa nije odobreno. Coach ga ponovno sastavlja.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} još nije testiran s tafsom, pa vas svaka promjena mora prvo pitati; ovaj Card bi pustio „${tool}“ da radi bez pitanja. Ništa nije odobreno. Coach ga ponovno sastavlja.`,
   approval_critical_key: "Ovo proširuje što taf smije raditi, pa je potreban vaš otisak prsta. Ništa nije odobreno; odobrite ponovno otiskom prsta.",
   approval_drive_key: "Da bi Coach upravljao aplikacijom, potreban je vaš otisak prsta. Ništa nije počelo; odobrite ponovno otiskom prsta.",
   remove_signed: "Uklonite ga sa svog uređaja: uklanjanje tafa uvijek traži vaše zaključavanje zaslona. Ništa nije uklonjeno.",

@@ -798,6 +798,26 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(await ask()).toMatchObject({ outcome: "answered", note: WORDS.uncovered("Refund a charge") });
   });
 
+  it("an app not yet proved on the managed route is held as one set up on demand, in its own words (kiff/planque#457)", async () => {
+    const s = services();
+    const tools = [{ tool: "send", name: "send_x", title: "Send an email" }, { tool: "list", name: "list_x", title: "List emails", read_only: true }];
+    s.grants = [grant({ status: "connected", unproved: true }, { tools })];
+    const card = (over: Record<string, unknown>) => ({ id: "c1", subject: "refunds-x", grants: [{ action: "send_x" }, { action: "list_x" }], on_exceed: "owner", aggregates: [{ quantity: "count", limit: 0, window: "calendar_day" }], ...over });
+    // Allowed outright: refused, with the unproved words, not "set up today".
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [card({ aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] })] };
+    const r = await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(r.body).toMatchObject({ outcome: "answered", note: WORDS.unprovedLetsRun("Stripe", "Send an email") });
+    expect(String(r.body.answer)).toMatch(/^failed: Stripe is not yet proved on the managed route, so every write and money tool of it must ask the owner each time.*"Send an email" run without asking/);
+    expect(WORDS.unprovedLetsRun("Stripe", "Send an email")).not.toEqual(WORDS.onDemandLetsRun("Stripe", "Send an email"));
+    // Held for every call, reads open: signed.
+    s.drafts.drf_1.cards = [card({}), { id: "c2", subject: "refunds-x", grants: [{ action: "list_x" }], on_exceed: "refuse", aggregates: [{ quantity: "count", limit: 1000, window: "calendar_day" }] }];
+    expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
+    // Both marks: the on-demand words, as before.
+    s.grants = [grant({ status: "connected", unproved: true, on_demand: true }, { tools })];
+    s.drafts.drf_1.cards = [card({ aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] })];
+    expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", note: WORDS.onDemandLetsRun("Stripe", "Send an email") });
+  });
+
   it("an app set up on demand asks for every change: a draft that lets one of its writes run outright isn't signed (kiff/planque#87)", async () => {
     const s = services();
     const tools = [{ tool: "send", name: "send_x", title: "Send an email" }, { tool: "list", name: "list_x", title: "List emails", read_only: true }];

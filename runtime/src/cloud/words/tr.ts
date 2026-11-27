@@ -170,6 +170,7 @@ export const tr: Words = {
   each_item_total_day: "günde toplam",
   each_item_name: (key: string) => ({ payment_intent: "ödeme", payment: "ödeme", charge: "tahsilat", invoice: "fatura", customer: "müşteri", order: "sipariş", subscription: "abonelik", refund: "iade" } as Record<string, string>)[key] ?? "öğe",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} bugün kuruldu, bu yüzden her değişiklik önce size sormalı; bu Card "${tool}" aracının sormadan çalışmasına izin verirdi. Hiçbir şey onaylanmadı. Coach onu yeniden hazırlar.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} henüz tafs ile test edilmedi, bu yüzden her değişiklik önce size sormalı; bu Card "${tool}" aracının sormadan çalışmasına izin verirdi. Hiçbir şey onaylanmadı. Coach onu yeniden hazırlar.`,
   approval_critical_key: "Bu, taf'ın yapabileceklerini genişletiyor, bu yüzden parmak izinizi gerektiriyor. Hiçbir şey onaylanmadı; parmak izinizle tekrar onaylayın.",
   approval_drive_key: "Coach'un uygulamayı kullanmasına izin vermek parmak izinizi gerektirir. Hiçbir şey başlamadı; parmak izinizle tekrar onaylayın.",
   remove_signed: "Cihazınızdan kaldırın: bir taf'ı kaldırmak her seferinde ekran kilidinizi ister. Hiçbir şey kaldırılmadı.",
