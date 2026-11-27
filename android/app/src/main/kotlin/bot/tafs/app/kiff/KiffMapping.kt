@@ -557,7 +557,7 @@ object KiffMapping {
   fun details(e: CardException): List<String> {
     val arguments = e.arguments ?: return emptyList()
     val shown = (e.parameterUnits?.keys.orEmpty() + e.parameters?.keys.orEmpty()).map { it.lowercase() }.toSet()
-    return arguments.keys.sorted().flatMap { key ->
+    return arguments.keys.sortedWith(CODE_POINT_ORDER).flatMap { key ->
       val k = key.lowercase()
       // The gateway's own arguments: the operation's id, and the taf's words, which show under "The taf says".
       if (k in shown || k == "kiff_operation_id" || k == "kiff_reason" || k == "kiff_about") return@flatMap emptyList()
@@ -576,7 +576,7 @@ object KiffMapping {
         else listOf("$pad$label:") + value.flatMapIndexed { i, item -> argumentLines("${i + 1}", item, depth + 1) }
       is JsonObject ->
         if (value.isEmpty()) listOf("$pad$label: {}")
-        else listOf("$pad$label:") + value.keys.sorted().flatMap { k -> argumentLines(visible(k), value[k], depth + 1) }
+        else listOf("$pad$label:") + value.keys.sortedWith(CODE_POINT_ORDER).flatMap { k -> argumentLines(visible(k), value[k], depth + 1) }
       else -> listOf("$pad$label: ${visible(argumentText(value))}")
     }
   }
@@ -607,6 +607,23 @@ object KiffMapping {
 
   /** A JSON number whose digits are all zeros, with any exponent. */
   private val ZERO = Regex("-?0+(\\.0*)?([eE][+-]?[0-9]+)?")
+
+  /**
+   * Keys in Unicode code point order, as KIFF and every app sort them (contracts/held-arguments.json). A String's own order
+   * compares UTF-16 units, which puts a key with an emoji (a surrogate pair, 0xD800 and up) before one with U+E000 to U+FFFF.
+   */
+  val CODE_POINT_ORDER: Comparator<String> = Comparator { a, b ->
+    var i = 0
+    var j = 0
+    while (i < a.length && j < b.length) {
+      val x = a.codePointAt(i)
+      val y = b.codePointAt(j)
+      if (x != y) return@Comparator x.compareTo(y)
+      i += Character.charCount(x)
+      j += Character.charCount(y)
+    }
+    (a.length - i).compareTo(b.length - j)
+  }
 
   /** The most digits a held call's number is written out in; past it, it's written as sent. */
   const val PLAIN_DIGITS_MAX = 100L
