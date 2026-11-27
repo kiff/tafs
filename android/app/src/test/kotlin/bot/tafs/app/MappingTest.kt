@@ -193,6 +193,8 @@ class MappingTest {
     }
     assertEquals("15" + "0".repeat(97), text("1.50e98"))
     assertEquals("0", text("-0.0e5"))
+    // A zero whose exponent is too large to read is still 0, as KIFF writes it.
+    for (n in listOf("0e500", "0e99999999999999999999", "-0.000E-999999999", "0.0")) assertEquals(n, "0", text(n))
   }
 
   @Test fun aHeldBrowserCallsStepsAreWrittenOutInFullNeverFolded() {
