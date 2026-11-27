@@ -607,7 +607,10 @@ tools signed with their Card (`key_and_cards`, `tools_and_cards`) always take th
 takes the key KIFF names for its draft (`confirm_key`, read within the same 1.5 s), and the fingerprint while KIFF
 names none. When KIFF's draft can't be read, `takes` is left out. The apps draw KIFF's window words ("No fingerprint
 for the next 4 minutes", [approvals.md](approvals.md#one-fingerprint-then-taps-the-approval-window)) only on a
-`"tap"` card: on any other, Approve asks for the fingerprint, and the card doesn't say otherwise.
+`"tap"` card: on any other, Approve asks for the fingerprint, and the card doesn't say otherwise. A card whose
+Approve signs nothing is marked `{"card": false, "takes": "none"}`: `decide` answers it with no step (a connected app
+or a signed-in one with no draft, already approved or nothing new; a connection past approving). No app names the
+fingerprint over it. An app that doesn't know `"none"` draws the card as before.
 
 ## Coming back to a run at work
 
