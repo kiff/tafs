@@ -364,6 +364,7 @@ export const fr: Words = {
   gallery_guide_if: "Si",
   recipes_proved_help_desk: "Éprouvé sur un support de test.",
   recipes_proved_billing: "Éprouvé sur une appli de facturation de test.",
+  recipes_proved_receipts: "Éprouvé sur une boîte mail, un dossier et un tableur de test.",
   suggestions_on: "Les suggestions s'affichent dans une nouvelle conversation avec Coach tant que le compte n'a pas son premier taf.",
   suggestions_off: "Les suggestions sont désactivées pour ce compte.",
   suggestions_live: "Le compte a déjà un taf : une nouvelle conversation avec Coach s'ouvre vide. Les suggestions peuvent être désactivées définitivement.",

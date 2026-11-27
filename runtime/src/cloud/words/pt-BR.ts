@@ -195,6 +195,7 @@ export const ptBR: Words = {
   recipes_home_empty_shared: "Ainda sem tafs. Os tafs compartilhados com você aparecem aqui.",
   recipes_proved_help_desk: "Testado em um helpdesk de teste.",
   recipes_proved_billing: "Testado em um app de cobrança de teste.",
+  recipes_proved_receipts: "Testado em uma caixa de e-mail, uma pasta e uma planilha de teste.",
   suggestions_on: "As sugestões aparecem em uma nova conversa com o Coach até a conta ter o primeiro taf.",
   refusal_halted_account: "Sua conta está bloqueada: nenhum dos seus tafs é executado, Coach incluído, até ser retomada.",
   code_ai_unavailable: "O nosso fornecedor de IA não está nos servindo neste momento, por isso isto parou e não usou nenhum dos seus créditos. O problema é nosso, não seu: tente novamente um pouco mais tarde.",
