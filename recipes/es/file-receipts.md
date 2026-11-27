@@ -12,8 +12,8 @@ guide:
   - Conecta tu buzón, tu carpeta y tu hoja
   - - Do: Abre el trabajo. Coach te pide conectar tu correo, tu almacenamiento de archivos y tu hoja de cálculo, una tras otra. Inicia sesión en cada una y aprueba.
   - - You see: Cada app aparece como conectada.
-  - Enlaza la carpeta y la hoja, e indica la pestaña
-  - - Do: Dale a Coach los enlaces a tu carpeta de recibos y a tu hoja de cálculo, y el nombre de la pestaña.
+  - Dale al trabajo los enlaces y el nombre de la pestaña
+  - - Do: En el chat del trabajo, dale los enlaces a tu carpeta de recibos y a tu hoja de cálculo, y el nombre de la pestaña.
   - - You see: El trabajo los usa cuando guarda un archivo y añade una fila.
   - Aprueba la Card
   - - Do: Aprueba la Card.
