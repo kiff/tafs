@@ -241,7 +241,9 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   anywhere else.
 - **Closing.** When the screen turns off the app closes it at once (`POST /v1/me/window/{id}/close`,
   device-signed); before a drive starts too. Android closes it at once when the app leaves the
-  foreground. iPhone and iPad close it after 30 seconds in the background; iOS may suspend the app
+  foreground: the window is forgotten on the phone before anything else runs, its words and
+  setup with it, and the close goes to KIFF after, so a quick return never finds it held
+  (`AppModel.dropWindow`). iPhone and iPad close it after 30 seconds in the background; iOS may suspend the app
   before its 30 seconds, and then it closes on coming back, if that was 30 seconds or more. It's
   the app that sees the background or a lock, not KIFF: a window the close never reached ends at
   KIFF's own time, five minutes from its last use. The app forgets it at sign-out and at a new sign-in. KIFF ends it itself at sign-out,

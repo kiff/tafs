@@ -2493,7 +2493,7 @@ class PlanqueTest {
   @Test fun theWindowClosesAtOnceInTheBackgroundAndWhenTheScreenTurnsOff() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant()}]}""")
-    repeat(2) {
+    repeat(3) {
       transport.answer(askRoute, 200, signConnectInWindow())
       transport.answer("POST /v1/me/window", 201, windowOpened)
       transport.answer(approve, 200, """{"status":"connected"}""")
@@ -2512,11 +2512,20 @@ class PlanqueTest {
     assertTrue(closed.headers.getValue("KIFF-Device-Signature").contains(",v1="))
     assertNull(m.state.value.windowWords)
     assertNull(m.state.value.windowSetup)
+    // A new window, then a return before the close has run: the window is gone already, and the close still goes.
+    m.approveCoach(approvalComponent(), digest, null)
+    assertNotNull(m.state.value.windowWords)
+    m.wentToBackground()
+    m.cameToForeground()
+    assertNull(m.state.value.windowWords)
+    assertNull(m.state.value.windowSetup)
+    testScheduler.runCurrent()
+    assertEquals(2, transport.requestsTo("POST /v1/me/window/$win/close").size)
     // A new window, then the screen turns off: closed at once.
     m.approveCoach(approvalComponent(), digest, null)
     m.screenLocked()
     testScheduler.runCurrent()
-    assertEquals(2, transport.requestsTo("POST /v1/me/window/$win/close").size)
+    assertEquals(3, transport.requestsTo("POST /v1/me/window/$win/close").size)
   }
 
   @Test fun aNewSignInForgetsTheLastSessionsWindow() = runTest {

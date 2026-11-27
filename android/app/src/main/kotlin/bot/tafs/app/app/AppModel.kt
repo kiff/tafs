@@ -6383,26 +6383,33 @@ class AppModel(
 
   private var windowClosing: Job? = null
 
-  /** The app left the foreground: the window this phone holds is closed at KIFF at once, and the next approval asks again. */
+  /** The app left the foreground: the window this phone holds is dropped at once, and the next approval asks again. */
   fun wentToBackground() {
     foreground.value = false
-    if (kiff.window == null) return
-    windowClosing?.cancel()
-    windowClosing = scope.launch { closeWindow() }
+    dropWindow()
   }
 
-  /** Back on screen: a close waiting on the background is called off, and KIFF's words read again. */
+  /** Back on screen: KIFF's words read again. A window dropped on leaving stays dropped, however quick the return. */
   fun cameToForeground() {
     foreground.value = true
-    windowClosing?.cancel()
-    windowClosing = null
     if (kiff.window != null) scope.launch { readWindowWords() }
   }
 
-  /** The screen turned off: the window this phone holds is closed at once. */
+  /** The screen turned off: the window this phone holds is dropped at once. */
   fun screenLocked() {
-    windowClosing?.cancel()
-    if (kiff.window != null) windowClosing = scope.launch { closeWindow() }
+    dropWindow()
+  }
+
+  /**
+   * Forgets the held window here before anything else runs, so no tap can ride on it, then tells KIFF to close it. A close that
+   * never reaches KIFF leaves a window this phone no longer uses; KIFF ends it at its own time.
+   */
+  private fun dropWindow() {
+    val held = kiff.window ?: return
+    kiff.window = null
+    _state.update { it.copy(windowWords = null, windowSetup = null) }
+    val signer = signer
+    windowClosing = scope.launch { runCatching { kiff.closeWindow(held) { signer.signConfirmed(it) } } }
   }
 
   private suspend fun closeWindow() {

@@ -265,9 +265,9 @@ class KiffClient(
   }
 
   /** Closes the held window, signed by the device key ([sign]): the app went to the background or the screen locked. Forgotten either way. */
-  suspend fun closeWindow(sign: (ByteArray) -> String) {
-    val held = window ?: return
-    window = null
+  suspend fun closeWindow(held: ApprovalWindow? = window, sign: (ByteArray) -> String) {
+    held ?: return
+    if (window?.id == held.id) window = null
     sendJson("POST", "$WINDOW/${escaped(held.id)}/close", JsonObject(emptyMap()), signedBy = sign)
   }
 
