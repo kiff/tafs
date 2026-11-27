@@ -6,7 +6,7 @@ line: Findet Belege und Rechnungen im Postfach, legt jede Datei in einem Ordner 
 sample:
   - Ich habe einen Beleg im Postfach gefunden und seinen Anhang im Ordner Belege abgelegt.
   - Ich habe der Ausgabentabelle eine Zeile hinzugefügt, mit Datum, Absender und Betreff.
-  - Derselbe Anhang wird nie zweimal abgelegt.
+  - Als ich es noch einmal laufen ließ, habe ich denselben Anhang nicht zweimal abgelegt.
   - Ich habe keine E-Mail gelöscht oder verschoben.
 guide:
   - Postfach, Ordner und Tabelle verbinden

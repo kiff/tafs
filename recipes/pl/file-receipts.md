@@ -6,7 +6,7 @@ line: Znajduje paragony i faktury w skrzynce, zapisuje każdy w folderze i dodaj
 sample:
   - Znalazłem jeden paragon w skrzynce i zapisałem jego załącznik w folderze Paragony.
   - Dodałem jeden wiersz do arkusza wydatków, z datą, nadawcą i tematem.
-  - Ten sam załącznik nigdy nie jest zapisywany dwa razy.
+  - Gdy uruchomiłem to ponownie, nie zapisałem tego samego załącznika dwa razy.
   - Nie usunąłem ani nie przeniosłem żadnej wiadomości.
 guide:
   - Połącz skrzynkę, folder i arkusz

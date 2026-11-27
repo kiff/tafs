@@ -6,14 +6,14 @@ line: Vindt bonnetjes en facturen in de mailbox, bewaart elk in een map en voegt
 sample:
   - Ik heb één bonnetje in de mailbox gevonden en de bijlage in de map Bonnetjes bewaard.
   - Ik heb één regel aan de uitgavenlijst toegevoegd, met de datum, de afzender en het onderwerp.
-  - Dezelfde bijlage wordt nooit twee keer bewaard.
+  - Toen ik het opnieuw liet lopen, heb ik dezelfde bijlage niet twee keer bewaard.
   - Ik heb geen e-mail verwijderd of verplaatst.
 guide:
   - Verbind je mailbox, je map en je spreadsheet
   - - Do: Open de taak. Coach vraagt je je e-mail, je bestandsopslag en je spreadsheet na elkaar te verbinden. Log in bij elk en keur goed.
   - - You see: Elke app als verbonden getoond.
   - Noem de map, de spreadsheet en het tabblad
-  - - Do: Zeg Coach welke map voor bonnetjes is, welke spreadsheet je uitgaven bevat en hoe het tabblad heet.
+  - - Do: Vertel Coach welke map voor bonnetjes is, welke spreadsheet je uitgaven bevat en hoe het tabblad heet.
   - - You see: De taak gebruikt dat tabblad wanneer hij een regel toevoegt.
   - Keur de Card goed
   - - Do: Keur de Card goed.

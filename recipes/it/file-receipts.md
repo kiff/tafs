@@ -6,7 +6,7 @@ line: Trova ricevute e fatture nella casella di posta, salva ciascuna in una car
 sample:
   - Ho trovato una ricevuta nella casella di posta e ho salvato il suo allegato nella cartella Ricevute.
   - Ho aggiunto una riga al foglio spese, con la data, il mittente e l'oggetto.
-  - Lo stesso allegato non viene mai salvato due volte.
+  - Quando l'ho riavviato, non ho salvato due volte lo stesso allegato.
   - Non ho eliminato né spostato nessuna email.
 guide:
   - Collega la casella di posta, la cartella e il foglio

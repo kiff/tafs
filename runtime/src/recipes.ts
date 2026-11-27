@@ -2448,7 +2448,7 @@ export const RECIPES = [
       ]
     },
     "proved": "receipts",
-    "sample": "I found one receipt in the mailbox and saved its attachment to the Receipts folder.\n\nI added one row to the expenses sheet, with the date, the sender and the subject.\n\nThe same attachment is never saved twice.\n\nI deleted and moved no email.",
+    "sample": "I found one receipt in the mailbox and saved its attachment to the Receipts folder.\n\nI added one row to the expenses sheet, with the date, the sender and the subject.\n\nWhen it ran again, I didn't save the same attachment twice.\n\nI didn't delete or move any email.",
     "guide": [
       {
         "title": "Connect your mailbox, your folder and your sheet",
@@ -2489,7 +2489,7 @@ export const RECIPES = [
             "Eine E-Mail löschen oder verschieben"
           ]
         },
-        "sample": "Ich habe einen Beleg im Postfach gefunden und seinen Anhang im Ordner Belege abgelegt.\n\nIch habe der Ausgabentabelle eine Zeile hinzugefügt, mit Datum, Absender und Betreff.\n\nDerselbe Anhang wird nie zweimal abgelegt.\n\nIch habe keine E-Mail gelöscht oder verschoben.",
+        "sample": "Ich habe einen Beleg im Postfach gefunden und seinen Anhang im Ordner Belege abgelegt.\n\nIch habe der Ausgabentabelle eine Zeile hinzugefügt, mit Datum, Absender und Betreff.\n\nAls ich es noch einmal laufen ließ, habe ich denselben Anhang nicht zweimal abgelegt.\n\nIch habe keine E-Mail gelöscht oder verschoben.",
         "guide": [
           {
             "title": "Postfach, Ordner und Tabelle verbinden",
@@ -2530,7 +2530,7 @@ export const RECIPES = [
             "Supprimer ou déplacer un e-mail"
           ]
         },
-        "sample": "J'ai trouvé un justificatif dans la boîte mail et enregistré sa pièce jointe dans le dossier Justificatifs.\n\nJ'ai ajouté une ligne au tableau des dépenses, avec la date, l'expéditeur et l'objet.\n\nLa même pièce jointe n'est jamais enregistrée deux fois.\n\nJe n'ai supprimé ni déplacé aucun e-mail.",
+        "sample": "J'ai trouvé un justificatif dans la boîte mail et enregistré sa pièce jointe dans le dossier Justificatifs.\n\nJ'ai ajouté une ligne au tableau des dépenses, avec la date, l'expéditeur et l'objet.\n\nQuand je l'ai relancé, je n'ai pas enregistré deux fois la même pièce jointe.\n\nJe n'ai supprimé ni déplacé aucun e-mail.",
         "guide": [
           {
             "title": "Connecter votre boîte mail, votre dossier et votre tableur",
@@ -2571,7 +2571,7 @@ export const RECIPES = [
             "Borrar o mover un correo"
           ]
         },
-        "sample": "He encontrado un recibo en el buzón y he guardado su adjunto en la carpeta Recibos.\n\nHe añadido una fila a la hoja de gastos, con la fecha, el remitente y el asunto.\n\nEl mismo adjunto nunca se guarda dos veces.\n\nNo he borrado ni movido ningún correo.",
+        "sample": "He encontrado un recibo en el buzón y he guardado su adjunto en la carpeta Recibos.\n\nHe añadido una fila a la hoja de gastos, con la fecha, el remitente y el asunto.\n\nAl ejecutarlo otra vez, no guardé el mismo adjunto dos veces.\n\nNo he borrado ni movido ningún correo.",
         "guide": [
           {
             "title": "Conecta tu buzón, tu carpeta y tu hoja",
@@ -2612,7 +2612,7 @@ export const RECIPES = [
             "Eliminare o spostare un'email"
           ]
         },
-        "sample": "Ho trovato una ricevuta nella casella di posta e ho salvato il suo allegato nella cartella Ricevute.\n\nHo aggiunto una riga al foglio spese, con la data, il mittente e l'oggetto.\n\nLo stesso allegato non viene mai salvato due volte.\n\nNon ho eliminato né spostato nessuna email.",
+        "sample": "Ho trovato una ricevuta nella casella di posta e ho salvato il suo allegato nella cartella Ricevute.\n\nHo aggiunto una riga al foglio spese, con la data, il mittente e l'oggetto.\n\nQuando l'ho riavviato, non ho salvato due volte lo stesso allegato.\n\nNon ho eliminato né spostato nessuna email.",
         "guide": [
           {
             "title": "Collega la casella di posta, la cartella e il foglio",
@@ -2653,7 +2653,7 @@ export const RECIPES = [
             "Apagar ou mover um email"
           ]
         },
-        "sample": "Encontrei um recibo na caixa de correio e guardei o seu anexo na pasta Recibos.\n\nAcrescentei uma linha à folha de despesas, com a data, o remetente e o assunto.\n\nO mesmo anexo nunca é guardado duas vezes.\n\nNão apaguei nem movi nenhum e-mail.",
+        "sample": "Encontrei um recibo na caixa de correio e guardei o seu anexo na pasta Recibos.\n\nAcrescentei uma linha à folha de despesas, com a data, o remetente e o assunto.\n\nQuando o executei outra vez, não guardei o mesmo anexo duas vezes.\n\nNão apaguei nem movi nenhum e-mail.",
         "guide": [
           {
             "title": "Ligue a caixa de correio, a pasta e a folha",
@@ -2694,7 +2694,7 @@ export const RECIPES = [
             "Een e-mail verwijderen of verplaatsen"
           ]
         },
-        "sample": "Ik heb één bonnetje in de mailbox gevonden en de bijlage in de map Bonnetjes bewaard.\n\nIk heb één regel aan de uitgavenlijst toegevoegd, met de datum, de afzender en het onderwerp.\n\nDezelfde bijlage wordt nooit twee keer bewaard.\n\nIk heb geen e-mail verwijderd of verplaatst.",
+        "sample": "Ik heb één bonnetje in de mailbox gevonden en de bijlage in de map Bonnetjes bewaard.\n\nIk heb één regel aan de uitgavenlijst toegevoegd, met de datum, de afzender en het onderwerp.\n\nToen ik het opnieuw liet lopen, heb ik dezelfde bijlage niet twee keer bewaard.\n\nIk heb geen e-mail verwijderd of verplaatst.",
         "guide": [
           {
             "title": "Verbind je mailbox, je map en je spreadsheet",
@@ -2703,7 +2703,7 @@ export const RECIPES = [
           },
           {
             "title": "Noem de map, de spreadsheet en het tabblad",
-            "do": "Zeg Coach welke map voor bonnetjes is, welke spreadsheet je uitgaven bevat en hoe het tabblad heet.",
+            "do": "Vertel Coach welke map voor bonnetjes is, welke spreadsheet je uitgaven bevat en hoe het tabblad heet.",
             "see": "De taak gebruikt dat tabblad wanneer hij een regel toevoegt."
           },
           {
@@ -2735,7 +2735,7 @@ export const RECIPES = [
             "Usunięcie lub przeniesienie e-maila"
           ]
         },
-        "sample": "Znalazłem jeden paragon w skrzynce i zapisałem jego załącznik w folderze Paragony.\n\nDodałem jeden wiersz do arkusza wydatków, z datą, nadawcą i tematem.\n\nTen sam załącznik nigdy nie jest zapisywany dwa razy.\n\nNie usunąłem ani nie przeniosłem żadnej wiadomości.",
+        "sample": "Znalazłem jeden paragon w skrzynce i zapisałem jego załącznik w folderze Paragony.\n\nDodałem jeden wiersz do arkusza wydatków, z datą, nadawcą i tematem.\n\nGdy uruchomiłem to ponownie, nie zapisałem tego samego załącznika dwa razy.\n\nNie usunąłem ani nie przeniosłem żadnej wiadomości.",
         "guide": [
           {
             "title": "Połącz skrzynkę, folder i arkusz",

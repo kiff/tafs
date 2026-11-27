@@ -6,7 +6,7 @@ line: Encontra recibos e faturas na caixa de correio, guarda cada um numa pasta 
 sample:
   - Encontrei um recibo na caixa de correio e guardei o seu anexo na pasta Recibos.
   - Acrescentei uma linha à folha de despesas, com a data, o remetente e o assunto.
-  - O mesmo anexo nunca é guardado duas vezes.
+  - Quando o executei outra vez, não guardei o mesmo anexo duas vezes.
   - Não apaguei nem movi nenhum e-mail.
 guide:
   - Ligue a caixa de correio, a pasta e a folha

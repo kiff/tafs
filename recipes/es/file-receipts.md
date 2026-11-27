@@ -6,7 +6,7 @@ line: Encuentra recibos y facturas en el buzón, guarda cada uno en una carpeta 
 sample:
   - He encontrado un recibo en el buzón y he guardado su adjunto en la carpeta Recibos.
   - He añadido una fila a la hoja de gastos, con la fecha, el remitente y el asunto.
-  - El mismo adjunto nunca se guarda dos veces.
+  - Al ejecutarlo otra vez, no guardé el mismo adjunto dos veces.
   - No he borrado ni movido ningún correo.
 guide:
   - Conecta tu buzón, tu carpeta y tu hoja

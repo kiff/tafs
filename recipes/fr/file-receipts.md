@@ -6,7 +6,7 @@ line: Trouve les reçus et factures dans la boîte mail, enregistre chacun dans 
 sample:
   - J'ai trouvé un justificatif dans la boîte mail et enregistré sa pièce jointe dans le dossier Justificatifs.
   - J'ai ajouté une ligne au tableau des dépenses, avec la date, l'expéditeur et l'objet.
-  - La même pièce jointe n'est jamais enregistrée deux fois.
+  - Quand je l'ai relancé, je n'ai pas enregistré deux fois la même pièce jointe.
   - Je n'ai supprimé ni déplacé aucun e-mail.
 guide:
   - Connecter votre boîte mail, votre dossier et votre tableur

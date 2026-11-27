@@ -14,8 +14,8 @@ proved: receipts
 sample:
   - I found one receipt in the mailbox and saved its attachment to the Receipts folder.
   - I added one row to the expenses sheet, with the date, the sender and the subject.
-  - The same attachment is never saved twice.
-  - I deleted and moved no email.
+  - When it ran again, I didn't save the same attachment twice.
+  - I didn't delete or move any email.
 guide:
   - Connect your mailbox, your folder and your sheet
   - - Do: Open the job. Coach asks you to connect your email, your file storage and your spreadsheet, one after the other. Sign in to each and approve.
