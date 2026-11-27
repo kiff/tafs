@@ -104,7 +104,8 @@ internal fun OnboardingPicture(page: OnboardingPage) {
       Text(Words.Sample.Deploys.deployApiWhy, style = scaled(14, color = Theme.soft))
       Text(Words.NeedsYou.nothingSent, style = scaled(13, color = Theme.dim))
       // As Needs you words and marks them on this phone (a driven touch on either is refused); the picture takes no taps.
-      PrimaryButton(Words.NeedsYou.approveOnceWith(LocalBiometry.current), {}, Modifier.padding(top = 8.dp).confirms())
+      // It never says the screen lock approves: with no strong biometric, it names the fingerprint the phone would need.
+      PrimaryButton(Words.NeedsYou.approveOnceWith(bot.tafs.app.signing.Biometry.approvingWith(LocalBiometry.current)), {}, Modifier.padding(top = 8.dp).confirms())
       OutlineButton(Words.Sample.Deploys.nextStep, {}, Modifier.fillMaxWidth())
       OutlineButton(Words.NeedsYou.refuse, {}, Modifier.fillMaxWidth().confirms(), color = Theme.no)
     }
