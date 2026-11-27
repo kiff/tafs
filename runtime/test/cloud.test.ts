@@ -548,7 +548,8 @@ describe("tafs cloud", () => {
     expect(first.strip).toEqual({ shown: false, title: "More jobs to hand off", ids: [] });
     // Home leads with every job, so "Explore jobs" would open the same list again: it isn't offered (finding 2 on Android 76).
     expect(first.words).toEqual({ title: "New taf", all: "All jobs", own_words: "Say it in your own words", own_words_line: "Coach builds the taf with you.",
-      see_all: "See all jobs", try: "Try it with Coach", sample: "What it reported after its test run" });
+      see_all: "See all jobs", try: "Try it with Coach", sample: "What it reported after its test run",
+      guide: "How it goes", guide_do: "Do", guide_see: "You see", guide_if: "If" });
     // Browsing: a job whose proof run passed says on what, ready to draw; a job with none has no line.
     expect(first.recipes.find((r: { id: string }) => r.id === "acknowledge-every-ticket").proved).toBe("Proved on a test help desk.");
     expect(first.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).not.toHaveProperty("proved");
