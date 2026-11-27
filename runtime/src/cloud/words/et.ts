@@ -358,6 +358,7 @@ export const et: Words = {
   gallery_guide_if: "Kui",
   recipes_proved_help_desk: "Tõestatud katsekasutajatoel.",
   recipes_proved_billing: "Tõestatud katse-arvelduse rakendusel.",
+  recipes_proved_receipts: "Tõestatud katsepostkasti, kausta ja tabeliga.",
   suggestions_on: "Soovitused ilmuvad Coachiga uues vestluses, kuni konto esimene taf on tööl.",
   suggestions_off: "Soovitused on selle konto jaoks välja lülitatud.",
   suggestions_live: "Kontol on töötav taf, seega avaneb uus vestlus Coachiga tühjana. Soovitused saab jäädavalt välja lülitada.",

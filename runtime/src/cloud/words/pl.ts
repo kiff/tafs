@@ -364,6 +364,7 @@ export const pl: Words = {
   gallery_guide_if: "Jeśli",
   recipes_proved_help_desk: "Sprawdzone na testowym helpdesku.",
   recipes_proved_billing: "Sprawdzone na testowej aplikacji do rozliczeń.",
+  recipes_proved_receipts: "Sprawdzone na testowej skrzynce, folderze i arkuszu.",
   suggestions_on: "Sugestie pojawiają się w nowej rozmowie z Coachem, dopóki konto nie ma pierwszego tafa.",
   suggestions_off: "Sugestie są wyłączone dla tego konta.",
   suggestions_live: "Konto ma już tafa, więc nowa rozmowa z Coachem zaczyna się pusta. Sugestie można wyłączyć na stałe.",

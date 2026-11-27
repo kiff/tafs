@@ -358,6 +358,7 @@ export const hr: Words = {
   gallery_guide_if: "Ako",
   recipes_proved_help_desk: "Provjereno na probnoj službi podrške.",
   recipes_proved_billing: "Provjereno na probnoj aplikaciji za naplatu.",
+  recipes_proved_receipts: "Provjereno na probnom sandučiću, mapi i tablici.",
   suggestions_on: "Prijedlozi se prikazuju u novom razgovoru s Coachem dok prvi taf računa ne proradi.",
   suggestions_off: "Prijedlozi su za ovaj račun isključeni.",
   suggestions_live: "Račun ima aktivan taf pa se novi razgovor s Coachem otvara prazan. Prijedlozi se mogu trajno isključiti.",

@@ -2447,6 +2447,30 @@ export const RECIPES = [
         "Deleting or moving an email"
       ]
     },
+    "proved": "receipts",
+    "sample": "I found one receipt in the mailbox and saved its attachment to the Receipts folder.\n\nI added one row to the expenses sheet, with the date, the sender and the subject.\n\nThe same attachment is never saved twice.\n\nI deleted and moved no email.",
+    "guide": [
+      {
+        "title": "Connect your mailbox, your folder and your sheet",
+        "do": "Open the job. Coach asks you to connect your email, your file storage and your spreadsheet, one after the other. Sign in to each and approve.",
+        "see": "Each app listed as connected."
+      },
+      {
+        "title": "Name the folder, the sheet and its tab",
+        "do": "Tell Coach which folder is for receipts, which spreadsheet holds your expenses, and the name of the tab in it.",
+        "see": "The job uses that tab when it adds a row."
+      },
+      {
+        "title": "Approve the Card",
+        "do": "Approve the Card.",
+        "see": "The Card: what the job does on its own, what asks you first, and what it never does."
+      },
+      {
+        "title": "Run it",
+        "do": "Open the job's chat and ask it to run.",
+        "see": "The receipt found in your email, its attachment saved in your folder, and a row added to your sheet with the date, the sender and the subject. Run it again, and the same attachment isn't saved twice."
+      }
+    ],
     "languages": {
       "de": {
         "title": "Belege ablegen",
@@ -2464,7 +2488,30 @@ export const RECIPES = [
           "never": [
             "Eine E-Mail löschen oder verschieben"
           ]
-        }
+        },
+        "sample": "Ich habe einen Beleg im Postfach gefunden und seinen Anhang im Ordner Belege abgelegt.\n\nIch habe der Ausgabentabelle eine Zeile hinzugefügt, mit Datum, Absender und Betreff.\n\nDerselbe Anhang wird nie zweimal abgelegt.\n\nIch habe keine E-Mail gelöscht oder verschoben.",
+        "guide": [
+          {
+            "title": "Postfach, Ordner und Tabelle verbinden",
+            "do": "Öffne die Aufgabe. Coach bittet dich, deine E-Mail, deinen Dateispeicher und deine Tabelle nacheinander zu verbinden. Melde dich bei jedem an und genehmige.",
+            "see": "Jede App als verbunden aufgeführt."
+          },
+          {
+            "title": "Ordner, Tabelle und Blatt nennen",
+            "do": "Sag Coach, welcher Ordner für Belege gedacht ist, welche Tabelle deine Ausgaben enthält und wie das Blatt darin heißt.",
+            "see": "Die Aufgabe nutzt dieses Blatt, wenn sie eine Zeile hinzufügt."
+          },
+          {
+            "title": "Die Card genehmigen",
+            "do": "Genehmige die Card.",
+            "see": "Die Card: was die Aufgabe selbst macht, was sie dich zuerst fragt und was sie nie macht."
+          },
+          {
+            "title": "Starten",
+            "do": "Öffne den Chat der Aufgabe und bitte sie zu starten.",
+            "see": "Der Beleg in deiner E-Mail, sein Anhang in deinem Ordner abgelegt und eine neue Zeile in deiner Tabelle mit Datum, Absender und Betreff. Starte sie noch einmal, und derselbe Anhang wird nicht zweimal abgelegt."
+          }
+        ]
       },
       "fr": {
         "title": "Classer les justificatifs",
@@ -2482,7 +2529,30 @@ export const RECIPES = [
           "never": [
             "Supprimer ou déplacer un e-mail"
           ]
-        }
+        },
+        "sample": "J'ai trouvé un justificatif dans la boîte mail et enregistré sa pièce jointe dans le dossier Justificatifs.\n\nJ'ai ajouté une ligne au tableau des dépenses, avec la date, l'expéditeur et l'objet.\n\nLa même pièce jointe n'est jamais enregistrée deux fois.\n\nJe n'ai supprimé ni déplacé aucun e-mail.",
+        "guide": [
+          {
+            "title": "Connecter votre boîte mail, votre dossier et votre tableur",
+            "do": "Ouvrez la tâche. Coach vous demande de connecter votre messagerie, votre stockage de fichiers et votre tableur, l'un après l'autre. Connectez-vous à chacun et approuvez.",
+            "see": "Chaque appli indiquée comme connectée."
+          },
+          {
+            "title": "Indiquer le dossier, le tableur et son onglet",
+            "do": "Dites à Coach quel dossier est pour les justificatifs, quel tableur contient vos dépenses et comment s'appelle l'onglet.",
+            "see": "La tâche utilise cet onglet quand elle ajoute une ligne."
+          },
+          {
+            "title": "Approuver la Card",
+            "do": "Approuvez la Card.",
+            "see": "La Card : ce que la tâche fait seule, ce qu'elle vous demande d'abord et ce qu'elle ne fait jamais."
+          },
+          {
+            "title": "Lancer",
+            "do": "Ouvrez la conversation de la tâche et demandez-lui de se lancer.",
+            "see": "Le justificatif trouvé dans votre messagerie, sa pièce jointe enregistrée dans votre dossier et une ligne ajoutée à votre tableur avec la date, l'expéditeur et l'objet. Relancez-la, et la même pièce jointe n'est pas enregistrée deux fois."
+          }
+        ]
       },
       "es": {
         "title": "Archivar recibos",
@@ -2500,7 +2570,30 @@ export const RECIPES = [
           "never": [
             "Borrar o mover un correo"
           ]
-        }
+        },
+        "sample": "He encontrado un recibo en el buzón y he guardado su adjunto en la carpeta Recibos.\n\nHe añadido una fila a la hoja de gastos, con la fecha, el remitente y el asunto.\n\nEl mismo adjunto nunca se guarda dos veces.\n\nNo he borrado ni movido ningún correo.",
+        "guide": [
+          {
+            "title": "Conecta tu buzón, tu carpeta y tu hoja",
+            "do": "Abre el trabajo. Coach te pide conectar tu correo, tu almacenamiento de archivos y tu hoja de cálculo, una tras otra. Inicia sesión en cada una y aprueba.",
+            "see": "Cada app aparece como conectada."
+          },
+          {
+            "title": "Indica la carpeta, la hoja y su pestaña",
+            "do": "Dile a Coach qué carpeta es para los recibos, qué hoja de cálculo contiene tus gastos y cómo se llama la pestaña.",
+            "see": "El trabajo usa esa pestaña cuando añade una fila."
+          },
+          {
+            "title": "Aprueba la Card",
+            "do": "Aprueba la Card.",
+            "see": "La Card: lo que el trabajo hace solo, lo que te pregunta primero y lo que nunca hace."
+          },
+          {
+            "title": "Ejecútalo",
+            "do": "Abre el chat del trabajo y pídele que se ejecute.",
+            "see": "El recibo encontrado en tu correo, su adjunto guardado en tu carpeta y una fila añadida a tu hoja con la fecha, el remitente y el asunto. Ejecútalo otra vez y el mismo adjunto no se guarda dos veces."
+          }
+        ]
       },
       "it": {
         "title": "Archiviare le ricevute",
@@ -2518,7 +2611,30 @@ export const RECIPES = [
           "never": [
             "Eliminare o spostare un'email"
           ]
-        }
+        },
+        "sample": "Ho trovato una ricevuta nella casella di posta e ho salvato il suo allegato nella cartella Ricevute.\n\nHo aggiunto una riga al foglio spese, con la data, il mittente e l'oggetto.\n\nLo stesso allegato non viene mai salvato due volte.\n\nNon ho eliminato né spostato nessuna email.",
+        "guide": [
+          {
+            "title": "Collega la casella di posta, la cartella e il foglio",
+            "do": "Apri il lavoro. Coach ti chiede di collegare la tua email, il tuo archivio di file e il tuo foglio di calcolo, uno dopo l'altro. Accedi a ciascuno e approva.",
+            "see": "Ogni app indicata come collegata."
+          },
+          {
+            "title": "Indica la cartella, il foglio e la sua scheda",
+            "do": "Di' a Coach quale cartella è per le ricevute, quale foglio di calcolo contiene le tue spese e come si chiama la scheda.",
+            "see": "Il lavoro usa quella scheda quando aggiunge una riga."
+          },
+          {
+            "title": "Approva la Card",
+            "do": "Approva la Card.",
+            "see": "La Card: ciò che il lavoro fa da solo, ciò che ti chiede prima e ciò che non fa mai."
+          },
+          {
+            "title": "Avvialo",
+            "do": "Apri la chat del lavoro e chiedigli di partire.",
+            "see": "La ricevuta trovata nella tua email, il suo allegato salvato nella tua cartella e una riga aggiunta al tuo foglio con la data, il mittente e l'oggetto. Avvialo di nuovo e lo stesso allegato non viene salvato due volte."
+          }
+        ]
       },
       "pt": {
         "title": "Arquivar recibos",
@@ -2536,7 +2652,30 @@ export const RECIPES = [
           "never": [
             "Apagar ou mover um email"
           ]
-        }
+        },
+        "sample": "Encontrei um recibo na caixa de correio e guardei o seu anexo na pasta Recibos.\n\nAcrescentei uma linha à folha de despesas, com a data, o remetente e o assunto.\n\nO mesmo anexo nunca é guardado duas vezes.\n\nNão apaguei nem movi nenhum e-mail.",
+        "guide": [
+          {
+            "title": "Ligue a caixa de correio, a pasta e a folha",
+            "do": "Abra o trabalho. O Coach pede-lhe que ligue o seu e-mail, o seu armazenamento de ficheiros e a sua folha de cálculo, um a seguir ao outro. Inicie sessão em cada um e aprove.",
+            "see": "Cada app aparece como ligada."
+          },
+          {
+            "title": "Indique a pasta, a folha e o separador",
+            "do": "Diga ao Coach qual é a pasta dos recibos, qual folha de cálculo tem as suas despesas e como se chama o separador.",
+            "see": "O trabalho usa esse separador quando acrescenta uma linha."
+          },
+          {
+            "title": "Aprove o Card",
+            "do": "Aprove o Card.",
+            "see": "O Card: o que o trabalho faz sozinho, o que lhe pergunta primeiro e o que nunca faz."
+          },
+          {
+            "title": "Execute",
+            "do": "Abra o chat do trabalho e peça-lhe que execute.",
+            "see": "O recibo encontrado no seu e-mail, o anexo guardado na sua pasta e uma linha acrescentada à sua folha com a data, o remetente e o assunto. Execute outra vez e o mesmo anexo não é guardado duas vezes."
+          }
+        ]
       },
       "nl": {
         "title": "Bonnetjes archiveren",
@@ -2554,7 +2693,30 @@ export const RECIPES = [
           "never": [
             "Een e-mail verwijderen of verplaatsen"
           ]
-        }
+        },
+        "sample": "Ik heb één bonnetje in de mailbox gevonden en de bijlage in de map Bonnetjes bewaard.\n\nIk heb één regel aan de uitgavenlijst toegevoegd, met de datum, de afzender en het onderwerp.\n\nDezelfde bijlage wordt nooit twee keer bewaard.\n\nIk heb geen e-mail verwijderd of verplaatst.",
+        "guide": [
+          {
+            "title": "Verbind je mailbox, je map en je spreadsheet",
+            "do": "Open de taak. Coach vraagt je je e-mail, je bestandsopslag en je spreadsheet na elkaar te verbinden. Log in bij elk en keur goed.",
+            "see": "Elke app als verbonden getoond."
+          },
+          {
+            "title": "Noem de map, de spreadsheet en het tabblad",
+            "do": "Zeg Coach welke map voor bonnetjes is, welke spreadsheet je uitgaven bevat en hoe het tabblad heet.",
+            "see": "De taak gebruikt dat tabblad wanneer hij een regel toevoegt."
+          },
+          {
+            "title": "Keur de Card goed",
+            "do": "Keur de Card goed.",
+            "see": "De Card: wat de taak zelf doet, wat hij je eerst vraagt en wat hij nooit doet."
+          },
+          {
+            "title": "Start hem",
+            "do": "Open de chat van de taak en vraag hem te starten.",
+            "see": "Het bonnetje gevonden in je e-mail, de bijlage bewaard in je map en een regel toegevoegd aan je spreadsheet met de datum, de afzender en het onderwerp. Start hem opnieuw, en dezelfde bijlage wordt niet twee keer bewaard."
+          }
+        ]
       },
       "pl": {
         "title": "Archiwizowanie paragonów",
@@ -2572,7 +2734,30 @@ export const RECIPES = [
           "never": [
             "Usunięcie lub przeniesienie e-maila"
           ]
-        }
+        },
+        "sample": "Znalazłem jeden paragon w skrzynce i zapisałem jego załącznik w folderze Paragony.\n\nDodałem jeden wiersz do arkusza wydatków, z datą, nadawcą i tematem.\n\nTen sam załącznik nigdy nie jest zapisywany dwa razy.\n\nNie usunąłem ani nie przeniosłem żadnej wiadomości.",
+        "guide": [
+          {
+            "title": "Połącz skrzynkę, folder i arkusz",
+            "do": "Otwórz zadanie. Coach prosi o połączenie poczty, magazynu plików i arkusza, jedno po drugim. Zaloguj się w każdym i zatwierdź.",
+            "see": "Każda aplikacja pokazana jako połączona."
+          },
+          {
+            "title": "Podaj folder, arkusz i jego kartę",
+            "do": "Powiedz Coachowi, który folder jest na paragony, który arkusz zawiera Twoje wydatki i jak nazywa się karta w nim.",
+            "see": "Zadanie używa tej karty, gdy dodaje wiersz."
+          },
+          {
+            "title": "Zatwierdź Card",
+            "do": "Zatwierdź Card.",
+            "see": "Card: co zadanie robi samo, o co najpierw Cię pyta i czego nigdy nie robi."
+          },
+          {
+            "title": "Uruchom",
+            "do": "Otwórz czat zadania i poproś o uruchomienie.",
+            "see": "Paragon znaleziony w poczcie, jego załącznik zapisany w folderze i wiersz dodany do arkusza z datą, nadawcą i tematem. Uruchom je ponownie, a ten sam załącznik nie zostanie zapisany dwa razy."
+          }
+        ]
       }
     }
   }

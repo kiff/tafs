@@ -358,6 +358,7 @@ export const lv: Words = {
   gallery_guide_if: "Ja",
   recipes_proved_help_desk: "Pārbaudīts izmēģinājuma palīdzības dienestā.",
   recipes_proved_billing: "Pārbaudīts izmēģinājuma rēķinu lietotnē.",
+  recipes_proved_receipts: "Pārbaudīts izmēģinājuma pastkastē, mapē un izklājlapā.",
   suggestions_on: "Ieteikumi tiek rādīti jaunā sarunā ar Coach, līdz konta pirmais taf darbojas.",
   suggestions_off: "Ieteikumi šim kontam ir izslēgti.",
   suggestions_live: "Kontā ir darbojošs taf, tāpēc jauna saruna ar Coach atveras tukša. Ieteikumus var izslēgt uz visiem laikiem.",
