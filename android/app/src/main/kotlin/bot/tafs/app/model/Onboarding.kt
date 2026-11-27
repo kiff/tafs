@@ -49,12 +49,16 @@ enum class OnboardingPage {
     Credits -> Words.Onboarding.creditsTitle
   }
 
-  /** The Card's line ends with Android's own way to approve: the screen lock. */
-  val lead: String get() = when (this) {
-    Tafs -> Words.Onboarding.tafsLead
-    Coach -> Words.Onboarding.homeLead
-    Card -> Words.Onboarding.cardLead + " " + Words.Onboarding.controlLeadAndroid
-    Credits -> Words.Billing.creditsBuy
+  /**
+   * The card's lines, each its own paragraph: no language joins two sentences with a space it may not use (Japanese and Chinese
+   * put none after a full stop), as the iPhone's `OnboardingPage.lines`. The Card's ends with Android's own way to approve: the
+   * screen lock.
+   */
+  val lines: List<String> get() = when (this) {
+    Tafs -> listOf(Words.Onboarding.tafsLead)
+    Coach -> listOf(Words.Onboarding.homeLead)
+    Card -> listOf(Words.Onboarding.cardLead, Words.Onboarding.controlLeadAndroid)
+    Credits -> listOf(Words.Billing.creditsBuy)
   }
 
   val next: OnboardingPage? get() = entries.getOrNull(ordinal + 1)

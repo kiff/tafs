@@ -121,7 +121,8 @@ never starts `release` or `wear-release`.
   - Credits: Plan & usage's Solo line and meter, and Coach's own work counted apart.
 
   Their lines: `onboarding.tafs_lead`; `onboarding.home_lead`; `onboarding.card_lead` then
-  `onboarding.control_lead_android`, which names the screen lock; `billing.credits_buy`. The pictures are hidden from
+  `onboarding.control_lead_android`, which names the screen lock, each its own paragraph (`OnboardingPage.lines`: Japanese
+  and Chinese put no space after a full stop, so the app never joins two sentences); `billing.credits_buy`. The pictures are hidden from
   TalkBack. They show full screen once per device after signing in (`CARDS_SEEN_KEY`), and Back is Skip.
 - **The first Home** (`HomeView`, step 4): with no taf and no recipes listed, for anyone who may use Coach. It shows
   board 2, tafs cloud's empty line alone (the app's "No tafs yet" and `onboarding.home_lead` only when it sends

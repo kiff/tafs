@@ -76,7 +76,7 @@ fun OnboardingCards(start: OnboardingPage = OnboardingPage.Tafs, done: () -> Uni
       Box(Modifier.fillMaxWidth().clearAndSetSemantics {}, contentAlignment = Alignment.Center) { OnboardingPicture(page) }
       Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(page.title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.semantics { heading() })
-        Text(page.lead, style = scaled(16, color = Theme.soft))
+        page.lines.forEach { Text(it, style = scaled(16, color = Theme.soft)) }
       }
     }
     Row(Modifier.fillMaxWidth().clearAndSetSemantics {}, horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {

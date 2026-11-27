@@ -68,10 +68,12 @@ class OnboardingCardsTest {
    */
   @Test fun theFourCardsSayTheirLines() {
     assertEquals(listOf(OnboardingPage.Tafs, OnboardingPage.Coach, OnboardingPage.Card, OnboardingPage.Credits), OnboardingPage.entries)
-    assertEquals(Words.Onboarding.cardLead + " " + Words.Onboarding.controlLeadAndroid, OnboardingPage.Card.lead)
-    assertFalse(OnboardingPage.Card.lead.contains(Words.Onboarding.controlLead))
-    assertEquals(Words.Onboarding.homeLead, OnboardingPage.Coach.lead)
-    assertEquals(Words.Billing.creditsBuy, OnboardingPage.Credits.lead)
+    // Two lines, two paragraphs: never joined with a space a language may not use.
+    assertEquals(listOf(Words.Onboarding.cardLead, Words.Onboarding.controlLeadAndroid), OnboardingPage.Card.lines)
+    assertFalse(OnboardingPage.Card.lines.contains(Words.Onboarding.controlLead))
+    assertEquals(listOf(Words.Onboarding.homeLead), OnboardingPage.Coach.lines)
+    assertEquals(listOf(Words.Billing.creditsBuy), OnboardingPage.Credits.lines)
+    assertEquals(listOf(Words.Onboarding.tafsLead), OnboardingPage.Tafs.lines)
     assertEquals(Words.Onboarding.coachTitle, OnboardingPage.Coach.title)
     assertEquals(Words.Onboarding.creditsTitle, OnboardingPage.Credits.title)
   }
