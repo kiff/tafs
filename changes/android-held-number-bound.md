@@ -1,0 +1,1 @@
+- **Android: a held call's huge number is written as sent.** A number that would take more than 100 digits written out (such as `1e400`) shows as the taf sent it, so a number like `1e999999999` can't make the card build a billion zeros. The same bound as KIFF's `details` and every app (`contracts/held-arguments.json`, case 7).

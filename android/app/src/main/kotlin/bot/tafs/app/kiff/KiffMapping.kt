@@ -583,16 +583,27 @@ object KiffMapping {
 
   /**
    * One plain argument as text: a string as it is (an empty one as "", so a fill with nothing still shows), a number
-   * written out exactly as sent (an integer past 2^53 too), a flag as true or false, a null as null.
+   * written out plainly with no trailing zero after its point (an integer past 2^53 exactly), a flag as true or false, a
+   * null as null. A number that would take more than [PLAIN_DIGITS_MAX] digits written so (the 0 before a point counted) is
+   * written as sent ("1e400"): a taf's 1e999999999 is never a billion zeros on the card (contracts/held-arguments.json,
+   * case 7, as KIFF writes `details`).
    */
   fun argumentText(value: JsonElement?): String {
     val p = value as? JsonPrimitive ?: return "null"
     if (p is JsonNull) return "null"
     if (p.isString) return p.content.ifEmpty { "\"\"" }
     p.content.toBooleanStrictOrNull()?.let { return it.toString() }
-    // A decimal written out plainly, as sent: "0.000015", never "1.5e-05".
-    return p.content.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString() ?: p.content
+    // A decimal written out plainly: "0.000015", never "1.5e-05"; "1.5", never "1.50" (the iPhone reads a Double).
+    val n = p.content.toBigDecimalOrNull()?.stripTrailingZeros() ?: return p.content
+    // Counted in Long: a scale near Int.MIN_VALUE can't wrap the count round to a small one.
+    val precision = n.precision().toLong()
+    val scale = n.scale().toLong()
+    val written = if (scale <= 0) precision - scale else maxOf(precision, scale + 1)
+    return if (written > PLAIN_DIGITS_MAX) p.content else n.toPlainString()
   }
+
+  /** The most digits a held call's number is written out in; past it, it's written as sent. */
+  const val PLAIN_DIGITS_MAX = 100L
 
   /**
    * The amount to show above the answer: a parameter KIFF declares a unit for, in that unit; otherwise the
