@@ -975,8 +975,11 @@
         <item quantity="one">Ndalon edhe %2$s.</item>
         <item quantity="other">Ndalojnë edhe %2$s.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Çelësi vazhdon të funksionojë te %1$s derisa ta fshini atje.</string>
     <string name="connect_disconnect_no_taf_uses">Asnjë taf nuk përdor %1$s tani.</string>
+    <string name="connect_disconnect_not_revoked">%1$s nuk na ofron asnjë mënyrë për të revokuar hyrjen: hiqni qasjen e tafs te %1$s për ta përfunduar edhe atje.</string>
     <string name="connect_disconnect_rest">Tafs-et e tjerë që përdorin %1$s e mbajnë qasjen e tyre. Nëse asnjë taf tjetër nuk përdor të njëjtën llogari aty, hyrja revokohet te %1$s; përndryshe, kur të hiqet i fundit. Përdorimi i %1$s sërish ju kërkon të miratoni dhe të hyni sërish.</string>
+    <string name="connect_disconnect_rest_deleted">Tafs-et e tjerë që përdorin %1$s e mbajnë qasjen e tyre. Nëse asnjë taf tjetër nuk përdor të njëjtën llogari aty, hyrja fshihet nga tafs; përndryshe, kur të hiqet i fundit. Përdorimi i %1$s sërish ju kërkon të miratoni dhe të hyni sërish.</string>
     <string name="connect_disconnect_rest_key">Tafs-et e tjerë që përdorin %1$s e mbajnë qasjen e tyre. Çelësi fshihet nga tafs sapo asnjë taf nuk e përdor. Përdorimi i %1$s sërish ju kërkon të miratoni dhe të ngjitni një çelës sërish.</string>
     <string name="connect_disconnect_title">Ta hiqni qasjen te %1$s?</string>
     <string name="connect_disconnect_title_from">Ta hiqni qasjen te %1$s për %2$s?</string>

@@ -77,8 +77,11 @@
     "many": "{names} też przestają działać.",
     "other": "{names} też przestają działać."
   },
+  "connect.disconnect.key_not_revoked": "Klucz nadal działa w {vendor}, dopóki go tam nie usuniesz.",
   "connect.disconnect.no_taf_uses": "Żaden taf nie używa teraz {vendor}.",
+  "connect.disconnect.not_revoked": "{vendor} nie daje nam możliwości cofnięcia logowania: usuń dostęp tafs w {vendor}, aby zakończyć je również tam.",
   "connect.disconnect.rest": "Inne tafy, które używają {vendor}, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie cofnięte w {vendor}; w przeciwnym razie, gdy usuniesz ostatni. Ponowne użycie {vendor} poprosi Cię o zatwierdzenie i ponowne zalogowanie.",
+  "connect.disconnect.rest_deleted": "Inne tafy, które używają {vendor}, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie usunięte z tafs; w przeciwnym razie, gdy usuniesz ostatni. Ponowne użycie {vendor} poprosi Cię o zatwierdzenie i ponowne zalogowanie.",
   "connect.disconnect.rest_key": "Inne tafy, które używają {vendor}, zachowują dostęp. Klucz zostanie usunięty z tafs, gdy żaden taf nie będzie go już używał. Ponowne użycie {vendor} poprosi Cię o zatwierdzenie i ponowne wklejenie klucza.",
   "connect.disconnect.title": "Usunąć dostęp do {vendor}?",
   "connect.disconnect.title_from": "Usunąć dostęp do {vendor} dla {taf}?",

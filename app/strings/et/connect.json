@@ -69,8 +69,11 @@
     "one": "Lõpetab ka: {names}.",
     "other": "Lõpetavad ka: {names}."
   },
+  "connect.disconnect.key_not_revoked": "Võti töötab teenuses {vendor} edasi, kuni sa selle seal kustutad.",
   "connect.disconnect.no_taf_uses": "Ükski taf ei kasuta nüüd teenust {vendor}.",
+  "connect.disconnect.not_revoked": "{vendor} ei paku meile võimalust sisselogimist tühistada: selle lõpetamiseks ka seal eemalda tafsi juurdepääs teenuses {vendor}.",
   "connect.disconnect.rest": "Teised tafid, mis kasutavad teenust {vendor}, säilitavad oma juurdepääsu. Kui ükski teine taf ei kasuta seal sama kontot, tühistatakse sisselogimine teenuses {vendor}; vastasel juhul siis, kui viimane neist eemaldatakse. Teenuse {vendor} uuesti kasutamisel pead uuesti kinnitama ja sisse logima.",
+  "connect.disconnect.rest_deleted": "Teised tafid, mis kasutavad teenust {vendor}, säilitavad oma juurdepääsu. Kui ükski teine taf ei kasuta seal sama kontot, kustutatakse sisselogimine tafsist; vastasel juhul siis, kui viimane neist eemaldatakse. Teenuse {vendor} uuesti kasutamisel pead uuesti kinnitama ja sisse logima.",
   "connect.disconnect.rest_key": "Teised tafid, mis kasutavad teenust {vendor}, säilitavad oma juurdepääsu. Võti kustutatakse tafsist, kui ükski taf seda enam ei kasuta. Teenuse {vendor} uuesti kasutamisel pead uuesti kinnitama ja võtme uuesti kleepima.",
   "connect.disconnect.title": "Kas eemaldada juurdepääs teenusele {vendor}?",
   "connect.disconnect.title_from": "Kas eemaldada tafi {taf} juurdepääs teenusele {vendor}?",

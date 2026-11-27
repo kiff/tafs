@@ -69,8 +69,11 @@
     "one": "{names} de durur.",
     "other": "{names} de durur."
   },
+  "connect.disconnect.key_not_revoked": "Anahtar, siz {vendor} içinde silene kadar orada çalışmaya devam eder.",
   "connect.disconnect.no_taf_uses": "Şu anda hiçbir taf {vendor} kullanmıyor.",
+  "connect.disconnect.not_revoked": "{vendor}, oturum açmayı iptal etmemiz için bir yol sunmuyor: orada da sona erdirmek için {vendor} içinde tafs'ın erişimini kaldırın.",
   "connect.disconnect.rest": "{vendor} kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma {vendor} tarafında iptal edilir; aksi halde sonuncusu kaldırıldığında. {vendor} uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister.",
+  "connect.disconnect.rest_deleted": "{vendor} kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma tafs'tan silinir; aksi halde sonuncusu kaldırıldığında. {vendor} uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister.",
   "connect.disconnect.rest_key": "{vendor} kullanan diğer tafs erişimini korur. Hiçbir taf kullanmadığında anahtar tafs'tan silinir. {vendor} uygulamasını tekrar kullanmak, onaylamanızı ve bir anahtarı tekrar yapıştırmanızı ister.",
   "connect.disconnect.title": "{vendor} erişimi kaldırılsın mı?",
   "connect.disconnect.title_from": "{taf} taf'ı için {vendor} erişimi kaldırılsın mı?",

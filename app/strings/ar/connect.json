@@ -85,8 +85,11 @@
     "many": "{names} تتوقف أيضًا.",
     "other": "{names} تتوقف أيضًا."
   },
+  "connect.disconnect.key_not_revoked": "يظل المفتاح يعمل لدى {vendor} إلى أن تحذفه هناك.",
   "connect.disconnect.no_taf_uses": "لا يستخدم أي taf {vendor} الآن.",
+  "connect.disconnect.not_revoked": "لا يتيح لنا {vendor} أي طريقة لإلغاء تسجيل الدخول، لذا أزل وصول tafs في {vendor} لإنهائه هناك أيضًا.",
   "connect.disconnect.rest": "تحتفظ بقية tafs التي تستخدم {vendor} بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُلغى تسجيل الدخول لدى {vendor}؛ وإلا فعند إزالة آخرها. يطلب منك استخدام {vendor} مرة أخرى الموافقة وتسجيل الدخول مجددًا.",
+  "connect.disconnect.rest_deleted": "تحتفظ بقية tafs التي تستخدم {vendor} بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُحذف تسجيل الدخول من tafs؛ وإلا فعند إزالة آخرها. يطلب منك استخدام {vendor} مرة أخرى الموافقة وتسجيل الدخول مجددًا.",
   "connect.disconnect.rest_key": "تحتفظ بقية tafs التي تستخدم {vendor} بوصولها. يُحذف المفتاح من tafs متى لم يعد أي taf يستخدمه. يطلب منك استخدام {vendor} مرة أخرى الموافقة ولصق مفتاح مجددًا.",
   "connect.disconnect.title": "إزالة الوصول إلى {vendor}؟",
   "connect.disconnect.title_from": "إزالة الوصول إلى {vendor} لـ {taf}؟",

@@ -65,8 +65,11 @@
   "connect.disconnect.also_stops": {
     "other": "{names} ikut berhenti."
   },
+  "connect.disconnect.key_not_revoked": "Kunci tetap berfungsi di {vendor} sampai Anda menghapusnya di sana.",
   "connect.disconnect.no_taf_uses": "Tidak ada taf yang memakai {vendor} sekarang.",
+  "connect.disconnect.not_revoked": "{vendor} tidak menyediakan cara bagi kami untuk mencabut proses masuk: hapus akses tafs di {vendor} untuk mengakhirinya di sana juga.",
   "connect.disconnect.rest": "Taf lain yang memakai {vendor} tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk dicabut di {vendor}; jika tidak, saat yang terakhir dihapus. Memakai {vendor} lagi meminta Anda menyetujui dan masuk lagi.",
+  "connect.disconnect.rest_deleted": "Taf lain yang memakai {vendor} tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk dihapus dari tafs; jika tidak, saat yang terakhir dihapus. Memakai {vendor} lagi meminta Anda menyetujui dan masuk lagi.",
   "connect.disconnect.rest_key": "Taf lain yang memakai {vendor} tetap memiliki aksesnya. Kunci dihapus dari tafs setelah tidak ada taf yang memakainya. Memakai {vendor} lagi meminta Anda menyetujui dan menempelkan kunci lagi.",
   "connect.disconnect.title": "Hapus akses ke {vendor}?",
   "connect.disconnect.title_from": "Hapus akses ke {vendor} untuk {taf}?",

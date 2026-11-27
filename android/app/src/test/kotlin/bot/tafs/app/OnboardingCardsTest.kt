@@ -6,6 +6,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import androidx.test.core.app.ApplicationProvider
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
@@ -190,6 +193,49 @@ class OnboardingCardsTest {
       compose.onNodeWithTag("onboarding.next").performClick()
     }
     assertEquals(1, done)
+  }
+
+  /** A swipe moves one card either way and never past either end, and never ends the cards (as the iPhone, tafs#2255). */
+  @Test fun aSwipeMovesOneCardAndNeverPastEitherEnd() {
+    val first = OnboardingSteps(OnboardingPage.Tafs)
+    assertEquals(OnboardingPage.Coach, first.swiped(forward = true).page)
+    assertEquals("before the first card, it stays", first, first.swiped(forward = false))
+    val last = OnboardingSteps(OnboardingPage.Credits)
+    assertEquals(OnboardingPage.Card, last.swiped(forward = false).page)
+    assertEquals("past the last card, it stays", last, last.swiped(forward = true))
+    assertFalse("a swipe never ends the cards, as Get started does", last.swiped(forward = true).finished)
+  }
+
+  @Test fun swipingGoesOnAndBackOnTheScreen() {
+    var done = 0
+    compose.setContent { TafsTheme { OnboardingCards { done += 1 } } }
+    val pages = compose.onNodeWithTag(bot.tafs.app.views.ONBOARDING_PAGES)
+    pages.performTouchInput { swipeRight() }
+    compose.onNodeWithText(OnboardingPage.Tafs.title).assertExists()
+    for (page in OnboardingPage.entries.drop(1)) {
+      pages.performTouchInput { swipeLeft() }
+      compose.onNodeWithText(page.title).assertExists()
+    }
+    // Past the last card: still there, and the cards haven't ended.
+    pages.performTouchInput { swipeLeft() }
+    compose.onNodeWithText(OnboardingPage.Credits.title).assertExists()
+    assertEquals(0, done)
+    pages.performTouchInput { swipeRight() }
+    compose.onNodeWithText(OnboardingPage.Card.title).assertExists()
+  }
+
+  /** In a right-to-left language the next card is the other way: a swipe to the right. */
+  @Test fun swipingFollowsARightToLeftLanguage() {
+    compose.setContent {
+      androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Rtl) {
+        TafsTheme { OnboardingCards {} }
+      }
+    }
+    val pages = compose.onNodeWithTag(bot.tafs.app.views.ONBOARDING_PAGES)
+    pages.performTouchInput { swipeRight() }
+    compose.onNodeWithText(OnboardingPage.Coach.title).assertExists()
+    pages.performTouchInput { swipeLeft() }
+    compose.onNodeWithText(OnboardingPage.Tafs.title).assertExists()
   }
 
   @Test fun skipEndsTheCards() {

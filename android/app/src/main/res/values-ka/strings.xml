@@ -975,8 +975,11 @@
         <item quantity="one">%2$s ისიც ჩერდება.</item>
         <item quantity="other">%2$s ისინიც ჩერდებიან.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">გასაღები %1$s-ში მუშაობას აგრძელებს, სანამ იქ არ წაშლით.</string>
     <string name="connect_disconnect_no_taf_uses">არც ერთი taf ახლა არ იყენებს %1$s-ს.</string>
+    <string name="connect_disconnect_not_revoked">%1$s არ გვაძლევს შესვლის გაუქმების საშუალებას: იქაც რომ დასრულდეს, მოხსენით tafs-ის წვდომა %1$s-ში.</string>
     <string name="connect_disconnect_rest">სხვა taf-ები, რომლებიც %1$s-ს იყენებენ, წვდომას ინარჩუნებენ. თუ სხვა taf იმავე ანგარიშს იქ არ იყენებს, შესვლა უქმდება %1$s-თან; სხვაგვარად, როცა ბოლო ამოიღება. %1$s-ის ხელახლა გამოყენება გთხოვთ დაამტკიცოთ და ხელახლა შეხვიდეთ.</string>
+    <string name="connect_disconnect_rest_deleted">სხვა taf-ები, რომლებიც %1$s-ს იყენებენ, წვდომას ინარჩუნებენ. თუ სხვა taf იმავე ანგარიშს იქ არ იყენებს, შესვლა იშლება tafs-იდან; სხვაგვარად, როცა ბოლო ამოიღება. %1$s-ის ხელახლა გამოყენება გთხოვთ დაამტკიცოთ და ხელახლა შეხვიდეთ.</string>
     <string name="connect_disconnect_rest_key">სხვა taf-ები, რომლებიც %1$s-ს იყენებენ, წვდომას ინარჩუნებენ. გასაღები tafs-იდან იშლება, როგორც კი არც ერთი taf მას აღარ იყენებს. %1$s-ის ხელახლა გამოყენება გთხოვთ დაამტკიცოთ და გასაღები ხელახლა ჩასვათ.</string>
     <string name="connect_disconnect_title">ამოიღოთ წვდომა %1$s-ზე?</string>
     <string name="connect_disconnect_title_from">ამოიღოთ წვდომა %1$s-ზე %2$s-ისთვის?</string>

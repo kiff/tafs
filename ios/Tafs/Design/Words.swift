@@ -1868,10 +1868,16 @@ enum Words {
             static func alsoCards(names: String) -> String { Words.line("connect.disconnect.also_cards", names) }
             /// {names} stop too.
             static func alsoStops(count: Int, names: String) -> String { Words.count("connect.disconnect.also_stops", count, names) }
+            /// The key still works at {vendor} until you delete it there.
+            static func keyNotRevoked(vendor: String) -> String { Words.line("connect.disconnect.key_not_revoked", vendor) }
             /// No taf uses {vendor} now.
             static func noTafUses(vendor: String) -> String { Words.line("connect.disconnect.no_taf_uses", vendor) }
+            /// {vendor} offers no way for us to revoke the sign-in, so remove tafs's access in {vendor} to end it there too.
+            static func notRevoked(vendor: String) -> String { Words.line("connect.disconnect.not_revoked", vendor) }
             /// Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is revoked at {vendor}; otherwise, when the last one is removed. Using {vendor} again asks you to approve and sign in again.
             static func rest(vendor: String) -> String { Words.line("connect.disconnect.rest", vendor) }
+            /// Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is deleted from tafs; otherwise, when the last one is removed. Using {vendor} again asks you to approve and sign in again.
+            static func restDeleted(vendor: String) -> String { Words.line("connect.disconnect.rest_deleted", vendor) }
             /// Other tafs that use {vendor} keep their access. The key is deleted from tafs once no taf uses it. Using {vendor} again asks you to approve and paste a key again.
             static func restKey(vendor: String) -> String { Words.line("connect.disconnect.rest_key", vendor) }
             /// Remove access to {vendor}?
