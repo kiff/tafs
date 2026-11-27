@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type AccountConnection, accountConnections, accountConnectionsAndChromes, browserLine, chatLeftAgents, chromeLine, connectionLines, MAX_CHROMES, GUIDES_LINES, heldGuides, MAX_CONNECTIONS, MAX_GUIDES, withConnections } from "../src/cloud/connections.js";
+import { type AccountConnection, accountConnections, accountConnectionsAndChromes, browserLine, chatLeftAgents, chromeLine, requestedAgents, connectionLines, MAX_CHROMES, GUIDES_LINES, heldGuides, MAX_CONNECTIONS, MAX_GUIDES, withConnections } from "../src/cloud/connections.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { entryOf } from "../src/cloud/coach-skills.js";
 
@@ -204,12 +204,12 @@ describe("connections no taf uses", () => {
       { ...qonto, agent: "cut-short-example2" },
       { ...stripe, since: "2026-11-27" },
     ];
-    expect(chatLeftAgents(events, conns, new Set(["cb"]), "2026-11-27T20:44:00.000Z")).toEqual(["qonto-balance-k3f9x2a1", "shop-runner-example3", "cut-short-example2"]);
+    expect(chatLeftAgents(requestedAgents(events), conns, new Set(["cb"]), "2026-11-27T20:44:00.000Z")).toEqual(["qonto-balance-k3f9x2a1", "shop-runner-example3", "cut-short-example2"]);
     // The taf it made is live: its connections stay.
-    expect(chatLeftAgents(events, conns, new Set(["qonto-balance-k3f9x2a1"]), "2026-11-27T20:44:00.000Z")).toEqual(["shop-runner-example3", "cut-short-example2"]);
+    expect(chatLeftAgents(requestedAgents(events), conns, new Set(["qonto-balance-k3f9x2a1"]), "2026-11-27T20:44:00.000Z")).toEqual(["shop-runner-example3", "cut-short-example2"]);
     // An agent with one connection asked before the chat began isn't the chat's alone.
-    expect(chatLeftAgents(events, [qonto, { ...qonto, since: "2026-11-26" }], new Set(), "2026-11-27T20:44:00.000Z")).toEqual([]);
-    expect(chatLeftAgents([], conns, new Set(), "2026-11-27T20:44:00.000Z")).toEqual([]);
-    expect(chatLeftAgents(events, conns, new Set(), "")).toEqual([]);
+    expect(chatLeftAgents(requestedAgents(events), [qonto, { ...qonto, since: "2026-11-26" }], new Set(), "2026-11-27T20:44:00.000Z")).toEqual([]);
+    expect(chatLeftAgents(new Set(), conns, new Set(), "2026-11-27T20:44:00.000Z")).toEqual([]);
+    expect(chatLeftAgents(requestedAgents(events), conns, new Set(), "")).toEqual([]);
   });
 });

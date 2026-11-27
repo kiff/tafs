@@ -37,7 +37,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, chatLeftAgents, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, browserLine, chromeLine, tafPageSites } from "./connections.js";
+import { type AccountConnection, type AppGuide, accountConnections, answeredAgent, chatLeftAgents, requestedAgents, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, browserLine, chromeLine, tafPageSites } from "./connections.js";
 import { maskedPath, normalHost, onSites, pageSiteRefused } from "./page-sites.js";
 import { maskedCodes } from "./page-codes.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
@@ -7047,6 +7047,10 @@ async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Dep
     })));
     if (removed.includes(false)) throw new HTTPError(503, wordsIn(lang).chat_delete_failed);
   }
+  // The agents its connection requests were answered under, as the relay kept them, read before the chat's notes go.
+  const asked = deps.coach ? await deps.coach.get(chatAgentsKey(me.tenantID, chat.id)).catch(() => undefined) : undefined;
+  const agents = requestedAgents(events);
+  for (const a of Array.isArray(asked) ? asked as ChatAgents : []) if (typeof a?.agent === "string") agents.add(a.agent);
   await agentsCall(() => deps.agents.deleteSession(me.tenantID, chat.id, ownerKey(me)));
   // What tafs cloud kept by this chat: best effort, each ends on its own (30 days at most) if a removal fails.
   const coach = deps.coach;
@@ -7058,12 +7062,12 @@ async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Dep
     const recaps = await coach.get(driveKeys.recaps(me.tenantID, chat.id)).catch(() => undefined);
     const drives = [...new Set(Array.isArray(recaps) ? recaps.filter((x): x is string => typeof x === "string" && x !== "") : [])];
     const steer = chatKeys(me, taf, chat.id);
-    const kept = [setAsideKey(me.tenantID, chat.id), chatConnectedKey(me.tenantID, chat.id), coachKeys.chatNotes(me.tenantID, me.subject, chat.id),
+    const kept = [setAsideKey(me.tenantID, chat.id), chatConnectedKey(me.tenantID, chat.id), chatAgentsKey(me.tenantID, chat.id), coachKeys.chatNotes(me.tenantID, me.subject, chat.id),
       ...[...approvals].map((id) => approvalNoteKey(me.tenantID, chat.id, id)), steer.held, steer.steered,
       ...drives.flatMap((d) => [driveKeys.recap(me.tenantID, d), driveKeys.steps(me.tenantID, d)]), driveKeys.recaps(me.tenantID, chat.id)];
     await Promise.all(kept.map((key) => coach.remove(key).catch((err) => console.error(`delete chat: a kept note stays until it ends: ${(err as Error).message}`))));
   }
-  await endChatConnections(me, chat.started, events, deps, token);
+  await endChatConnections(me, chat.started, agents, deps, token);
   return { session: chat.id, deleted: true };
 }
 
@@ -7073,18 +7077,23 @@ async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Dep
  * is gone: one that can't be read or ended is left as it was, and logged with counts only. 27 Nov: a Qonto sign-in
  * made in a chat the owner deleted, for a taf never made, stayed signed in, with no door left to end it.
  */
-async function endChatConnections(me: KIFFIdentity, started: string, events: ReadonlyArray<{ kind: string; body: unknown }>, deps: Deps, token: string): Promise<void> {
-  if (!deps.planqueBase || !token) return;
+async function endChatConnections(me: KIFFIdentity, started: string, asked: ReadonlySet<string>, deps: Deps, token: string): Promise<void> {
+  if (!deps.planqueBase || !token || asked.size === 0) return;
   try {
     const [conns, tafs] = await Promise.all([accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token), deps.tafs.list(me.tenantID)]);
     const live = new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent!));
-    const agents = chatLeftAgents(events, conns, live, iso(started));
-    let ended = 0;
+    const agents = chatLeftAgents(asked, conns, live, iso(started));
+    // One line, whatever happens: the agents asked, those left to end, and each one's answer. Agent ids and counts only.
+    const results: Array<{ agent: string; ended?: number; error?: string }> = [];
     for (const agent of agents) {
-      const r = await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, agent, token).catch(() => null);
-      ended += r?.ended.length ?? 0;
+      try {
+        const r = await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, agent, token);
+        results.push(r === null ? { agent, error: "no end route" } : { agent, ended: r.ended.length });
+      } catch (err) {
+        results.push({ agent, error: (err as Error).message });
+      }
     }
-    if (agents.length) console.log(JSON.stringify({ event: "chat_connections_ended", tenant: me.tenantID, agents: agents.length, ended }));
+    console.log(JSON.stringify({ event: "chat_connections_ended", tenant: me.tenantID, asked: [...asked], left: agents, results }));
   } catch (err) {
     console.error(`delete chat: its connections weren't read: ${(err as Error).message}`);
   }
@@ -7766,7 +7775,7 @@ class Pace {
 
 /** Keeps a failed step's reason for its run's thread (kiff/tafs#476, gap 9): by run and call, with the call's tool. */
 type WhyKeeper = ((run: string, call: string, tool: string, why: string, refusal?: string, refused?: StepWhys[number]["refused"], notMade?: boolean) => void)
-  & { connected?: (run: string, through: { vendor: string; key?: string }) => void; session?: string };
+  & { connected?: (run: string, through: { vendor: string; key?: string }) => void; asked?: (run: string, agent: string) => void; session?: string };
 
 /**
  * The keeper for a person's streams: a run's failed steps' reasons go in the coach store
@@ -7830,8 +7839,32 @@ function whyKeeper(me: KIFFIdentity, deps: Deps, taf: Taf, session?: string): Wh
       await store.put(chatConnectedKey(me.tenantID, session), [...marks, { ...through, at: at.toISOString() }], new Date(at.getTime() + STEP_WHY_KEPT_MS));
     }));
   };
+  // A connection request that went through: the agent it was asked under, kept with the chat for as long as the chat is,
+  // so deleting the chat ends what no taf uses (deleteChat). kiff/agents drops the call and its answer when the run ends,
+  // so this is the only record of it a delete can read.
+  keeper.asked = (run, agent) => {
+    then(async () => {
+      const chat = await chatOf(run);
+      if (!chat) return;
+      const key = chatAgentsKey(me.tenantID, chat);
+      const kept = await store.get(key);
+      const asked = (Array.isArray(kept) ? kept as ChatAgents : []).filter((a) => a.agent !== agent).slice(-CHAT_AGENTS_MAX + 1);
+      const at = deps.now?.() ?? new Date();
+      await store.put(key, [...asked, { agent, at: at.toISOString() }], new Date(at.getTime() + CHAT_AGENTS_KEPT_MS));
+    });
+  };
   return keeper;
 }
+
+/** The agents a chat's connection requests were answered under, each with when (keeper.asked). */
+type ChatAgents = Array<{ agent: string; at: string }>;
+
+/** Where a chat's asked agents are kept, as long as the chat itself (30 days), and at most this many. */
+function chatAgentsKey(tenant: string, session: string): string {
+  return `${tenant}#coach-asked#${session}`;
+}
+const CHAT_AGENTS_KEPT_MS = 31 * 24 * 3600_000;
+const CHAT_AGENTS_MAX = 20;
 
 /** The apps a chat connected, each with when: an earlier run's refusal of the same is past (keeper.connected). */
 type SessionConnected = Array<{ vendor: string; key?: string; at: string }>;
@@ -7884,6 +7917,11 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     // call): "couldn't connect" never stands under "signed in".
     const connected = r.is_error !== true && r.state !== "held" && !notMade ? steps.requestTarget(callID) ?? steps.connectedBy(callID, r.text) : undefined;
     if (connected !== undefined && runID) keep?.connected?.(runID, connected);
+    // The agent a connection request was answered under, while its answer still exists (keeper.asked).
+    if (runID && r.is_error !== true && r.state !== "held" && !notMade && steps.requestTarget(callID) !== undefined && typeof r.text === "string") {
+      const agent = answeredAgent(r.text);
+      if (agent) keep?.asked?.(runID, agent);
+    }
     steps.result(callID, r.text);
     if (typeof callID === "string" && typeof r.tool === "string" && !toolOf.has(callID)) toolOf.set(callID, r.tool);
     if (r.state === "held") {
