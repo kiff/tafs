@@ -1628,7 +1628,7 @@
     <string name="onboarding_consent_tick">Съгласен съм с %1$s и с %2$s.</string>
     <string name="onboarding_control_lead">Когато taf има нужда от вас, той чака в „Чака ви“ и на часовника ви, ако имате такъв. Одобрявате с Face ID или Touch ID, или отказвате.</string>
     <string name="onboarding_control_lead_android">Когато taf има нужда от вас, той чака в „Чака ви“ и на часовника ви, ако имате такъв. Одобрявате с пръстовия си отпечатък или лицето си или отказвате.</string>
-    <string name="onboarding_control_lead_desktop">Когато taf има нужда от вас, той чака в „Чака ви“. Одобрявате от телефона си или отказвате.</string>
+    <string name="onboarding_control_lead_desktop">Когато taf има нужда от вас, той чака в „Чака ви“. Одобрявате от телефона си, или на този компютър, ако сте влезли в него с ключ за достъп или ключ за сигурност, или отказвате.</string>
     <string name="onboarding_control_lead_mac">Когато taf има нужда от вас, той чака в „Чака ви“. Одобрявате с Touch ID или от телефона си, или отказвате.</string>
     <string name="onboarding_control_title">Вие запазвате контрола</string>
     <string name="onboarding_get_started">Да започваме</string>

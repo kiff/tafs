@@ -401255,259 +401255,259 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "عندما يحتاجك taf ينتظر في «بانتظارك». توافق على هاتفك، أو ترفض."
+            "value": "عندما يحتاجك taf ينتظر في «بانتظارك». توافق على هاتفك، أو على هذا الكمبيوتر إن سجّلت الدخول عليه بمفتاح مرور أو مفتاح أمان، أو ترفض."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində gözləyir. Telefonunuzda təsdiq edirsiniz, ya da rədd edirsiniz."
+            "value": "Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində gözləyir. Telefonunuzda, ya da bu kompüterə giriş açarı (passkey) və ya təhlükəsizlik açarı ilə daxil olmusunuzsa, bu kompüterdə təsdiq edirsiniz, ya da rədd edirsiniz."
           }
         },
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Когато taf има нужда от вас, той чака в „Чака ви“. Одобрявате от телефона си или отказвате."
+            "value": "Когато taf има нужда от вас, той чака в „Чака ви“. Одобрявате от телефона си, или на този компютър, ако сте влезли в него с ключ за достъп или ключ за сигурност, или отказвате."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "কোনো taf-এর আপনাকে দরকার হলে সে «আপনার অপেক্ষায়» অপেক্ষা করে। আপনি আপনার ফোনে অনুমোদন করেন, অথবা প্রত্যাখ্যান করেন।"
+            "value": "কোনো taf-এর আপনাকে দরকার হলে সে «আপনার অপেক্ষায়» অপেক্ষা করে। আপনি আপনার ফোনে অনুমোদন করেন, অথবা পাসকি বা সিকিউরিটি কী দিয়ে সাইন ইন করে থাকলে এই কম্পিউটারে, অথবা প্রত্যাখ্যান করেন।"
           }
         },
         "ca": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quan un taf et necessita, espera a «Et necessita». Aproves al telèfon, o rebutges."
+            "value": "Quan un taf et necessita, espera a «Et necessita». Aproves al telèfon, o en aquest ordinador si hi has iniciat la sessió amb una clau d'accés o una clau de seguretat, o rebutges."
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Když vás taf potřebuje, čeká v Čeká na vás. Schválíte v telefonu, nebo odmítnete."
+            "value": "Když vás taf potřebuje, čeká v Čeká na vás. Schválíte v telefonu, nebo na tomto počítači, pokud jste se na něm přihlásili přístupovým klíčem nebo bezpečnostním klíčem, nebo odmítnete."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Braucht dich ein taf, wartet er in „Braucht dich“. Du genehmigst auf deinem Handy oder lehnst ab."
+            "value": "Braucht dich ein taf, wartet er in „Braucht dich“. Du genehmigst auf deinem Handy, oder an diesem Computer, wenn du ihn mit einem Passkey oder Sicherheitsschlüssel angemeldet hast, oder lehnst ab."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When a taf needs you, it waits in Needs you. You approve on your phone, or refuse."
+            "value": "When a taf needs you, it waits in Needs you. You approve on your phone, or on this computer if you signed it in with a passkey or security key, or refuse."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando un taf te necesita, espera en «Te necesita». Apruebas en tu teléfono, o rechazas."
+            "value": "Cuando un taf te necesita, espera en «Te necesita». Apruebas en tu teléfono, o en este ordenador si iniciaste sesión en él con una llave de acceso o una llave de seguridad, o rechazas."
           }
         },
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kui taf vajab sind, ootab see vaates Vajab sind. Kinnitad telefonis või keeldud."
+            "value": "Kui taf vajab sind, ootab see vaates Vajab sind. Kinnitad telefonis või selles arvutis, kui logisid sinna sisse pääsuvõtme või turvavõtmega, või keeldud."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez sur votre téléphone, ou vous refusez."
+            "value": "Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez sur votre téléphone, ou sur cet ordinateur si vous l'avez connecté avec une clé d'accès ou une clé de sécurité, ou vous refusez."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "כש-taf זקוק לך, הוא ממתין ב«זקוק לך». אתה מאשר בטלפון, או דוחה."
+            "value": "כש-taf זקוק לך, הוא ממתין ב«זקוק לך». אתה מאשר בטלפון, או במחשב הזה אם התחברת אליו עם מפתח גישה או מפתח אבטחה, או דוחה."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "जब किसी taf को आपकी ज़रूरत होती है, वह आपका इंतज़ार में इंतज़ार करता है। आप अपने फ़ोन पर मंज़ूर करते हैं, या अस्वीकार करते हैं।"
+            "value": "जब किसी taf को आपकी ज़रूरत होती है, वह आपका इंतज़ार में इंतज़ार करता है। आप अपने फ़ोन पर मंज़ूर करते हैं, या इस कंप्यूटर पर, अगर आपने इसमें पासकी या सिक्योरिटी की से साइन इन किया है, या अस्वीकार करते हैं।"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kad tafu trebate vi, čeka u Čeka vas. Odobravate na telefonu ili odbijate."
+            "value": "Kad tafu trebate vi, čeka u Čeka vas. Odobravate na telefonu, ili na ovom računalu ako ste se na njemu prijavili pristupnim ključem ili sigurnosnim ključem, ili odbijate."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ha egy tafnak szüksége van rád, a Rád vár részben vár. A telefonodon hagyod jóvá, vagy elutasítod."
+            "value": "Ha egy tafnak szüksége van rád, a Rád vár részben vár. A telefonodon hagyod jóvá, vagy ezen a számítógépen, ha azonosítókulccsal vagy biztonsági kulccsal jelentkeztél be rajta, vagy elutasítod."
           }
         },
         "hy": {
           "stringUnit": {
             "state": "translated",
-            "value": "Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում։ Դուք հաստատում եք հեռախոսով, կամ մերժում եք։"
+            "value": "Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում։ Դուք հաստատում եք հեռախոսով, կամ այս համակարգչում, եթե մուտք եք գործել դրանում passkey-ով կամ անվտանգության բանալիով, կամ մերժում եք։"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda. Anda menyetujui di ponsel, atau menolak."
+            "value": "Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda. Anda menyetujui di ponsel, atau di komputer ini jika Anda masuk dengan kunci sandi atau kunci keamanan, atau menolak."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi sul telefono, oppure rifiuti."
+            "value": "Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi sul telefono, o su questo computer se vi hai eseguito l'accesso con una passkey o una chiave di sicurezza, oppure rifiuti."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafがあなたを必要とすると要確認で待ちます。スマートフォンで承認するか、拒否してください。"
+            "value": "tafがあなたを必要とすると要確認で待ちます。スマートフォンで承認するか、パスキーやセキュリティキーでサインインしたこのコンピュータで承認するか、拒否してください。"
           }
         },
         "ka": {
           "stringUnit": {
             "state": "translated",
-            "value": "როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“. ამტკიცებთ ტელეფონზე, ან უარს ამბობთ."
+            "value": "როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“. ამტკიცებთ ტელეფონზე, ან ამ კომპიუტერზე, თუ მასში passkey-ით ან უსაფრთხოების გასაღებით შეხვედით, ან უარს ამბობთ."
           }
         },
         "km": {
           "stringUnit": {
             "state": "translated",
-            "value": "នៅពេល taf ត្រូវការអ្នក វារង់ចាំក្នុង «ត្រូវការអ្នក»។ អ្នកអនុម័តនៅលើទូរសព្ទរបស់អ្នក ឬបដិសេធ។"
+            "value": "នៅពេល taf ត្រូវការអ្នក វារង់ចាំក្នុង «ត្រូវការអ្នក»។ អ្នកអនុម័តនៅលើទូរសព្ទរបស់អ្នក ឬនៅលើកុំព្យូទ័រនេះ ប្រសិនបើអ្នកបានចូលដោយ passkey ឬកូនសោសុវត្ថិភាព ឬបដិសេធ។"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "taf에 내가 필요하면 확인 필요에서 기다립니다. 휴대폰으로 승인하거나 거절하세요."
+            "value": "taf에 내가 필요하면 확인 필요에서 기다립니다. 휴대폰으로 승인하거나, 패스키나 보안 키로 로그인한 이 컴퓨터에서 승인하거나 거절하세요."
           }
         },
         "lo": {
           "stringUnit": {
             "state": "translated",
-            "value": "ເມື່ອ taf ຕ້ອງການທ່ານ ມັນລໍຖ້າໃນ «ຕ້ອງການທ່ານ». ທ່ານອະນຸມັດໃນໂທລະສັບຂອງທ່ານ ຫຼື ປະຕິເສດ."
+            "value": "ເມື່ອ taf ຕ້ອງການທ່ານ ມັນລໍຖ້າໃນ «ຕ້ອງການທ່ານ». ທ່ານອະນຸມັດໃນໂທລະສັບຂອງທ່ານ ຫຼື ໃນຄອມພິວເຕີນີ້ ຖ້າທ່ານເຂົ້າສູ່ລະບົບດ້ວຍ passkey ຫຼື ກະແຈຄວາມປອດໄພ ຫຼື ປະຕິເສດ."
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate telefone arba atmetate."
+            "value": "Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate telefone, arba šiame kompiuteryje, jei prisijungėte prie jo prieigos raktu ar saugos raktu, arba atmetate."
           }
         },
         "lv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi”. Tu apstiprini savā tālrunī vai atsaki."
+            "value": "Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi”. Tu apstiprini savā tālrunī, vai šajā datorā, ja tajā pierakstījies ar piekļuves atslēgu vai drošības atslēgu, vai atsaki."
           }
         },
         "mk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Кога на некој taf му си потребен, чека во Те чека. Одобруваш на твојот телефон, или одбиваш."
+            "value": "Кога на некој taf му си потребен, чека во Те чека. Одобруваш на твојот телефон, или на овој компјутер ако си се најавил на него со клуч за пристап или безбедносен клуч, или одбиваш."
           }
         },
         "mn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ. Та утсаараа зөвшөөрч, эсвэл татгалзана."
+            "value": "Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ. Та утсаараа зөвшөөрч, эсвэл энэ компьютерт passkey эсвэл аюулгүйн түлхүүрээр нэвтэрсэн бол эндээ зөвшөөрч, эсвэл татгалзана."
           }
         },
         "ne": {
           "stringUnit": {
             "state": "translated",
-            "value": "कुनै taf लाई तपाईं चाहिँदा यो तपाईंको प्रतीक्षामा पर्खन्छ। तपाईं फोनमा स्वीकृत गर्नुहुन्छ, वा अस्वीकार गर्नुहुन्छ।"
+            "value": "कुनै taf लाई तपाईं चाहिँदा यो तपाईंको प्रतीक्षामा पर्खन्छ। तपाईं फोनमा स्वीकृत गर्नुहुन्छ, वा पासकी वा सुरक्षा कुञ्जीले साइन इन गर्नुभएको भए यो कम्प्युटरमा, वा अस्वीकार गर्नुहुन्छ।"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed op je telefoon, of weigert."
+            "value": "Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed op je telefoon, of op deze computer als je er met een toegangssleutel of beveiligingssleutel bent ingelogd, of weigert."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz na telefonie albo odrzucasz."
+            "value": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz na telefonie lub na tym komputerze, jeśli zalogowano się na nim kluczem dostępu lub kluczem bezpieczeństwa, albo odrzucasz."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando um taf precisa de si, espera em «Precisa de si». Aprova no telemóvel, ou recusa."
+            "value": "Quando um taf precisa de si, espera em «Precisa de si». Aprova no telemóvel, ou neste computador, se tiver iniciado sessão nele com uma chave de acesso ou chave de segurança, ou recusa."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando um taf precisa de você, espera em «Precisa de você». Aprova no celular, ou recusa."
+            "value": "Quando um taf precisa de você, espera em «Precisa de você». Aprova no celular, ou neste computador, se tiver entrado nele com uma chave de acesso ou chave de segurança, ou recusa."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Când un taf are nevoie de dvs., așteaptă în Vă așteaptă. Aprobați pe telefon, ori refuzați."
+            "value": "Când un taf are nevoie de dvs., așteaptă în Vă așteaptă. Aprobați pe telefon, sau pe acest computer, dacă v-ați conectat pe el cu o cheie de acces sau o cheie de securitate, ori refuzați."
           }
         },
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keď vás taf potrebuje, čaká v Čaká na vás. Schválite v telefóne, alebo odmietnete."
+            "value": "Keď vás taf potrebuje, čaká v Čaká na vás. Schválite v telefóne, alebo na tomto počítači, ak ste sa na ňom prihlásili prístupovým kľúčom alebo bezpečnostným kľúčom, alebo odmietnete."
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite v telefonu ali zavrnete."
+            "value": "Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite v telefonu, ali na tem računalniku, če ste se vanj prijavili s ključem za dostop ali varnostnim ključem, ali zavrnete."
           }
         },
         "sq": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kur një taf ka nevojë për ju, pret te Ju pret. Miratoni në telefonin tuaj, ose refuzoni."
+            "value": "Kur një taf ka nevojë për ju, pret te Ju pret. Miratoni në telefonin tuaj, ose në këtë kompjuter nëse keni hyrë në të me një çelës kalimi ose çelës sigurie, ose refuzoni."
           }
         },
         "sr-Latn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kad tafu trebate vi, čeka u Čeka vas. Odobravate na telefonu ili odbijate."
+            "value": "Kad tafu trebate vi, čeka u Čeka vas. Odobravate na telefonu, ili na ovom računaru ako ste se na njemu prijavili pristupnim ključem ili bezbednosnim ključem, ili odbijate."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ คุณอนุมัติบนโทรศัพท์ หรือปฏิเสธ."
+            "value": "เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ คุณอนุมัติบนโทรศัพท์ หรือบนคอมพิวเตอร์เครื่องนี้ หากคุณลงชื่อเข้าใช้ด้วยพาสคีย์หรือคีย์ความปลอดภัย หรือปฏิเสธ."
           }
         },
         "tk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Taf size zerur bolanda, ol Size garaşýar bölüminde garaşýar. Siz telefonyňyzda tassyklaýarsyňyz, ýa-da ret edýärsiňiz."
+            "value": "Taf size zerur bolanda, ol Size garaşýar bölüminde garaşýar. Siz telefonyňyzda tassyklaýarsyňyz, ýa-da bu kompýutere passkey ýa-da howpsuzlyk açary bilen giren bolsaňyz, şu ýerde tassyklaýarsyňyz, ýa-da ret edýärsiňiz."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir taf'ın size ihtiyacı olduğunda Sizi bekliyor'da bekler. Telefonunuzdan onaylar ya da reddedersiniz."
+            "value": "Bir taf'ın size ihtiyacı olduğunda Sizi bekliyor'da bekler. Telefonunuzdan onaylar, ya da bu bilgisayarda geçiş anahtarı veya güvenlik anahtarıyla oturum açtıysanız burada onaylar ya da reddedersiniz."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "جب کسی taf کو آپ کی ضرورت ہوتی ہے تو وہ آپ کی ضرورت میں انتظار کرتا ہے۔ آپ اپنے فون پر منظور کرتے ہیں، یا مسترد کرتے ہیں۔"
+            "value": "جب کسی taf کو آپ کی ضرورت ہوتی ہے تو وہ آپ کی ضرورت میں انتظار کرتا ہے۔ آپ اپنے فون پر منظور کرتے ہیں، یا اس کمپیوٹر پر اگر آپ نے اس میں پاس کی یا سیکیورٹی کی سے سائن اِن کیا ہے، یا مسترد کرتے ہیں۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Khi một taf cần bạn, nó chờ trong Đang chờ bạn. Bạn phê duyệt trên điện thoại, hoặc từ chối."
+            "value": "Khi một taf cần bạn, nó chờ trong Đang chờ bạn. Bạn phê duyệt trên điện thoại, hoặc trên máy tính này nếu bạn đã đăng nhập bằng khóa truy cập hay khóa bảo mật, hoặc từ chối."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "當 taf 需要您時，它會在「等您處理」中等候。您可在手機上核准，或拒絕。"
+            "value": "當 taf 需要您時，它會在「等您處理」中等候。您可在手機上核准，或在以密碼金鑰或安全金鑰登入的這台電腦上核准，或拒絕。"
           }
         }
       }

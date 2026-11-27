@@ -1628,7 +1628,7 @@
     <string name="onboarding_consent_tick">Би %1$s болон %2$s-тэй санал нийлж байна.</string>
     <string name="onboarding_control_lead">Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ, танд цаг байвал цаган дээр нь ч гэсэн. Та Face ID эсвэл Touch ID-аар зөвшөөрч, эсвэл татгалзана.</string>
     <string name="onboarding_control_lead_android">Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ, танд цаг байвал цаган дээр нь ч гэсэн. Та хурууны хээ эсвэл царайгаараа зөвшөөрч, эсвэл татгалзана.</string>
-    <string name="onboarding_control_lead_desktop">Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ. Та утсаараа зөвшөөрч, эсвэл татгалзана.</string>
+    <string name="onboarding_control_lead_desktop">Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ. Та утсаараа зөвшөөрч, эсвэл энэ компьютерт passkey эсвэл аюулгүйн түлхүүрээр нэвтэрсэн бол эндээ зөвшөөрч, эсвэл татгалзана.</string>
     <string name="onboarding_control_lead_mac">Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ. Та Touch ID-аар эсвэл утсаараа зөвшөөрч, эсвэл татгалзана.</string>
     <string name="onboarding_control_title">Хяналт таны гарт</string>
     <string name="onboarding_get_started">Эхлэх</string>

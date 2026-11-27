@@ -6,7 +6,7 @@
   "onboarding.consent_tick": "Akceptuję {kiff_terms} i {tafs_terms}.",
   "onboarding.control_lead": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz przez Face ID lub Touch ID albo odrzucasz.",
   "onboarding.control_lead_android": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz odciskiem palca albo twarzą albo odrzucasz.",
-  "onboarding.control_lead_desktop": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz na telefonie albo odrzucasz.",
+  "onboarding.control_lead_desktop": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz na telefonie lub na tym komputerze, jeśli zalogowano się na nim kluczem dostępu lub kluczem bezpieczeństwa, albo odrzucasz.",
   "onboarding.control_lead_mac": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz przez Touch ID lub na telefonie albo odrzucasz.",
   "onboarding.control_title": "Kontrola zostaje przy Tobie",
   "onboarding.get_started": "Zaczynamy",

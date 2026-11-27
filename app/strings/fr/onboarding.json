@@ -6,7 +6,7 @@
   "onboarding.consent_tick": "J'accepte {kiff_terms} et {tafs_terms}.",
   "onboarding.control_lead": "Quand un taf a besoin de vous, il attend dans « Vous attend » et, si vous en avez une, sur votre montre. Vous approuvez avec Face ID ou Touch ID, ou vous refusez.",
   "onboarding.control_lead_android": "Quand un taf a besoin de vous, il attend dans « Vous attend » et, si vous en avez une, sur votre montre. Vous approuvez avec votre empreinte digitale ou votre visage, ou vous refusez.",
-  "onboarding.control_lead_desktop": "Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez sur votre téléphone, ou vous refusez.",
+  "onboarding.control_lead_desktop": "Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez sur votre téléphone, ou sur cet ordinateur si vous l'avez connecté avec une clé d'accès ou une clé de sécurité, ou vous refusez.",
   "onboarding.control_lead_mac": "Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez avec Touch ID ou sur votre téléphone, ou vous refusez.",
   "onboarding.control_title": "Vous gardez le contrôle",
   "onboarding.get_started": "Commencer",

@@ -1628,7 +1628,7 @@
     <string name="onboarding_consent_tick">Pajtohem me %1$s dhe %2$s.</string>
     <string name="onboarding_control_lead">Kur një taf ka nevojë për ju, pret te Ju pret, dhe në orën tuaj nëse keni një. Miratoni me Face ID ose Touch ID, ose refuzoni.</string>
     <string name="onboarding_control_lead_android">Kur një taf ka nevojë për ju, pret te Ju pret, dhe në orën tuaj nëse keni një. Miratoni me gjurmën e gishtit ose fytyrën, ose refuzoni.</string>
-    <string name="onboarding_control_lead_desktop">Kur një taf ka nevojë për ju, pret te Ju pret. Miratoni në telefonin tuaj, ose refuzoni.</string>
+    <string name="onboarding_control_lead_desktop">Kur një taf ka nevojë për ju, pret te Ju pret. Miratoni në telefonin tuaj, ose në këtë kompjuter nëse keni hyrë në të me një çelës kalimi ose çelës sigurie, ose refuzoni.</string>
     <string name="onboarding_control_lead_mac">Kur një taf ka nevojë për ju, pret te Ju pret. Miratoni me Touch ID ose në telefonin tuaj, ose refuzoni.</string>
     <string name="onboarding_control_title">Mbetesh ju në kontroll</string>
     <string name="onboarding_get_started">Filloni</string>

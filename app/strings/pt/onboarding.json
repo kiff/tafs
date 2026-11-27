@@ -6,7 +6,7 @@
   "onboarding.consent_tick": "Aceito {kiff_terms} e {tafs_terms}.",
   "onboarding.control_lead": "Quando um taf precisa de si, espera em «Precisa de si» e, se tiver um, no relógio. Aprova com Face ID ou Touch ID, ou recusa.",
   "onboarding.control_lead_android": "Quando um taf precisa de si, espera em «Precisa de si» e, se tiver um, no relógio. Aprova com a impressão digital ou o rosto, ou recusa.",
-  "onboarding.control_lead_desktop": "Quando um taf precisa de si, espera em «Precisa de si». Aprova no telemóvel, ou recusa.",
+  "onboarding.control_lead_desktop": "Quando um taf precisa de si, espera em «Precisa de si». Aprova no telemóvel, ou neste computador, se tiver iniciado sessão nele com uma chave de acesso ou chave de segurança, ou recusa.",
   "onboarding.control_lead_mac": "Quando um taf precisa de si, espera em «Precisa de si». Aprova com Touch ID ou no telemóvel, ou recusa.",
   "onboarding.control_title": "O controlo é seu",
   "onboarding.get_started": "Começar",

@@ -6,7 +6,7 @@
   "onboarding.consent_tick": "Men {kiff_terms} we {tafs_terms} razy.",
   "onboarding.control_lead": "Taf size zerur bolanda, ol Size garaşýar bölüminde, we sagadyňyz bar bolsa, sagatda garaşýar. Siz Face ID ýa-da Touch ID bilen tassyklaýarsyňyz, ýa-da ret edýärsiňiz.",
   "onboarding.control_lead_android": "Taf size zerur bolanda, ol Size garaşýar bölüminde, we sagadyňyz bar bolsa, sagatda garaşýar. Siz barmak yzyňyz ýa-da ýüzüňiz bilen tassyklaýarsyňyz, ýa-da ret edýärsiňiz.",
-  "onboarding.control_lead_desktop": "Taf size zerur bolanda, ol Size garaşýar bölüminde garaşýar. Siz telefonyňyzda tassyklaýarsyňyz, ýa-da ret edýärsiňiz.",
+  "onboarding.control_lead_desktop": "Taf size zerur bolanda, ol Size garaşýar bölüminde garaşýar. Siz telefonyňyzda tassyklaýarsyňyz, ýa-da bu kompýutere passkey ýa-da howpsuzlyk açary bilen giren bolsaňyz, şu ýerde tassyklaýarsyňyz, ýa-da ret edýärsiňiz.",
   "onboarding.control_lead_mac": "Taf size zerur bolanda, ol Size garaşýar bölüminde garaşýar. Siz Touch ID bilen ýa-da telefonyňyzda tassyklaýarsyňyz, ýa-da ret edýärsiňiz.",
   "onboarding.control_title": "Gözegçilik sizde galýar",
   "onboarding.get_started": "Başlaň",

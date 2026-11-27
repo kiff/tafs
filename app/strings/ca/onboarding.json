@@ -6,7 +6,7 @@
   "onboarding.consent_tick": "Accepto {kiff_terms} i {tafs_terms}.",
   "onboarding.control_lead": "Quan un taf et necessita, espera a «Et necessita», i al teu rellotge si en tens un. Aproves amb Face ID o Touch ID, o rebutges.",
   "onboarding.control_lead_android": "Quan un taf et necessita, espera a «Et necessita», i al teu rellotge si en tens un. Aproves amb l'empremta digital o la cara, o rebutges.",
-  "onboarding.control_lead_desktop": "Quan un taf et necessita, espera a «Et necessita». Aproves al telèfon, o rebutges.",
+  "onboarding.control_lead_desktop": "Quan un taf et necessita, espera a «Et necessita». Aproves al telèfon, o en aquest ordinador si hi has iniciat la sessió amb una clau d'accés o una clau de seguretat, o rebutges.",
   "onboarding.control_lead_mac": "Quan un taf et necessita, espera a «Et necessita». Aproves amb Touch ID o al telèfon, o rebutges.",
   "onboarding.control_title": "Tu tens el control",
   "onboarding.get_started": "Comença",

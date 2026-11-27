@@ -6,7 +6,7 @@
   "onboarding.consent_tick": "Elfogadom a következőket: {kiff_terms} és {tafs_terms}.",
   "onboarding.control_lead": "Ha egy tafnak szüksége van rád, a Rád vár részben vár, és az órádon is, ha van. Face ID-val vagy Touch ID-val hagyod jóvá, vagy elutasítod.",
   "onboarding.control_lead_android": "Ha egy tafnak szüksége van rád, a Rád vár részben vár, és az órádon is, ha van. Az ujjlenyomatoddal vagy az arcoddal hagyod jóvá, vagy elutasítod.",
-  "onboarding.control_lead_desktop": "Ha egy tafnak szüksége van rád, a Rád vár részben vár. A telefonodon hagyod jóvá, vagy elutasítod.",
+  "onboarding.control_lead_desktop": "Ha egy tafnak szüksége van rád, a Rád vár részben vár. A telefonodon hagyod jóvá, vagy ezen a számítógépen, ha azonosítókulccsal vagy biztonsági kulccsal jelentkeztél be rajta, vagy elutasítod.",
   "onboarding.control_lead_mac": "Ha egy tafnak szüksége van rád, a Rád vár részben vár. Touch ID-val vagy a telefonodon hagyod jóvá, vagy elutasítod.",
   "onboarding.control_title": "Az irányítás nálad marad",
   "onboarding.get_started": "Kezdés",

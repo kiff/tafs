@@ -1688,7 +1688,7 @@
     <string name="onboarding_consent_tick">Sutinku su %1$s ir %2$s.</string>
     <string name="onboarding_control_lead">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“ ir jūsų laikrodyje, jei jį turite. Tvirtinate su Face ID ar Touch ID arba atmetate.</string>
     <string name="onboarding_control_lead_android">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“ ir jūsų laikrodyje, jei jį turite. Tvirtinate piršto atspaudu arba veidu arba atmetate.</string>
-    <string name="onboarding_control_lead_desktop">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate telefone arba atmetate.</string>
+    <string name="onboarding_control_lead_desktop">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate telefone, arba šiame kompiuteryje, jei prisijungėte prie jo prieigos raktu ar saugos raktu, arba atmetate.</string>
     <string name="onboarding_control_lead_mac">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate su Touch ID ar telefone arba atmetate.</string>
     <string name="onboarding_control_title">Valdote jūs</string>
     <string name="onboarding_get_started">Pradėti</string>
