@@ -1567,8 +1567,8 @@
     <string name="onboarding_card_title">Card 就是您的許可</string>
     <string name="onboarding_consent_tick">我同意%1$s和%2$s。</string>
     <string name="onboarding_control_lead">當 taf 需要您時，它會在「等您處理」中等候，若您有手錶，也會顯示在手錶上。您可用 Face ID 或 Touch ID 核准，或拒絕。</string>
-    <string name="onboarding_control_lead_android">當 taf 需要您時，它會在「等您處理」中等候，若您有手錶，也會顯示在手錶上。您可用螢幕鎖定核准，或拒絕。</string>
-    <string name="onboarding_control_lead_desktop">當 taf 需要您時，它會在「等您處理」中等候。您可在手機上核准，或拒絕。</string>
+    <string name="onboarding_control_lead_android">當 taf 需要您時，它會在「等您處理」中等候，若您有手錶，也會顯示在手錶上。您可用指紋或臉部核准，或拒絕。</string>
+    <string name="onboarding_control_lead_desktop">當 taf 需要您時，它會在「等您處理」中等候。您可在手機上核准，或在以密碼金鑰或安全金鑰登入的這台電腦上核准，或拒絕。</string>
     <string name="onboarding_control_lead_mac">當 taf 需要您時，它會在「等您處理」中等候。您可用 Touch ID 或在手機上核准，或拒絕。</string>
     <string name="onboarding_control_title">一切由您掌控</string>
     <string name="onboarding_get_started">開始使用</string>

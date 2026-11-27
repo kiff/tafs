@@ -1627,8 +1627,8 @@
     <string name="onboarding_card_title">Card е твоја дозвола</string>
     <string name="onboarding_consent_tick">Се согласувам со %1$s и %2$s.</string>
     <string name="onboarding_control_lead">Кога на некој taf му си потребен, чека во Те чека, и на твојот часовник ако имаш. Одобруваш со Face ID или Touch ID, или одбиваш.</string>
-    <string name="onboarding_control_lead_android">Кога на некој taf му си потребен, чека во Те чека, и на твојот часовник ако имаш. Одобруваш со заклучувањето на екранот, или одбиваш.</string>
-    <string name="onboarding_control_lead_desktop">Кога на некој taf му си потребен, чека во Те чека. Одобруваш на твојот телефон, или одбиваш.</string>
+    <string name="onboarding_control_lead_android">Кога на некој taf му си потребен, чека во Те чека, и на твојот часовник ако имаш. Одобруваш со отпечаток од прст или лице, или одбиваш.</string>
+    <string name="onboarding_control_lead_desktop">Кога на некој taf му си потребен, чека во Те чека. Одобруваш на твојот телефон, или на овој компјутер ако си се најавил на него со клуч за пристап или безбедносен клуч, или одбиваш.</string>
     <string name="onboarding_control_lead_mac">Кога на некој taf му си потребен, чека во Те чека. Одобруваш со Touch ID или на телефонот, или одбиваш.</string>
     <string name="onboarding_control_title">Ти ја држиш контролата</string>
     <string name="onboarding_get_started">Започни</string>

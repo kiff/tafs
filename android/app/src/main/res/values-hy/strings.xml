@@ -1627,8 +1627,8 @@
     <string name="onboarding_card_title">Card-ը ձեր թույլտվությունն է</string>
     <string name="onboarding_consent_tick">Համաձայն եմ %1$s-ի և %2$s-ի հետ։</string>
     <string name="onboarding_control_lead">Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում և ձեր ժամացույցում, եթե ունեք։ Դուք հաստատում եք Face ID-ով կամ Touch ID-ով, կամ մերժում եք։</string>
-    <string name="onboarding_control_lead_android">Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում և ձեր ժամացույցում, եթե ունեք։ Դուք հաստատում եք էկրանի կողպմամբ, կամ մերժում եք։</string>
-    <string name="onboarding_control_lead_desktop">Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում։ Դուք հաստատում եք հեռախոսով, կամ մերժում եք։</string>
+    <string name="onboarding_control_lead_android">Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում և ձեր ժամացույցում, եթե ունեք։ Դուք հաստատում եք մատնահետքով կամ դեմքով, կամ մերժում եք։</string>
+    <string name="onboarding_control_lead_desktop">Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում։ Դուք հաստատում եք հեռախոսով, կամ այս համակարգչում, եթե մուտք եք գործել դրանում passkey-ով կամ անվտանգության բանալիով, կամ մերժում եք։</string>
     <string name="onboarding_control_lead_mac">Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում։ Դուք հաստատում եք Touch ID-ով կամ հեռախոսով, կամ մերժում եք։</string>
     <string name="onboarding_control_title">Վերահսկողությունը ձեր ձեռքում է</string>
     <string name="onboarding_get_started">Սկսեք</string>

@@ -1747,8 +1747,8 @@
     <string name="onboarding_card_title">Card je vaše dovoljenje</string>
     <string name="onboarding_consent_tick">Strinjam se s %1$s in %2$s.</string>
     <string name="onboarding_control_lead">Ko vas taf potrebuje, čaka v Čaka na vas in na vaši uri, če jo imate. Odobrite s Face ID ali Touch ID ali zavrnete.</string>
-    <string name="onboarding_control_lead_android">Ko vas taf potrebuje, čaka v Čaka na vas in na vaši uri, če jo imate. Odobrite z zaklepanjem zaslona ali zavrnete.</string>
-    <string name="onboarding_control_lead_desktop">Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite v telefonu ali zavrnete.</string>
+    <string name="onboarding_control_lead_android">Ko vas taf potrebuje, čaka v Čaka na vas in na vaši uri, če jo imate. Odobrite s prstnim odtisom ali obrazom ali zavrnete.</string>
+    <string name="onboarding_control_lead_desktop">Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite v telefonu, ali na tem računalniku, če ste se vanj prijavili s ključem za dostop ali varnostnim ključem, ali zavrnete.</string>
     <string name="onboarding_control_lead_mac">Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite s Touch ID ali v telefonu ali zavrnete.</string>
     <string name="onboarding_control_title">Nadzor ostane vaš</string>
     <string name="onboarding_get_started">Začni</string>

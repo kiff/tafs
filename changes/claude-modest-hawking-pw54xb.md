@@ -1,0 +1,2 @@
+- **Android: the first-run card says you approve with your fingerprint or face, not your screen lock.** The screen lock never approves on Android (a strong biometric only); the card said it did, in all 44 languages.
+- **Windows, Linux and macOS 12: the first-run card also names approving on the computer itself**, when it was signed in with a passkey or security key, not only on the phone (all 44 languages).

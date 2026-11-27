@@ -1687,8 +1687,8 @@
     <string name="onboarding_card_title">Card הוא ההרשאה שלך</string>
     <string name="onboarding_consent_tick">אני מסכים ל%1$s ול%2$s.</string>
     <string name="onboarding_control_lead">כש-taf זקוק לך, הוא ממתין ב«זקוק לך», ובשעון שלך אם יש לך. אתה מאשר עם Face ID או Touch ID, או דוחה.</string>
-    <string name="onboarding_control_lead_android">כש-taf זקוק לך, הוא ממתין ב«זקוק לך», ובשעון שלך אם יש לך. אתה מאשר עם נעילת המסך, או דוחה.</string>
-    <string name="onboarding_control_lead_desktop">כש-taf זקוק לך, הוא ממתין ב«זקוק לך». אתה מאשר בטלפון, או דוחה.</string>
+    <string name="onboarding_control_lead_android">כש-taf זקוק לך, הוא ממתין ב«זקוק לך», ובשעון שלך אם יש לך. אתה מאשר עם טביעת האצבע או הפנים שלך, או דוחה.</string>
+    <string name="onboarding_control_lead_desktop">כש-taf זקוק לך, הוא ממתין ב«זקוק לך». אתה מאשר בטלפון, או במחשב הזה אם התחברת אליו עם מפתח גישה או מפתח אבטחה, או דוחה.</string>
     <string name="onboarding_control_lead_mac">כש-taf זקוק לך, הוא ממתין ב«זקוק לך». אתה מאשר עם Touch ID או בטלפון, או דוחה.</string>
     <string name="onboarding_control_title">השליטה נשארת בידיים שלך</string>
     <string name="onboarding_get_started">להתחיל</string>

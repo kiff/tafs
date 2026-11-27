@@ -1747,8 +1747,8 @@
     <string name="onboarding_card_title">Card to Twoje pozwolenie</string>
     <string name="onboarding_consent_tick">Akceptuję %1$s i %2$s.</string>
     <string name="onboarding_control_lead">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz przez Face ID lub Touch ID albo odrzucasz.</string>
-    <string name="onboarding_control_lead_android">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz blokadą ekranu albo odrzucasz.</string>
-    <string name="onboarding_control_lead_desktop">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz na telefonie albo odrzucasz.</string>
+    <string name="onboarding_control_lead_android">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz odciskiem palca albo twarzą albo odrzucasz.</string>
+    <string name="onboarding_control_lead_desktop">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz na telefonie lub na tym komputerze, jeśli zalogowano się na nim kluczem dostępu lub kluczem bezpieczeństwa, albo odrzucasz.</string>
     <string name="onboarding_control_lead_mac">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz przez Touch ID lub na telefonie albo odrzucasz.</string>
     <string name="onboarding_control_title">Kontrola zostaje przy Tobie</string>
     <string name="onboarding_get_started">Zaczynamy</string>
