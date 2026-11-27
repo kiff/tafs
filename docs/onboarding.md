@@ -43,9 +43,10 @@ back (`AppSignIn.Failure.refused("unsupported_client")`). The sign-up's email co
 4. **The first Home** (the iPhone's Home, and the iPad's and Mac's wide Overview, which is where a wide layout opens: `FirstHome`, one block for both): with no taf, for anyone who may use Coach: board 2, tafs cloud's own empty line when it sends
    one (else the app's "No tafs yet" and what Coach does), Ask Coach, and How tafs works, which reopens the cards with
    the privacy and terms links (also in Account). Where tafs cloud lists recipes instead, Home is as it ships.
-   Above either, **A first taf to try** (`FirstTafCard`): the first recipe tafs cloud lists with a proof
-   (`Recipes.firstToTry`, a non-empty `proved`), its title and line in tafs cloud's words, and **Set it up with
-   Coach**, which opens Coach with the recipe's words in the box to edit and send. None proved, and there's no card.
+   Above either, **A first taf to try** (`FirstTafCard`): the job tafs cloud names in `home.first_taf`
+   (`Recipes.firstToTry`; it picks the first proved recipe written in the person's language), its title and line in
+   tafs cloud's words, and **Set it up with Coach**, which opens Coach with its `say` in the box to edit and send. With
+   no field, a word missing, or the list not shown, there's no card: the app never picks a job of its own.
 
 ## Words
 

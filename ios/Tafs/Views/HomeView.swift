@@ -130,7 +130,7 @@ struct HomeView: View {
                     // A first taf to try (first-run v2): the first recipe tafs cloud lists with a proof, for
                     // someone who may use Coach; with none proved, nothing here.
                     if model.mayUseCoach, let first = model.recipes?.firstToTry {
-                        FirstTafCard(recipe: first) { model.handRecipeToCoach(first) }
+                        FirstTafCard(first: first) { model.handWordsToCoach(first.say) }
                     }
                     // tafs cloud says what Home shows with no taf: the recipes under its line, or
                     // its empty line (docs/ios-app.md).
@@ -464,15 +464,15 @@ struct TafRow: View {
 /// line in tafs cloud's words; Set it up with Coach opens Coach with the recipe's words in the box, to edit and send.
 /// Nothing is sent.
 struct FirstTafCard: View {
-    let recipe: TafsCloud.Recipes.Recipe
+    let first: TafsCloud.Recipes.Home.FirstTaf
     let setUp: () -> Void
 
     var body: some View {
         Panel {
             Eyebrow(text: Words.Home.firstTafTry)
-            Text(recipe.title).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
+            Text(first.title).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(recipe.line).scaledFont(14).foregroundColor(Theme.soft)
+            Text(first.line).scaledFont(14).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
             Button(Words.Home.firstTafCoach, action: setUp)
                 .buttonStyle(PrimaryButtonStyle())

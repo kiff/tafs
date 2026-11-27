@@ -265,7 +265,7 @@ struct OverviewView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         // A first taf to try (first-run v2), above the first Home, as Home draws it.
                         if let first = model.recipes?.firstToTry {
-                            FirstTafCard(recipe: first) { model.handRecipeToCoach(first) }
+                            FirstTafCard(first: first) { model.handWordsToCoach(first.say) }
                         }
                         FirstHome(showingHowItWorks: $showingHowItWorks)
                     }

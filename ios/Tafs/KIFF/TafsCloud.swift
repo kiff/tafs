@@ -2232,12 +2232,30 @@ final class TafsCloud {
                 }
                 private enum CodingKeys: String, CodingKey { case title, line }
             }
+            /// A first taf to try on the empty Home (first-run v2), as tafs cloud picks it: the first proved job written
+            /// in the person's language, its title, its one line and the words Set it up with Coach puts in Coach's box.
+            struct FirstTaf: Decodable, Equatable {
+                var title = ""
+                var line = ""
+                var say = ""
+                init(title: String = "", line: String = "", say: String = "") { self.title = title; self.line = line; self.say = say }
+                init(from decoder: Decoder) throws {
+                    let c = try decoder.container(keyedBy: CodingKeys.self)
+                    title = ((try? c.decodeIfPresent(String.self, forKey: .title)) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                    line = ((try? c.decodeIfPresent(String.self, forKey: .line)) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                    say = ((try? c.decodeIfPresent(String.self, forKey: .say)) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+                private enum CodingKeys: String, CodingKey { case title, line, say }
+                /// Whole: a title, a line and words for Coach. Anything less is no card.
+                var whole: Bool { !title.isEmpty && !line.isEmpty && !say.isEmpty }
+            }
             var shown = false
             var words = ""
             var ownWords: OwnWords?
-            private enum CodingKeys: String, CodingKey { case shown, words, ownWords = "own_words" }
-            init(shown: Bool = false, words: String = "", ownWords: OwnWords? = nil) {
-                self.shown = shown; self.words = words; self.ownWords = ownWords
+            var firstTaf: FirstTaf?
+            private enum CodingKeys: String, CodingKey { case shown, words, ownWords = "own_words", firstTaf = "first_taf" }
+            init(shown: Bool = false, words: String = "", ownWords: OwnWords? = nil, firstTaf: FirstTaf? = nil) {
+                self.shown = shown; self.words = words; self.ownWords = ownWords; self.firstTaf = firstTaf
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -2245,6 +2263,8 @@ final class TafsCloud {
                 words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? ""
                 // A row with no title isn't one.
                 ownWords = (try? c.decodeIfPresent(OwnWords.self, forKey: .ownWords)).flatMap { $0?.title.isEmpty == false ? $0 : nil }
+                // A first taf with a word missing isn't one.
+                firstTaf = (try? c.decodeIfPresent(FirstTaf.self, forKey: .firstTaf)).flatMap { $0?.whole == true ? $0 : nil }
             }
         }
         /// The recipe sheet's words, in the person's language: its three zones and its button.
@@ -2301,14 +2321,12 @@ final class TafsCloud {
         var homeListsRecipes: Bool { home?.shown == true && labels != nil && !byCategory.isEmpty }
         /// "Say it in your own words", leading Home's list; nil when tafs cloud sent none.
         var homeOwnWords: Home.OwnWords? { home?.ownWords }
-        /// A first taf to try (first-run v2): the first recipe tafs cloud lists with a proof (`proved`), in its own
-        /// words. Nil when none is proved, or when the one proved has no title, line or words for Coach: the app never
-        /// writes a job of its own here.
-        var firstToTry: Recipe? {
+        /// A first taf to try (first-run v2), exactly as tafs cloud names it (`home.first_taf`): it picks the job (the first
+        /// proved one written in the person's language), and the app never picks one of its own. Nil while the list isn't
+        /// shown, or when tafs cloud sent none.
+        var firstToTry: Home.FirstTaf? {
             guard shown else { return nil }
-            return recipes.first { r in
-                [r.proved, r.title, r.line, r.say].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            }
+            return home?.firstTaf
         }
         /// tafs cloud's line for Home with no taf; nil when it sent none.
         var homeWords: String? {

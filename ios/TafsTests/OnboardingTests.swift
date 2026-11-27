@@ -70,19 +70,23 @@ final class OnboardingTests: XCTestCase {
         XCTAssertEqual(OnboardingPage.credits.title, Words.Onboarding.creditsTitle)
     }
 
-    /// A first taf to try is the first recipe tafs cloud lists with a proof, in its words; none proved, or the
-    /// suggestions off, and there's none. The app never writes a job of its own.
-    func testTheFirstTafToTryIsTheFirstProvedRecipe() {
-        typealias R = TafsCloud.Recipes.Recipe
-        let unproved = R(id: "a", title: "Late parcels", line: "Chases late parcels.", say: "Chase late parcels")
-        let proved = R(id: "b", title: "Acknowledge every ticket", line: "Acknowledges each new ticket.", say: "Acknowledge tickets",
-                       proved: "Ran on 25 Nov")
-        let alsoProved = R(id: "c", title: "Lead follow-ups", line: "Follows up leads.", say: "Follow up leads", proved: "Ran on 26 Nov")
-        XCTAssertEqual(TafsCloud.Recipes(recipes: [unproved, proved, alsoProved]).firstToTry?.id, "b", "the first proved, in tafs cloud's order")
-        XCTAssertNil(TafsCloud.Recipes(recipes: [unproved]).firstToTry, "none proved: no card")
-        XCTAssertNil(TafsCloud.Recipes(recipes: [proved], shown: false).firstToTry, "suggestions off: no card")
-        let noWords = R(id: "d", title: "Acknowledge every ticket", line: "Acknowledges each new ticket.", say: " ", proved: "Ran")
-        XCTAssertNil(TafsCloud.Recipes(recipes: [noWords]).firstToTry, "nothing for Coach's box: no card")
+    /// A first taf to try is exactly what tafs cloud names (`home.first_taf`): the app never picks a job of its own. A
+    /// field with a word missing, none sent, or the list not shown (a live taf, or suggestions off), and there's none.
+    func testTheFirstTafToTryIsWhatTafsCloudNames() throws {
+        func read(_ json: String) throws -> TafsCloud.Recipes {
+            try JSONDecoder().decode(TafsCloud.Recipes.self, from: Data(json.utf8))
+        }
+        let named = try read(#"{"shown":true,"home":{"shown":true,"words":"Pick a job.","first_taf":{"title":" Chase overdue invoices ","line":"Reminds customers of overdue invoices.","say":"Each weekday morning, remind them."}}}"#)
+        XCTAssertEqual(named.firstToTry, .init(title: "Chase overdue invoices", line: "Reminds customers of overdue invoices.", say: "Each weekday morning, remind them."))
+        XCTAssertNil(try read(#"{"shown":true,"home":{"shown":true,"words":"Pick a job."}}"#).firstToTry, "none sent: no card")
+        XCTAssertNil(try read(#"{"shown":true,"home":{"shown":true,"first_taf":{"title":"Chase","line":"Reminds.","say":" "}}}"#).firstToTry,
+                     "nothing for Coach's box: no card")
+        XCTAssertNil(try read(#"{"shown":false,"home":{"shown":false,"first_taf":{"title":"Chase","line":"Reminds.","say":"Remind."}}}"#).firstToTry,
+                     "the list not shown: no card")
+        // A proved recipe tafs cloud didn't name isn't one: the app never picks.
+        let proved = TafsCloud.Recipes.Recipe(id: "b", title: "Acknowledge every ticket", line: "Acknowledges each new ticket.",
+                                              say: "Acknowledge tickets", proved: "Ran on 25 Nov")
+        XCTAssertNil(TafsCloud.Recipes(recipes: [proved]).firstToTry)
     }
 
     /// The cards follow the celebration once on this device, and only with the new onboarding on.

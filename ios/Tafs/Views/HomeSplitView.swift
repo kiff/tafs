@@ -129,7 +129,7 @@ struct HomeSplitView: View {
                         VStack(alignment: .leading, spacing: 16) {
                             // A first taf to try (first-run v2), above the list, as Home draws it.
                             if model.mayUseCoach, let first = model.recipes?.firstToTry {
-                                FirstTafCard(recipe: first) { model.handRecipeToCoach(first) }
+                                FirstTafCard(first: first) { model.handWordsToCoach(first.say) }
                             }
                             HomeRecipes(recipes: model.recipes ?? TafsCloud.Recipes(), logo: { model.cloud.logoURL($0) },
                                         ownWords: model.mayUseCoach ? { model.startNewTaf() } : nil) { openRecipe = $0 }
