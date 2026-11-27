@@ -55,6 +55,15 @@ Handle refund requests from my help desk. Refund in my payment provider up to 15
 - `sample` (optional, only with `proved`) is what the taf reported after that proof run, as it
   wrote it: a list of lines, one per paragraph. The job's sheet shows it read-only, under "What it
   reported after its test run", so a person can see what they'd get before setting anything up.
+- `guide` (optional, only with `proved`) walks a person through the job, one to six steps. Each step is a
+  list item (its title) with up to three lines under it, each starting with a marker: `Do:` (what the
+  person does), `You see:` (what appears) and `If:` (the one thing that goes wrong most). A step has at
+  least one line and each marker at most once. The markers stay English in every language's file: the
+  apps draw them as "Do", "You see" and "If" from tafs cloud's words (`gallery_guide_do`, `_see`,
+  `_if`), under the heading `gallery_guide`. A translation has the same steps with the same markers.
+  Say "approve", never a window length or a fingerprint; "never" only where the Card says never; quote
+  the app only with its exact string; no test-account lines and no workarounds for a defect. A guide
+  says "drafts" and "nothing is sent" until a proof run sent something.
 - The body is the words to say to Coach, in the person's own voice. **It names the kind of
   app, never a brand** ("my accounting app", "my email", "my help desk"): an app sold in one
   country isn't in another, and the account may already have a different one. Coach finds the

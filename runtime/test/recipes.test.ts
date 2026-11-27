@@ -107,6 +107,29 @@ Bezahle meine Rechnungen unter 100 EUR.
     bad(DE.replace("today: Rechnungen warten, bis jemand Zeit hat.\n", ""), "today is missing");
   });
 
+  it("reads a job's guide as steps with Do, You see and If lines, in every language or none", () => {
+    const GUIDE = "proved: help_desk\nguide:\n  - Connect it\n  - - Do: Open the job.\n  - - You see: it connected.\n  - Run it\n  - - Do: Ask it to run.\n  - - If: nothing shows.\n";
+    const en = parseRecipe(FILE.replace("  - wise\n", "  - wise\n" + GUIDE), "pay-a-bill.md");
+    expect(en.guide).toEqual([{ title: "Connect it", do: "Open the job.", see: "it connected." }, { title: "Run it", do: "Ask it to run.", if: "nothing shows." }]);
+    expect(parseRecipe(FILE, "pay-a-bill.md")).not.toHaveProperty("guide");
+    const bad = (text: string, why: string) => expect(() => parseRecipe(text, "pay-a-bill.md")).toThrow(`pay-a-bill.md: ${why}`);
+    const withGuide = (g: string) => FILE.replace("  - wise\n", "  - wise\nproved: help_desk\nguide:\n" + g);
+    bad(FILE.replace("  - wise\n", "  - wise\nguide:\n  - Step\n  - - Do: x.\n"), "guide is the steps its proof run went through");
+    bad(withGuide("  - - Do: x.\n"), "a guide line before any step title");
+    bad(withGuide("  - Step\n  - - Tap: x.\n"), "a guide line starts with Do:, You see: or If:");
+    bad(withGuide("  - Step\n  - - Do: a.\n  - - Do: b.\n"), 'guide step "Step" has two Do: lines');
+    bad(withGuide("  - Step\n"), 'guide step "Step" has no Do:, You see: or If: line');
+    bad(withGuide(Array.from({ length: 7 }, (_, i) => `  - S${i}\n  - - Do: x.\n`).join("")), "a guide has at most 6 steps");
+    // A translation has the same steps with the same kinds of line; its labels stay English markers, the apps draw them.
+    const DE_GUIDE = DE.replace("card:", "guide:\n  - Verbinden\n  - - Do: Öffne den Job.\n  - - You see: Es ist verbunden.\n  - Starten\n  - - Do: Starte ihn.\n  - - If: Nichts erscheint.\ncard:");
+    expect(parseRecipe(DE_GUIDE, "de/pay-a-bill.md", en).guide).toHaveLength(2);
+    const badDe = (text: string, of: ReturnType<typeof parseRecipe>, why: string) => expect(() => parseRecipe(text, "de/pay-a-bill.md", of)).toThrow(`de/pay-a-bill.md: ${why}`);
+    badDe(DE, en, "guide is missing: English has one");
+    badDe(DE_GUIDE, parseRecipe(FILE, "pay-a-bill.md"), "guide is given, and English has none");
+    badDe(DE_GUIDE.replace("  - Starten\n  - - Do: Starte ihn.\n  - - If: Nichts erscheint.\n", ""), en, "guide has 1 steps, and English has 2");
+    badDe(DE_GUIDE.replace("- If: Nichts erscheint.", "- Do: Nichts erscheint.").replace("  - - Do: Starte ihn.\n", ""), en, "guide step 2 has do, and English has do, if");
+  });
+
   it("reads what a recipe's proof run passed on, and what it reported, in every language or none", () => {
     const PROVEN = FILE.replace("  - wise\n", "  - wise\nproved: help_desk\nsample:\n  - Paid 2 bills.\n  - One waits for you.\n");
     expect(parseRecipe(PROVEN, "pay-a-bill.md")).toMatchObject({ proved: "help_desk", sample: "Paid 2 bills.\n\nOne waits for you." });

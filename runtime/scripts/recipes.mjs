@@ -24,6 +24,32 @@ const LISTS = ["allows", "holds", "never"];
  * language in tafs cloud's words (`recipes_proved_<key>`). A recipe with no proof run names none.
  */
 export const PROVED = ["help_desk"];
+/** The three kinds of line in a guide step, as the recipe files mark them (in English in every language: the apps draw the labels). */
+export const GUIDE_LABELS = { Do: "do", "You see": "see", If: "if" };
+const GUIDE_KINDS = ["do", "see", "if"];
+const GUIDE_MAX = 6;
+
+/**
+ * A guide's list items as steps: an item is a step's title, and the items under it ("- Do: …", "- You see: …", "- If: …")
+ * are its lines, each kind at most once, at least one. One to six steps. Undefined when the recipe has none.
+ */
+function guideOf(items, fail) {
+  if (!items.length) return undefined;
+  const steps = [];
+  for (const item of items) {
+    if (!item.startsWith("- ")) { steps.push({ title: item }); continue; }
+    const m = /^(Do|You see|If): (.+)$/.exec(item.slice(2));
+    if (!m) fail(`a guide line starts with Do:, You see: or If:: ${item}`);
+    if (!steps.length) fail(`a guide line before any step title: ${item}`);
+    const kind = GUIDE_LABELS[m[1]];
+    const step = steps[steps.length - 1];
+    if (step[kind] !== undefined) fail(`guide step "${step.title}" has two ${m[1]}: lines`);
+    step[kind] = m[2];
+  }
+  if (steps.length > GUIDE_MAX) fail(`a guide has at most ${GUIDE_MAX} steps`);
+  for (const s of steps) if (!GUIDE_KINDS.some((k) => s[k] !== undefined)) fail(`guide step "${s.title}" has no Do:, You see: or If: line`);
+  return steps;
+}
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VENDOR = /^[a-z0-9_]+(?:-[a-z0-9_]+)*$/;
 
@@ -51,8 +77,8 @@ export function parseRecipe(text, file, of) {
   if (/^#|^---/m.test(say)) fail("the words to say to Coach are plain sentences, with no headings");
 
   // The front matter: top-level keys, `connections` as a list, `card` with three lists.
-  const out = { connections: [], card: {}, sample: [] };
-  const lists = { connections: out.connections, sample: out.sample };
+  const out = { connections: [], card: {}, sample: [], guide: [] };
+  const lists = { connections: out.connections, sample: out.sample, guide: out.guide };
   let open = null;
   let inCard = false;
   for (const raw of m[1].split("\n")) {
@@ -67,8 +93,8 @@ export function parseRecipe(text, file, of) {
     if (line.indent === 0) {
       inCard = false;
       open = null;
-      if (line.key in out && !["connections", "card", "sample"].includes(line.key)) fail(`${line.key} is given twice`);
-      if (line.key === "connections" || line.key === "card" || line.key === "sample") {
+      if (line.key in out && !["connections", "card", "sample", "guide"].includes(line.key)) fail(`${line.key} is given twice`);
+      if (line.key === "connections" || line.key === "card" || line.key === "sample" || line.key === "guide") {
         if (line.value) fail(`${line.key} is a list under its own line, not a value`);
         if (line.key === "card") inCard = true;
         else open = lists[line.key];
@@ -88,7 +114,7 @@ export function parseRecipe(text, file, of) {
   }
 
   const words = ["title", "headline", "today", "line"];
-  const known = of ? [...words, "card", "sample"] : ["id", "title", "category", "order", "line", "headline", "today", "connections", "card", "proved", "sample"];
+  const known = of ? [...words, "card", "sample", "guide"] : ["id", "title", "category", "order", "line", "headline", "today", "connections", "card", "proved", "sample", "guide"];
   // A translation names no connections: they're English's alone (an empty list reads as none given).
   if (of && !out.connections.length) delete out.connections;
   // The sample report, as one text: each item a paragraph, a blank line between them, except that list
@@ -96,6 +122,7 @@ export function parseRecipe(text, file, of) {
   const sample = out.sample.length
     ? out.sample.map((l, i) => (i === 0 ? "" : l.startsWith("- ") && out.sample[i - 1].startsWith("- ") ? "\n" : "\n\n") + l).join("")
     : undefined;
+  const guide = guideOf(out.guide, fail);
   for (const key of Object.keys(out)) if (!known.includes(key)) fail(`${key} isn't a${of ? " translated" : ""} recipe's field (${known.join(", ")})`);
   for (const key of words) if (!out[key]) fail(`${key} is missing`);
   for (const key of LISTS) if (!out.card[key]) fail(`card.${key} is missing (an empty list is fine)`);
@@ -104,8 +131,16 @@ export function parseRecipe(text, file, of) {
       if (out.card[key].length !== of.card[key].length) fail(`card.${key} has ${out.card[key].length} lines, and English has ${of.card[key].length}`);
     }
     if (Boolean(sample) !== Boolean(of.sample)) fail(of.sample ? "sample is missing: English has one" : "sample is given, and English has none");
+    if (Boolean(guide) !== Boolean(of.guide)) fail(of.guide ? "guide is missing: English has one" : "guide is given, and English has none");
+    if (guide) {
+      if (guide.length !== of.guide.length) fail(`guide has ${guide.length} steps, and English has ${of.guide.length}`);
+      guide.forEach((g, i) => {
+        const kinds = (x) => GUIDE_KINDS.filter((k) => x[k] !== undefined).join(", ");
+        if (kinds(g) !== kinds(of.guide[i])) fail(`guide step ${i + 1} has ${kinds(g) || "no lines"}, and English has ${kinds(of.guide[i])}`);
+      });
+    }
     return { title: out.title, headline: out.headline, today: out.today, line: out.line, say, card: { allows: out.card.allows, holds: out.card.holds, never: out.card.never },
-      ...(sample ? { sample } : {}) };
+      ...(sample ? { sample } : {}), ...(guide ? { guide } : {}) };
   }
   if (!out.id) fail("id is missing");
   if (!out.category) fail("category is missing");
@@ -123,10 +158,11 @@ export function parseRecipe(text, file, of) {
   if (!out.card.allows.length) fail("card.allows says what the Card allows, at least one line");
   if (out.proved !== undefined && !PROVED.includes(out.proved)) fail(`proved is what its proof run passed on: one of ${PROVED.join(", ")}`);
   if (sample && !out.proved) fail("sample is what its proof run reported: a recipe with a sample names what it was proved on (proved)");
+  if (guide && !out.proved) fail("guide is the steps its proof run went through: a recipe with a guide names what it was proved on (proved)");
   return {
     id: out.id, title: out.title, category: out.category, order: Number(out.order), line: out.line, headline: out.headline, today: out.today, say, connections,
     card: { allows: out.card.allows, holds: out.card.holds, never: out.card.never },
-    ...(out.proved ? { proved: out.proved } : {}), ...(sample ? { sample } : {}),
+    ...(out.proved ? { proved: out.proved } : {}), ...(sample ? { sample } : {}), ...(guide ? { guide } : {}),
   };
 }
 
