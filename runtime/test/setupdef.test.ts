@@ -221,7 +221,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("an app that needs_setup can't be connected until an operator sets it up: say so and offer another");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("A long catalog is never a reason to stop: catalog {grant, q} searches it by words");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Never say a list was too long to read.");
-    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("on_demand: true is an app whose sign-in was set up on the owner's pick");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("on_demand: true (set up on the owner's pick, not reviewed by an operator) or unproved: true (a managed app no run has proved yet)");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("changes data or moves money to ask the owner each time");
     expect(COACH_TEXT).toContain("the draft the owner confirmed");
     // From the owner's phone test (kiff/tafs#73): their language, briefly, choices
