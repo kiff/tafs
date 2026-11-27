@@ -586,8 +586,9 @@ asks by (`stepFor`), read as the phone: the chat's read carries `Planque-Device-
 sign (`?can=tools_and_cards,key_and_cards`). Without the proof, or when planque refuses the
 read, the cards carry no `signs` and the apps draw them as before. A read slower than 1.5 s doesn't leave a waiting card
 unmarked: it's marked from the grants this person's cards were last marked from, kept in tafs cloud for 10 minutes
-(`grantsForMarks`), while the late read refreshes that copy for the next one. With no copy that recent, the cards carry
-no `signs`, as before. planque took 1.8 to 4 s on 27 Nov, and a connection's card inside an open approval window drew
+(`grantsForMarks`), while the late read refreshes that copy for the next one. A read planque refuses drops the copy
+until a later read is held, so it only stands in for a device planque still accepts. With no copy that recent, the cards
+carry no `signs`, as before. planque took 1.8 to 4 s on 27 Nov, and a connection's card inside an open approval window drew
 "Approve with your fingerprint" for want of its mark. A phone that draws by the mark says so with
 `signs` in `can` (on the read and on the ask): only then is a held sign-in's first tools offered with the Card
 under one fingerprint ([secure-connection.md](secure-connection.md)). With `card: false`, an app never draws the

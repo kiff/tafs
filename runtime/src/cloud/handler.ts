@@ -3646,10 +3646,13 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
  * is the refresh, held to `SIGNS_READ_MS`; a refresh that's late marks the cards from these, so a waiting card isn't left
  * unmarked while planque is slow (it took 1.8 to 4 s on 27 Nov, and a connection's card drew "Approve with your
  * fingerprint" inside an open window). The late refresh still lands here for the next read. A read planque refuses marks
- * nothing, as before. A mark from an older copy can only be narrower than the tap or wider than it, and the apps already
+ * nothing, as before, and drops the copy, so it only stands in for a device planque still accepts. A mark from an older
+ * copy can only be narrower than the tap or wider than it, and the apps already
  * read again on the first and refuse the second (each tap is decided afresh by `decide`).
  */
-const heldGrants = new Map<string, { grants: ApprovalGrant[]; at: number }>();
+const heldGrants = new Map<string, { grants?: ApprovalGrant[]; at: number; seq: number }>();
+/** Each read's place in order: a read asked earlier never overwrites what a later one held or refused. */
+let grantsReadSeq = 0;
 const HELD_GRANTS_MS = 10 * 60_000;
 const heldGrantsKey = (me: KIFFIdentity) => `${me.tenantID}#${me.subject}`;
 
@@ -3663,17 +3666,23 @@ async function grantsForMarks(me: KIFFIdentity, proof: string, deps: Deps): Prom
   const key = heldGrantsKey(me);
   // Held as of when the read was asked, never later: a copy is never younger than planque's answer.
   const asked = now();
+  const seq = ++grantsReadSeq;
+  const later = () => { const kept = heldGrants.get(key); return !kept || kept.seq < seq; };
   const refresh = readGrants(deps.planqueBase!, me.tenantID, proof, deps.fetch ?? fetch).then((grants) => {
     for (const [k, v] of heldGrants) if (now() - v.at > HELD_GRANTS_MS) heldGrants.delete(k);
-    const kept = heldGrants.get(key);
-    if (!kept || kept.at <= asked) heldGrants.set(key, { grants, at: asked });
+    if (later()) heldGrants.set(key, { grants, at: asked, seq });
     return grants;
+  }, (err: unknown) => {
+    // planque refused this phone's read (or couldn't answer): no copy stands in until a later read is held, so it only
+    // ever stands in for a device planque still accepts, and an earlier read landing late can't bring it back.
+    if (later()) heldGrants.set(key, { at: asked, seq });
+    throw err;
   });
   // In time, or refused (marks nothing); undefined only when the refresh is late.
   const read = await within(refresh.then((grants) => ({ grants }), () => ({ grants: undefined })), SIGNS_READ_MS);
   if (read) return read.grants;
   const held = heldGrants.get(key);
-  if (held && now() - held.at <= HELD_GRANTS_MS) {
+  if (held?.grants && now() - held.at <= HELD_GRANTS_MS) {
     console.log(JSON.stringify({ event: "signs_from_held", age_ms: now() - held.at }));
     return held.grants;
   }

@@ -1810,12 +1810,16 @@ describe("each waiting approval card says what its fingerprint signs", () => {
     // Late again, as at 08:11: marked from what's held, a tap.
     s.grantsDelayMs = 1800;
     expect(await signs(w)).toEqual({ card: false, words: "Its Card: you approve it next", takes: "tap" });
-    // A read planque refuses marks nothing, held or not.
+    // A read planque refuses marks nothing, and drops the copy: a late read after it marks nothing either.
     s.grantsDelayMs = 0;
-    s.grantsDown = 503;
+    s.grantsDown = 403;
     expect(await signs(w)).toBeUndefined();
-    // Held for 10 minutes only: an older copy marks nothing.
     s.grantsDown = undefined;
+    s.grantsDelayMs = 1800;
+    expect(await signs(w)).toBeUndefined();
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    // Held for 10 minutes only: an older copy marks nothing.
+    s.grantsDelayMs = 0;
     expect(await signs(w)).toMatchObject({ takes: "tap" });
     w.at(new Date(NOW.getTime() + 11 * 60_000));
     s.grantsDelayMs = 1800;
