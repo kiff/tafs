@@ -733,7 +733,8 @@ final class ApprovalWindowTests: XCTestCase {
 
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
-        XCTAssertTrue(chat.contains("if let line = Self.approveLine(component, held: model.windowWords, approving: model.connecting != nil) {"))
+        // Only this taf's window counts: another taf's would be closed by the tap, which asks for Face ID.
+        XCTAssertTrue(chat.contains("if let line = Self.approveLine(component, held: model.windowWords(forTaf: model.setupTaf?.id), approving: model.connecting != nil) {"))
         XCTAssertFalse(chat.contains("CardNote(id: component.id)\n                Text(Words.Coach.approvingAsks"), "never Face ID unconditionally under Approve")
     }
 }
