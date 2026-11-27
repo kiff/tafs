@@ -215,10 +215,13 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   window only for that step: on iPhone and iPad, and on Android around the one call whose
   Approve was a tap (`KiffClient.signsInWindow`, set by `AppModel.approveCoach`); anywhere else
   the approval key signs them, behind the fingerprint or Face ID, as before, and the window
-  stays held. On Android a Card's authority never goes in a window: a draft made or confirmed
-  (`POST /v1/me/agent-drafts`, `…/{id}/confirm`, `KiffClient.grantsCard`) is always the
-  approval key's, behind the fingerprint, even in that call, and a card whose step confirms a
-  draft (`signs.card`) never reads as a tap (`CoachWords.approvesAsTap`).
+  stays held. A tap there may confirm a new Card for the same taf.
+- **One setup's.** On Android a window covers only the steps of the setup (Coach's session)
+  whose step opened it (`AppState.windowSetup`). Another setup's card reads "Approve with your
+  fingerprint", and its step closes the held window and opens its own behind a fresh
+  fingerprint (`AppModel.approveCoach`, `CoachWords.approvesAsTap`). This keeps the label true;
+  KIFF holds the rule itself by the taf that opened the window. Raising a limit or anything else
+  that widens a Card always takes the fingerprint, window or not (`critical_key_required`).
 - **Refused.** KIFF's `critical_key_required` (the act takes the fingerprint every time, such
   as **No** to "Did this happen?") is signed again by the approval key, once (on iPhone and
   iPad behind a new Face ID: the approval key signs only under one). KIFF's
@@ -234,10 +237,12 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   by it; on iPhone and iPad the line under Approve is KIFF's words on a `"tap"` card while a
   window is held (`SetupComponent.windowWords`, `SetupApproval.approveLine`), and names Face ID
   anywhere else.
-- **Closing.** After 30 seconds in the background, and at once when the screen turns off, the
-  app closes it (`POST /v1/me/window/{id}/close`, device-signed); before a drive starts too. iOS
-  may suspend the app before its 30 seconds: then it closes on coming back, if that was 30
-  seconds or more. The app forgets it at sign-out and at a new sign-in. KIFF ends it itself at sign-out,
+- **Closing.** When the screen turns off the app closes it at once (`POST /v1/me/window/{id}/close`,
+  device-signed); before a drive starts too. Android closes it at once when the app leaves the
+  foreground. iPhone and iPad close it after 30 seconds in the background; iOS may suspend the app
+  before its 30 seconds, and then it closes on coming back, if that was 30 seconds or more. It's
+  the app that sees the background or a lock, not KIFF: a window the close never reached ends at
+  KIFF's own time, five minutes from its last use. The app forgets it at sign-out and at a new sign-in. KIFF ends it itself at sign-out,
   at its cap (15 minutes from the fingerprint), on a halt or a new approval key. Whether a window
   is open is never decided on the phone: an ended one comes back as `window_required`.
 
