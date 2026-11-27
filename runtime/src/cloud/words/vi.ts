@@ -170,6 +170,7 @@ export const vi: Words = {
   each_item_total_day: "tổng mỗi ngày",
   each_item_name: (key: string) => ({ payment_intent: "thanh toán", payment: "thanh toán", charge: "khoản thu", invoice: "hóa đơn", customer: "khách hàng", order: "đơn hàng", subscription: "gói đăng ký", refund: "hoàn tiền" } as Record<string, string>)[key] ?? "mục",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} được thiết lập hôm nay, nên mọi thay đổi phải hỏi bạn trước; Card này sẽ để "${tool}" chạy mà không hỏi. Chưa có gì được phê duyệt. Coach soạn lại.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} chưa được thử nghiệm với tafs, nên mọi thay đổi phải hỏi bạn trước; Card này sẽ để "${tool}" chạy mà không hỏi. Chưa có gì được phê duyệt. Coach soạn lại.`,
   approval_critical_key: "Việc này mở rộng những gì taf được phép làm, nên cần vân tay của bạn. Chưa có gì được phê duyệt; hãy phê duyệt lại bằng vân tay.",
   approval_drive_key: "Cho phép Coach điều khiển ứng dụng cần vân tay của bạn. Chưa có gì bắt đầu; hãy phê duyệt lại bằng vân tay.",
   remove_signed: "Hãy gỡ nó khỏi thiết bị của bạn: gỡ một taf luôn cần khóa màn hình của bạn. Chưa có gì bị gỡ.",

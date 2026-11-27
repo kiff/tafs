@@ -221,9 +221,13 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   it (`AppState.windowSetup`). Another taf's card names the fingerprint or Face ID, and its step
   closes the held window and opens its own behind a fresh one (`windowWords(forTaf:)` on iOS;
   `AppModel.approveCoach` and `CoachWords.approvesAsTap` on Android). This keeps the label true;
-  KIFF holds the rule itself by the taf that opened the window. Raising a limit or anything else
-  that widens a Card always takes the fingerprint or Face ID, window or not
-  (`critical_key_required`).
+  KIFF holds the rule itself by the taf that opened the window. The opening names that taf: its
+  `agent`, signed with the rest, is the KIFF agent the step is for, the agent of the KIFF draft it
+  confirms or of the step's planque grant (iOS `AppModel.openWindow(for:agent:)`, Android
+  `AppModel.stepAgent`; `openWindow` in both clients). A window with none, such as a connection's
+  outside Coach, confirms no Card, and a Card step in it takes the fingerprint or Face ID. Raising
+  a limit or anything else that widens a Card always takes the fingerprint or Face ID, window or
+  not (`critical_key_required`).
 - **Refused.** KIFF's `critical_key_required` (the act takes the fingerprint every time, such
   as **No** to "Did this happen?") is signed again by the approval key, once (on iPhone and
   iPad behind a new Face ID: the approval key signs only under one). KIFF's

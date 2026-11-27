@@ -170,6 +170,7 @@ export const th: Words = {
   each_item_total_day: "รวมต่อวัน",
   each_item_name: (key: string) => ({ payment_intent: "การชำระเงิน", payment: "การชำระเงิน", charge: "ค่าธรรมเนียม", invoice: "ใบแจ้งหนี้", customer: "ลูกค้า", order: "คำสั่งซื้อ", subscription: "การสมัครสมาชิก", refund: "การคืนเงิน" } as Record<string, string>)[key] ?? "รายการ",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} เพิ่งตั้งค่าวันนี้ ทุกการเปลี่ยนแปลงจึงต้องถามคุณก่อน แต่ Card นี้จะปล่อยให้ "${tool}" ทำงานโดยไม่ถาม ไม่มีสิ่งใดถูกอนุมัติ Coach จะร่างใหม่`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} ยังไม่ได้ทดสอบกับ tafs ทุกการเปลี่ยนแปลงจึงต้องถามคุณก่อน แต่ Card นี้จะปล่อยให้ "${tool}" ทำงานโดยไม่ถาม ไม่มีสิ่งใดถูกอนุมัติ Coach จะร่างใหม่`,
   approval_critical_key: "สิ่งนี้ขยายสิ่งที่ taf ทำได้ จึงต้องใช้ลายนิ้วมือของคุณ ไม่มีสิ่งใดถูกอนุมัติ โปรดอนุมัติอีกครั้งด้วยลายนิ้วมือ",
   approval_drive_key: "การให้ Coach ควบคุมแอปต้องใช้ลายนิ้วมือของคุณ ยังไม่มีสิ่งใดเริ่มต้น โปรดอนุมัติอีกครั้งด้วยลายนิ้วมือ",
   remove_signed: "ลบออกจากอุปกรณ์ของคุณ: การลบ taf ต้องใช้การล็อกหน้าจอของคุณทุกครั้ง ยังไม่ได้ลบอะไร",

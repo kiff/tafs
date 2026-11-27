@@ -176,6 +176,7 @@ export const pt: Words = {
   each_item_total_day: "no total por dia",
   each_item_name: (key) => ({ payment_intent: "pagamento", payment: "pagamento", charge: "cobrança", invoice: "fatura", customer: "cliente", order: "pedido", subscription: "assinatura", refund: "reembolso" } as Record<string, string>)[key] ?? "elemento",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} foi configurado hoje, por isso cada alteração tem de lhe perguntar primeiro; este Card deixaria «${tool}» executar sem perguntar. Nada foi aprovado. O Coach volta a redigi-lo.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} ainda não foi testado com o tafs, por isso cada alteração tem de lhe perguntar primeiro; este Card deixaria «${tool}» executar sem perguntar. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_critical_key: "Isto alarga o que o taf pode fazer, por isso precisa da sua impressão digital. Nada foi aprovado; aprove novamente com a sua impressão digital.",
   approval_drive_key: "Deixar o Coach usar a app precisa da sua impressão digital. Nada começou; aprove novamente com a sua impressão digital.",
   remove_signed: "Remova-o no seu dispositivo: remover um taf pede sempre o bloqueio do ecrã. Nada foi removido.",

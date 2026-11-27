@@ -170,6 +170,7 @@ export const sl: Words = {
   each_item_total_day: "skupaj na dan",
   each_item_name: (key: string) => ({ payment_intent: "plačilo", payment: "plačilo", charge: "obremenitev", invoice: "račun", customer: "stranka", order: "naročilo", subscription: "naročnina", refund: "vračilo" } as Record<string, string>)[key] ?? "element",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} je bil nastavljen danes, zato vas mora vsaka sprememba najprej vprašati; ta Card bi pustil „${tool}“ delovati brez spraševanja. Nič ni bilo odobreno. Coach ga pripravi znova.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} še ni bil preizkušen s tafs, zato vas mora vsaka sprememba najprej vprašati; ta Card bi pustil „${tool}“ delovati brez spraševanja. Nič ni bilo odobreno. Coach ga pripravi znova.`,
   approval_critical_key: "To razširi, kaj sme taf početi, zato je potreben vaš prstni odtis. Nič ni bilo odobreno; odobrite znova s prstnim odtisom.",
   approval_drive_key: "Da bi Coach upravljal aplikacijo, je potreben vaš prstni odtis. Nič se ni začelo; odobrite znova s prstnim odtisom.",
   remove_signed: "Odstrani ga s svoje naprave: odstranitev tafa vedno zahteva zaklep zaslona. Nič ni bilo odstranjeno.",

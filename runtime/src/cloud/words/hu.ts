@@ -170,6 +170,7 @@ export const hu: Words = {
   each_item_total_day: "naponta összesen",
   each_item_name: (key: string) => ({ payment_intent: "fizetés", payment: "fizetés", charge: "terhelés", invoice: "számla", customer: "ügyfél", order: "rendelés", subscription: "előfizetés", refund: "visszatérítés" } as Record<string, string>)[key] ?? "elem",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} ma lett beállítva, így minden változtatásnál előbb rád kell kérdeznie; ez a Card kérdés nélkül futtatná a(z) „${tool}” eszközt. Semmi sem lett jóváhagyva. A Coach újra megfogalmazza.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} még nincs tesztelve a tafsszal, így minden változtatásnál előbb rád kell kérdeznie; ez a Card kérdés nélkül futtatná a(z) „${tool}” eszközt. Semmi sem lett jóváhagyva. A Coach újra megfogalmazza.`,
   approval_critical_key: "Ez kiterjeszti, mit tehet a taf, ezért az ujjlenyomatod kell hozzá. Semmi sem lett jóváhagyva; hagyd jóvá újra az ujjlenyomatoddal.",
   approval_drive_key: "Ahhoz, hogy a Coach vezérelje az alkalmazást, az ujjlenyomatod kell. Semmi sem indult el; hagyd jóvá újra az ujjlenyomatoddal.",
   remove_signed: "Töröld az eszközödről: egy taf eltávolításához mindig kell a képernyőzárad. Semmi sem lett eltávolítva.",

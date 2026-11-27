@@ -40,6 +40,8 @@ export interface ApprovalGrant {
   reason?: string;
   /** The app's sign-in was set up on the owner's pick, not by an operator (kiff/planque#87). */
   on_demand?: boolean;
+  /** A managed connection to an app no recorded run has proved on the managed route (kiff/planque#457): held as `on_demand`. */
+  unproved?: boolean;
   /** planque's name for the connection, the same in every app: its app and, when known, its account ("Gmail · Demo Shop"). */
   title?: string;
   request: {
@@ -175,12 +177,15 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
   // Coach drafts one rather than the card asking the same draft again (#1067).
   if (!draft.cards) return { outcome: "read_again", note: W.cardsUnread, code: "cards_unread" };
   if (!draft.cards.length) return { outcome: "answered", answer: `failed: the Card draft ${draftID} has no Card, so nothing in it covers the taf's tools and it isn't signed. Draft it again with a Card over each tool the taf's connections give it.`, note: W.noCard, code: "no_card" };
-  // An app set up on demand asks for every change (kiff/planque#87): a draft that lets one of its
-  // writes run outright isn't signed, and Coach hears why, so the default holds here, not only in its words.
+  // An app set up on demand (kiff/planque#87), or one not yet proved on the managed route (kiff/planque#457), asks for
+  // every change: a draft that lets one of its writes run outright isn't signed, and Coach hears why, so the default
+  // holds here, not only in its words.
   const letsRun = onDemandLetsRun(grant, draft.cards);
   if (letsRun) {
-    const why = W.onDemandLetsRun(vendor, letsRun);
-    return { outcome: "answered", answer: `failed: ${vendor} was set up on demand, so every write and money tool of it must ask the owner each time (0 a day, held); the draft lets "${letsRun}" run without asking. Draft it again with that tool held.`, note: why, code: "on_demand" };
+    const onDemand = grant.on_demand === true;
+    const why = onDemand ? W.onDemandLetsRun(vendor, letsRun) : W.unprovedLetsRun(vendor, letsRun);
+    const was = onDemand ? "was set up on demand" : "is not yet proved on the managed route";
+    return { outcome: "answered", answer: `failed: ${vendor} ${was}, so every write and money tool of it must ask the owner each time (0 a day, held); the draft lets "${letsRun}" run without asking. Draft it again with that tool held.`, note: why, code: "on_demand" };
   }
   // Every tool the taf was given goes on a Card, the reads too: a draft that leaves one uncovered,
   // with no Card in force covering it either, isn't signed, and Coach hears which. A draft read
@@ -466,14 +471,14 @@ export function lifetimeSumOnWrite(grant: ApprovalGrant, cards: unknown[]): { to
 }
 
 /**
- * An app set up on demand asks the owner for every change: a Card drafted over its tools lets
+ * An app set up on demand, or a managed one not yet proved (`unproved`, held the same), asks the owner for every change: a Card drafted over its tools lets
  * no write or money tool run without asking. KIFF's draft shows each Card's actions, what
  * happens past its limits (`on_exceed`) and its totals; a write tool of the connection is held
  * for the owner only when every Card covering it holds past 0 calls. The first tool the draft
  * lets run outright is named, so Coach redrafts; a tool no Card covers can't run at all.
  */
 export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string | undefined {
-  if (grant.on_demand !== true) return undefined;
+  if (grant.on_demand !== true && grant.unproved !== true) return undefined;
   const writes = (grant.request.tools ?? []).filter((t) => !t.read_only && !t.setup_reads);
   // KIFF matches a Card's action to a tool ignoring case, and trims a quantity: so does this.
   const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
@@ -809,6 +814,7 @@ export function approvalWords(lang: Lang = "en") {
     rulesUnagreed: w.approval_rules_unagreed,
     rulesRequired: w.approval_rules_required,
     onDemandLetsRun: w.approval_on_demand,
+    unprovedLetsRun: w.approval_unproved,
     criticalKey: w.approval_critical_key,
     driveKey: w.approval_drive_key,
     windowClosed: w.approval_window_closed,

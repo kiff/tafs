@@ -170,6 +170,7 @@ export const lv: Words = {
   each_item_total_day: "kopā dienā",
   each_item_name: (key: string) => ({ payment_intent: "maksājums", payment: "maksājums", charge: "maksa", invoice: "rēķins", customer: "klients", order: "pasūtījums", subscription: "abonements", refund: "atmaksa" } as Record<string, string>)[key] ?? "vienums",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} tika iestatīts šodien, tāpēc katrai izmaiņai vispirms jājautā tev; šī Card ļautu „${tool}” darboties bez jautāšanas. Nekas netika apstiprināts. Coach sagatavo to no jauna.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} vēl nav pārbaudīts ar tafs, tāpēc katrai izmaiņai vispirms jājautā tev; šī Card ļautu „${tool}” darboties bez jautāšanas. Nekas netika apstiprināts. Coach sagatavo to no jauna.`,
   approval_critical_key: "Tas paplašina to, ko taf drīkst darīt, tāpēc vajadzīgs tavs pirksta nospiedums. Nekas netika apstiprināts; apstiprini vēlreiz ar savu pirksta nospiedumu.",
   approval_drive_key: "Lai Coach vadītu lietotni, vajadzīgs tavs pirksta nospiedums. Nekas nesākās; apstiprini vēlreiz ar savu pirksta nospiedumu.",
   remove_signed: "Noņem to no savas ierīces: taf noņemšana katru reizi prasa tavu ekrāna bloķēšanu. Nekas netika noņemts.",
