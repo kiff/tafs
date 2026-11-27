@@ -1769,9 +1769,74 @@ describe("chats (kiff/tafs#73)", () => {
     const r = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${chat.session}`, { token: "ana", fetch: fetchFn, planqueBase: "https://planque.test" });
     expect(r.body).toEqual({ session: chat.session, deleted: true });
     expect(asked).toEqual([
+      `GET https://planque.test/v1/accounts/t_acme/sessions/${chat.session}/agents Bearer ana`,
       "GET https://planque.test/v1/accounts/t_acme/connections Bearer ana",
       "POST https://planque.test/v1/accounts/t_acme/agents/qonto-balance-example1/end Bearer ana",
     ]);
+  });
+
+  // The backstop (step 3): a chat whose request was made with no stream left no record in tafs cloud and no tool call in
+  // the chat (kiff/agents drops it when the run ends). The connection server kept the chat with the grant (kiff/planque#489),
+  // so the app's delete still ends it.
+  it("ends what a chat asked for with no stream at all, from the connection server's record of the chat", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const sent = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Make me a taf that tells me my Qonto balance every morning." } });
+    expect(sent.status).toBe(200);
+    const run = w.agents.runs.at(-1)!;
+    (run as { status: string }).status = "COMPLETED";
+    w.at(NOW);
+    // Nothing in the chat or in tafs cloud's record says what it asked.
+    expect((w.agents.events.get(run.session) ?? []).some((e) => e.kind === "tool_call" || e.kind === "tool_result")).toBe(false);
+    expect(await w.coach.get(`t_acme#coach-asked#${run.session}`)).toBeUndefined();
+
+    const today = NOW.toISOString().slice(0, 10);
+    const connections = [
+      { agent: "qonto-balance-example2", vendor: "Qonto", kind: "vendor_sign_in", status: "listed", since: today },
+      { agent: "rae", vendor: "Stripe", kind: "vendor_sign_in", status: "connected", since: today },
+    ];
+    const kiffFetch = kiff({ ana: ME });
+    const asked: string[] = [];
+    const fetchFn = (async (url: string, init?: RequestInit) => {
+      if (url.startsWith("https://planque.test/")) {
+        asked.push(`${init?.method ?? "GET"} ${url} ${(init?.headers as Record<string, string>)?.authorization}`);
+        if (url.endsWith(`/sessions/${run.session}/agents`)) {
+          // The chat's own grant, and a live taf's agent the route can't know is live: tafs cloud's bounds keep it.
+          return new Response(JSON.stringify({ agents: [{ agent: "qonto-balance-example2", status: "listed", since: today }, { agent: "rae", status: "connected", since: today }] }));
+        }
+        if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections }));
+        return new Response(JSON.stringify({ ended: [{ vendor: "Qonto", grant: "grt_q2" }], kept: [] }));
+      }
+      return kiffFetch(url, init);
+    }) as typeof fetch;
+    const r = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${run.session}`, { token: "ana", fetch: fetchFn, planqueBase: "https://planque.test" });
+    expect(r.body).toEqual({ session: run.session, deleted: true });
+    expect(asked).toEqual([
+      `GET https://planque.test/v1/accounts/t_acme/sessions/${run.session}/agents Bearer ana`,
+      "GET https://planque.test/v1/accounts/t_acme/connections Bearer ana",
+      "POST https://planque.test/v1/accounts/t_acme/agents/qonto-balance-example2/end Bearer ana",
+    ]);
+  });
+
+  it("deletes the chat as before when the connection server has no record of chats (404)", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Connect Qonto", ANA);
+    (w.agents.runs.find((x) => x.id === chat.id) as { status: string }).status = "COMPLETED";
+    w.at(NOW);
+    const kiffFetch = kiff({ ana: ME });
+    const asked: string[] = [];
+    const fetchFn = (async (url: string, init?: RequestInit) => {
+      if (url.startsWith("https://planque.test/")) {
+        asked.push(`${init?.method ?? "GET"} ${url}`);
+        return new Response("{}", { status: 404 });
+      }
+      return kiffFetch(url, init);
+    }) as typeof fetch;
+    const r = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${chat.session}`, { token: "ana", fetch: fetchFn, planqueBase: "https://planque.test" });
+    expect(r.status).toBe(200);
+    // An older server: the route's 404 adds nothing, and with nothing recorded, nothing else is asked.
+    expect(asked).toEqual([`GET https://planque.test/v1/accounts/t_acme/sessions/${chat.session}/agents`]);
   });
 
   it("still deletes the chat when its connections can't be read, and ends nothing", async () => {
