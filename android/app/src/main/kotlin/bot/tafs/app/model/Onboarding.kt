@@ -19,10 +19,10 @@ data class ConsentTick(val agreed: Boolean = false) {
   val canContinue: Boolean get() = agreed
 }
 
-/** The three cards were seen on this device (Get started or Skip): they show once, after the first sign-in here. */
+/** The cards were seen on this device (Get started or Skip): they show once, after the first sign-in here. */
 const val CARDS_SEEN_KEY = "tafs.onboarding-cards-seen"
 
-/** Whether the three cards follow the celebration after signing in: with the new onboarding on, once per device. */
+/** Whether the cards follow the celebration after signing in: with the new onboarding on, once per device. */
 fun showsOnboardingCards(seen: Boolean, on: Boolean = ONBOARDING_ON): Boolean = on && !seen
 
 /**
@@ -35,21 +35,30 @@ fun showsFirstHome(mayUseCoach: Boolean, on: Boolean = ONBOARDING_ON): Boolean =
 fun firstHomeLines(cloud: String?): Pair<String, String?> =
   cloud?.takeIf { it.isNotBlank() }?.let { it to null } ?: (Words.Home.noTafs to Words.Onboarding.homeLead)
 
-/** The three cards, in order (docs/onboarding.md, step 3). */
+/**
+ * The four cards, in order (docs/onboarding.md, step 3; first run v2, as the iPhone and the Mac): tafs, Coach, the Card with
+ * how this phone approves, and what credits pay for.
+ */
 enum class OnboardingPage {
-  Tafs, Card, Control;
+  Tafs, Coach, Card, Credits;
 
   val title: String get() = when (this) {
     Tafs -> Words.Onboarding.tafsTitle
+    Coach -> Words.Onboarding.coachTitle
     Card -> Words.Onboarding.cardTitle
-    Control -> Words.Onboarding.controlTitle
+    Credits -> Words.Onboarding.creditsTitle
   }
 
-  /** The last card names Android's own way to approve: the screen lock. */
-  val lead: String get() = when (this) {
-    Tafs -> Words.Onboarding.tafsLead
-    Card -> Words.Onboarding.cardLead
-    Control -> Words.Onboarding.controlLeadAndroid
+  /**
+   * The card's lines, each its own paragraph: no language joins two sentences with a space it may not use (Japanese and Chinese
+   * put none after a full stop), as the iPhone's `OnboardingPage.lines`. The Card's ends with how this phone approves: a
+   * fingerprint or face, never the screen lock.
+   */
+  val lines: List<String> get() = when (this) {
+    Tafs -> listOf(Words.Onboarding.tafsLead)
+    Coach -> listOf(Words.Onboarding.homeLead)
+    Card -> listOf(Words.Onboarding.cardLead, Words.Onboarding.controlLeadAndroid)
+    Credits -> listOf(Words.Billing.creditsBuy)
   }
 
   val next: OnboardingPage? get() = entries.getOrNull(ordinal + 1)

@@ -434,16 +434,47 @@ enum KIFFMapping {
         }
     }
 
-    /// What a held gateway call is on, one line an argument, as KIFF keeps them ("payment_intent:
-    /// pi_…"). The amount isn't repeated (it's shown above), nor KIFF's own operation id.
+    /// What a held gateway call is on, as KIFF keeps its arguments ("payment_intent: pi_…"): one line an argument,
+    /// and a list or object written out in full below its name, each item (1, 2, …) or field on its own line, two
+    /// spaces deeper each level, keys in code point order at every level (contracts/held-arguments.json). Nothing the
+    /// call carries is ever folded to "…": a held browser call's `steps` are what the owner signs, and a step the line
+    /// hid could click what the taf's words never said (red-team, 27 Nov). The amount isn't repeated (it's shown
+    /// above), nor the gateway's own arguments; an empty string at the top says nothing and isn't shown.
     static func details(of e: KIFFClient.CardException) -> [String] {
         guard let arguments = e.arguments else { return [] }
         let shown = Set((e.parameterUnits ?? [:]).keys.map { $0.lowercased() }).union((e.parameters ?? [:]).keys.map { $0.lowercased() })
-        return arguments.keys.sorted().compactMap { key in
+        return arguments.keys.sorted(by: codePointOrder).flatMap { key -> [String] in
             let k = key.lowercased()
-            guard !shown.contains(k), !kiffOwnArguments.contains(k), let text = arguments[key]?.text, !text.isEmpty else { return nil }
-            return "\(visible(key)): \(visible(text))"
+            guard !shown.contains(k), !kiffOwnArguments.contains(k), let value = arguments[key] else { return [] }
+            if case .text(let t) = value, t.isEmpty { return [] }
+            return argumentLines(visible(key), value, depth: 0)
         }
+    }
+
+    /// `label`'s `value` as lines: a plain value on its label's line; a list's items (1, 2, …) and an object's fields
+    /// below it, two spaces deeper each level. A string below the top that is empty is written `""`, so a fill with
+    /// nothing still shows.
+    static func argumentLines(_ label: String, _ value: KIFFClient.CardException.Argument, depth: Int) -> [String] {
+        let pad = String(repeating: "  ", count: depth)
+        switch value {
+        case .list(let items):
+            guard !items.isEmpty else { return ["\(pad)\(label): []"] }
+            return ["\(pad)\(label):"] + items.enumerated().flatMap { argumentLines("\($0.offset + 1)", $0.element, depth: depth + 1) }
+        case .object(let fields):
+            guard !fields.isEmpty else { return ["\(pad)\(label): {}"] }
+            return ["\(pad)\(label):"] + fields.keys.sorted(by: codePointOrder).flatMap { key in
+                fields[key].map { argumentLines(visible(key), $0, depth: depth + 1) } ?? []
+            }
+        case .text(let t): return ["\(pad)\(label): \(t.isEmpty ? "\"\"" : visible(t))"]
+        case .number(let n): return ["\(pad)\(label): \(HeldArgumentsReader.plainLiteral(n))"]
+        case .flag(let b): return ["\(pad)\(label): \(b ? "true" : "false")"]
+        case .null: return ["\(pad)\(label): null"]
+        }
+    }
+
+    /// Keys in Unicode code point order, the same on every app (a dictionary keeps no order of its own).
+    static func codePointOrder(_ a: String, _ b: String) -> Bool {
+        a.unicodeScalars.lexicographicallyPrecedes(b.unicodeScalars)
     }
 
     /// A line from KIFF, a vendor or a taf as the approval and the record draw it: no direction

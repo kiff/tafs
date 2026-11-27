@@ -268643,7 +268643,7 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ só pode entregar trabalho a %2$@. O que %2$@ pode fazer continua a ser decidido pela sua Card."
+            "value": "%1$@ só pode entregar trabalho a %2$@. O que %2$@ pode fazer continua a ser decidido pelo seu Card."
           }
         },
         "pt-BR": {
@@ -400646,7 +400646,7 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada taf trabalha dentro de uma Card que emite: o que pode fazer, com que app e quanto. Para além disso, pergunta-lhe."
+            "value": "Cada taf trabalha dentro de um Card que emite: o que pode fazer, com que app e quanto. Para além disso, pergunta-lhe."
           }
         },
         "pt-BR": {
@@ -400909,13 +400909,13 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uma Card é a sua autorização"
+            "value": "Um Card é a sua autorização"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uma Card é a sua autorização"
+            "value": "Um Card é a sua autorização"
           }
         },
         "ro": {
@@ -403539,7 +403539,7 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diga ao Coach, por palavras suas, o que quer que seja feito. Ele configura o taf consigo e mostra-lhe a Card antes de qualquer coisa correr."
+            "value": "Diga ao Coach, por palavras suas, o que quer que seja feito. Ele configura o taf consigo e mostra-lhe o Card antes de qualquer coisa correr."
           }
         },
         "pt-BR": {

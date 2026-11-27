@@ -1090,7 +1090,7 @@
         <item quantity="other">Até %1$s pedidos por dia.</item>
     </plurals>
     <string name="door_api_draft_kind">Nova porta · de outra aplicação</string>
-    <string name="door_api_draft_scope">%1$s só pode entregar trabalho a %2$s. O que %2$s pode fazer continua a ser decidido pela sua Card.</string>
+    <string name="door_api_draft_scope">%1$s só pode entregar trabalho a %2$s. O que %2$s pode fazer continua a ser decidido pelo seu Card.</string>
     <string name="door_api_draft_sends">Envia</string>
     <string name="door_api_draft_will">O que %1$s faz: %2$s</string>
     <string name="door_api_draft_words">Também as próprias palavras de %1$s</string>
@@ -1625,8 +1625,8 @@
     <string name="needs_you_your_step_set_up_hello">Configure o Windows Hello (basta um PIN) para responder aqui, ou responda a partir do seu telefone.</string>
     <string name="onboarding_age">Tem de ter pelo menos 16 anos, ou a idade de consentimento digital do seu país, se for superior.</string>
     <string name="onboarding_age_n">Tem de ter pelo menos %1$s anos.</string>
-    <string name="onboarding_card_lead">Cada taf trabalha dentro de uma Card que emite: o que pode fazer, com que app e quanto. Para além disso, pergunta-lhe.</string>
-    <string name="onboarding_card_title">Uma Card é a sua autorização</string>
+    <string name="onboarding_card_lead">Cada taf trabalha dentro de um Card que emite: o que pode fazer, com que app e quanto. Para além disso, pergunta-lhe.</string>
+    <string name="onboarding_card_title">Um Card é a sua autorização</string>
     <string name="onboarding_coach_title">O Coach configura-o consigo</string>
     <string name="onboarding_consent_tick">Aceito %1$s e %2$s.</string>
     <string name="onboarding_control_lead">Quando um taf precisa de si, espera em «Precisa de si» e, se tiver um, no relógio. Aprova com Face ID ou Touch ID, ou recusa.</string>
@@ -1636,7 +1636,7 @@
     <string name="onboarding_control_title">O controlo é seu</string>
     <string name="onboarding_credits_title">Os créditos pagam o trabalho</string>
     <string name="onboarding_get_started">Começar</string>
-    <string name="onboarding_home_lead">Diga ao Coach, por palavras suas, o que quer que seja feito. Ele configura o taf consigo e mostra-lhe a Card antes de qualquer coisa correr.</string>
+    <string name="onboarding_home_lead">Diga ao Coach, por palavras suas, o que quer que seja feito. Ele configura o taf consigo e mostra-lhe o Card antes de qualquer coisa correr.</string>
     <string name="onboarding_how_it_works">Como funciona o tafs</string>
     <string name="onboarding_kiff_privacy">Política de Privacidade da KIFF</string>
     <string name="onboarding_kiff_terms">os Termos de Serviço da KIFF</string>

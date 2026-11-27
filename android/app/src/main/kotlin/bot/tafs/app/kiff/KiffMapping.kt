@@ -557,7 +557,7 @@ object KiffMapping {
   fun details(e: CardException): List<String> {
     val arguments = e.arguments ?: return emptyList()
     val shown = (e.parameterUnits?.keys.orEmpty() + e.parameters?.keys.orEmpty()).map { it.lowercase() }.toSet()
-    return arguments.keys.sorted().flatMap { key ->
+    return arguments.keys.sortedWith(CODE_POINT_ORDER).flatMap { key ->
       val k = key.lowercase()
       // The gateway's own arguments: the operation's id, and the taf's words, which show under "The taf says".
       if (k in shown || k == "kiff_operation_id" || k == "kiff_reason" || k == "kiff_about") return@flatMap emptyList()
@@ -576,7 +576,7 @@ object KiffMapping {
         else listOf("$pad$label:") + value.flatMapIndexed { i, item -> argumentLines("${i + 1}", item, depth + 1) }
       is JsonObject ->
         if (value.isEmpty()) listOf("$pad$label: {}")
-        else listOf("$pad$label:") + value.keys.sorted().flatMap { k -> argumentLines(visible(k), value[k], depth + 1) }
+        else listOf("$pad$label:") + value.keys.sortedWith(CODE_POINT_ORDER).flatMap { k -> argumentLines(visible(k), value[k], depth + 1) }
       else -> listOf("$pad$label: ${visible(argumentText(value))}")
     }
   }
@@ -594,6 +594,8 @@ object KiffMapping {
     if (p.isString) return p.content.ifEmpty { "\"\"" }
     p.content.toBooleanStrictOrNull()?.let { return it.toString() }
     // A decimal written out plainly: "0.000015", never "1.5e-05"; "1.5", never "1.50" (the iPhone reads a Double).
+    // A zero is one written digit, whatever its exponent, even one too large to read ("0e99999999999999999999" is 0).
+    if (ZERO.matches(p.content)) return "0"
     // Dropping the zeros can overflow the scale ("1000e2147483647" throws): then it's written as sent.
     val n = runCatching { p.content.toBigDecimalOrNull()?.stripTrailingZeros() }.getOrNull() ?: return p.content
     // Counted in Long: a scale near Int.MIN_VALUE can't wrap the count round to a small one.
@@ -601,6 +603,26 @@ object KiffMapping {
     val scale = n.scale().toLong()
     val written = if (scale <= 0) precision - scale else maxOf(precision, scale + 1)
     return if (written > PLAIN_DIGITS_MAX) p.content else n.toPlainString()
+  }
+
+  /** A JSON number whose digits are all zeros, with any exponent. */
+  private val ZERO = Regex("-?0+(\\.0*)?([eE][+-]?[0-9]+)?")
+
+  /**
+   * Keys in Unicode code point order, as KIFF and every app sort them (contracts/held-arguments.json). A String's own order
+   * compares UTF-16 units, which puts a key with an emoji (a surrogate pair, 0xD800 and up) before one with U+E000 to U+FFFF.
+   */
+  val CODE_POINT_ORDER: Comparator<String> = Comparator { a, b ->
+    var i = 0
+    var j = 0
+    while (i < a.length && j < b.length) {
+      val x = a.codePointAt(i)
+      val y = b.codePointAt(j)
+      if (x != y) return@Comparator x.compareTo(y)
+      i += Character.charCount(x)
+      j += Character.charCount(y)
+    }
+    (a.length - i).compareTo(b.length - j)
   }
 
   /** The most digits a held call's number is written out in; past it, it's written as sent. */

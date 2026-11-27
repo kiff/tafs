@@ -1,0 +1,2 @@
+• Una chiamata che ti aspetta mostra ogni passaggio e ogni valore per intero in Dettagli, mai abbreviati.
+• Primo avvio: quattro schede, ora con Coach e i crediti, e un primo taf da provare su una Home vuota.

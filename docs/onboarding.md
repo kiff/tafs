@@ -110,15 +110,30 @@ never starts `release` or `wear-release`.
   welcome counts KIFF's changed-terms answers (saved with the screen), so a rotation while the sheet is open neither loses
   one nor unticks the box again after it was ticked anew.
   However the sheet closes, the ticked version goes with it. Off, the claim is today's.
-- **The three cards** (`OnboardingCards`, step 3): Your tafs, A Card is your permission, You stay in control, with
-  Skip, Next and Get started (`OnboardingSteps`). Each picture is Android's own view over the sample's words: Home's
-  `TafRow`s, the Card tab's `TafCardFace` ("Support replies · Zendesk", 12 of 40 replies) and a Needs you card. The
-  pictures are hidden from TalkBack. The last card says the screen lock (`onboarding.control_lead_android`). They
-  show full screen once per device after signing in (`CARDS_SEEN_KEY`), and Back is Skip.
+- **The four cards** (`OnboardingCards`, step 3; first run v2, as the iPhone and the Mac): Your tafs, Coach sets it up with
+  you, A Card is your permission, Credits pay for the work, with Skip, Next and Get started (`OnboardingSteps`). Each picture
+  is Android's own view over the sample's words:
+  - Your tafs: Home's `TafRow`s;
+  - Coach: the person's line (`sample.coach.ask`) in the chat's own bubble, then Coach's answer, connect first, with the plan
+    line;
+  - the Card: the Card tab's `TafCardFace` ("Support replies · Zendesk", 12 of 40 replies), and under it a call it holds as
+    Needs you draws it: nothing is sent, and **Approve once** naming the fingerprint (`Biometry.approvingWith`, never the
+    screen lock);
+  - Credits: Plan & usage's Solo line and meter, and Coach's own work counted apart.
+
+  Their lines: `onboarding.tafs_lead`; `onboarding.home_lead`; `onboarding.card_lead` then
+  `onboarding.control_lead_android` ("You approve with your fingerprint or face"), each its own paragraph (`OnboardingPage.lines`: Japanese
+  and Chinese put no space after a full stop, so the app never joins two sentences); `billing.credits_buy`. The pictures are hidden from
+  TalkBack. They show full screen once per device after signing in (`CARDS_SEEN_KEY`), and Back is Skip.
 - **The first Home** (`HomeView`, step 4): with no taf and no recipes listed, for anyone who may use Coach. It shows
   board 2, tafs cloud's empty line alone (the app's "No tafs yet" and `onboarding.home_lead` only when it sends
   none, `firstHomeLines`), **Ask Coach** and **How tafs works**.
-- **How tafs works** (`HowTafsWorksSheet`), from the first Home and from Account's Legal: the three cards, each
+- **A first taf to try** (`FirstTafCard`, first run v2): while tafs cloud serves `home.first_taf` (its first proved job in
+  the person's language, only while Home lists the jobs, for someone who manages the tafs), Home shows "A first taf to try",
+  its title and line as served, and **Set it up with Coach**, which opens a new Coach conversation with its `say` in the
+  message box to edit and send (`AppModel.handFirstTafToCoach`). It's read whole or not at all (`RecipesHome.firstTafToTry`:
+  title, line and `say` all there, trimmed), so a partial one, or none, draws no card. As on the iPhone and the Mac.
+- **How tafs works** (`HowTafsWorksSheet`), from the first Home and from Account's Legal: the four cards, each
   opening where it's tapped, and the four legal pages titled as their pages (`onboarding.row_*`, never the tick
   line's link words). Then, as on iPhone and iPad, two short sections (`help.json`): **Chrome** only where planque
   offers Chromes (`AppState.chromes` not null), and **Sign in with an emailed code** only where KIFF can send one
