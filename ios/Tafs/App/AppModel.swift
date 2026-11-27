@@ -10201,6 +10201,11 @@ final class AppModel: ObservableObject {
                     // The window is the taf's whose step opened it: another taf's is closed, and this step's Face ID
                     // opens this taf's own.
                     if takesWindow, kiff.window != nil, windowTaf != s.id { await closeWindow() }
+                    // KIFF holds the window to the agent the step is for (kiff/cloud#189): a Cards step's draft's
+                    // agent, or a planque step's grant request's agent; with neither, none, and no Card goes in it.
+                    // As Android. Not the Coach's own agent, which would keep the new taf's Cards out of the window.
+                    let windowAgent = component.draft.flatMap { setupDrafts[$0]?.agentID }
+                        ?? grants.first { $0.id == ask.planque?.grant }?.request.agent
                     guard gen == accountGeneration else { return }
                     let confirm: @MainActor () async throws -> Void = { _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true) }
                     var windowed = takesWindow && kiff.window != nil
@@ -10215,7 +10220,7 @@ final class AppModel: ObservableObject {
                     guard gen == accountGeneration else { return }
                     kiff.setupSigner = { try signer.signConfirmed($0) }
                     // The approval key opens the window under that one Face ID.
-                    if takesWindow && !windowed { windowed = try await openWindow(for: s.id, agent: s.kiffAgent) }
+                    if takesWindow && !windowed { windowed = try await openWindow(for: s.id, agent: windowAgent) }
                     guard gen == accountGeneration else { return }
                     useWindow(windowed, reconfirm: confirm)
                     var made = await makeAskedCall(ask, tenant: tenant, gen: gen)
@@ -10232,7 +10237,7 @@ final class AppModel: ObservableObject {
                         }
                         guard gen == accountGeneration else { return }
                         var reopened = false
-                        if windowAvailable { reopened = try await openWindow(for: s.id, agent: s.kiffAgent) }
+                        if windowAvailable { reopened = try await openWindow(for: s.id, agent: windowAgent) }
                         guard gen == accountGeneration else { return }
                         useWindow(reopened, reconfirm: confirm)
                         made = await makeAskedCall(ask, tenant: tenant, gen: gen)
