@@ -3051,6 +3051,9 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     const placeholder = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...own, kickoff: "Read the responses to form [form ID] and add each as a deal." } });
     expect(placeholder.status).toBe(400);
     expect(placeholder.body.error).toContain("leaves an id to fill in ([form ID])");
+    for (const left of ["Read form <form id> first.", "Use the sheet {spreadsheet_id}.", "Open [the folder ID]."]) {
+      expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...own, instructions: left } })).status).toBe(400);
+    }
     for (const bad of [[{ kind: "spreadsheet", name: "Leads", id: "a1" }], [{ kind: "form", name: "", id: "a1" }], [{ kind: "form", name: "Leads", id: "has space" }], "Leads", Array(6).fill({ kind: "form", name: "Leads", id: "a1" })]) {
       expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...own, sources: bad } })).status).toBe(400);
     }
@@ -3064,6 +3067,15 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.agents.agents.get(`t_acme|${NEW}`)!.instructions).toContain(`Never add the same person twice.\n\n${said}`);
     // A definition built again from the stored taf (an upgrade, a version) keeps it.
     expect(jobOf(w.tafs.held.get(`t_acme#${NEW}`)!).instructions).toContain(said);
+  });
+
+  it("takes what a run fills in each time ({order_id}, [ticket id], <lead id>) as a job's own words, never an id left to fill in", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "replies-x" });
+    const runWords = "Reply: Your refund for order {order_id} is done. Write the [ticket id] in the note; Subject: Lead <lead id> added; use {data.id} from the call; see [Order ID](https://example.com); check the customer [ID verification] status.";
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Replies", draft_id: "drf_s1", from_setup: true, kickoff: "Answer each new refund request.", instructions: runWords, unscheduled: true } });
+    expect(r.status).toBe(200);
+    expect(w.agents.agents.get(`t_acme|${NEW}`)!.instructions).toContain(runWords);
   });
 
   it("starts a taf with a job of its own, as Coach drafted it: any job, not one of the five (kiff/tafs#476)", async () => {

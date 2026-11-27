@@ -695,8 +695,11 @@ export function sourcesOf(v: unknown): Source[] | undefined {
   });
 }
 
-/** An id left to fill in, in a job's words or as an id: "<form id>", "{form_id}", "[FORM ID]". */
-export const ID_PLACEHOLDER = /[<{[]\s*[\w .-]*?(?:\bid|_id)\b[\w .-]*[>}\]]/i;
+/**
+ * The id of a source left to fill in, in a job's words or as an id: "<form id>", "{form_id}", "[the sheet ID]". Only the
+ * kinds `sources` takes: "{order_id}", "[ticket id]" or "<lead id>" are what a run fills in each time, never setup's.
+ */
+export const ID_PLACEHOLDER = /[<{[]\s*(?:the\s+|your\s+)?(?:form|sheet|spreadsheet|folder|board)[ _-]?id\s*[>}\]]/i;
 /** An id value that only stands for one: "FORM_ID", "your_sheet_id", "xxx". */
 const ID_STAND_IN = /^(?:[a-z_]*_id|x{3,}|id)$/i;
 
