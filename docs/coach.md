@@ -828,7 +828,7 @@ exists, Coach asks the owner for its link, never its name: a search by name ofte
 connection gives (a Sheets sign-in doesn't search Drive). When a place for results has no read on the
 taf's connection that lists places by name, Coach asks for the place's link and takes the id from it.
 
-A check's list is where the catalog's `returns` says the read puts it, never a guessed path (`set-up-a-taf@11`, `the-dial@6`). An operation's fields are named as its server gives them, never from the vendor's API Coach knows (`name-the-tools@11`).
+A check's list is where the catalog's `returns` says the read puts it, never a guessed path (`set-up-a-taf@11`, `the-dial@6`). An operation's fields are named as its server gives them, never from the vendor's API Coach knows (`name-the-tools@11`). A tool is named only as planque lists it (its catalog, a status, a refusal), never from memory or the vendor's docs: a read is found by the job's words (`catalog {grant, q: "balance"}`) and its fields, and a name planque refused as not served is chosen again from the tools it lists and asked again; only when none answers the job does Coach say so (`name-the-tools@23`; Qonto re-test 3, 27 Nov: Coach asked planque for `list_bank_accounts`, a name it made up, which planque refused, and told the owner balances can't be read, though `get_organization` gives them).
 
 ## A vendor the account already connects
 
@@ -859,7 +859,16 @@ A message tafs opens with its own line (`[improve taf …]`, `[tafs coach lines]
 keeps that line first, and a message in the live chat (which the apps send with no session) goes on in it by name, with neither the lines nor the reads. The thread shows only the owner's words. What planque can't answer is left out,
 and Coach reads planque's grants itself. Coach offers only a connection one of the account's tafs uses, or
 one made in this conversation: a grant another agent holds (a test, a draft that never became a taf) is never
-offered as the owner's, or reused (`connect-an-app@8`). For a vendor one of the tafs already connects, Coach offers the
+offered as the owner's, or reused (`connect-an-app@8`). **One no taf uses yet** is offered too: tafs cloud lists the
+account's signed-in connections (`listed` or `connected`, with the day they were asked) whose agent no live taf runs, nor
+the other form of a live taf's name, as `- Qonto, for no taf yet (asked 2026-11-27): vendor_sign_in, …; listed`
+(`connectionLines` with every live taf, the ones the person can't see included). Coach offers that sign-in first, by its
+vendor ("Qonto, signed in earlier, not used by any taf yet"), and when the owner takes it, goes on with that same grant
+as if made in this conversation, its agent the new taf's, with no new sign-in (`connect-an-app@38`; Qonto re-test 3,
+27 Nov: a new conversation asked to sign in again over a `listed` Qonto sign-in left by a conversation the owner had
+deleted). planque's `reuse` takes only a `connected` grant, so a `listed` one is gone on with, never reused. Deleting a
+conversation ends the connections it asked for that no taf uses ([api.md](api.md), `DELETE /v1/tafs/{id}/chats/{session}`),
+so such a sign-in lives only as long as the conversation that made it. For a vendor one of the tafs already connects, Coach offers the
 same kind first, named with the taf that uses it, by reusing its sign-in: `request {reuse: <grant>, name, taf_name,
 tools: []}` and nothing more (planque refuses `entry` or `uses` beside it, `connect-an-app@22`), so the owner approves the new taf's tools alone, with no second sign-in or key (gap 2 of
 kiff/tafs#476, `connect-an-app@4`; planque reuses a managed app's sign-in too). Only when planque refuses

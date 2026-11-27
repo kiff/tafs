@@ -51,7 +51,7 @@ function world() {
 }
 type World = ReturnType<typeof world>;
 
-async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; fetch?: typeof fetch; headers?: Record<string, string>; now?: Date } = {}) {
+async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; fetch?: typeof fetch; headers?: Record<string, string>; now?: Date; planqueBase?: string } = {}) {
   const event: HTTPEvent = {
     rawPath: path,
     requestContext: { http: { method } },
@@ -66,6 +66,7 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
     forward: async () => undefined,
     fetch: opts.fetch ?? kiff({ ana: ME, viewer: VIEWER, approver: APPROVER, editor: EDITOR }),
     now: () => opts.now ?? NOW,
+    ...(opts.planqueBase ? { planqueBase: opts.planqueBase } : {}),
   });
   return { status: r.statusCode, body: JSON.parse(r.body) };
 }
@@ -1725,6 +1726,72 @@ describe("chats (kiff/tafs#73)", () => {
     expect(w.agents.runs.some((x) => x.id === old.id)).toBe(true);
     // A second delete finds nothing.
     expect((await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${old.session}`, { token: "ana" })).status).toBe(404);
+  });
+
+  // 27 Nov: a Qonto sign-in made in a chat the owner deleted, for a taf never made, stayed signed in with no door to end
+  // it. Deleting the chat ends what its own requests connected that no taf uses; a live taf's and another chat's stay.
+  it("ends the connections a deleted chat asked for that no taf uses, and only those", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Tell me my Qonto balance every morning", ANA);
+    (w.agents.runs.find((x) => x.id === chat.id) as { status: string }).status = "COMPLETED";
+    const list = w.agents.events.get(chat.session)!;
+    const ev = (kind: string, body: object) => list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: NOW.toISOString(), kind, body });
+    ev("tool_call", { call_id: "c1", tool: "planque", input: { action: "request", entry: "qonto", name: "qonto-balance", taf_name: "Qonto balance" } });
+    ev("tool_result", { call_id: "c1", text: '{"grant":"grt_q1","status":"pending"}' });
+    // A request the server refused connected nothing: its name ends nothing.
+    ev("tool_call", { call_id: "c2", tool: "planque", input: { action: "request", entry: "stripe", name: "refused-one" } });
+    ev("tool_result", { call_id: "c2", text: "refused", is_error: true });
+    // A read under a live taf's agent name is no request.
+    ev("tool_call", { call_id: "c3", tool: "planque", input: { action: "status", name: "rae" } });
+    ev("tool_result", { call_id: "c3", text: "{}" });
+    const today = NOW.toISOString().slice(0, 10);
+    const connections = [
+      { agent: "qonto-balance-k3f9x2a1", vendor: "Qonto", kind: "vendor_sign_in", status: "listed", since: today },
+      // Another chat's, under the same name, asked the day before this chat began: never this chat's.
+      { agent: "qonto-balance", vendor: "Qonto", kind: "vendor_sign_in", status: "listed", since: "2026-10-15" },
+      { agent: "refused-one", vendor: "Stripe", kind: "vendor_sign_in", status: "listed", since: today },
+      { agent: "rae", vendor: "Stripe", kind: "vendor_sign_in", status: "connected", since: today },
+    ];
+    const kiffFetch = kiff({ ana: ME });
+    const asked: string[] = [];
+    const fetchFn = (async (url: string, init?: RequestInit) => {
+      if (url.startsWith("https://planque.test/")) {
+        asked.push(`${init?.method ?? "GET"} ${url} ${(init?.headers as Record<string, string>)?.authorization}`);
+        if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections }));
+        return new Response(JSON.stringify({ ended: [{ vendor: "Qonto", grant: "grt_q1" }], kept: [] }));
+      }
+      return kiffFetch(url, init);
+    }) as typeof fetch;
+
+    const r = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${chat.session}`, { token: "ana", fetch: fetchFn, planqueBase: "https://planque.test" });
+    expect(r.body).toEqual({ session: chat.session, deleted: true });
+    expect(asked).toEqual([
+      "GET https://planque.test/v1/accounts/t_acme/connections Bearer ana",
+      "POST https://planque.test/v1/accounts/t_acme/agents/qonto-balance-k3f9x2a1/end Bearer ana",
+    ]);
+  });
+
+  it("still deletes the chat when its connections can't be read, and ends nothing", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Connect Qonto", ANA);
+    (w.agents.runs.find((x) => x.id === chat.id) as { status: string }).status = "COMPLETED";
+    const list = w.agents.events.get(chat.session)!;
+    list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: NOW.toISOString(), kind: "tool_call",
+      body: { call_id: "c1", tool: "planque", input: { action: "request", entry: "qonto", name: "qonto-balance" } } });
+    list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: NOW.toISOString(), kind: "tool_result", body: { call_id: "c1", text: "ok" } });
+    const kiffFetch = kiff({ ana: ME });
+    const ends: string[] = [];
+    const fetchFn = (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/connections")) return new Response("down", { status: 503 });
+      if (url.endsWith("/end")) { ends.push(url); return new Response("{}"); }
+      return kiffFetch(url, init);
+    }) as typeof fetch;
+    const r = await call(w, "DELETE", `/v1/tafs/${RAE}/chats/${chat.session}`, { token: "ana", fetch: fetchFn, planqueBase: "https://planque.test" });
+    expect(r.status).toBe(200);
+    expect(ends).toEqual([]);
+    expect(w.agents.calls).toContain(`deleteSession ${chat.session} member:u_ana`);
   });
 
   it("sends what an app draws to delete a chat with both chats lists, in the person's language", async () => {
