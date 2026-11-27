@@ -1,0 +1,1 @@
+- **Held calls: a number reads the same in every app.** Details writes a number without trailing zeros after its point (1.50 reads 1.5, 2.0 reads 2), since the iPhone can't keep them, and with every digit sent, however long. The vector `contracts/held-arguments.json` has a case for each.

@@ -583,15 +583,16 @@ object KiffMapping {
 
   /**
    * One plain argument as text: a string as it is (an empty one as "", so a fill with nothing still shows), a number
-   * written out exactly as sent (an integer past 2^53 too), a flag as true or false, a null as null.
+   * written out with no exponent and no trailing zeros after its point, as every app writes it (an integer past 2^53
+   * exactly), a flag as true or false, a null as null.
    */
   fun argumentText(value: JsonElement?): String {
     val p = value as? JsonPrimitive ?: return "null"
     if (p is JsonNull) return "null"
     if (p.isString) return p.content.ifEmpty { "\"\"" }
     p.content.toBooleanStrictOrNull()?.let { return it.toString() }
-    // A decimal written out plainly, as sent: "0.000015", never "1.5e-05".
-    return p.content.toBigDecimalOrNull()?.toPlainString() ?: p.content
+    // A decimal written out plainly: "0.000015", never "1.5e-05"; "1.5", never "1.50" (the iPhone reads a Double).
+    return p.content.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString() ?: p.content
   }
 
   /**
