@@ -388,7 +388,24 @@ export function leftoverAgents(conns: AccountConnection[], live: Set<string>, ar
  * delete). Only an agent whose connections were all asked on or after the day the chat began (`since`), never an
  * agent a live taf runs, nor the other form of one; the end route itself keeps a sign-in another taf still uses.
  */
-export function chatLeftAgents(events: ReadonlyArray<{ kind: string; body: unknown }>, conns: AccountConnection[], live: Set<string>, chatStarted: string): string[] {
+export function chatLeftAgents(agents: ReadonlySet<string>, conns: AccountConnection[], live: Set<string>, chatStarted: string): string[] {
+  const day = chatStarted.slice(0, 10);
+  if (agents.size === 0 || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return [];
+  const byAgent = new Map<string, AccountConnection[]>();
+  for (const c of conns) byAgent.set(c.agent, [...(byAgent.get(c.agent) ?? []), c]);
+  return [...byAgent.entries()]
+    .filter(([a, cs]) => agents.has(a) && !live.has(a) && ![...live].some((k) => otherForm(a, k))
+      && cs.every((c) => c.since !== undefined && c.since >= day))
+    .map(([a]) => a);
+}
+
+/**
+ * The agents a chat's own successful `planque` `request` calls were answered under, read from its events. Only while the
+ * run that made them is live: kiff/agents keeps a tool call and its result until their run ends (tafdef.ts, keepRules),
+ * so at a chat's delete they're gone, and deleteChat reads the record the relay kept as each answer streamed
+ * (`chatAgentsKey`). 27 Nov: two live deletes ended nothing, since this read found no events.
+ */
+export function requestedAgents(events: ReadonlyArray<{ kind: string; body: unknown }>): Set<string> {
   const requests = new Set<string>();
   const agents = new Set<string>();
   for (const e of events) {
@@ -401,14 +418,7 @@ export function chatLeftAgents(events: ReadonlyArray<{ kind: string; body: unkno
       if (agent) agents.add(agent);
     }
   }
-  const day = chatStarted.slice(0, 10);
-  if (agents.size === 0 || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return [];
-  const byAgent = new Map<string, AccountConnection[]>();
-  for (const c of conns) byAgent.set(c.agent, [...(byAgent.get(c.agent) ?? []), c]);
-  return [...byAgent.entries()]
-    .filter(([a, cs]) => agents.has(a) && !live.has(a) && ![...live].some((k) => otherForm(a, k))
-      && cs.every((c) => c.since !== undefined && c.since >= day))
-    .map(([a]) => a);
+  return agents;
 }
 
 /**
@@ -416,7 +426,7 @@ export function chatLeftAgents(events: ReadonlyArray<{ kind: string; body: unkno
  * (an agent's results are bounded, and an app's guide follows the grant), its first `"agent"` field, which comes before
  * the guide (keys are written in order). Undefined when it names none an id could be.
  */
-function answeredAgent(text: string): string | undefined {
+export function answeredAgent(text: string): string | undefined {
   let agent: unknown;
   try {
     const g = (JSON.parse(text) ?? {}) as { agent?: unknown; grant?: { agent?: unknown } };

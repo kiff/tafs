@@ -2,7 +2,7 @@ import { ownerWords } from "../src/cloud/improve.js";
 import { withReplyLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
-import { handleStream, heldLine, type HTTPEvent, MAX_NOTE, noteWords, preToolLines, SETUP_JOB, type Taf, waitsOf, withLine, wordsOnRefusedCards } from "../src/cloud/handler.js";
+import { handle, handleStream, heldLine, type HTTPEvent, MAX_NOTE, noteWords, preToolLines, SETUP_JOB, type Taf, waitsOf, withLine, wordsOnRefusedCards } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -354,6 +354,69 @@ describe("a message streamed (kiff/tafs#60)", () => {
 
   // Android 85, 14 Nov: planque refused Coach's reuse request for its shape, Coach asked again and it went through, and the red
   // "Coach couldn't connect the app yet" stayed in the chat.
+  // 27 Nov, twice on the owner's phone: a chat's Qonto sign-in stayed after the chat was deleted. kiff/agents keeps a tool
+  // call and its answer only until the run ends (tafdef.ts, keepRules), so by the delete they were gone, and the delete
+  // read nothing. The agent each request was answered under is now kept as the answer streams, and the app's delete reads it.
+  it("ends a deleted chat's unused sign-in from what was kept as the request's answer streamed, though its tool calls are gone", async () => {
+    const w = world();
+    const answer = { id: "grt_q1", agent: "qonto-morning-balance-example1", status: "pending", guide: { text: "Qonto's guide…" } };
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", entry: "qonto", name: "qonto-balance", taf_name: "Qonto morning balance", tools: [] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: JSON.stringify(answer) } } },
+      // A refused request names an agent too: it was never asked under, and nothing of it is kept.
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "request", entry: "stripe", name: "refused" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: '{"agent":"refused-example2"}', is_error: true } } },
+      // A status read names a live taf's agent: no request.
+      { event: "delta", data: { kind: "tool_call", call_id: "c3", tool: "planque", input: { action: "status", grant: "grt_r1" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c3", result: { text: '{"id":"grt_r1","agent":"rae","status":"connected"}' } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Make me a taf that tells me my Qonto balance every morning." } });
+    expect(r.status).toBe(200);
+    await new Promise((f) => setTimeout(f, 0));
+    const run = w.agents.runs.at(-1)!;
+    // As kiff/agents: the ended run kept no tool call or result.
+    expect((await w.agents.api.session("t_acme", run.session)).events.some((e) => e.kind === "tool_call" || e.kind === "tool_result")).toBe(false);
+
+    const today = NOW.toISOString().slice(0, 10);
+    const connections = [
+      { agent: "qonto-morning-balance-example1", vendor: "Qonto", kind: "vendor_sign_in", status: "listed", since: today },
+      { agent: "refused-example2", vendor: "Stripe", kind: "vendor_sign_in", status: "listed", since: today },
+      { agent: "rae", vendor: "Stripe", kind: "vendor_sign_in", status: "connected", since: today },
+    ];
+    const asked: string[] = [];
+    const kiffFetch = kiff({ ana: ME });
+    const fetchFn = (async (url: string, init?: RequestInit) => {
+      if (url.startsWith("https://planque.test/")) {
+        asked.push(`${init?.method ?? "GET"} ${url} ${(init?.headers as Record<string, string>)?.authorization}`);
+        if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections }));
+        return new Response(JSON.stringify({ ended: [{ vendor: "Qonto", grant: "grt_q1" }], kept: [] }));
+      }
+      return kiffFetch(url, init);
+    }) as typeof fetch;
+    const logged = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const del = await handle({ rawPath: `/v1/tafs/${RAE}/chats/${run.session}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, {
+      agents: w.agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs: w.tafs,
+      names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(), archived: w.archived, coach: w.coach,
+      push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
+      apns: { send: async () => "sent" as const },
+      forward: async () => undefined,
+      fetch: fetchFn, planqueBase: "https://planque.test",
+      now: () => NOW,
+    });
+    const line = logged.mock.calls.map((c) => String(c[0])).find((l) => l.includes("chat_connections_ended"));
+    logged.mockRestore();
+    expect(del.statusCode).toBe(200);
+    expect(asked).toEqual([
+      "GET https://planque.test/v1/accounts/t_acme/connections Bearer ana",
+      "POST https://planque.test/v1/accounts/t_acme/agents/qonto-morning-balance-example1/end Bearer ana",
+    ]);
+    // One line says what was asked, what was left to end and how each went: agent ids and counts only.
+    expect(JSON.parse(line!)).toEqual({ event: "chat_connections_ended", tenant: "t_acme", asked: ["qonto-morning-balance-example1"],
+      left: ["qonto-morning-balance-example1"], results: [{ agent: "qonto-morning-balance-example1", ended: 1 }] });
+    // What was kept for the chat goes with it.
+    expect(await w.coach.get(`t_acme#coach-asked#${run.session}`)).toBeUndefined();
+  });
+
   it("ends a connection call refused for how Coach wrote it as not made, never red, and the thread says the same on a reread", async () => {
     const w = world();
     w.agents.streamed.push(
