@@ -1,0 +1,85 @@
+{
+  "about": "A held call's arguments as every app writes them under Details (KIFF's `arguments`, kept while the call is held): one line an argument, keys in order, the gateway's own (kiff_operation_id, kiff_reason, kiff_about) and an empty string at the top left out; a list's items (1, 2, ...) and an object's fields below their name, two spaces deeper each level, in the order sent; nothing ever shortened to \"...\" (red-team, 27 Nov: a held browse_act showed `steps: ...`). Written by hand, as data; every app's test reads every case and must produce `lines` exactly.",
+  "cases": [
+    {
+      "name": "plain values",
+      "arguments": {
+        "b_flag": true,
+        "a_small": 1.5e-05,
+        "c_count": 50,
+        "d_name": "Ana",
+        "f_null": null,
+        "g_empty": ""
+      },
+      "lines": [
+        "a_small: 0.000015",
+        "b_flag: true",
+        "c_count: 50",
+        "d_name: Ana",
+        "f_null: null"
+      ]
+    },
+    {
+      "name": "a held browser call's steps",
+      "arguments": {
+        "kiff_reason": "Owner asked to fill customer name Test",
+        "url": "https://www.httpbin.org/forms/post",
+        "steps": [
+          {
+            "kind": "fill",
+            "selector": "input[name=custname]",
+            "value": "Test"
+          },
+          {
+            "kind": "click",
+            "text": "Submit order"
+          }
+        ],
+        "options": {},
+        "tags": []
+      },
+      "lines": [
+        "options: {}",
+        "steps:",
+        "  1:",
+        "    kind: fill",
+        "    selector: input[name=custname]",
+        "    value: Test",
+        "  2:",
+        "    kind: click",
+        "    text: Submit order",
+        "tags: []",
+        "url: https://www.httpbin.org/forms/post"
+      ]
+    },
+    {
+      "name": "a list of plain values, and an object inside a list inside an object",
+      "arguments": {
+        "ids": [
+          1,
+          2
+        ],
+        "filter": {
+          "any": [
+            {
+              "field": "status",
+              "is": "open"
+            }
+          ],
+          "limit": 5
+        }
+      },
+      "lines": [
+        "filter:",
+        "  any:",
+        "    1:",
+        "      field: status",
+        "      is: open",
+        "  limit: 5",
+        "ids:",
+        "  1: 1",
+        "  2: 2"
+      ]
+    }
+  ]
+}

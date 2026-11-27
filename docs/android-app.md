@@ -423,7 +423,10 @@ marks) dropped so nothing can reorder or hide words (`KiffMapping.tafSays`). The
 KIFF keeps, 120 and 280 code points, so an emoji is never cut in half. A link or markup shows only as words. They never stand in for KIFF's amount,
 rule or action. The gateway's own arguments (`kiff_operation_id`, `kiff_about`, `kiff_reason`)
 aren't repeated under Details, where the call's ids stay. A KIFF that keeps neither shows the card
-as before.
+as before. Details writes every other argument out in full, never "…": a plain one on its line, a list's items (1, 2, …)
+and an object's fields below its name, two spaces deeper each level, in the order sent, so a held browser call's `steps`
+(each fill, its field and value, each click) are what the owner reads before approving (`KiffMapping.details`). Every app
+writes the same lines, from the cases in `contracts/held-arguments.json`.
 
 **A Card asked to take another currency** (KIFF's `card_unit` exception, as tafs cloud draws it in
 `card_unit_exceptions`): one panel (`CardUnitExceptionPanel`) with tafs cloud's title, words and

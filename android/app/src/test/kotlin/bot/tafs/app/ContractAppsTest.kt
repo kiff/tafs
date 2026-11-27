@@ -28,6 +28,20 @@ class ContractAppsTest {
   private fun answer(file: String): String =
     KiffClient.json.parseToJsonElement(File("../../contracts/$file").readText()).jsonObject["answer"]!!.toString()
 
+  /**
+   * A held call's arguments under Details, every case of contracts/held-arguments.json: the lines every app writes, exactly.
+   * Nothing is ever shortened to "…" (red-team, 27 Nov: a held browse_act's steps showed as "steps: …").
+   */
+  @Test fun aHeldCallsArgumentsAreTheContractsLinesExactly() {
+    cases("held-arguments.json").forEach { case ->
+      val name = case["name"]!!.jsonPrimitive.content
+      val text = """{"exceptions":[{"id":"ce_c","subject":"a","action":"x","entity_id":"e","created_at":"2026-11-27T16:00:00Z","arguments":${case["arguments"]}}]}"""
+      val e = KiffClient.json.decodeFromString(bot.tafs.app.kiff.CardExceptions.serializer(), text).exceptions[0]
+      val want = case["lines"]!!.jsonArray.map { it.jsonPrimitive.content }
+      assertEquals(name, want, bot.tafs.app.kiff.KiffMapping.details(e))
+    }
+  }
+
   @Test fun homesRecipesReadAsTafsCloudSendsThem() {
     val read = KiffClient.json.decodeFromString(bot.tafs.app.kiff.Recipes.serializer(), answer("recipes-home.json"))
     assertTrue("Home leads with the jobs", read.home?.shown == true)
