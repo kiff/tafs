@@ -109,8 +109,9 @@ def commit(edit: str, token: str) -> str:
     """
     Commits the edit without sending anything for review, and says how. With managed publishing off, a plain commit sent every
     change pending in the console for review (it once restarted a release's review), so the commit asks for none. With it on, Play
-    refuses that parameter (400, 21 Nov) because nothing it commits goes out before the console's Publish: then, and only on
-    those words, the edit is committed plainly. Any other refusal stops here, committing nothing.
+    refuses that parameter (400, 21 Nov): then, and only on those words, the edit is committed plainly. The internal release
+    reached testers without Publish all the same (146 on 25 Nov, 149 on 27 Nov); other changes saved in the console wait for
+    it. Any other refusal stops here, committing nothing.
     """
     try:
         call("POST", f"{API}/edits/{edit}:commit?changesNotSentForReview=true", token, raising=True)
@@ -119,7 +120,7 @@ def commit(edit: str, token: str) -> str:
         if e.code != 400 or MANAGED not in e.words:
             sys.exit(str(e))
     call("POST", f"{API}/edits/{edit}:commit", token)
-    return "under managed publishing, waiting for the console's Publish"
+    return "under managed publishing"
 
 
 def upload(bundle: str, wear: bool = False) -> None:
@@ -142,7 +143,8 @@ def upload(bundle: str, wear: bool = False) -> None:
     # This edit goes to the internal track only; anything to review is sent from the console, by the person who owns the listing.
     how = commit(edit, token)
     print(f"versionCode {code} is committed to Play's {track} track, with release notes in {len(release_notes)} languages, "
-          f"{how}: it reaches testers once it's published in Play Console")
+          f"{how}. Internal releases have reached testers without Publish (146, 149); if testers don't see this one, check the "
+          f"track in Play Console")
 
 
 def main(argv: list) -> None:
