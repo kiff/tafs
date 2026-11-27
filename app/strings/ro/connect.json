@@ -79,6 +79,8 @@
   "connect.disconnect.rest": "Celelalte tafuri care folosesc {vendor} își păstrează accesul. Dacă niciun alt taf nu folosește același cont acolo, conectarea este revocată la {vendor}; altfel, când este eliminat ultimul. Dacă folosiți din nou {vendor}, vi se cere să aprobați și să vă conectați din nou.",
   "connect.disconnect.rest_deleted": "Celelalte tafuri care folosesc {vendor} își păstrează accesul. Dacă niciun alt taf nu folosește același cont acolo, conectarea este ștearsă din tafs; altfel, când este eliminat ultimul. Dacă folosiți din nou {vendor}, vi se cere să aprobați și să vă conectați din nou.",
   "connect.disconnect.rest_key": "Celelalte tafuri care folosesc {vendor} își păstrează accesul. Cheia se șterge din tafs când niciun taf nu o mai folosește. Dacă folosiți din nou {vendor}, vi se cere să aprobați și să lipiți din nou o cheie.",
+  "connect.disconnect.rest_requested": "Celelalte tafuri care folosesc {vendor} își păstrează accesul. Dacă niciun alt taf nu folosește același cont acolo, conectarea este dezactivată imediat și i se cere lui {vendor} să o revoce; altfel, când este eliminat ultimul. Dacă folosiți din nou {vendor}, vi se cere să aprobați și să vă conectați din nou.",
+  "connect.disconnect.revoke_requested": "Conectarea este dezactivată. I se cere lui {vendor} să o revoce, iar asta se poate încheia puțin mai târziu.",
   "connect.disconnect.title": "Eliminați accesul la {vendor}?",
   "connect.disconnect.title_from": "Eliminați accesul la {vendor} pentru {taf}?",
   "connect.disconnect.tools_stop": "Instrumentele {vendor} pentru {owner} nu mai funcționează.",

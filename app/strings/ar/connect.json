@@ -91,6 +91,8 @@
   "connect.disconnect.rest": "تحتفظ بقية tafs التي تستخدم {vendor} بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُلغى تسجيل الدخول لدى {vendor}؛ وإلا فعند إزالة آخرها. يطلب منك استخدام {vendor} مرة أخرى الموافقة وتسجيل الدخول مجددًا.",
   "connect.disconnect.rest_deleted": "تحتفظ بقية tafs التي تستخدم {vendor} بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُحذف تسجيل الدخول من tafs؛ وإلا فعند إزالة آخرها. يطلب منك استخدام {vendor} مرة أخرى الموافقة وتسجيل الدخول مجددًا.",
   "connect.disconnect.rest_key": "تحتفظ بقية tafs التي تستخدم {vendor} بوصولها. يُحذف المفتاح من tafs متى لم يعد أي taf يستخدمه. يطلب منك استخدام {vendor} مرة أخرى الموافقة ولصق مفتاح مجددًا.",
+  "connect.disconnect.rest_requested": "تحتفظ بقية tafs التي تستخدم {vendor} بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُوقف تسجيل الدخول فورًا ويُطلب من {vendor} إلغاؤه؛ وإلا فعند إزالة آخرها. يطلب منك استخدام {vendor} مرة أخرى الموافقة وتسجيل الدخول مجددًا.",
+  "connect.disconnect.revoke_requested": "أُوقف تسجيل الدخول. ويُطلب من {vendor} إلغاؤه، وقد يكتمل ذلك بعد قليل.",
   "connect.disconnect.title": "إزالة الوصول إلى {vendor}؟",
   "connect.disconnect.title_from": "إزالة الوصول إلى {vendor} لـ {taf}؟",
   "connect.disconnect.tools_stop": "تتوقف أدوات {vendor} الخاصة بـ {owner} عن العمل.",

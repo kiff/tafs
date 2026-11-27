@@ -1018,6 +1018,8 @@
     <string name="connect_disconnect_rest">taf אחרים שמשתמשים ב-%1$s שומרים על הגישה שלהם. אם אף taf אחר לא משתמש שם באותו חשבון, הכניסה מבוטלת אצל %1$s; אחרת, כשהאחרון יוסר. שימוש חוזר ב-%1$s מבקש ממך לאשר ולהיכנס שוב.</string>
     <string name="connect_disconnect_rest_deleted">taf אחרים שמשתמשים ב-%1$s שומרים על הגישה שלהם. אם אף taf אחר לא משתמש שם באותו חשבון, הכניסה נמחקת מ-tafs; אחרת, כשהאחרון יוסר. שימוש חוזר ב-%1$s מבקש ממך לאשר ולהיכנס שוב.</string>
     <string name="connect_disconnect_rest_key">taf אחרים שמשתמשים ב-%1$s שומרים על הגישה שלהם. המפתח נמחק מ-tafs כשאף taf לא משתמש בו. שימוש חוזר ב-%1$s מבקש ממך לאשר ולהדביק מפתח שוב.</string>
+    <string name="connect_disconnect_rest_requested">taf אחרים שמשתמשים ב-%1$s שומרים על הגישה שלהם. אם אף taf אחר לא משתמש שם באותו חשבון, הכניסה מושבתת מיד ו-%1$s מתבקש לבטל אותה; אחרת, כשהאחרון יוסר. שימוש חוזר ב-%1$s מבקש ממך לאשר ולהיכנס שוב.</string>
+    <string name="connect_disconnect_revoke_requested">הכניסה הושבתה. %1$s מתבקש לבטל אותה, וזה עשוי להסתיים מעט מאוחר יותר.</string>
     <string name="connect_disconnect_title">להסיר את הגישה ל-%1$s?</string>
     <string name="connect_disconnect_title_from">להסיר את הגישה ל-%1$s עבור %2$s?</string>
     <string name="connect_disconnect_tools_stop">הכלים של %2$s של %1$s מפסיקים לעבוד.</string>

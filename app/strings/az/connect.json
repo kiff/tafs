@@ -75,6 +75,8 @@
   "connect.disconnect.rest": "{vendor} istifadə edən digər taf-lar girişlərini saxlayır. Orada eyni hesabdan başqa taf istifadə etmirsə, {vendor} saytında giriş ləğv edilir; əks halda sonuncu silinəndə. {vendor} xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və yenidən daxil olmağı xahiş edir.",
   "connect.disconnect.rest_deleted": "{vendor} istifadə edən digər taf-lar girişlərini saxlayır. Orada eyni hesabdan başqa taf istifadə etmirsə, giriş tafs-dan silinir; əks halda sonuncu silinəndə. {vendor} xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və yenidən daxil olmağı xahiş edir.",
   "connect.disconnect.rest_key": "{vendor} istifadə edən digər taf-lar girişlərini saxlayır. Heç bir taf açardan istifadə etməyəndə o, tafs-dan silinir. {vendor} xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və açarı yenidən yapışdırmağı xahiş edir.",
+  "connect.disconnect.rest_requested": "{vendor} istifadə edən digər taf-lar girişlərini saxlayır. Orada eyni hesabdan başqa taf istifadə etmirsə, giriş dərhal söndürülür və {vendor} xidmətindən onu ləğv etməsi istənilir; əks halda sonuncu silinəndə. {vendor} xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və yenidən daxil olmağı xahiş edir.",
+  "connect.disconnect.revoke_requested": "Giriş söndürüldü. {vendor} xidmətindən onu ləğv etməsi istənilir; bu bir az sonra tamamlana bilər.",
   "connect.disconnect.title": "{vendor} girişi silinsin?",
   "connect.disconnect.title_from": "{taf} üçün {vendor} girişi silinsin?",
   "connect.disconnect.tools_stop": "{owner} üçün {vendor} alətləri işləməyi dayandırır.",

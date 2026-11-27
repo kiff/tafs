@@ -981,6 +981,8 @@
     <string name="connect_disconnect_rest">%1$s kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma %1$s tarafında iptal edilir; aksi halde sonuncusu kaldırıldığında. %1$s uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister.</string>
     <string name="connect_disconnect_rest_deleted">%1$s kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma tafs\'tan silinir; aksi halde sonuncusu kaldırıldığında. %1$s uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister.</string>
     <string name="connect_disconnect_rest_key">%1$s kullanan diğer tafs erişimini korur. Hiçbir taf kullanmadığında anahtar tafs\'tan silinir. %1$s uygulamasını tekrar kullanmak, onaylamanızı ve bir anahtarı tekrar yapıştırmanızı ister.</string>
+    <string name="connect_disconnect_rest_requested">%1$s kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma hemen kapatılır ve %1$s tarafından iptal edilmesi istenir; aksi halde sonuncusu kaldırıldığında. %1$s uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister.</string>
+    <string name="connect_disconnect_revoke_requested">Oturum açma kapatıldı. %1$s tarafından iptal edilmesi istendi; bu biraz sonra tamamlanabilir.</string>
     <string name="connect_disconnect_title">%1$s erişimi kaldırılsın mı?</string>
     <string name="connect_disconnect_title_from">%2$s taf\'ı için %1$s erişimi kaldırılsın mı?</string>
     <string name="connect_disconnect_tools_stop">%1$s için %2$s araçları çalışmayı bırakır.</string>

@@ -71,6 +71,8 @@
   "connect.disconnect.rest": "Taf lain yang memakai {vendor} tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk dicabut di {vendor}; jika tidak, saat yang terakhir dihapus. Memakai {vendor} lagi meminta Anda menyetujui dan masuk lagi.",
   "connect.disconnect.rest_deleted": "Taf lain yang memakai {vendor} tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk dihapus dari tafs; jika tidak, saat yang terakhir dihapus. Memakai {vendor} lagi meminta Anda menyetujui dan masuk lagi.",
   "connect.disconnect.rest_key": "Taf lain yang memakai {vendor} tetap memiliki aksesnya. Kunci dihapus dari tafs setelah tidak ada taf yang memakainya. Memakai {vendor} lagi meminta Anda menyetujui dan menempelkan kunci lagi.",
+  "connect.disconnect.rest_requested": "Taf lain yang memakai {vendor} tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk langsung dinonaktifkan dan {vendor} diminta mencabutnya; jika tidak, saat yang terakhir dihapus. Memakai {vendor} lagi meminta Anda menyetujui dan masuk lagi.",
+  "connect.disconnect.revoke_requested": "Proses masuk dinonaktifkan. {vendor} diminta mencabutnya, yang mungkin selesai sedikit lebih lambat.",
   "connect.disconnect.title": "Hapus akses ke {vendor}?",
   "connect.disconnect.title_from": "Hapus akses ke {vendor} untuk {taf}?",
   "connect.disconnect.tools_stop": "Alat {vendor} milik {owner} berhenti berfungsi.",

@@ -75,6 +75,8 @@
   "connect.disconnect.rest": "Teised tafid, mis kasutavad teenust {vendor}, säilitavad oma juurdepääsu. Kui ükski teine taf ei kasuta seal sama kontot, tühistatakse sisselogimine teenuses {vendor}; vastasel juhul siis, kui viimane neist eemaldatakse. Teenuse {vendor} uuesti kasutamisel pead uuesti kinnitama ja sisse logima.",
   "connect.disconnect.rest_deleted": "Teised tafid, mis kasutavad teenust {vendor}, säilitavad oma juurdepääsu. Kui ükski teine taf ei kasuta seal sama kontot, kustutatakse sisselogimine tafsist; vastasel juhul siis, kui viimane neist eemaldatakse. Teenuse {vendor} uuesti kasutamisel pead uuesti kinnitama ja sisse logima.",
   "connect.disconnect.rest_key": "Teised tafid, mis kasutavad teenust {vendor}, säilitavad oma juurdepääsu. Võti kustutatakse tafsist, kui ükski taf seda enam ei kasuta. Teenuse {vendor} uuesti kasutamisel pead uuesti kinnitama ja võtme uuesti kleepima.",
+  "connect.disconnect.rest_requested": "Teised tafid, mis kasutavad teenust {vendor}, säilitavad oma juurdepääsu. Kui ükski teine taf ei kasuta seal sama kontot, lülitatakse sisselogimine kohe välja ja teenuselt {vendor} palutakse see tühistada; vastasel juhul siis, kui viimane neist eemaldatakse. Teenuse {vendor} uuesti kasutamisel pead uuesti kinnitama ja sisse logima.",
+  "connect.disconnect.revoke_requested": "Sisselogimine on välja lülitatud. Teenuselt {vendor} palutakse see tühistada, see võib lõpule jõuda veidi hiljem.",
   "connect.disconnect.title": "Kas eemaldada juurdepääs teenusele {vendor}?",
   "connect.disconnect.title_from": "Kas eemaldada tafi {taf} juurdepääs teenusele {vendor}?",
   "connect.disconnect.tools_stop": "Tafi {owner} tööriistad teenuses {vendor} lakkavad töötamast.",

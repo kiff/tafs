@@ -71,6 +71,8 @@
   "connect.disconnect.rest": "{vendor}を使う他のtafはアクセスを保持します。同じアカウントを使う他のtafがなければ、{vendor}でサインインが取り消されます。あれば、最後のtafを外したときに取り消されます。再び{vendor}を使うには、もう一度承認とサインインが必要です。",
   "connect.disconnect.rest_deleted": "{vendor}を使う他のtafはアクセスを保持します。同じアカウントを使う他のtafがなければ、サインインはtafsから削除されます。あれば、最後のtafを外したときに削除されます。再び{vendor}を使うには、もう一度承認とサインインが必要です。",
   "connect.disconnect.rest_key": "{vendor}を使う他のtafはアクセスを保持します。キーは、使うtafがなくなるとtafsから削除されます。再び{vendor}を使うには、もう一度承認とキーの貼り付けが必要です。",
+  "connect.disconnect.rest_requested": "{vendor}を使う他のtafはアクセスを保持します。同じアカウントを使う他のtafがなければ、サインインはすぐに無効になり、{vendor}に取り消しを依頼します。あれば、最後のtafを外したときにそうなります。再び{vendor}を使うには、もう一度承認とサインインが必要です。",
+  "connect.disconnect.revoke_requested": "サインインは無効になりました。{vendor}に取り消しを依頼しており、完了は少し後になることがあります。",
   "connect.disconnect.title": "{vendor}へのアクセスを削除しますか？",
   "connect.disconnect.title_from": "{taf}の{vendor}へのアクセスを削除しますか？",
   "connect.disconnect.tools_stop": "{owner}の{vendor}ツールが動かなくなります。",

@@ -83,6 +83,8 @@
   "connect.disconnect.rest": "Drugi tafi, ki uporabljajo {vendor}, obdržijo dostop. Če istega računa tam ne uporablja noben drug taf, se prijava pri {vendor} odvzame; sicer ko je odstranjen zadnji. Ponovna uporaba {vendor} vas prosi za odobritev in novo prijavo.",
   "connect.disconnect.rest_deleted": "Drugi tafi, ki uporabljajo {vendor}, obdržijo dostop. Če istega računa tam ne uporablja noben drug taf, se prijava izbriše iz tafs; sicer ko je odstranjen zadnji. Ponovna uporaba {vendor} vas prosi za odobritev in novo prijavo.",
   "connect.disconnect.rest_key": "Drugi tafi, ki uporabljajo {vendor}, obdržijo dostop. Ključ se iz tafs izbriše, ko ga ne uporablja noben taf. Ponovna uporaba {vendor} vas prosi za odobritev in ponovno vstavitev ključa.",
+  "connect.disconnect.rest_requested": "Drugi tafi, ki uporabljajo {vendor}, obdržijo dostop. Če istega računa tam ne uporablja noben drug taf, se prijava takoj izklopi, {vendor} pa se zaprosi za njen preklic; sicer ko je odstranjen zadnji. Ponovna uporaba {vendor} vas prosi za odobritev in novo prijavo.",
+  "connect.disconnect.revoke_requested": "Prijava je izklopljena. {vendor} se zaprosi za njen preklic, ki se lahko zaključi malo pozneje.",
   "connect.disconnect.title": "Odstranim dostop do {vendor}?",
   "connect.disconnect.title_from": "Odstranim dostop do {vendor} za {taf}?",
   "connect.disconnect.tools_stop": "Orodja {vendor} tafa {owner} prenehajo delovati.",

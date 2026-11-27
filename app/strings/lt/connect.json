@@ -79,6 +79,8 @@
   "connect.disconnect.rest": "Kiti {vendor} naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas atšaukiamas {vendor} pusėje; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti {vendor}, reikės dar kartą patvirtinti ir prisijungti.",
   "connect.disconnect.rest_deleted": "Kiti {vendor} naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas ištrinamas iš tafs; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti {vendor}, reikės dar kartą patvirtinti ir prisijungti.",
   "connect.disconnect.rest_key": "Kiti {vendor} naudojantys taf išlaiko savo prieigą. Raktas ištrinamas iš tafs, kai jo nebenaudoja nė vienas taf. Norint vėl naudoti {vendor}, reikės dar kartą patvirtinti ir įklijuoti raktą.",
+  "connect.disconnect.rest_requested": "Kiti {vendor} naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas iškart išjungiamas, o {vendor} paprašoma jį atšaukti; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti {vendor}, reikės dar kartą patvirtinti ir prisijungti.",
+  "connect.disconnect.revoke_requested": "Prisijungimas išjungtas. {vendor} paprašyta jį atšaukti; tai gali užtrukti šiek tiek ilgiau.",
   "connect.disconnect.title": "Pašalinti prieigą prie {vendor}?",
   "connect.disconnect.title_from": "Pašalinti taf {taf} prieigą prie {vendor}?",
   "connect.disconnect.tools_stop": "{owner} {vendor} įrankiai nustos veikti.",

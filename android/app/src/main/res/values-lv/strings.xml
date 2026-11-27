@@ -1018,6 +1018,8 @@
     <string name="connect_disconnect_rest">Citi taf, kas izmanto %1$s, patur savu piekļuvi. Ja neviens cits taf tur neizmanto to pašu kontu, pierakstīšanās %1$s tiek atsaukta; citādi – kad tiek noņemts pēdējais. Lai atkal izmantotu %1$s, tev būs vēlreiz jāapstiprina un jāpierakstās.</string>
     <string name="connect_disconnect_rest_deleted">Citi taf, kas izmanto %1$s, patur savu piekļuvi. Ja neviens cits taf tur neizmanto to pašu kontu, pierakstīšanās tiek dzēsta no tafs; citādi – kad tiek noņemts pēdējais. Lai atkal izmantotu %1$s, tev būs vēlreiz jāapstiprina un jāpierakstās.</string>
     <string name="connect_disconnect_rest_key">Citi taf, kas izmanto %1$s, patur savu piekļuvi. Atslēga tiek dzēsta no tafs, kad to vairs neizmanto neviens taf. Lai atkal izmantotu %1$s, tev būs vēlreiz jāapstiprina un jāielīmē atslēga.</string>
+    <string name="connect_disconnect_rest_requested">Citi taf, kas izmanto %1$s, patur savu piekļuvi. Ja neviens cits taf tur neizmanto to pašu kontu, pierakstīšanās uzreiz tiek izslēgta, un %1$s tiek lūgts to atsaukt; citādi – kad tiek noņemts pēdējais. Lai atkal izmantotu %1$s, tev būs vēlreiz jāapstiprina un jāpierakstās.</string>
+    <string name="connect_disconnect_revoke_requested">Pierakstīšanās ir izslēgta. %1$s tiek lūgts to atsaukt; tas var noslēgties nedaudz vēlāk.</string>
     <string name="connect_disconnect_title">Noņemt piekļuvi: %1$s?</string>
     <string name="connect_disconnect_title_from">Noņemt piekļuvi %1$s šim taf: %2$s?</string>
     <string name="connect_disconnect_tools_stop">taf %1$s rīki (%2$s) pārstāj darboties.</string>

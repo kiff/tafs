@@ -75,6 +75,8 @@
   "connect.disconnect.rest": "Andere tafs die {vendor} gebruiken, houden hun toegang. Als geen andere taf hetzelfde account gebruikt, wordt de aanmelding bij {vendor} ingetrokken; anders pas als de laatste wordt verwijderd. Als je {vendor} weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden.",
   "connect.disconnect.rest_deleted": "Andere tafs die {vendor} gebruiken, houden hun toegang. Als geen andere taf hetzelfde account gebruikt, wordt de aanmelding uit tafs verwijderd; anders pas als de laatste wordt verwijderd. Als je {vendor} weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden.",
   "connect.disconnect.rest_key": "Andere tafs die {vendor} gebruiken, houden hun toegang. De sleutel wordt uit tafs verwijderd zodra geen enkel taf hem nog gebruikt. Als je {vendor} weer gebruikt, word je gevraagd opnieuw goed te keuren en een sleutel te plakken.",
+  "connect.disconnect.rest_requested": "Andere tafs die {vendor} gebruiken, houden hun toegang. Als geen andere taf hetzelfde account gebruikt, wordt de aanmelding meteen uitgeschakeld en wordt {vendor} gevraagd haar in te trekken; anders pas als de laatste wordt verwijderd. Als je {vendor} weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden.",
+  "connect.disconnect.revoke_requested": "De aanmelding is uitgeschakeld. {vendor} wordt gevraagd haar in te trekken; dat kan iets later klaar zijn.",
   "connect.disconnect.title": "Toegang tot {vendor} intrekken?",
   "connect.disconnect.title_from": "Toegang tot {vendor} voor {taf} intrekken?",
   "connect.disconnect.tools_stop": "De {vendor}-tools van {owner} werken niet meer.",

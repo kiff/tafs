@@ -981,6 +981,8 @@
     <string name="connect_disconnect_rest">%1$s-y ulanýan beýleki taf-lar elýeterligini saklaýar. Eger başga hiç bir taf şol ýerdäki şol bir hasaby ulanmasa, giriş %1$s-da ýatyrylýar; ýogsa soňky aýrylanda. %1$s-y täzeden ulanmak sizden tassyklamagy we täzeden girmegi soraýar.</string>
     <string name="connect_disconnect_rest_deleted">%1$s-y ulanýan beýleki taf-lar elýeterligini saklaýar. Eger başga hiç bir taf şol ýerdäki şol bir hasaby ulanmasa, giriş tafs-dan pozulýar; ýogsa soňky aýrylanda. %1$s-y täzeden ulanmak sizden tassyklamagy we täzeden girmegi soraýar.</string>
     <string name="connect_disconnect_rest_key">%1$s-y ulanýan beýleki taf-lar elýeterligini saklaýar. Açar hiç bir taf ulanmanda tafs-dan pozulýar. %1$s-y täzeden ulanmak sizden tassyklamagy we açary täzeden goýmagy soraýar.</string>
+    <string name="connect_disconnect_rest_requested">%1$s-y ulanýan beýleki taf-lar elýeterligini saklaýar. Eger başga hiç bir taf şol ýerdäki şol bir hasaby ulanmasa, giriş derrew öçürilýär we %1$s-dan ony ýatyrmagy haýyş edilýär; ýogsa soňky aýrylanda. %1$s-y täzeden ulanmak sizden tassyklamagy we täzeden girmegi soraýar.</string>
+    <string name="connect_disconnect_revoke_requested">Giriş öçürildi. %1$s-dan ony ýatyrmagy haýyş edilýär; bu birneme soňra tamamlanyp biler.</string>
     <string name="connect_disconnect_title">%1$s elýeterligini aýyrýarsyňyzmy?</string>
     <string name="connect_disconnect_title_from">%2$s üçin %1$s elýeterligini aýyrýarsyňyzmy?</string>
     <string name="connect_disconnect_tools_stop">%1$s üçin %2$s gurallary işlemeýär.</string>

@@ -981,6 +981,8 @@
     <string name="connect_disconnect_rest">%1$s istifadə edən digər taf-lar girişlərini saxlayır. Orada eyni hesabdan başqa taf istifadə etmirsə, %1$s saytında giriş ləğv edilir; əks halda sonuncu silinəndə. %1$s xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və yenidən daxil olmağı xahiş edir.</string>
     <string name="connect_disconnect_rest_deleted">%1$s istifadə edən digər taf-lar girişlərini saxlayır. Orada eyni hesabdan başqa taf istifadə etmirsə, giriş tafs-dan silinir; əks halda sonuncu silinəndə. %1$s xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və yenidən daxil olmağı xahiş edir.</string>
     <string name="connect_disconnect_rest_key">%1$s istifadə edən digər taf-lar girişlərini saxlayır. Heç bir taf açardan istifadə etməyəndə o, tafs-dan silinir. %1$s xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və açarı yenidən yapışdırmağı xahiş edir.</string>
+    <string name="connect_disconnect_rest_requested">%1$s istifadə edən digər taf-lar girişlərini saxlayır. Orada eyni hesabdan başqa taf istifadə etmirsə, giriş dərhal söndürülür və %1$s xidmətindən onu ləğv etməsi istənilir; əks halda sonuncu silinəndə. %1$s xidmətini yenidən istifadə etmək sizdən təsdiq etməyi və yenidən daxil olmağı xahiş edir.</string>
+    <string name="connect_disconnect_revoke_requested">Giriş söndürüldü. %1$s xidmətindən onu ləğv etməsi istənilir; bu bir az sonra tamamlana bilər.</string>
     <string name="connect_disconnect_title">%1$s girişi silinsin?</string>
     <string name="connect_disconnect_title_from">%2$s üçün %1$s girişi silinsin?</string>
     <string name="connect_disconnect_tools_stop">%1$s üçün %2$s alətləri işləməyi dayandırır.</string>

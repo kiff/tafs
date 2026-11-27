@@ -981,6 +981,8 @@
     <string name="connect_disconnect_rest">Los demás tafs que usan %1$s conservan su acceso. Si ningún otro taf usa la misma cuenta, el inicio de sesión se revoca en %1$s; si no, cuando se quita el último. Usar %1$s de nuevo te pide aprobar e iniciar sesión otra vez.</string>
     <string name="connect_disconnect_rest_deleted">Los demás tafs que usan %1$s conservan su acceso. Si ningún otro taf usa la misma cuenta, el inicio de sesión se elimina de tafs; si no, cuando se quita el último. Usar %1$s de nuevo te pide aprobar e iniciar sesión otra vez.</string>
     <string name="connect_disconnect_rest_key">Los demás tafs que usan %1$s conservan su acceso. La clave se elimina de tafs cuando ya ningún taf la use. Usar %1$s de nuevo te pide aprobar y pegar una clave otra vez.</string>
+    <string name="connect_disconnect_rest_requested">Los demás tafs que usan %1$s conservan su acceso. Si ningún otro taf usa la misma cuenta, el inicio de sesión se desactiva al momento y se pide a %1$s que lo revoque; si no, cuando se quita el último. Usar %1$s de nuevo te pide aprobar e iniciar sesión otra vez.</string>
+    <string name="connect_disconnect_revoke_requested">El inicio de sesión está desactivado. Se pide a %1$s que lo revoque, y puede completarse un poco más tarde.</string>
     <string name="connect_disconnect_title">¿Quitar el acceso a %1$s?</string>
     <string name="connect_disconnect_title_from">¿Quitar el acceso a %1$s para %2$s?</string>
     <string name="connect_disconnect_tools_stop">Las herramientas de %2$s de %1$s dejan de funcionar.</string>

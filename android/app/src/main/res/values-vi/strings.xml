@@ -944,6 +944,8 @@
     <string name="connect_disconnect_rest">Các taf khác dùng %1$s vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị thu hồi tại %1$s; nếu không, nó bị thu hồi khi taf cuối cùng bị gỡ. Dùng %1$s lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại.</string>
     <string name="connect_disconnect_rest_deleted">Các taf khác dùng %1$s vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị xóa khỏi tafs; nếu không, nó bị xóa khi taf cuối cùng bị gỡ. Dùng %1$s lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại.</string>
     <string name="connect_disconnect_rest_key">Các taf khác dùng %1$s vẫn giữ quyền truy cập. Khóa bị xóa khỏi tafs khi không còn taf nào dùng nó. Dùng %1$s lại sẽ yêu cầu bạn phê duyệt và dán lại một khóa.</string>
+    <string name="connect_disconnect_rest_requested">Các taf khác dùng %1$s vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị tắt ngay và %1$s được yêu cầu thu hồi; nếu không, việc này xảy ra khi taf cuối cùng bị gỡ. Dùng %1$s lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại.</string>
+    <string name="connect_disconnect_revoke_requested">Việc đăng nhập đã tắt. %1$s được yêu cầu thu hồi, việc này có thể hoàn tất muộn hơn một chút.</string>
     <string name="connect_disconnect_title">Gỡ quyền truy cập vào %1$s?</string>
     <string name="connect_disconnect_title_from">Gỡ quyền truy cập vào %1$s của %2$s?</string>
     <string name="connect_disconnect_tools_stop">Các công cụ %2$s của %1$s ngừng hoạt động.</string>

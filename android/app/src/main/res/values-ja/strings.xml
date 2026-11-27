@@ -944,6 +944,8 @@
     <string name="connect_disconnect_rest">%1$sを使う他のtafはアクセスを保持します。同じアカウントを使う他のtafがなければ、%1$sでサインインが取り消されます。あれば、最後のtafを外したときに取り消されます。再び%1$sを使うには、もう一度承認とサインインが必要です。</string>
     <string name="connect_disconnect_rest_deleted">%1$sを使う他のtafはアクセスを保持します。同じアカウントを使う他のtafがなければ、サインインはtafsから削除されます。あれば、最後のtafを外したときに削除されます。再び%1$sを使うには、もう一度承認とサインインが必要です。</string>
     <string name="connect_disconnect_rest_key">%1$sを使う他のtafはアクセスを保持します。キーは、使うtafがなくなるとtafsから削除されます。再び%1$sを使うには、もう一度承認とキーの貼り付けが必要です。</string>
+    <string name="connect_disconnect_rest_requested">%1$sを使う他のtafはアクセスを保持します。同じアカウントを使う他のtafがなければ、サインインはすぐに無効になり、%1$sに取り消しを依頼します。あれば、最後のtafを外したときにそうなります。再び%1$sを使うには、もう一度承認とサインインが必要です。</string>
+    <string name="connect_disconnect_revoke_requested">サインインは無効になりました。%1$sに取り消しを依頼しており、完了は少し後になることがあります。</string>
     <string name="connect_disconnect_title">%1$sへのアクセスを削除しますか？</string>
     <string name="connect_disconnect_title_from">%2$sの%1$sへのアクセスを削除しますか？</string>
     <string name="connect_disconnect_tools_stop">%1$sの%2$sツールが動かなくなります。</string>

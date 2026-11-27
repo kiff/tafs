@@ -1018,6 +1018,8 @@
     <string name="connect_disconnect_rest">Celelalte tafuri care folosesc %1$s își păstrează accesul. Dacă niciun alt taf nu folosește același cont acolo, conectarea este revocată la %1$s; altfel, când este eliminat ultimul. Dacă folosiți din nou %1$s, vi se cere să aprobați și să vă conectați din nou.</string>
     <string name="connect_disconnect_rest_deleted">Celelalte tafuri care folosesc %1$s își păstrează accesul. Dacă niciun alt taf nu folosește același cont acolo, conectarea este ștearsă din tafs; altfel, când este eliminat ultimul. Dacă folosiți din nou %1$s, vi se cere să aprobați și să vă conectați din nou.</string>
     <string name="connect_disconnect_rest_key">Celelalte tafuri care folosesc %1$s își păstrează accesul. Cheia se șterge din tafs când niciun taf nu o mai folosește. Dacă folosiți din nou %1$s, vi se cere să aprobați și să lipiți din nou o cheie.</string>
+    <string name="connect_disconnect_rest_requested">Celelalte tafuri care folosesc %1$s își păstrează accesul. Dacă niciun alt taf nu folosește același cont acolo, conectarea este dezactivată imediat și i se cere lui %1$s să o revoce; altfel, când este eliminat ultimul. Dacă folosiți din nou %1$s, vi se cere să aprobați și să vă conectați din nou.</string>
+    <string name="connect_disconnect_revoke_requested">Conectarea este dezactivată. I se cere lui %1$s să o revoce, iar asta se poate încheia puțin mai târziu.</string>
     <string name="connect_disconnect_title">Eliminați accesul la %1$s?</string>
     <string name="connect_disconnect_title_from">Eliminați accesul la %1$s pentru %2$s?</string>
     <string name="connect_disconnect_tools_stop">Instrumentele %2$s pentru %1$s nu mai funcționează.</string>
