@@ -12,9 +12,9 @@ guide:
   - Collega la casella di posta, la cartella e il foglio
   - - Do: Apri il lavoro. Coach ti chiede di collegare la tua email, il tuo archivio di file e il tuo foglio di calcolo, uno dopo l'altro. Accedi a ciascuno e approva.
   - - You see: Ogni app indicata come collegata.
-  - Indica la cartella, il foglio e la sua scheda
-  - - Do: Di' a Coach quale cartella è per le ricevute, quale foglio di calcolo contiene le tue spese e come si chiama la scheda.
-  - - You see: Il lavoro usa quella scheda quando aggiunge una riga.
+  - Dai al lavoro i link e il nome della scheda
+  - - Do: Nella chat del lavoro, dagli i link alla tua cartella delle ricevute e al tuo foglio di calcolo, e il nome della scheda.
+  - - You see: Il lavoro li usa quando salva un file e aggiunge una riga.
   - Approva la Card
   - - Do: Approva la Card.
   - - You see: La Card: ciò che il lavoro fa da solo, ciò che ti chiede prima e ciò che non fa mai.

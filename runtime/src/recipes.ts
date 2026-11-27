@@ -2456,9 +2456,9 @@ export const RECIPES = [
         "see": "Each app listed as connected."
       },
       {
-        "title": "Name the folder, the sheet and its tab",
-        "do": "Tell Coach which folder is for receipts, which spreadsheet holds your expenses, and the name of the tab in it.",
-        "see": "The job uses that tab when it adds a row."
+        "title": "Give the job the links and the tab's name",
+        "do": "In the job's chat, give it the links to your receipts folder and to your spreadsheet, and the name of the tab.",
+        "see": "The job uses them when it saves a file and adds a row."
       },
       {
         "title": "Approve the Card",
@@ -2497,9 +2497,9 @@ export const RECIPES = [
             "see": "Jede App als verbunden aufgeführt."
           },
           {
-            "title": "Ordner, Tabelle und Blatt nennen",
-            "do": "Sag Coach, welcher Ordner für Belege gedacht ist, welche Tabelle deine Ausgaben enthält und wie das Blatt darin heißt.",
-            "see": "Die Aufgabe nutzt dieses Blatt, wenn sie eine Zeile hinzufügt."
+            "title": "Der Aufgabe die Links und den Namen des Blatts geben",
+            "do": "Gib ihr im Chat der Aufgabe die Links zu deinem Belege-Ordner und zu deiner Tabelle sowie den Namen des Blatts.",
+            "see": "Die Aufgabe nutzt sie, wenn sie eine Datei ablegt und eine Zeile hinzufügt."
           },
           {
             "title": "Die Card genehmigen",
@@ -2538,9 +2538,9 @@ export const RECIPES = [
             "see": "Chaque appli indiquée comme connectée."
           },
           {
-            "title": "Indiquer le dossier, le tableur et son onglet",
-            "do": "Dites à Coach quel dossier est pour les justificatifs, quel tableur contient vos dépenses et comment s'appelle l'onglet.",
-            "see": "La tâche utilise cet onglet quand elle ajoute une ligne."
+            "title": "Donner à la tâche les liens et le nom de l'onglet",
+            "do": "Dans la conversation de la tâche, donnez-lui les liens vers votre dossier de justificatifs et vers votre tableur, ainsi que le nom de l'onglet.",
+            "see": "La tâche les utilise quand elle enregistre un fichier et ajoute une ligne."
           },
           {
             "title": "Approuver la Card",
@@ -2579,9 +2579,9 @@ export const RECIPES = [
             "see": "Cada app aparece como conectada."
           },
           {
-            "title": "Indica la carpeta, la hoja y su pestaña",
-            "do": "Dile a Coach qué carpeta es para los recibos, qué hoja de cálculo contiene tus gastos y cómo se llama la pestaña.",
-            "see": "El trabajo usa esa pestaña cuando añade una fila."
+            "title": "Dale al trabajo los enlaces y el nombre de la pestaña",
+            "do": "En el chat del trabajo, dale los enlaces a tu carpeta de recibos y a tu hoja de cálculo, y el nombre de la pestaña.",
+            "see": "El trabajo los usa cuando guarda un archivo y añade una fila."
           },
           {
             "title": "Aprueba la Card",
@@ -2620,9 +2620,9 @@ export const RECIPES = [
             "see": "Ogni app indicata come collegata."
           },
           {
-            "title": "Indica la cartella, il foglio e la sua scheda",
-            "do": "Di' a Coach quale cartella è per le ricevute, quale foglio di calcolo contiene le tue spese e come si chiama la scheda.",
-            "see": "Il lavoro usa quella scheda quando aggiunge una riga."
+            "title": "Dai al lavoro i link e il nome della scheda",
+            "do": "Nella chat del lavoro, dagli i link alla tua cartella delle ricevute e al tuo foglio di calcolo, e il nome della scheda.",
+            "see": "Il lavoro li usa quando salva un file e aggiunge una riga."
           },
           {
             "title": "Approva la Card",
@@ -2661,9 +2661,9 @@ export const RECIPES = [
             "see": "Cada app aparece como ligada."
           },
           {
-            "title": "Indique a pasta, a folha e o separador",
-            "do": "Diga ao Coach qual é a pasta dos recibos, qual folha de cálculo tem as suas despesas e como se chama o separador.",
-            "see": "O trabalho usa esse separador quando acrescenta uma linha."
+            "title": "Dê ao trabalho as ligações e o nome do separador",
+            "do": "No chat do trabalho, dê-lhe as ligações para a sua pasta de recibos e para a sua folha de cálculo, e o nome do separador.",
+            "see": "O trabalho usa-as quando guarda um ficheiro e acrescenta uma linha."
           },
           {
             "title": "Aprove o Card",
@@ -2702,9 +2702,9 @@ export const RECIPES = [
             "see": "Elke app als verbonden getoond."
           },
           {
-            "title": "Noem de map, de spreadsheet en het tabblad",
-            "do": "Vertel Coach welke map voor bonnetjes is, welke spreadsheet je uitgaven bevat en hoe het tabblad heet.",
-            "see": "De taak gebruikt dat tabblad wanneer hij een regel toevoegt."
+            "title": "Geef de taak de links en de naam van het tabblad",
+            "do": "Geef hem in de chat van de taak de links naar je bonnetjesmap en naar je spreadsheet, en de naam van het tabblad.",
+            "see": "De taak gebruikt ze wanneer hij een bestand bewaart en een regel toevoegt."
           },
           {
             "title": "Keur de Card goed",
@@ -2743,9 +2743,9 @@ export const RECIPES = [
             "see": "Każda aplikacja pokazana jako połączona."
           },
           {
-            "title": "Podaj folder, arkusz i jego kartę",
-            "do": "Powiedz Coachowi, który folder jest na paragony, który arkusz zawiera Twoje wydatki i jak nazywa się karta w nim.",
-            "see": "Zadanie używa tej karty, gdy dodaje wiersz."
+            "title": "Podaj zadaniu linki i nazwę karty",
+            "do": "W czacie zadania podaj mu linki do folderu z paragonami i do arkusza oraz nazwę karty.",
+            "see": "Zadanie używa ich, gdy zapisuje plik i dodaje wiersz."
           },
           {
             "title": "Zatwierdź Card",

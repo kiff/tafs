@@ -12,9 +12,9 @@ guide:
   - Połącz skrzynkę, folder i arkusz
   - - Do: Otwórz zadanie. Coach prosi o połączenie poczty, magazynu plików i arkusza, jedno po drugim. Zaloguj się w każdym i zatwierdź.
   - - You see: Każda aplikacja pokazana jako połączona.
-  - Podaj folder, arkusz i jego kartę
-  - - Do: Powiedz Coachowi, który folder jest na paragony, który arkusz zawiera Twoje wydatki i jak nazywa się karta w nim.
-  - - You see: Zadanie używa tej karty, gdy dodaje wiersz.
+  - Podaj zadaniu linki i nazwę karty
+  - - Do: W czacie zadania podaj mu linki do folderu z paragonami i do arkusza oraz nazwę karty.
+  - - You see: Zadanie używa ich, gdy zapisuje plik i dodaje wiersz.
   - Zatwierdź Card
   - - Do: Zatwierdź Card.
   - - You see: Card: co zadanie robi samo, o co najpierw Cię pyta i czego nigdy nie robi.

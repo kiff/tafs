@@ -12,9 +12,9 @@ guide:
   - Ligue a caixa de correio, a pasta e a folha
   - - Do: Abra o trabalho. O Coach pede-lhe que ligue o seu e-mail, o seu armazenamento de ficheiros e a sua folha de cálculo, um a seguir ao outro. Inicie sessão em cada um e aprove.
   - - You see: Cada app aparece como ligada.
-  - Indique a pasta, a folha e o separador
-  - - Do: Diga ao Coach qual é a pasta dos recibos, qual folha de cálculo tem as suas despesas e como se chama o separador.
-  - - You see: O trabalho usa esse separador quando acrescenta uma linha.
+  - Dê ao trabalho as ligações e o nome do separador
+  - - Do: No chat do trabalho, dê-lhe as ligações para a sua pasta de recibos e para a sua folha de cálculo, e o nome do separador.
+  - - You see: O trabalho usa-as quando guarda um ficheiro e acrescenta uma linha.
   - Aprove o Card
   - - Do: Aprove o Card.
   - - You see: O Card: o que o trabalho faz sozinho, o que lhe pergunta primeiro e o que nunca faz.

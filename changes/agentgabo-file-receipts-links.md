@@ -1,0 +1,1 @@
+- **"File receipts" guide, step 2 now says to give the job the links in its chat.** The job keeps the folder and the sheet by name and asks in the chat for their links, so step 2 says: in the job's chat, give it the links to the receipts folder and the spreadsheet, and the name of the tab. All 8 recipe languages (recipes/file-receipts.md).
