@@ -17,6 +17,9 @@ extension TafsCloud {
     struct ActivityEntry: Decodable, Identifiable {
         let id: String; let at: Date; let kind: String; let title: String; let detail: String; let time: String
         let amount_text: String?; let call: KIFFClient.ActivityCall
+        /// tafs cloud: KIFF says this done call moved money. Without it an amount moved nothing (an invoice written, a
+        /// transfer requested).
+        var money_moved: Bool? = nil
         /// What the owner can do about a call that wasn't done, as tafs cloud says it (kiff/tafs#476, gap 10).
         var next: NextStep? = nil
         /// "Report this payment" (docs/record.md): only on a payment this reader may report and that isn't reported yet. tafs

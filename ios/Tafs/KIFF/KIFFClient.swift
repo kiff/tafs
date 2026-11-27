@@ -1113,8 +1113,11 @@ final class KIFFClient {
         /// Why it wasn't sent, in KIFF's words, in the app's language.
         var reason: String?
         var detail: String? = nil
+        /// KIFF: the call's tool moves money (by its owner-approved profile) and the call was sent. Only then did money
+        /// move: an amount alone (an invoice written, a transfer requested) moved nothing.
+        var payment: Bool? = nil
         enum CodingKeys: String, CodingKey {
-            case title, outcome, held, amount, answer, receipt, reasons, detail
+            case title, outcome, held, amount, answer, receipt, reasons, detail, payment
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
             case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"
@@ -2032,5 +2035,6 @@ extension KIFFClient.ActivityCall {
         madeAt = try c.decodeIfPresent(Date.self, forKey: .madeAt)
         reason = try c.decodeIfPresent(String.self, forKey: .reason)
         detail = try c.decodeIfPresent(String.self, forKey: .detail)
+        payment = try c.decodeIfPresent(Bool.self, forKey: .payment)
     }
 }

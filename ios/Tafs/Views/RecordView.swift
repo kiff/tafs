@@ -168,7 +168,8 @@ enum RecordFilter: CaseIterable {
     func keeps(_ e: RecordEntry) -> Bool {
         switch self {
         case .all: return true
-        case .moneyMoved: return e.amount != nil && (e.kind == .done || e.kind == .approved)
+        // Only what KIFF says moved money: an amount alone (an invoice written, a transfer requested) moved nothing.
+        case .moneyMoved: return e.moneyMoved == true && e.amount != nil && (e.kind == .done || e.kind == .approved)
         case .stopped: return e.kind == .refused || e.kind == .notDone || e.kind == .revoked
         case .waiting: return e.kind == .held || e.kind == .sending || e.kind == .unknown
         }
@@ -695,7 +696,8 @@ struct ReceiptView: View {
 
     private var outcome: String {
         switch entry.kind {
-        case .done, .approved: return entry.amount == nil ? Words.Receipt.Outcome.done : entry.amountText.map { Words.Receipt.Outcome.moved(amount: $0) } ?? Words.Receipt.Outcome.done
+        // "moved" only when KIFF says money moved: an amount alone (an invoice written, a transfer requested) moved nothing.
+        case .done, .approved: return entry.amount == nil || entry.moneyMoved != true ? Words.Receipt.Outcome.done : entry.amountText.map { Words.Receipt.Outcome.moved(amount: $0) } ?? Words.Receipt.Outcome.done
         case .refused: return entry.answer?.decision == "refused" ? Words.Receipt.Outcome.refusedBy(who: "\(entry.answerer)") : Words.Receipt.Outcome.cardRefused
         case .held: return Words.Receipt.Outcome.waiting
         default: return entry.detail
