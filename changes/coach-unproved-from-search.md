@@ -1,0 +1,1 @@
+- **Coach: an unproved app's writes ask from a new taf's first questions.** Coach also reads `unproved` from planque's tool search, so it never asks "how many a day" for such an app's writes, even before any connection exists. See [Coach](docs/coach.md).

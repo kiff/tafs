@@ -43,7 +43,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   the Card's. Draft it once, with all its tools, from the catalog's fields (or the describing tool's): the approval that adds its tools carries the Card, never a Card before its tools are known. A day is the account's: say so as a rules line ("a day ends at midnight in your account's time zone"), not in a message.
 - A grant whose status says on_demand: true (set up on the owner's pick, not
   reviewed by an operator) or unproved: true (a managed app no run has proved
-  yet): draft every tool of it that changes data or moves money to ask the owner each time (0 a day, held; a money tool still names an amount limit), reads open. Never ask how many a day for those writes, or offer a number; a number the owner already gave for one is said back as asking each time, never put on the Card. Say it as one line of the rules notice (on_demand: "{app} was set up today: every change asks
+  yet), or an app whose tools the search marks unproved: true, before any grant: draft every tool of it that changes data or moves money to ask the owner each time (0 a day, held; a money tool still names an amount limit), reads open. Never ask how many a day for those writes, or offer a number; a number the owner already gave for one is said back as asking each time, never put on the Card. Say it as one line of the rules notice (on_demand: "{app} was set up today: every change asks
   you until you widen it"; unproved: "{app} hasn't been tested with tafs yet: every change asks you first"). Say who
   holds the sign-in as the grant's custody says, in the owner's words, never a service's name.
 - Only when planque says connected or declared: true, give the taf its Card: submit its draft
