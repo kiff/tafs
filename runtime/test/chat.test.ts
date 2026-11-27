@@ -1737,20 +1737,22 @@ describe("chats (kiff/tafs#73)", () => {
     (w.agents.runs.find((x) => x.id === chat.id) as { status: string }).status = "COMPLETED";
     const list = w.agents.events.get(chat.session)!;
     const ev = (kind: string, body: object) => list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: NOW.toISOString(), kind, body });
-    ev("tool_call", { call_id: "c1", tool: "planque", input: { action: "request", entry: "qonto", name: "qonto-balance", taf_name: "Qonto balance" } });
-    ev("tool_result", { call_id: "c1", text: '{"grant":"grt_q1","status":"pending"}' });
-    // A request the server refused connected nothing: its name ends nothing.
+    // As kiff/agents asks and answers it: the agent's id is made from taf_name and a random part, never from `name`,
+    // and the answer's grant names it (27 Nov: matched by `name`, a chat's Qonto sign-in stayed after its delete).
+    ev("tool_call", { call_id: "c1", tool: "planque", input: { action: "request", entry: "qonto", name: "qonto-morning", taf_name: "Qonto balance" } });
+    ev("tool_result", { call_id: "c1", text: '{"id":"grt_q1","status":"pending","agent":"qonto-balance-example1","sign_in_url":"https://planque.test/s/1"}' });
+    // A request the server refused connected nothing, whatever it names.
     ev("tool_call", { call_id: "c2", tool: "planque", input: { action: "request", entry: "stripe", name: "refused-one" } });
-    ev("tool_result", { call_id: "c2", text: "refused", is_error: true });
-    // A read under a live taf's agent name is no request.
-    ev("tool_call", { call_id: "c3", tool: "planque", input: { action: "status", name: "rae" } });
-    ev("tool_result", { call_id: "c3", text: "{}" });
+    ev("tool_result", { call_id: "c2", text: '{"agent":"refused-one-aaaaaaaa"}', is_error: true });
+    // A status read that names a live taf's agent is no request.
+    ev("tool_call", { call_id: "c3", tool: "planque", input: { action: "status", grant: "grt_r1" } });
+    ev("tool_result", { call_id: "c3", text: '{"id":"grt_r1","agent":"rae","status":"connected"}' });
     const today = NOW.toISOString().slice(0, 10);
     const connections = [
-      { agent: "qonto-balance-k3f9x2a1", vendor: "Qonto", kind: "vendor_sign_in", status: "listed", since: today },
-      // Another chat's, under the same name, asked the day before this chat began: never this chat's.
-      { agent: "qonto-balance", vendor: "Qonto", kind: "vendor_sign_in", status: "listed", since: "2026-10-15" },
-      { agent: "refused-one", vendor: "Stripe", kind: "vendor_sign_in", status: "listed", since: today },
+      { agent: "qonto-balance-example1", vendor: "Qonto", kind: "vendor_sign_in", status: "listed", since: today },
+      // Another chat's, under the name Coach sent here: never this chat's.
+      { agent: "qonto-morning", vendor: "Qonto", kind: "vendor_sign_in", status: "listed", since: today },
+      { agent: "refused-one-aaaaaaaa", vendor: "Stripe", kind: "vendor_sign_in", status: "listed", since: today },
       { agent: "rae", vendor: "Stripe", kind: "vendor_sign_in", status: "connected", since: today },
     ];
     const kiffFetch = kiff({ ana: ME });
@@ -1768,7 +1770,7 @@ describe("chats (kiff/tafs#73)", () => {
     expect(r.body).toEqual({ session: chat.session, deleted: true });
     expect(asked).toEqual([
       "GET https://planque.test/v1/accounts/t_acme/connections Bearer ana",
-      "POST https://planque.test/v1/accounts/t_acme/agents/qonto-balance-k3f9x2a1/end Bearer ana",
+      "POST https://planque.test/v1/accounts/t_acme/agents/qonto-balance-example1/end Bearer ana",
     ]);
   });
 
@@ -1780,7 +1782,7 @@ describe("chats (kiff/tafs#73)", () => {
     const list = w.agents.events.get(chat.session)!;
     list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: NOW.toISOString(), kind: "tool_call",
       body: { call_id: "c1", tool: "planque", input: { action: "request", entry: "qonto", name: "qonto-balance" } } });
-    list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: NOW.toISOString(), kind: "tool_result", body: { call_id: "c1", text: "ok" } });
+    list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: NOW.toISOString(), kind: "tool_result", body: { call_id: "c1", text: '{"agent":"qonto-balance-example1"}' } });
     const kiffFetch = kiff({ ana: ME });
     const ends: string[] = [];
     const fetchFn = (async (url: string, init?: RequestInit) => {

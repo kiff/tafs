@@ -382,31 +382,47 @@ export function leftoverAgents(conns: AccountConnection[], live: Set<string>, ar
 /**
  * The agents a Coach chat's own connection requests were asked under that no live taf runs: what deleting the chat
  * ends (deleteChat), so a sign-in nobody uses (a bank's, say) never outlives the chat that made it. Taken from the
- * chat's own successful `planque` `request` calls (the agent name Coach gave, `name`), matched to the account's
- * connections by that name or its suffixed form (otherForm), and only connections asked on or after the chat began
- * (`since`, by day), so another chat's connection under the same name made earlier is never taken. Never an agent a
- * live taf runs, nor the other form of one; the end route itself keeps a sign-in another taf still uses.
+ * answers to the chat's own successful `planque` `request` calls: the agent each names (`agent`), which is the id the
+ * connection was asked under. Never the `name` Coach sent: the agent's id is made from the taf's name and a random
+ * part, so a name matches nothing (27 Nov: a chat's Qonto sign-in, asked with `name` and `taf_name`, stayed after its
+ * delete). Only an agent whose connections were all asked on or after the day the chat began (`since`), never an
+ * agent a live taf runs, nor the other form of one; the end route itself keeps a sign-in another taf still uses.
  */
 export function chatLeftAgents(events: ReadonlyArray<{ kind: string; body: unknown }>, conns: AccountConnection[], live: Set<string>, chatStarted: string): string[] {
-  const asked = new Map<string, string>();
-  const names = new Set<string>();
+  const requests = new Set<string>();
+  const agents = new Set<string>();
   for (const e of events) {
-    const b = (e.body ?? {}) as { tool?: unknown; input?: unknown; call_id?: unknown; is_error?: unknown };
+    const b = (e.body ?? {}) as { tool?: unknown; input?: unknown; call_id?: unknown; is_error?: unknown; text?: unknown };
     if (typeof b.call_id !== "string") continue;
-    const input = (b.input ?? {}) as { action?: unknown; name?: unknown };
-    if (e.kind === "tool_call" && b.tool === "planque" && input.action === "request" && typeof input.name === "string" && input.name.trim()) {
-      asked.set(b.call_id, input.name.trim());
-    } else if (e.kind === "tool_result" && asked.has(b.call_id) && b.is_error !== true) {
-      names.add(asked.get(b.call_id)!);
+    if (e.kind === "tool_call" && b.tool === "planque" && (b.input as { action?: unknown } | null)?.action === "request") {
+      requests.add(b.call_id);
+    } else if (e.kind === "tool_result" && requests.has(b.call_id) && b.is_error !== true && typeof b.text === "string") {
+      const agent = answeredAgent(b.text);
+      if (agent) agents.add(agent);
     }
   }
   const day = chatStarted.slice(0, 10);
-  if (names.size === 0 || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return [];
+  if (agents.size === 0 || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return [];
   const byAgent = new Map<string, AccountConnection[]>();
   for (const c of conns) byAgent.set(c.agent, [...(byAgent.get(c.agent) ?? []), c]);
   return [...byAgent.entries()]
-    .filter(([a, cs]) => !live.has(a) && ![...live].some((k) => otherForm(a, k))
-      && [...names].some((n) => n === a || otherForm(a, n))
+    .filter(([a, cs]) => agents.has(a) && !live.has(a) && ![...live].some((k) => otherForm(a, k))
       && cs.every((c) => c.since !== undefined && c.since >= day))
     .map(([a]) => a);
+}
+
+/**
+ * The agent a planque request's answer names (its grant's `agent`), from its JSON; or, when the answer was cut short
+ * (an agent's results are bounded, and an app's guide follows the grant), its first `"agent"` field, which comes before
+ * the guide (keys are written in order). Undefined when it names none an id could be.
+ */
+function answeredAgent(text: string): string | undefined {
+  let agent: unknown;
+  try {
+    const g = (JSON.parse(text) ?? {}) as { agent?: unknown; grant?: { agent?: unknown } };
+    agent = typeof g.agent === "string" ? g.agent : g.grant?.agent;
+  } catch {
+    agent = /"agent"\s*:\s*"([^"\\]{1,64})"/.exec(text)?.[1];
+  }
+  return typeof agent === "string" && /^[a-z0-9][a-z0-9-]{0,63}$/.test(agent) ? agent : undefined;
 }
