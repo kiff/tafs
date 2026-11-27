@@ -33,12 +33,20 @@ back (`AppSignIn.Failure.refused("unsupported_client")`). The sign-up's email co
    (Apple or Google; email-code sign-in is off), replacing the code-matching device flow. The contract is kiff/cloud's
    `api/internal/appsignin/README.md`; the tick's terms version goes with the token request, and KIFF records the
    consent in the same step that makes the session. The sheet is a private browser session (`VendorSignIn.kiffSheet()`): no earlier sign-in or cookie comes in, so every authorize goes through KIFF's form. A vendor's sheet still shares Safari's sign-in. iPad and Mac keep "Sign in with your phone": its pairing claim carries the same terms version, so KIFF records the consent for the device that showed the tick however the person signs in, and `terms_outdated` asks for the tick again there too.
-3. **Three cards:** Your tafs, A Card is your permission, You stay in control. Each draws the app's own components
-   with the sample's words, so they read in the person's language. The last card names each device's approval:
-   Face ID or Touch ID on iPhone and iPad, Touch ID or the phone on the Mac (`onboarding.control_lead_mac`).
+3. **Four cards** (first-run v2, owner-approved 27 Nov 2026): Your tafs work for you, Coach sets it up with you, A
+   Card is your permission, Credits pay for the work. Each draws the app's own components with the sample's words
+   (Home's taf rows; Coach's first exchange; a Card, then a held call; Plan & usage's credits and meter), so they read
+   in the person's language and theme. The Card card ends with each device's approval as its own paragraph: Face ID
+   or Touch ID on iPhone and iPad, Touch ID or the phone on the Mac (`onboarding.control_lead_mac`). Skip on every
+   card, Next on the first three and Get started on the last; a swipe left or right moves between cards (never past
+   either end), and with reduced motion they don't slide.
 4. **The first Home** (the iPhone's Home, and the iPad's and Mac's wide Overview, which is where a wide layout opens: `FirstHome`, one block for both): with no taf, for anyone who may use Coach: board 2, tafs cloud's own empty line when it sends
    one (else the app's "No tafs yet" and what Coach does), Ask Coach, and How tafs works, which reopens the cards with
    the privacy and terms links (also in Account). Where tafs cloud lists recipes instead, Home is as it ships.
+   Above either, **A first taf to try** (`FirstTafCard`): the job tafs cloud names in `home.first_taf`
+   (`Recipes.firstToTry`; it picks the first proved recipe written in the person's language), its title and line in
+   tafs cloud's words, and **Set it up with Coach**, which opens Coach with its `say` in the box to edit and send. With
+   no field, a word missing, or the list not shown, there's no card: the app never picks a job of its own.
 
 ## Words
 

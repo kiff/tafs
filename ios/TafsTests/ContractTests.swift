@@ -70,6 +70,9 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(read.home?.shown, true)
         XCTAssertNotNil(read.homeWords, "Home's line")
         XCTAssertNotNil(read.labels, "the sheet's words")
+        // The first taf to try, as tafs cloud names it (first-run v2).
+        XCTAssertEqual(read.firstToTry?.title, "Chase overdue invoices")
+        XCTAssertEqual(read.firstToTry?.say.isEmpty, false)
     }
 
     /// A held call's arguments under Details, every case of contracts/held-arguments.json: the lines every app writes,
