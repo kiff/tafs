@@ -2359,6 +2359,8 @@ class PlanqueTest {
     assertEquals(listOf("Connect Stripe to Refunds"), auth.asked)
     val opening = transport.requestsTo("POST /v1/me/window").single()
     assertEquals("kiff.window.v1", bodyOf(opening).getValue("message").jsonPrimitive.content)
+    // The window is the taf's whose step opened it: its grant's KIFF agent, so KIFF confirms no other taf's Card in it.
+    assertEquals("refunds-1", bodyOf(opening).getValue("agent").jsonPrimitive.content)
     assertTrue(opening.headers.getValue("KIFF-Device-Signature").contains(",v1="))
     // planque's approve goes as a tap: the device key, with the window's id.
     val header = transport.requestsTo(approve).single().headers.getValue("Planque-Device-Signature")
@@ -2380,13 +2382,40 @@ class PlanqueTest {
     transport.answer("POST /v1/me/window", 201, windowOpened)
     val m = model()
     coachWithCard(m)
-    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    // The thread still lists the card, in the setup whose step opened the window: the window covers it.
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[{"at":"2026-10-28T08:00:00Z","session":"s1","run":"r1","component":$approvalCard}]}""")
     m.approveCoach(approvalComponent(), digest, null)
     // The second card is one tafs cloud marks a tap, so its button says "Approve" and it rides on the window.
     m.approveCoach(tapComponent(), digest, null)
     assertEquals(1, auth.asked.size)
     assertEquals(1, transport.requestsTo("POST /v1/me/window").size)
     assertEquals(2, transport.requestsTo(approve).count { it.headers.getValue("Planque-Device-Signature").contains(",w=$win,") })
+  }
+
+  // A window is one setup's (one taf's): a tap card from another setup closes it and opens its own, behind a fresh fingerprint.
+  @Test fun anotherSetupsCardNeverRidesTheWindow() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    repeat(2) {
+      transport.answer(askRoute, 200, signConnectInWindow())
+      transport.answer(approve, 200, """{"status":"connected"}""")
+      transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+      transport.answer("GET /v1/me/window", 200, windowOpened)
+      transport.answer("POST /v1/me/window", 201, windowOpened)
+    }
+    transport.answer("POST /v1/me/window/$win/close", 200, """{"window":{"id":"$win","open":false}}""")
+    val m = model()
+    coachWithCard(m)
+    // The thread now lists the card in another setup's session.
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[{"at":"2026-10-28T08:00:00Z","session":"s2","run":"r2","component":$approvalCard}]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals("s1", m.state.value.windowSetup)
+    m.approveCoach(tapComponent(), digest, null)
+    // Two fingerprints, two windows: the first closed, the second the new setup's.
+    assertEquals(2, auth.asked.size)
+    assertEquals(1, transport.requestsTo("POST /v1/me/window/$win/close").size)
+    assertEquals(2, transport.requestsTo("POST /v1/me/window").size)
+    assertEquals("s2", m.state.value.windowSetup)
   }
 
   // What the button says is what happens. A card tafs cloud doesn't mark a tap says "Approve with your
@@ -2403,7 +2432,8 @@ class PlanqueTest {
     transport.answer("POST /v1/me/window", 201, windowOpened)
     val m = model()
     coachWithCard(m)
-    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    // The thread still lists the card, in the setup whose step opened the window: the window covers it.
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[{"at":"2026-10-28T08:00:00Z","session":"s1","run":"r1","component":$approvalCard}]}""")
     m.approveCoach(approvalComponent(), digest, null)
     assertEquals("No fingerprint for the next 5 minutes", m.state.value.windowWords)
     m.approveCoach(approvalComponent(), digest, null)
@@ -2462,10 +2492,10 @@ class PlanqueTest {
     assertTrue(transport.requestsTo("POST /v1/me/window").isEmpty())
   }
 
-  @Test fun theWindowClosesAfterThirtySecondsInTheBackgroundAndAtOnceWhenTheScreenTurnsOff() = runTest {
+  @Test fun theWindowClosesAtOnceInTheBackgroundAndWhenTheScreenTurnsOff() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant()}]}""")
-    repeat(2) {
+    repeat(3) {
       transport.answer(askRoute, 200, signConnectInWindow())
       transport.answer("POST /v1/me/window", 201, windowOpened)
       transport.answer(approve, 200, """{"status":"connected"}""")
@@ -2477,24 +2507,27 @@ class PlanqueTest {
     coachWithCard(m)
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
     m.approveCoach(approvalComponent(), digest, null)
-    // Back within 30 seconds: it stays.
+    // The app leaves the foreground: closed at once, device-signed, and its words gone.
     m.wentToBackground()
-    testScheduler.advanceTimeBy(20_000)
-    m.cameToForeground()
-    testScheduler.advanceTimeBy(60_000)
-    assertTrue(transport.requestsTo("POST /v1/me/window/$win/close").isEmpty())
-    // Away for longer: closed, device-signed, and its words gone.
-    m.wentToBackground()
-    testScheduler.advanceTimeBy(31_000)
     testScheduler.runCurrent()
     val closed = transport.requestsTo("POST /v1/me/window/$win/close").single()
     assertTrue(closed.headers.getValue("KIFF-Device-Signature").contains(",v1="))
     assertNull(m.state.value.windowWords)
+    assertNull(m.state.value.windowSetup)
+    // A new window, then a return before the close has run: the window is gone already, and the close still goes.
+    m.approveCoach(approvalComponent(), digest, null)
+    assertNotNull(m.state.value.windowWords)
+    m.wentToBackground()
+    m.cameToForeground()
+    assertNull(m.state.value.windowWords)
+    assertNull(m.state.value.windowSetup)
+    testScheduler.runCurrent()
+    assertEquals(2, transport.requestsTo("POST /v1/me/window/$win/close").size)
     // A new window, then the screen turns off: closed at once.
     m.approveCoach(approvalComponent(), digest, null)
     m.screenLocked()
     testScheduler.runCurrent()
-    assertEquals(2, transport.requestsTo("POST /v1/me/window/$win/close").size)
+    assertEquals(3, transport.requestsTo("POST /v1/me/window/$win/close").size)
   }
 
   @Test fun aNewSignInForgetsTheLastSessionsWindow() = runTest {

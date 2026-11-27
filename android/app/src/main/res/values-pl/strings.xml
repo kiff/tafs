@@ -1942,6 +1942,7 @@
     <string name="receipt_refused_by">Odrzucone przez: %1$s</string>
     <string name="receipt_share">Udostępnij</string>
     <string name="receipt_show_full">Pokaż pełne potwierdzenie</string>
+    <string name="receipt_signed_in_window_why">Dotknięciem, w oknie otwartym przez %1$s, kluczem, który nigdy nie opuszcza tego urządzenia.</string>
     <string name="receipt_signed_on_device_why">Przez %1$s, kluczem, który nigdy nie opuszcza tego urządzenia.</string>
     <string name="receipt_signed_on_phone">✓ Podpisano na tym telefonie</string>
     <string name="receipt_signed_on_phone_why">Kluczem, który nigdy nie opuszcza tego telefonu.</string>

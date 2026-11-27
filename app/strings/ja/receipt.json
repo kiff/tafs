@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who}が拒否",
   "receipt.share": "共有",
   "receipt.show_full": "領収書全体を表示",
+  "receipt.signed_in_window_why": "{biometry}で開いた時間枠内のタップで、このデバイスから出ないキーにより署名。",
   "receipt.signed_on_device_why": "{biometry}で、このデバイスから出ないキーにより署名。",
   "receipt.signed_on_phone": "✓ このスマートフォンで署名",
   "receipt.signed_on_phone_why": "このスマートフォンから出ないキーにより署名。",

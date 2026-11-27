@@ -1820,6 +1820,7 @@
     <string name="receipt_refused_by">Rifiutata da %1$s</string>
     <string name="receipt_share">Condividi</string>
     <string name="receipt_show_full">Mostra la ricevuta completa</string>
+    <string name="receipt_signed_in_window_why">Con un tocco, in una finestra aperta con %1$s, con una chiave che non lascia mai questo dispositivo.</string>
     <string name="receipt_signed_on_device_why">Con %1$s, con una chiave che non lascia mai questo dispositivo.</string>
     <string name="receipt_signed_on_phone">✓ Firmata su questo telefono</string>
     <string name="receipt_signed_on_phone_why">Con una chiave che non lascia mai questo telefono.</string>

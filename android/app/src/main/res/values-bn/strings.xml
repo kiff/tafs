@@ -1820,6 +1820,7 @@
     <string name="receipt_refused_by">%1$s প্রত্যাখ্যান করেছেন</string>
     <string name="receipt_share">শেয়ার করুন</string>
     <string name="receipt_show_full">পুরো রসিদ দেখান</string>
+    <string name="receipt_signed_in_window_why">একটি ট্যাপে, %1$s দিয়ে খোলা একটি সময়সীমার মধ্যে, এমন একটি কী দিয়ে যা এই ডিভাইস কখনও ছাড়ে না।</string>
     <string name="receipt_signed_on_device_why">%1$s দিয়ে, এমন একটি কী দিয়ে যা এই ডিভাইস কখনও ছাড়ে না।</string>
     <string name="receipt_signed_on_phone">✓ এই ফোনে সই করা</string>
     <string name="receipt_signed_on_phone_why">এমন একটি কী দিয়ে যা এই ফোন কখনও ছাড়ে না।</string>

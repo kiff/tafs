@@ -729,6 +729,8 @@ data class ActivityCall(
   val reason: String? = null,
   /** KIFF's words for what happened to the call, when it gives them (a connection's refusal). */
   val detail: String? = null,
+  /** KIFF: the call's tool moves money (by its owner-approved profile) and the call was sent. Only then did money move. */
+  val payment: Boolean? = null,
 )
 
 @Serializable

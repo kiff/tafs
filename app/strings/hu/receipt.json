@@ -60,6 +60,7 @@
   "receipt.refused_by": "Elutasította: {who}",
   "receipt.share": "Megosztás",
   "receipt.show_full": "A teljes nyugta megjelenítése",
+  "receipt.signed_in_window_why": "Egy koppintással, egy időablakban, amelyet ez nyitott meg: {biometry}; egy kulccsal, amely soha nem hagyja el ezt az eszközt.",
   "receipt.signed_on_device_why": "Ezzel: {biometry}, egy kulccsal, amely soha nem hagyja el ezt az eszközt.",
   "receipt.signed_on_phone": "✓ Aláírva ezen a telefonon",
   "receipt.signed_on_phone_why": "Egy kulccsal, amely soha nem hagyja el ezt a telefont.",

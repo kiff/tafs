@@ -1,0 +1,1 @@
+- **"Money moved" only when money moved.** tafs cloud's Activity and Record entries carry `money_moved` only for a done call KIFF marks as a payment. Android's receipt says "Done. {amount} moved." and counts it under Money moved only then; an invoice written or a transfer requested reads "Done." (docs/api.md). iOS follows.

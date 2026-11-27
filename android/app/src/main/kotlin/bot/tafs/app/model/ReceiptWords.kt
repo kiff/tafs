@@ -25,7 +25,8 @@ object ReceiptWords {
 
   fun outcome(entry: RecordEntry): String {
     return when (entry.kind) {
-      Kind.done, Kind.approved -> entry.amountText?.let { Words.Receipt.Outcome.moved(it) } ?: Words.Receipt.Outcome.done
+      // "moved" only when KIFF says money moved: an amount alone (an invoice written, a transfer requested) moved nothing.
+      Kind.done, Kind.approved -> entry.amountText?.takeIf { entry.moneyMoved == true }?.let { Words.Receipt.Outcome.moved(it) } ?: Words.Receipt.Outcome.done
       Kind.refused -> if (entry.answer?.decision == "refused") Words.Receipt.Outcome.refusedBy(entry.answerer) else Words.Receipt.Outcome.cardRefused
       Kind.held -> Words.Receipt.Outcome.waiting
       else -> entry.detail

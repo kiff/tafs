@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who} ret etdi",
   "receipt.share": "Paýlaşyň",
   "receipt.show_full": "Doly kwitansiýany görkeziň",
+  "receipt.signed_in_window_why": "Bir basyş bilen, {biometry} bilen açylan wagt aralygynda, bu enjamdan hiç haçan çykmaýan açar bilen.",
   "receipt.signed_on_device_why": "{biometry} bilen, bu enjamdan hiç haçan çykmaýan açar bilen.",
   "receipt.signed_on_phone": "✓ Bu telefonda gol çekildi",
   "receipt.signed_on_phone_why": "Bu telefondan hiç haçan çykmaýan açar bilen.",

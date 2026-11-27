@@ -107,6 +107,29 @@ Bezahle meine Rechnungen unter 100 EUR.
     bad(DE.replace("today: Rechnungen warten, bis jemand Zeit hat.\n", ""), "today is missing");
   });
 
+  it("reads a job's guide as steps with Do, You see and If lines, in every language or none", () => {
+    const GUIDE = "proved: help_desk\nguide:\n  - Connect it\n  - - Do: Open the job.\n  - - You see: it connected.\n  - Run it\n  - - Do: Ask it to run.\n  - - If: nothing shows.\n";
+    const en = parseRecipe(FILE.replace("  - wise\n", "  - wise\n" + GUIDE), "pay-a-bill.md");
+    expect(en.guide).toEqual([{ title: "Connect it", do: "Open the job.", see: "it connected." }, { title: "Run it", do: "Ask it to run.", if: "nothing shows." }]);
+    expect(parseRecipe(FILE, "pay-a-bill.md")).not.toHaveProperty("guide");
+    const bad = (text: string, why: string) => expect(() => parseRecipe(text, "pay-a-bill.md")).toThrow(`pay-a-bill.md: ${why}`);
+    const withGuide = (g: string) => FILE.replace("  - wise\n", "  - wise\nproved: help_desk\nguide:\n" + g);
+    bad(FILE.replace("  - wise\n", "  - wise\nguide:\n  - Step\n  - - Do: x.\n"), "guide is the steps its proof run went through");
+    bad(withGuide("  - - Do: x.\n"), "a guide line before any step title");
+    bad(withGuide("  - Step\n  - - Tap: x.\n"), "a guide line starts with Do:, You see: or If:");
+    bad(withGuide("  - Step\n  - - Do: a.\n  - - Do: b.\n"), 'guide step "Step" has two Do: lines');
+    bad(withGuide("  - Step\n"), 'guide step "Step" has no Do:, You see: or If: line');
+    bad(withGuide(Array.from({ length: 7 }, (_, i) => `  - S${i}\n  - - Do: x.\n`).join("")), "a guide has at most 6 steps");
+    // A translation has the same steps with the same kinds of line; its labels stay English markers, the apps draw them.
+    const DE_GUIDE = DE.replace("card:", "guide:\n  - Verbinden\n  - - Do: Öffne den Job.\n  - - You see: Es ist verbunden.\n  - Starten\n  - - Do: Starte ihn.\n  - - If: Nichts erscheint.\ncard:");
+    expect(parseRecipe(DE_GUIDE, "de/pay-a-bill.md", en).guide).toHaveLength(2);
+    const badDe = (text: string, of: ReturnType<typeof parseRecipe>, why: string) => expect(() => parseRecipe(text, "de/pay-a-bill.md", of)).toThrow(`de/pay-a-bill.md: ${why}`);
+    badDe(DE, en, "guide is missing: English has one");
+    badDe(DE_GUIDE, parseRecipe(FILE, "pay-a-bill.md"), "guide is given, and English has none");
+    badDe(DE_GUIDE.replace("  - Starten\n  - - Do: Starte ihn.\n  - - If: Nichts erscheint.\n", ""), en, "guide has 1 steps, and English has 2");
+    badDe(DE_GUIDE.replace("- If: Nichts erscheint.", "- Do: Nichts erscheint.").replace("  - - Do: Starte ihn.\n", ""), en, "guide step 2 has do, and English has do, if");
+  });
+
   it("reads what a recipe's proof run passed on, and what it reported, in every language or none", () => {
     const PROVEN = FILE.replace("  - wise\n", "  - wise\nproved: help_desk\nsample:\n  - Paid 2 bills.\n  - One waits for you.\n");
     expect(parseRecipe(PROVEN, "pay-a-bill.md")).toMatchObject({ proved: "help_desk", sample: "Paid 2 bills.\n\nOne waits for you." });
@@ -200,7 +223,7 @@ Bezahle meine Rechnungen unter 100 EUR.
     // Filtered or in another language, the order holds.
     expect(recipesFor(undefined, "pl").recipes[0]!.id).toBe("refunds-within-a-limit");
     const stripeAndGmail = [{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gmail", vendor: "Gmail" }];
-    expect(recipesFor(stripeAndGmail).recipes.map((r) => r.id)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels", "failed-card-payments"]);
+    expect(recipesFor(stripeAndGmail).recipes.map((r) => r.id)).toEqual(["refunds-within-a-limit", "chase-overdue-invoices", "save-a-customer-who-cancels", "failed-card-payments"]);
   });
 
   it("leads Home with the recipes only for a person who manages tafs, and only with one to lead with", () => {
@@ -235,7 +258,11 @@ Bezahle meine Rechnungen unter 100 EUR.
   // can't connect yet stays out, and comes back once its app is added to CONNECTS_TODAY after a check proves it.
   it("lists only the jobs whose every connection has an app that connects today", () => {
     const ids = recipesFor(undefined).recipes.map((r) => r.id);
-    expect(ids).not.toContain("chase-overdue-invoices");
+    // Overdue invoices takes Stripe as its billing app (invoices read there, reminders by the person's own mail), so it is listed
+    // with Stripe and Gmail; without a billing app that connects, it would not be.
+    expect(ids).toContain("chase-overdue-invoices");
+    const noStripe = new Set([...CONNECTS_TODAY].filter((v) => v !== "stripe"));
+    expect(recipesFor(undefined, "en", true, noStripe).recipes.map((r) => r.id)).not.toContain("chase-overdue-invoices");
     for (const id of ids) expect(connectsToday(RECIPES.find((r) => r.id === id)!), id).toBe(true);
     expect(ids).toEqual(expect.arrayContaining(["ship-when-green", "refunds-within-a-limit", "save-a-customer-who-cancels", "acknowledge-every-ticket"]));
     // Once an app is proved, its jobs come back with no other change: Typeform was proved by a sign-in on a phone
@@ -243,12 +270,13 @@ Bezahle meine Rechnungen unter 100 EUR.
     expect(ids).toContain("follow-up-new-leads");
     const without = new Set([...CONNECTS_TODAY].filter((v) => v !== "typeform"));
     expect(recipesFor(undefined, "en", true, without).recipes.map((r) => r.id)).not.toContain("follow-up-new-leads");
-    // Google Calendar and Drive were proved by sign-ins on a phone (16 Nov): appointments are listed. Sheets connected
-    // too, but its sign-in was called read-only before the grant; receipts waits until that fix is live.
+    // Google Calendar and Drive were proved by sign-ins on a phone (16 Nov): appointments are listed. Sheets was
+    // proved the same way (read 20 Nov, a row added 21 Nov, after the grant's scope fix went live): receipts is listed too,
+    // and a job whose Sheets isn't proved isn't.
     expect(ids).toContain("book-and-move-appointments");
-    expect(ids).not.toContain("file-receipts");
-    const withSheets = new Set([...CONNECTS_TODAY, "googlesheets"]);
-    expect(recipesFor(undefined, "en", true, withSheets).recipes.map((r) => r.id)).toContain("file-receipts");
+    expect(ids).toContain("file-receipts");
+    const noSheets = new Set([...CONNECTS_TODAY].filter((v) => v !== "googlesheets"));
+    expect(recipesFor(undefined, "en", true, noSheets).recipes.map((r) => r.id)).not.toContain("file-receipts");
   });
 
   // Three jobs for small shops that need only apps that connect today: listed now, with no proof run.
@@ -327,7 +355,7 @@ Bezahle meine Rechnungen unter 100 EUR.
   it("filters by every connection, taking any vendor that would do for it, by category", () => {
     const ids = (apps: Array<{ entry: string; vendor: string }>) => recipesFor(apps, "en", true, null).recipes.map((r) => r.id);
     const stripeAndGmail = [{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gmail", vendor: "Gmail" }];
-    expect(ids(stripeAndGmail)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels", "failed-card-payments"]);
+    expect(ids(stripeAndGmail)).toEqual(["refunds-within-a-limit", "chase-overdue-invoices", "save-a-customer-who-cancels", "failed-card-payments"]);
     // Gorgias instead of Gmail does as well for Refunds; Chargebacks needs Stripe and a shop or help desk; a help desk alone does for tickets.
     expect(ids([{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gorgias", vendor: "Gorgias" }]))
       .toEqual(["refunds-within-a-limit", "chargebacks-with-evidence", "acknowledge-every-ticket"]);

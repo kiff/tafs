@@ -1,0 +1,6 @@
+• Approvazioni: il pulsante dice sempre quando serve la tua impronta, e uscendo dall'app te la richiede.
+• Le ricevute dicono che il denaro si è mosso solo quando è così.
+• Gli orari seguono il formato a 12 o 24 ore del telefono.
+• Piano e utilizzo dice cosa ottieni, e scegliere un piano è più semplice.
+• Le richieste di impronta dicono perché la chiedono.
+• Le chiamate trattenute arrivano al tuo orologio Wear OS anche con l'app chiusa.

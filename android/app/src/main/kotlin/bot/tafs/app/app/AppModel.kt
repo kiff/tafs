@@ -625,6 +625,8 @@ data class AppState(
   val suggestionsError: String? = null,
   /** KIFF's words for the next approval while this phone holds an approval window ("No fingerprint for the next 4 minutes"). */
   val windowWords: String? = null,
+  /** The setup (Coach's session) whose step opened the window this phone holds: its Approve is a tap only for that setup's cards. */
+  val windowSetup: String? = null,
   /** planque's live sign-in view for a browser connection, open over everything until the owner closes it. */
   val siteSignIn: bot.tafs.app.kiff.SiteSignInView? = null,
   /** The connection whose sign-in view is being asked for. */
@@ -1548,7 +1550,7 @@ class AppModel(
     // An approval window is the last session's: a new sign-in opens its own.
     kiff.window = null
     windowClosing?.cancel()
-    _state.update { it.copy(windowWords = null) }
+    _state.update { it.copy(windowWords = null, windowSetup = null) }
     eventReceipts.clear()
     forgetPlanqueDevice()
     relinkJob?.cancel()
@@ -6041,7 +6043,9 @@ class AppModel(
     if (_state.value.connecting != null && !giveWayToNewApproval()) { note(c.id, CoachWords.ANOTHER_APPROVAL); return true }
     // What the button said, as it was tapped: "Approve" rides on the approval window this phone holds; "Approve with your
     // fingerprint" asks for it. So a held window is used only where the button said so, never under a fingerprint's words.
-    val shownAsTap = CoachWords.approvesAsTap(c, _state.value.windowWords)
+    val shownSetup = (_state.value.coachComponents.lastOrNull { it.id == c.id && it.answer == null } ?: _state.value.coachComponents.lastOrNull { it.id == c.id })
+      ?.session?.ifEmpty { null } ?: _state.value.coachChat
+    val shownAsTap = CoachWords.approvesAsTap(c, _state.value.windowWords, _state.value.windowSetup, shownSetup)
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - c.id) }
     val generation = accountGeneration
     planque.tenant = tenant
@@ -6123,7 +6127,9 @@ class AppModel(
             try {
               // A window this phone already holds is ridden only where the button said "Approve"; with none held, one is opened
               // behind the fingerprint, as the button said.
-              windowed = chromeGrant == null && asked.key == "window" && (kiff.window == null || shownAsTap) && holdWindow(asked.reason)
+              // A window is one setup's (one taf's): one held for another is closed, and this step opens its own behind the fingerprint.
+              if (chromeGrant == null && asked.key == "window" && kiff.window != null && _state.value.windowSetup != shownSetup) closeWindow()
+              windowed = chromeGrant == null && asked.key == "window" && (kiff.window == null || shownAsTap) && holdWindow(asked.reason, shownSetup, stepAgent(asked))
               // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
               if (!windowed) {
                 when {
@@ -6143,12 +6149,15 @@ class AppModel(
             if (generation != accountGeneration) return true
             planque.signer = sign
             if (windowed) planque.window = kiff.window?.id
+            // KIFF's own requests ride the window only where the button said "Approve" (a tap) or this step opened the window;
+            // under "Approve with your fingerprint" every one asks for it.
+            kiff.signsInWindow = windowed || shownAsTap
             var made = makeAskedCall(asked, sitesSig)
             // planque says the window ended before anything was done: a new one, behind the fingerprint, and the call once more.
             if (windowed && made == Came.WindowEnded) {
               kiff.window = null
               try {
-                holdWindow(asked.reason)
+                holdWindow(asked.reason, shownSetup, stepAgent(asked))
               } catch (e: SignerException) {
                 note(c.id, notSigned(e, Words.Common.notDoneUnconfirmed))
                 return true
@@ -6200,6 +6209,7 @@ class AppModel(
     } finally {
       planque.signer = null
       planque.window = null
+      kiff.signsInWindow = false
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
       if (generation == accountGeneration) readWindowWords()
@@ -6340,7 +6350,7 @@ class AppModel(
   /** A message's one id (`client_message_id`, docs/api.md), made when the owner sends it. */
   private fun newMessageId(): String = java.util.UUID.randomUUID().toString()
 
-  private suspend fun holdWindow(reason: String): Boolean {
+  private suspend fun holdWindow(reason: String, setup: String? = null, agent: String? = null): Boolean {
     // While Coach drives, the approval window is suspended: every confirming signature asks for the fingerprint (docs/drive.md).
     if (drive.on) return false
     if (!sessionHasApprovalKey || kiff.approvalSigner == null) return false
@@ -6351,13 +6361,24 @@ class AppModel(
     val expires = DateTimeFormatter.ISO_INSTANT.format(clock().plusSeconds(WINDOW_SECONDS).truncatedTo(ChronoUnit.SECONDS))
     val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }
     return try {
-      val opened = kiff.openWindow(expires, nonce)
-      _state.update { it.copy(windowWords = opened.words) }
+      val opened = kiff.openWindow(expires, nonce, agent)
+      _state.update { it.copy(windowWords = opened.words, windowSetup = setup) }
       true
     } catch (e: KiffError.Server) {
       // A KIFF from before the window has no such route: the step goes on as before.
       if (e.status == 404 || e.status == 405) false else throw e
     }
+  }
+
+  /**
+   * The KIFF agent of the taf whose step [asked] is: its planque grant's agent, else the agent of KIFF's draft it confirms (read
+   * from KIFF). None when neither says, and the window then confirms no Card. Read only when a window is opened.
+   */
+  private suspend fun stepAgent(asked: bot.tafs.app.kiff.ApprovalAsk): String? {
+    if (kiff.window != null) return null
+    asked.planque?.grant?.let { id -> _state.value.grants.firstOrNull { it.id == id }?.request?.agent?.takeIf { it.isNotBlank() }?.let { return it } }
+    val draft = asked.kiff?.draft ?: return null
+    return runCatching { kiff.draft(draft).agentId }.getOrNull()?.takeIf { it.isNotBlank() }
   }
 
   /** KIFF's words for the next approval, while a window is held; none once it's gone. */
@@ -6373,39 +6394,40 @@ class AppModel(
 
   private var windowClosing: Job? = null
 
-  /**
-   * The app went to the background: after 30 seconds there, the window this phone holds is closed at KIFF (kiff/tafs#494).
-   * Back sooner, it stays.
-   */
+  /** The app left the foreground: the window this phone holds is dropped at once, and the next approval asks again. */
   fun wentToBackground() {
     foreground.value = false
-    if (kiff.window == null) return
-    windowClosing?.cancel()
-    windowClosing = scope.launch {
-      delay(WINDOW_BACKGROUND_MS)
-      closeWindow()
-    }
+    dropWindow()
   }
 
-  /** Back on screen: a close waiting on the background is called off, and KIFF's words read again. */
+  /** Back on screen: KIFF's words read again. A window dropped on leaving stays dropped, however quick the return. */
   fun cameToForeground() {
     foreground.value = true
-    windowClosing?.cancel()
-    windowClosing = null
     if (kiff.window != null) scope.launch { readWindowWords() }
   }
 
-  /** The screen turned off: the window this phone holds is closed at once. */
+  /** The screen turned off: the window this phone holds is dropped at once. */
   fun screenLocked() {
-    windowClosing?.cancel()
-    if (kiff.window != null) windowClosing = scope.launch { closeWindow() }
+    dropWindow()
+  }
+
+  /**
+   * Forgets the held window here before anything else runs, so no tap can ride on it, then tells KIFF to close it. A close that
+   * never reaches KIFF leaves a window this phone no longer uses; KIFF ends it at its own time.
+   */
+  private fun dropWindow() {
+    val held = kiff.window ?: return
+    kiff.window = null
+    _state.update { it.copy(windowWords = null, windowSetup = null) }
+    val signer = signer
+    windowClosing = scope.launch { runCatching { kiff.closeWindow(held) { signer.signConfirmed(it) } } }
   }
 
   private suspend fun closeWindow() {
     val signer = signer
     // Forgotten here whether or not KIFF heard: a window it still holds ends at its own time, and the next approval asks again.
     runCatching { kiff.closeWindow { signer.signConfirmed(it) } }
-    _state.update { it.copy(windowWords = null) }
+    _state.update { it.copy(windowWords = null, windowSetup = null) }
   }
 
   /** Whether [grantId] uses the owner's own Chrome, as this phone holds the grant. */
@@ -10002,7 +10024,9 @@ class AppModel(
 
   private fun entry(tafId: String, kind: RecordEntry.Kind, title: String, detail: String, proposed: ProposedAction? = null, signature: String? = null) =
     RecordEntry(tafId = tafId, kind = kind, title = title, detail = detail, at = clock(), signature = signature,
-      ownerApproved = if (kind == RecordEntry.Kind.approved) true else null, amountText = proposed?.amount?.formatted)
+      ownerApproved = if (kind == RecordEntry.Kind.approved) true else null, amountText = proposed?.amount?.formatted,
+      // The sample's calls with an amount are refunds and payments: they move money.
+      moneyMoved = if (proposed?.amount != null) true else null)
 
   private fun log(tafId: String, kind: RecordEntry.Kind, title: String, detail: String, proposed: ProposedAction? = null) =
     _state.update { it.copy(record = listOf(entry(tafId, kind, title, detail, proposed)) + it.record) }
@@ -10282,8 +10306,6 @@ class AppModel(
     const val PAIR_FOLLOW_MS = 3_000L
     const val PAIR_FOLLOW_TRIES = 10
 
-    /** How long the app may be in the background before the window it holds is closed (kiff/tafs#494). */
-    const val WINDOW_BACKGROUND_MS = 30_000L
 
     /** KIFF answered, but holds another key, or this one was turned off while the browser waited. */
     val RELINK_DIDNT_TAKE get() = Words.SignIn.Relink.didntTake

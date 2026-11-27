@@ -60,6 +60,7 @@
   "receipt.refused_by": "Одбиено од {who}",
   "receipt.share": "Сподели",
   "receipt.show_full": "Прикажи ја целата признаница",
+  "receipt.signed_in_window_why": "Со допир, во прозорец отворен со {biometry}, со клуч што никогаш не го напушта овој уред.",
   "receipt.signed_on_device_why": "Со {biometry}, со клуч што никогаш не го напушта овој уред.",
   "receipt.signed_on_phone": "✓ Потпишано на овој телефон",
   "receipt.signed_on_phone_why": "Со клуч што никогаш не го напушта овој телефон.",

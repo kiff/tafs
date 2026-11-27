@@ -1235,6 +1235,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
           onClose = { recipeOpen = null },
           tryWords = if (galleryOpen && galleryBrowsing) bot.tafs.app.model.HomeWords.tryIt(state.gallery) else null,
           sampleLabel = bot.tafs.app.model.HomeWords.sampleLabel(state.gallery),
+          galleryWords = state.gallery?.words,
         )
       }
     }

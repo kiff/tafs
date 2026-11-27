@@ -60,6 +60,7 @@
   "receipt.refused_by": "Keeldus: {who}",
   "receipt.share": "Jaga",
   "receipt.show_full": "Näita kogu kviitungit",
+  "receipt.signed_in_window_why": "Puudutusega, {biometry} abil avatud ajaaknas, võtmega, mis ei lahku kunagi sellest seadmest.",
   "receipt.signed_on_device_why": "{biometry} abil, võtmega, mis ei lahku kunagi sellest seadmest.",
   "receipt.signed_on_phone": "✓ Allkirjastatud selles telefonis",
   "receipt.signed_on_phone_why": "Võtmega, mis ei lahku kunagi sellest telefonist.",

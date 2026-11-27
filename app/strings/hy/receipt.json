@@ -60,6 +60,7 @@
   "receipt.refused_by": "Մերժել է՝ {who}",
   "receipt.share": "Կիսվել",
   "receipt.show_full": "Ցույց տվեք ամբողջական անդորրագիրը",
+  "receipt.signed_in_window_why": "Մեկ հպումով, {biometry}-ով բացված պատուհանում, բանալիով, որը երբեք չի լքում այս սարքը։",
   "receipt.signed_on_device_why": "{biometry}-ով, բանալիով, որը երբեք չի լքում այս սարքը։",
   "receipt.signed_on_phone": "✓ Ստորագրված է այս հեռախոսում",
   "receipt.signed_on_phone_why": "Բանալիով, որը երբեք չի լքում այս հեռախոսը։",

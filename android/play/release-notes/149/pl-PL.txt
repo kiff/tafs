@@ -1,0 +1,6 @@
+• Zatwierdzenia: przycisk zawsze mówi, kiedy potrzebny jest odcisk palca, a po wyjściu z aplikacji zostaniesz zapytany ponownie.
+• Potwierdzenia mówią, że pieniądze zostały przesłane, tylko gdy tak było.
+• Godziny są w formacie 12- lub 24-godzinnym, jak w telefonie.
+• Plan i wykorzystanie mówi, co dostajesz, a wybór planu jest prostszy.
+• Prośby o odcisk palca mówią, dlaczego o niego proszą.
+• Wstrzymane wywołania docierają do zegarka Wear OS nawet przy zamkniętej aplikacji.

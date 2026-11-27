@@ -19,15 +19,15 @@ final class RecordFieldsTests: XCTestCase {
     {"calls":[
     {"proposal_id":"p_a","action_name":"stripe_create_refund","title":"Refund a payment","actor_id":"agt_r","outcome":"allowed","held":false,
      "tool_outcome":{"status":"done"},"created_at":"2026-10-20T22:38:02Z",
-     "amount":{"value":"20.00","unit":"EUR"},"entity_id":"tc-a","on_arg":"payment","on_hash":"HASH_A",
+     "amount":{"value":"20.00","unit":"EUR"},"payment":true,"entity_id":"tc-a","on_arg":"payment","on_hash":"HASH_A",
      "receipt":{"trace_id":"t_a","status":"signed"}},
     {"proposal_id":"p_b","action_name":"stripe_create_refund","title":"Refund a payment","actor_id":"agt_r","outcome":"allowed","held":true,
      "tool_outcome":{"status":"done"},"created_at":"2026-10-21T00:40:12Z",
-     "amount":{"value":"150.00","unit":"EUR"},
+     "amount":{"value":"150.00","unit":"EUR"},"payment":true,
      "answer":{"decision":"approved_once","by":"admin","you":true,"signed":true,"device":"iPhone","at":"2026-10-21T00:41:03Z"},
      "receipt":{"trace_id":"t_b","status":"signed"}},
     {"proposal_id":"p_c","action_name":"stripe_create_refund","title":"Refund a payment","actor_id":"agt_r","outcome":"blocked","held":true,
-     "created_at":"2026-10-20T22:40:45Z","amount":{"value":"150.00","unit":"EUR"},
+     "created_at":"2026-10-20T22:40:45Z","amount":{"value":"150.00","unit":"EUR"},"payment":true,
      "answer":{"decision":"refused","by":"admin","you":false,"signed":true,"device":"iPhone","at":"2026-10-20T22:42:26Z"},
      "receipt":{"trace_id":"t_c","status":"signed"}},
     {"proposal_id":"p_d","action_name":"stripe_retrieve_payment_intent","title":"Look up a payment","actor_id":"agt_r","outcome":"allowed","held":false,
@@ -57,6 +57,7 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertNil(a.onValue, "tafs' value comes from its call_refs, not from KIFF")
         XCTAssertNil(a.answer, "within its Card: nobody answered")
         XCTAssertEqual(a.receipt, .init(traceID: "t_a", status: "signed"))
+        XCTAssertEqual(a.moneyMoved, true, "done, and KIFF says it was a payment")
 
         let b = try XCTUnwrap(byID["p_b"])
         XCTAssertEqual(b.answer?.decision, "approved_once")
@@ -66,8 +67,11 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertTrue(b.answeredByOwner, "KIFF says the reader answered it")
         XCTAssertEqual(b.decidedLine, "approved by you")
 
+        XCTAssertEqual(b.moneyMoved, true, "approved and done, a payment")
+
         let c = try XCTUnwrap(byID["p_c"])
         XCTAssertEqual(c.kind, .refused)
+        XCTAssertNil(c.moneyMoved, "refused: nothing moved, whatever KIFF says of its tool")
         XCTAssertEqual(c.answer?.decision, "refused")
         XCTAssertFalse(c.answeredByOwner, "a role can't say it was the reader")
         XCTAssertEqual(c.decidedLine, "refused by an admin")
@@ -76,6 +80,9 @@ final class RecordFieldsTests: XCTestCase {
         let gw = try XCTUnwrap(byID["p_gw"])
         XCTAssertEqual(gw.amount, .init(value: "150", unit: nil))
         XCTAssertEqual(gw.amountText, "150")
+        XCTAssertNil(gw.moneyMoved, "an amount with no payment from KIFF moved nothing (an invoice written, a transfer asked)")
+        XCTAssertFalse(RecordFilter.moneyMoved.keeps(gw))
+        XCTAssertTrue(RecordFilter.moneyMoved.keeps(a))
         // In a currency it reads as the app writes money everywhere (kiff/tafs#236, item 16).
         XCTAssertEqual(b.amountText, Money(minor: 15000, currency: "EUR", scale: 2).formatted)
         var whole = b
@@ -218,9 +225,10 @@ final class RecordFieldsTests: XCTestCase {
     /// The day heading's money moved (`RecordView.spent`) is said in the app's words, `record.day_spent`,
     /// never " spent" appended in code: a sum for each currency, joined with " + ". None moved: nothing.
     func testTheDaysMoneyIsSaidInTheAppsWords() {
-        func entry(_ value: String, _ unit: String, _ kind: RecordEntry.Kind = .done) -> RecordEntry {
+        func entry(_ value: String, _ unit: String, _ kind: RecordEntry.Kind = .done, moved: Bool = true) -> RecordEntry {
             var e = RecordEntry(tafID: UUID(), kind: kind, title: "Refund", detail: "", at: Date())
             e.amount = .init(value: value, unit: unit)
+            if moved { e.moneyMoved = true }
             return e
         }
         let euros = [entry("400.00", "EUR"), entry("240.00", "EUR")]
@@ -230,6 +238,8 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertEqual(both, Words.Record.daySpent(amount: Money(minor: 64000, currency: "EUR", scale: 2).formatted + " + "
                                                     + Money(minor: 1200, currency: "USD", scale: 2).formatted))
         XCTAssertNil(RecordView.spent([entry("5.00", "EUR", .refused)]), "a refused call moved nothing")
+        XCTAssertNil(RecordView.spent([entry("900.00", "EUR", moved: false)]), "an invoice written moved nothing: KIFF said no payment")
+        XCTAssertEqual(RecordView.spent(euros + [entry("900.00", "EUR", moved: false)]), eurSum, "only what moved is summed")
         XCTAssertNil(RecordView.spent([]))
     }
 }

@@ -50,6 +50,16 @@ export interface Recipe {
   proved?: string;
   /** What it reported after that proof run, as written: absent for a job with none. */
   sample?: string;
+  /** The job's steps, one object each, as the recipe file gives them; absent for a job with none. */
+  guide?: GuideStep[];
+}
+
+/** One step of a job's guide: a title, then what the person does (`do`), what appears (`see`) and the one thing that goes wrong most (`if`). */
+export interface GuideStep {
+  title: string;
+  do?: string;
+  see?: string;
+  if?: string;
 }
 
 /** What the apps get: the recipes by category, whether the catalog filtered them, and whether Home leads with them. */
@@ -118,6 +128,12 @@ function provedOf(r: (typeof RECIPES)[number], lang: Lang): { proved?: string } 
   return typeof line === "string" && line ? { proved: line } : {};
 }
 
+/** A recipe's guide in a language, as written, or nothing. */
+function guideOf(w: object): { guide?: GuideStep[] } {
+  const guide = (w as { guide?: readonly GuideStep[] }).guide;
+  return guide?.length ? { guide: guide.map((g) => ({ ...g })) } : {};
+}
+
 /** A recipe's sample report in a language, as written, or nothing. */
 function sampleOf(w: object): { sample?: string } {
   const sample = (w as { sample?: string }).sample;
@@ -179,7 +195,7 @@ function fold(name: string): string {
  * one of these (rule 13): a job whose app can't connect yet stays out, and comes back once its app is added
  * here, after a check proves it.
  */
-export const CONNECTS_TODAY: ReadonlySet<string> = new Set(["stripe", "qonto", "shippo", "intercom", "zendesk", "pipedrive", "github", "gmail", "typeform", "googlecalendar", "googledrive"]);
+export const CONNECTS_TODAY: ReadonlySet<string> = new Set(["stripe", "qonto", "shippo", "intercom", "zendesk", "pipedrive", "github", "gmail", "typeform", "googlecalendar", "googledrive", "googlesheets"]);
 
 /**
  * The apps that connect today, read from planque's catalog: every app a check connected (rule 13), from the read's
@@ -220,7 +236,7 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
       // costs today (the app-words cut, screen 2). The apps draw no empty line.
       return { id: r.id, title: w.title, category: r.category, headline: w.line, today: "", line: "", say: w.say,
         connections: r.connections.map((g) => [...g]), card: { allows: [...w.card.allows], holds: [...w.card.holds], never: [...w.card.never] },
-        ...provedOf(r, lang), ...sampleOf(w) };
+        ...provedOf(r, lang), ...sampleOf(w), ...guideOf(w) };
     });
   const order = new Map<string, number>(CATEGORY_IDS.map((c, i) => [c, i]));
   // RECIPES is in the apps' order already (category, then each recipe's `order`); a stable sort keeps it within a category.
@@ -337,6 +353,11 @@ export interface GalleryWords {
   try: string;
   /** The label above a job's `sample`: what it reported after its test run. */
   sample: string;
+  /** The heading over a job's `guide`, and the labels of its three kinds of line. */
+  guide: string;
+  guide_do: string;
+  guide_see: string;
+  guide_if: string;
 }
 
 /** What `GET /v1/recipes/gallery` answers: every job the catalog can connect, the strip, and the words to draw them. */
@@ -390,7 +411,8 @@ export function galleryFor(catalog: CatalogApp[] | undefined, lang: Lang, state:
     filtered: base.filtered,
     strip: { shown, title: w.gallery_strip_title, ids: shown ? ids : [] },
     words: { title: w.gallery_title, all: w.gallery_all, own_words: w.gallery_own_words, own_words_line: w.gallery_own_words_line,
-      ...(homeLeads ? {} : { explore: w.gallery_explore }), see_all: w.gallery_see_all, try: w.gallery_try, sample: w.gallery_sample },
+      ...(homeLeads ? {} : { explore: w.gallery_explore }), see_all: w.gallery_see_all, try: w.gallery_try, sample: w.gallery_sample,
+        guide: w.gallery_guide, guide_do: w.gallery_guide_do, guide_see: w.gallery_guide_see, guide_if: w.gallery_guide_if },
     labels: base.labels,
   };
 }

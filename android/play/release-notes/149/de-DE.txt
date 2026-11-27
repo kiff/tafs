@@ -1,0 +1,6 @@
+• Freigaben: Der Button sagt immer, wann er deinen Fingerabdruck braucht, und wer die App verlässt, wird wieder gefragt.
+• Belege sagen nur dann, dass Geld geflossen ist, wenn es so war.
+• Uhrzeiten folgen der 12- oder 24-Stunden-Einstellung deines Telefons.
+• Tarif & Nutzung sagt, was du bekommst, und einen Tarif zu wählen ist einfacher.
+• Fingerabdruck-Abfragen sagen, warum sie fragen.
+• Zurückgehaltene Aufrufe erreichen deine Wear-OS-Uhr auch bei geschlossener App.

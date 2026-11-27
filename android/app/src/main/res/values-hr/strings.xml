@@ -1881,6 +1881,7 @@
     <string name="receipt_refused_by">Odbio: %1$s</string>
     <string name="receipt_share">Podijelite</string>
     <string name="receipt_show_full">Prikažite cijelu potvrdu</string>
+    <string name="receipt_signed_in_window_why">Dodirom, u prozoru otvorenom uz: %1$s, ključem koji nikad ne napušta ovaj uređaj.</string>
     <string name="receipt_signed_on_device_why">Uz: %1$s, ključem koji nikad ne napušta ovaj uređaj.</string>
     <string name="receipt_signed_on_phone">✓ Potpisano na ovom telefonu</string>
     <string name="receipt_signed_on_phone_why">Ključem koji nikad ne napušta ovaj telefon.</string>

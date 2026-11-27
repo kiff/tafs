@@ -211,13 +211,29 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
 - **Inside it.** What the approval key would sign goes with the device key and the window's
   id, `t=…,v2=…,w=<id>`, over `kiff.request.v2` to KIFF or `planque.request.v2` to planque,
   the window's id last. planque's calls are signed this way only for the step that took the
-  window. The report to tafs cloud is signed as before (v1). On iPhone and iPad, KIFF's calls
-  too are signed in the window only for that step; anywhere else the approval key signs them,
-  behind Face ID, as before.
+  window. The report to tafs cloud is signed as before (v1). KIFF's calls too are signed in the
+  window only for that step: on iPhone and iPad, and on Android around the one call whose
+  Approve was a tap (`KiffClient.signsInWindow`, set by `AppModel.approveCoach`); anywhere else
+  the approval key signs them, behind the fingerprint or Face ID, as before, and the window
+  stays held. A tap there may confirm a new Card for the same taf.
+- **One taf.** A window covers only the steps of the taf whose step opened it: on iPhone and
+  iPad by that taf (`AppModel.windowTaf`), on Android by the setup (Coach's session) that opened
+  it (`AppState.windowSetup`). Another taf's card names the fingerprint or Face ID, and its step
+  closes the held window and opens its own behind a fresh one (`windowWords(forTaf:)` on iOS;
+  `AppModel.approveCoach` and `CoachWords.approvesAsTap` on Android). This keeps the label true;
+  KIFF holds the rule itself by the taf that opened the window. The opening names that taf: its
+  `agent`, signed with the rest, is the KIFF agent the step is for, the agent of the KIFF draft it
+  confirms or of the step's planque grant (iOS `AppModel.openWindow(for:agent:)`, Android
+  `AppModel.stepAgent`; `openWindow` in both clients). A window with none, such as a connection's
+  outside Coach, confirms no Card, and a Card step in it takes the fingerprint or Face ID. Raising
+  a limit or anything else that widens a Card always takes the fingerprint or Face ID, window or
+  not (`critical_key_required`).
 - **Refused.** KIFF's `critical_key_required` (the act takes the fingerprint every time, such
   as **No** to "Did this happen?") is signed again by the approval key, once (on iPhone and
   iPad behind a new Face ID: the approval key signs only under one). KIFF's
-  `window_required` forgets the window and does the same. planque's `window_required` on an
+  `window_required` forgets the window and does the same. KIFF's `window_scope` (the window was
+  opened for another taf) is signed again by the approval key, once, on both phones, and the
+  window stays for its own taf. planque's `window_required` on an
   approval card opens a new window, one fingerprint, and the call is made once more; on
   Android's direct connect, only the call it refused (most often the confirm, after a vendor
   sign-in that outlasted the window), never the approve again.
@@ -229,10 +245,13 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   by it; on iPhone and iPad the line under Approve is KIFF's words on a `"tap"` card while a
   window is held (`SetupComponent.windowWords`, `SetupApproval.approveLine`), and names Face ID
   anywhere else.
-- **Closing.** After 30 seconds in the background, and at once when the screen turns off, the
-  app closes it (`POST /v1/me/window/{id}/close`, device-signed); before a drive starts too. iOS
-  may suspend the app before its 30 seconds: then it closes on coming back, if that was 30
-  seconds or more. The app forgets it at sign-out and at a new sign-in. KIFF ends it itself at sign-out,
+- **Closing.** When the screen turns off the app closes it at once (`POST /v1/me/window/{id}/close`,
+  device-signed); before a drive starts too. Both phones close it at once when the app leaves
+  the foreground: the window's words and its taf or setup are forgotten on the phone before
+  anything else runs, and the close goes to KIFF after, so a quick return never finds it held
+  (`AppModel.dropWindow` on Android; `wentToBackground` and `screenLocked` on iPhone and iPad).
+  It's the app that sees the background or a lock, not KIFF: a window the close never reached
+  ends at KIFF's own time. The app forgets it at sign-out and at a new sign-in. KIFF ends it itself at sign-out,
   at its cap (15 minutes from the fingerprint), on a halt or a new approval key. Whether a window
   is open is never decided on the phone: an ended one comes back as `window_required`.
 

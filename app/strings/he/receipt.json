@@ -60,6 +60,7 @@
   "receipt.refused_by": "נדחה על ידי {who}",
   "receipt.share": "שיתוף",
   "receipt.show_full": "הצגת הקבלה המלאה",
+  "receipt.signed_in_window_why": "בהקשה, בתוך חלון שנפתח באמצעות {biometry}, במפתח שאף פעם לא עוזב את ההתקן הזה.",
   "receipt.signed_on_device_why": "באמצעות {biometry}, במפתח שאף פעם לא עוזב את ההתקן הזה.",
   "receipt.signed_on_phone": "✓ נחתם בטלפון הזה",
   "receipt.signed_on_phone_why": "במפתח שאף פעם לא עוזב את הטלפון הזה.",

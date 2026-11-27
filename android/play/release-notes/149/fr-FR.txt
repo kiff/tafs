@@ -1,0 +1,6 @@
+• Approbations : le bouton dit toujours quand il faut votre empreinte, et elle est redemandée quand vous quittez l'app.
+• Les reçus disent que de l'argent a bougé seulement quand c'est le cas.
+• Les heures suivent le format 12 ou 24 heures de votre téléphone.
+• Forfait et utilisation dit ce que vous obtenez, et choisir un forfait est plus simple.
+• Les demandes d'empreinte disent pourquoi elles la demandent.
+• Les appels retenus arrivent sur votre montre Wear OS même quand l'app est fermée.

@@ -1881,6 +1881,7 @@
     <string name="receipt_refused_by">נדחה על ידי %1$s</string>
     <string name="receipt_share">שיתוף</string>
     <string name="receipt_show_full">הצגת הקבלה המלאה</string>
+    <string name="receipt_signed_in_window_why">בהקשה, בתוך חלון שנפתח באמצעות %1$s, במפתח שאף פעם לא עוזב את ההתקן הזה.</string>
     <string name="receipt_signed_on_device_why">באמצעות %1$s, במפתח שאף פעם לא עוזב את ההתקן הזה.</string>
     <string name="receipt_signed_on_phone">✓ נחתם בטלפון הזה</string>
     <string name="receipt_signed_on_phone_why">במפתח שאף פעם לא עוזב את הטלפון הזה.</string>

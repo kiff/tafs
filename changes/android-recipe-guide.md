@@ -1,0 +1,1 @@
+- **Android: a job's sheet shows how it goes.** Under what the job reported after its proof run, the steps tafs cloud sends (`guide`), each with its Do, You see and If lines, in tafs cloud's words. A job without a guide, or a tafs cloud that sends no heading, shows none. ([the Android app](docs/android-app.md), "A job's sheet")

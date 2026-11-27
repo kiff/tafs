@@ -124,7 +124,10 @@ person's language.
 - **A job's sheet** (`RecipeSheet`) creates nothing. It shows the headline, the line, what it
   costs today, where it was proved (`proved`, "Proved on a test help desk."), its apps with
   their logos, its Card as does / asks / never, and what it reported after that proof run
-  (`sample`, under `words.sample`). A job with no proof run has neither. Its one action hands
+  (`sample`, under `words.sample`), then how it goes, step by step (`guide`, under the gallery's `words.guide`: each
+  step's title and its Do, You see and If lines, each led by `words.guide_do`, `guide_see` or
+  `guide_if`; a line that didn't come isn't drawn, and without the heading the section isn't
+  either, `GalleryWords.guideOf`). A job with no proof run has none of these. Its one action hands
   it to Coach: "Try it with Coach" (`words.try`) when opened while browsing, else `labels.hand`,
   and only for someone who may use Coach.
 - **The words** are tafs cloud's; the app's own (`HomeWords`) stand in only while it sends none.
@@ -284,8 +287,9 @@ guardrails. Promoting a release beyond internal (Play review) is the owner's, in
 (`changesNotSentForReview=true`): on 20 Nov a plain commit, with managed publishing off, sent every change pending in the
 console for review and restarted production's. Play's managed publishing is on since then, and with it on Play refuses that
 parameter (400, "Changes are sent for review automatically. The query parameter changesNotSentForReview must not be set.",
-21 Nov): on those words alone, and no others, the script commits the edit plainly (`commit`), and the release waits in
-"Changes ready to publish" until Publish is pressed in the Play Console. Any other refusal commits nothing. While a production review is in
+21 Nov): on those words alone, and no others, the script commits the edit plainly (`commit`). The internal release has
+reached testers without Publish all the same (146 on 25 Nov, 149 on 27 Nov, seen on a tester's phone), so the run's last
+line no longer says it waits. Anything else saved in the console still waits for Publish. Any other refusal commits nothing. While a production review is in
 flight, no internal upload runs until the review ends (row 44's 0.4.4-timing waited for 128). **Before merging a pull
 request that raises either `versionCode`**, Play Console's Publishing overview must list nothing saved and not yet sent for
 review: with managed publishing on, the plain commit sends every saved change for review with the release (on 22 Nov,

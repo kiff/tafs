@@ -1226,7 +1226,8 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { lookup: { refused: 2 } } });
     expect((await thread()).failed.words).toBe(wordsIn("en").turn_failed_ours);
     // A day's AI limit: tafs cloud's words, with when it goes on (kiff/agents' resets_at), never kiff/agents' English.
-    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: "ai_limit_account", error: "limit", resets_at: "2026-11-27T00:00:00Z" });
+    // An hour from now, so the limit hasn't started again whenever this runs (a fixed date passed at midnight).
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: "ai_limit_account", error: "limit", resets_at: new Date(Date.now() + 3_600_000).toISOString() });
     const limited = (await thread()).failed;
     // No Try again until the limit starts again: sent now, it would only stop at it again.
     expect(limited).toMatchObject({ run: run.id, code: "ai_limit_account", retry: false });

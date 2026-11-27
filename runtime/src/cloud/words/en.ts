@@ -186,6 +186,7 @@ export const en = {
   /** The item a limit for each item counts by, from the argument KIFF names (payment_intent), and a plain word for any other. */
   each_item_name: (key: string) => ({ payment_intent: "payment", payment: "payment", charge: "charge", invoice: "invoice", customer: "customer", order: "order", subscription: "subscription", refund: "refund" } as Record<string, string>)[key] ?? "item",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
+  approval_unproved: (vendor: string, tool: string) => `${vendor} hasn't been tested with tafs yet, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
   approval_critical_key: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
   approval_drive_key: "Letting Coach drive the app takes your fingerprint. Nothing started; approve it again with your fingerprint.",
   // A taf's removal unsigned, or signed without the screen lock, once signing is required (handler.ts, removalSigned).
@@ -379,7 +380,12 @@ export const en = {
   gallery_see_all: "See all jobs",
   gallery_try: "Try it with Coach",
   gallery_sample: "What it reported after its test run",
+  gallery_guide: "How it goes",
+  gallery_guide_do: "Do",
+  gallery_guide_see: "You see",
+  gallery_guide_if: "If",
   recipes_proved_help_desk: "Proved on a test help desk.",
+  recipes_proved_billing: "Proved on a test billing app.",
   suggestions_on: "Suggestions show in a new conversation with Coach until the account's first taf is live.",
   suggestions_off: "Suggestions are off for this account.",
   suggestions_live: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good.",

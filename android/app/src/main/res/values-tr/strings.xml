@@ -1820,6 +1820,7 @@
     <string name="receipt_refused_by">Reddeden: %1$s</string>
     <string name="receipt_share">Paylaş</string>
     <string name="receipt_show_full">Tam makbuzu göster</string>
+    <string name="receipt_signed_in_window_why">Bir dokunuşla, %1$s ile açılan bir pencere içinde, bu cihazdan asla çıkmayan bir anahtarla.</string>
     <string name="receipt_signed_on_device_why">%1$s ile, bu cihazdan asla çıkmayan bir anahtarla.</string>
     <string name="receipt_signed_on_phone">✓ Bu telefonda imzalandı</string>
     <string name="receipt_signed_on_phone_why">Bu telefondan asla çıkmayan bir anahtarla.</string>

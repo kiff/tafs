@@ -189,6 +189,16 @@ describe("Activity pages from the source", () => {
     const s = source([{ ...call(0), actor_id: "other-agent" }, call(1)]);
     expect((await activityPage(input(), s.net)).entries).toHaveLength(1);
   });
+  it("says money moved only for a done call KIFF marks as a payment, never for an amount alone", () => {
+    const paid = { ...call(0), amount: { value: "30.00", unit: "EUR" }, payment: true };
+    const invoice = { ...call(1), amount: { value: "120.00", unit: "EUR" } };
+    expect(activityEntry(paid, "Europe/Paris", now).money_moved).toBe(true);
+    // An invoice written or a transfer requested carries an amount and moves nothing.
+    expect(activityEntry(invoice, "Europe/Paris", now)).not.toHaveProperty("money_moved");
+    expect(activityEntry(invoice, "Europe/Paris", now).amount_text).toBe("€120.00");
+    // A payment KIFF held or refused moved nothing either.
+    expect(activityEntry({ ...paid, outcome: "owner_required" }, "Europe/Paris", now)).not.toHaveProperty("money_moved");
+  });
   it("writes dates, titles, amounts and stable ids for both screens", () => {
     const c = { ...call(0), amount: { value: "12.30", unit: "EUR" } };
     expect(activityEntry(c, "Europe/Paris", now)).toMatchObject({ time: "13:00", day_title: "Today", amount_text: "€12.30", title: "Read a case" });

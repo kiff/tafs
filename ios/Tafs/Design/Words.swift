@@ -3529,6 +3529,8 @@ enum Words {
         static var share: String { Words.line("receipt.share") }
         /// Show the full receipt
         static var showFull: String { Words.line("receipt.show_full") }
+        /// With a tap, in a window opened with {biometry}, by a key that never leaves this device.
+        static func signedInWindowWhy(biometry: String) -> String { Words.line("receipt.signed_in_window_why", biometry) }
         /// With {biometry}, by a key that never leaves this device.
         static func signedOnDeviceWhy(biometry: String) -> String { Words.line("receipt.signed_on_device_why", biometry) }
         /// ✓ Signed on this phone

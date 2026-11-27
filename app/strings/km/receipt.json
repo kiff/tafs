@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who} បានបដិសេធ",
   "receipt.share": "ចែករំលែក",
   "receipt.show_full": "បង្ហាញបង្កាន់ដៃពេញ",
+  "receipt.signed_in_window_why": "ដោយការប៉ះ ក្នុងរយៈពេលដែលបានបើកដោយ {biometry} ដោយកូនសោដែលមិនដែលចាកចេញពីឧបករណ៍នេះ។",
   "receipt.signed_on_device_why": "ដោយ {biometry} ដោយកូនសោដែលមិនដែលចាកចេញពីឧបករណ៍នេះ។",
   "receipt.signed_on_phone": "✓ បានចុះហត្ថលេខានៅលើទូរសព្ទនេះ",
   "receipt.signed_on_phone_why": "ដោយកូនសោដែលមិនដែលចាកចេញពីទូរសព្ទនេះ។",

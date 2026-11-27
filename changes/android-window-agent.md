@@ -1,0 +1,1 @@
+- **Android: the approval window names its taf.** The window's opening carries the KIFF agent of the step that opened it, so KIFF lets that taf's Cards be approved with a tap inside it and no other's. Needs a KIFF that takes `agent` on the opening. ([approvals.md](docs/approvals.md), "One fingerprint, then taps")

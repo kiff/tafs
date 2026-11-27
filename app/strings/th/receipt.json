@@ -60,6 +60,7 @@
   "receipt.refused_by": "{who} ปฏิเสธ",
   "receipt.share": "แชร์",
   "receipt.show_full": "แสดงใบเสร็จฉบับเต็ม",
+  "receipt.signed_in_window_why": "ด้วยการแตะ ภายในช่วงเวลาที่เปิดด้วย {biometry} โดยกุญแจที่ไม่เคยออกจากอุปกรณ์นี้",
   "receipt.signed_on_device_why": "ด้วย {biometry} โดยกุญแจที่ไม่เคยออกจากอุปกรณ์นี้",
   "receipt.signed_on_phone": "✓ ลงนามบนโทรศัพท์เครื่องนี้แล้ว",
   "receipt.signed_on_phone_why": "โดยกุญแจที่ไม่เคยออกจากโทรศัพท์เครื่องนี้",

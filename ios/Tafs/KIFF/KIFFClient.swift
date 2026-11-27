@@ -104,6 +104,9 @@ final class KIFFClient {
     nonisolated static let unsupportedClient = "unsupported_client"
     nonisolated static let appSignInPath = "/v1/auth/app/"
     nonisolated static let windowRequired = "window_required"
+    /// KIFF's refusal of a window-signed act for another taf than the one whose step opened the window:
+    /// the approval key signs it, behind Face ID, as for `critical_key_required`. The window stays.
+    nonisolated static let windowScope = "window_scope"
 
     /// What the device key signs inside an approval window: `kiff.request.v1`'s lines under
     /// `kiff.request.v2`, with the window's id last, so the signature can't be moved to another
@@ -130,14 +133,16 @@ final class KIFFClient {
         try await send("GET", Self.windowPath)
     }
 
-    private struct WindowOpenBody: Encodable { let message: String; let expires: String; let nonce: String }
+    /// The opening, signed whole. `agent` is the taf whose step opens it (its KIFF agent): KIFF holds the window to that
+    /// taf, and refuses a window-signed Card change for any other (`window_scope`). Left out for a window no taf opens.
+    private struct WindowOpenBody: Encodable { let message: String; let expires: String; let nonce: String; let agent: String? }
 
     /// Opens an approval window with the approval key, under the Face ID this step just took:
     /// KIFF's `kiff.window.v1`, to `expires` at most five minutes ahead, with a fresh `nonce`; KIFF
     /// takes the signer's own session and device. The window is held once KIFF answers it. Set
     /// `setupSigner` first.
-    func openWindow(expires: String, nonce: String) async throws -> ApprovalWindow {
-        let read: WindowRead = try await send("POST", Self.windowPath, body: WindowOpenBody(message: Self.windowMessage, expires: expires, nonce: nonce))
+    func openWindow(expires: String, nonce: String, agent: String? = nil) async throws -> ApprovalWindow {
+        let read: WindowRead = try await send("POST", Self.windowPath, body: WindowOpenBody(message: Self.windowMessage, expires: expires, nonce: nonce, agent: agent))
         guard let opened = read.window else { throw KIFFError.server(status: 0, message: Words.Error.kiffOpenedNoWindow) }
         window = opened
         return opened
@@ -1108,8 +1113,11 @@ final class KIFFClient {
         /// Why it wasn't sent, in KIFF's words, in the app's language.
         var reason: String?
         var detail: String? = nil
+        /// KIFF: the call's tool moves money (by its owner-approved profile) and the call was sent. Only then did money
+        /// move: an amount alone (an invoice written, a transfer requested) moved nothing.
+        var payment: Bool? = nil
         enum CodingKeys: String, CodingKey {
-            case title, outcome, held, amount, answer, receipt, reasons, detail
+            case title, outcome, held, amount, answer, receipt, reasons, detail, payment
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
             case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"
@@ -1874,7 +1882,7 @@ final class KIFFClient {
             let fields = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?.compactMapValues { $0 as? String }
             // Refused in the window: the act takes the approval key every time, or the window ended. The
             // approval key signs it again, once, behind a new Face ID; an ended window is forgotten.
-            if status == 403, let held, let refused = fields?["error"], refused == Self.criticalKeyRequired || refused == Self.windowRequired {
+            if status == 403, let held, let refused = fields?["error"], refused == Self.criticalKeyRequired || refused == Self.windowRequired || refused == Self.windowScope {
                 if refused == Self.windowRequired, window?.id == held { window = nil }
                 guard approvalSigner != nil, let reconfirm = windowReconfirm else { throw KIFFError.windowRefused(code: refused) }
                 try await reconfirm()
@@ -2027,5 +2035,6 @@ extension KIFFClient.ActivityCall {
         madeAt = try c.decodeIfPresent(Date.self, forKey: .madeAt)
         reason = try c.decodeIfPresent(String.self, forKey: .reason)
         detail = try c.decodeIfPresent(String.self, forKey: .detail)
+        payment = try c.decodeIfPresent(Bool.self, forKey: .payment)
     }
 }
