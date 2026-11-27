@@ -1,0 +1,3 @@
+• Zadania z przewodnikiem pokazują krok po kroku, jak przebiegają.
+• Rejestr mówi „Zatwierdzone raz przez Ciebie” tylko wtedy, gdy to Ty zatwierdziłeś.
+• Karty pierwszego uruchomienia mówią, czym zatwierdzasz: odciskiem palca lub twarzą, nigdy blokadą ekranu.

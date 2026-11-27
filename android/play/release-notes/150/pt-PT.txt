@@ -1,0 +1,3 @@
+• Os trabalhos com guia mostram como correm, passo a passo.
+• O registo diz "Aprovada uma vez por si" só quando aprovou.
+• Os cartões do primeiro arranque dizem com que aprova: a sua impressão digital ou o seu rosto, nunca o bloqueio de ecrã.

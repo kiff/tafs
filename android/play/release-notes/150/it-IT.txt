@@ -1,0 +1,3 @@
+• I lavori con una guida mostrano come vanno, passo dopo passo.
+• Il registro dice "Approvata una volta da te" solo quando hai approvato tu.
+• Le schede del primo avvio dicono con cosa approvi: impronta o volto, mai il blocco schermo.
