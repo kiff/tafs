@@ -12,4 +12,4 @@ card:
     - Alterar uma fatura
     - Uma nota de crédito ou um desconto
 ---
-Todas as manhãs de dias úteis, encontra as minhas faturas em atraso na minha app de contabilidade e envia a cada cliente um lembrete simpático a partir do meu email, no máximo um por semana e por fatura e 20 por dia. Nunca alteres uma fatura nem ofereças um desconto. Diz-me quem tem mais de 30 dias de atraso.
+Todas as manhãs de dias úteis, encontra as minhas faturas em atraso na minha app de contabilidade ou de faturação e envia a cada cliente um lembrete simpático a partir do meu email, no máximo um por semana e por fatura e 20 por dia. Nunca alteres uma fatura nem ofereças um desconto. Diz-me quem tem mais de 30 dias de atraso.

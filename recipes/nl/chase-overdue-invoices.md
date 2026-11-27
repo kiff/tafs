@@ -12,4 +12,4 @@ card:
     - Een factuur wijzigen
     - Een creditnota of een korting
 ---
-Zoek elke werkdagochtend mijn achterstallige facturen in mijn boekhoudapp en stuur elke klant een vriendelijke herinnering vanuit mijn e-mail, hoogstens één per week per factuur en 20 per dag. Wijzig nooit een factuur en bied geen korting aan. Vertel me wie meer dan 30 dagen achterloopt.
+Zoek elke werkdagochtend mijn achterstallige facturen in mijn boekhoud- of facturatieapp en stuur elke klant een vriendelijke herinnering vanuit mijn e-mail, hoogstens één per week per factuur en 20 per dag. Wijzig nooit een factuur en bied geen korting aan. Vertel me wie meer dan 30 dagen achterloopt.

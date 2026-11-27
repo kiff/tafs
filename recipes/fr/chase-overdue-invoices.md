@@ -12,4 +12,4 @@ card:
     - Modifier une facture
     - Un avoir ou une remise
 ---
-Chaque matin de semaine, trouve mes factures en retard dans mon logiciel de comptabilité et envoie à chaque client une relance polie depuis mon e-mail, au plus une par semaine et par facture et 20 par jour. Ne modifie jamais une facture et ne propose pas de remise. Dis-moi qui a plus de 30 jours de retard.
+Chaque matin de semaine, trouve mes factures en retard dans mon logiciel de comptabilité ou de facturation et envoie à chaque client une relance polie depuis mon e-mail, au plus une par semaine et par facture et 20 par jour. Ne modifie jamais une facture et ne propose pas de remise. Dis-moi qui a plus de 30 jours de retard.

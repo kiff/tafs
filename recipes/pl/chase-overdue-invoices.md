@@ -12,4 +12,4 @@ card:
     - Zmiana faktury
     - Nota kredytowa lub rabat
 ---
-W każdy poranek dnia roboczego znajdź moje zaległe faktury w mojej aplikacji księgowej i wyślij każdemu klientowi uprzejme przypomnienie z mojego e-maila, najwyżej jedno na tydzień i fakturę oraz 20 dziennie. Nigdy nie zmieniaj faktury i nie proponuj rabatu. Powiedz mi, kto zalega ponad 30 dni.
+W każdy poranek dnia roboczego znajdź moje zaległe faktury w mojej aplikacji księgowej lub do fakturowania i wyślij każdemu klientowi uprzejme przypomnienie z mojego e-maila, najwyżej jedno na tydzień i fakturę oraz 20 dziennie. Nigdy nie zmieniaj faktury i nie proponuj rabatu. Powiedz mi, kto zalega ponad 30 dni.

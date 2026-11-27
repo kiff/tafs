@@ -12,4 +12,4 @@ card:
     - Modificare una fattura
     - Una nota di credito o uno sconto
 ---
-Ogni mattina dei giorni feriali, trova le mie fatture scadute nella mia app di contabilità e invia a ogni cliente un sollecito cortese dalla mia email, al massimo uno a settimana per fattura e 20 al giorno. Non modificare mai una fattura e non offrire sconti. Dimmi chi è in ritardo di oltre 30 giorni.
+Ogni mattina dei giorni feriali, trova le mie fatture scadute nella mia app di contabilità o di fatturazione e invia a ogni cliente un sollecito cortese dalla mia email, al massimo uno a settimana per fattura e 20 al giorno. Non modificare mai una fattura e non offrire sconti. Dimmi chi è in ritardo di oltre 30 giorni.

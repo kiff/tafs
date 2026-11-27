@@ -12,4 +12,4 @@ card:
     - Modificar una factura
     - Una nota de crédito o un descuento
 ---
-Cada mañana de lunes a viernes, busca mis facturas vencidas en mi app de contabilidad y envía a cada cliente un recordatorio amable desde mi correo, como mucho uno por semana y factura y 20 al día. Nunca cambies una factura ni ofrezcas un descuento. Dime quién lleva más de 30 días de retraso.
+Cada mañana de lunes a viernes, busca mis facturas vencidas en mi app de contabilidad o de facturación y envía a cada cliente un recordatorio amable desde mi correo, como mucho uno por semana y factura y 20 al día. Nunca cambies una factura ni ofrezcas un descuento. Dime quién lleva más de 30 días de retraso.

@@ -366,12 +366,13 @@ export const RECIPES = [
     "line": "Reminds customers of overdue invoices on a schedule and reports who hasn't paid; moves no money.",
     "headline": "Get paid without chasing.",
     "today": "Late payers stay late until someone finds the time to remind them.",
-    "say": "Each weekday morning, find my overdue invoices in my accounting app and send a polite reminder to each customer from my email, at most one a week per invoice and 20 a day. Never change an invoice or offer a discount. Tell me who is more than 30 days late.",
+    "say": "Each weekday morning, find my overdue invoices in my accounting or billing app and send a polite reminder to each customer from my email, at most one a week per invoice and 20 a day. Never change an invoice or offer a discount. Tell me who is more than 30 days late.",
     "connections": [
       [
         "quickbooks",
         "zohobooks",
-        "moneybird"
+        "moneybird",
+        "stripe"
       ],
       [
         "gmail",
@@ -396,7 +397,7 @@ export const RECIPES = [
         "headline": "Werde bezahlt, ohne hinterherzulaufen.",
         "today": "Wer spät zahlt, bleibt spät, bis jemand Zeit findet, ihn zu erinnern.",
         "line": "Erinnert Kunden nach Plan an überfällige Rechnungen und meldet, wer nicht gezahlt hat; bewegt kein Geld.",
-        "say": "Suche jeden Werktag morgens meine überfälligen Rechnungen in meiner Buchhaltungs-App und schicke jedem Kunden von meiner E-Mail eine höfliche Erinnerung, höchstens eine pro Woche und Rechnung und 20 am Tag. Ändere nie eine Rechnung und biete keinen Rabatt an. Sag mir, wer mehr als 30 Tage im Verzug ist.",
+        "say": "Suche jeden Werktag morgens meine überfälligen Rechnungen in meiner Buchhaltungs- oder Rechnungs-App und schicke jedem Kunden von meiner E-Mail eine höfliche Erinnerung, höchstens eine pro Woche und Rechnung und 20 am Tag. Ändere nie eine Rechnung und biete keinen Rabatt an. Sag mir, wer mehr als 30 Tage im Verzug ist.",
         "card": {
           "allows": [
             "Erinnerungen bis zu 20 am Tag, höchstens eine pro Woche und Rechnung"
@@ -415,7 +416,7 @@ export const RECIPES = [
         "headline": "Soyez payé sans relancer.",
         "today": "Les mauvais payeurs restent en retard jusqu'à ce que quelqu'un trouve le temps de les relancer.",
         "line": "Relance les clients pour les factures en retard selon un calendrier et indique qui n'a pas payé ; ne déplace aucun argent.",
-        "say": "Chaque matin de semaine, trouve mes factures en retard dans mon logiciel de comptabilité et envoie à chaque client une relance polie depuis mon e-mail, au plus une par semaine et par facture et 20 par jour. Ne modifie jamais une facture et ne propose pas de remise. Dis-moi qui a plus de 30 jours de retard.",
+        "say": "Chaque matin de semaine, trouve mes factures en retard dans mon logiciel de comptabilité ou de facturation et envoie à chaque client une relance polie depuis mon e-mail, au plus une par semaine et par facture et 20 par jour. Ne modifie jamais une facture et ne propose pas de remise. Dis-moi qui a plus de 30 jours de retard.",
         "card": {
           "allows": [
             "Relances jusqu'à 20 par jour, au plus une par semaine et par facture"
@@ -434,7 +435,7 @@ export const RECIPES = [
         "headline": "Cobra sin perseguir a nadie.",
         "today": "Quien paga tarde sigue pagando tarde hasta que alguien encuentra tiempo para recordárselo.",
         "line": "Recuerda a los clientes sus facturas vencidas según un calendario e informa de quién no ha pagado; no mueve dinero.",
-        "say": "Cada mañana de lunes a viernes, busca mis facturas vencidas en mi app de contabilidad y envía a cada cliente un recordatorio amable desde mi correo, como mucho uno por semana y factura y 20 al día. Nunca cambies una factura ni ofrezcas un descuento. Dime quién lleva más de 30 días de retraso.",
+        "say": "Cada mañana de lunes a viernes, busca mis facturas vencidas en mi app de contabilidad o de facturación y envía a cada cliente un recordatorio amable desde mi correo, como mucho uno por semana y factura y 20 al día. Nunca cambies una factura ni ofrezcas un descuento. Dime quién lleva más de 30 días de retraso.",
         "card": {
           "allows": [
             "Recordatorios hasta 20 al día, como mucho uno por semana y factura"
@@ -453,7 +454,7 @@ export const RECIPES = [
         "headline": "Fatti pagare senza rincorrere nessuno.",
         "today": "Chi paga in ritardo resta in ritardo finché qualcuno non trova il tempo di ricordarglielo.",
         "line": "Ricorda ai clienti le fatture scadute secondo un calendario e segnala chi non ha pagato; non muove denaro.",
-        "say": "Ogni mattina dei giorni feriali, trova le mie fatture scadute nella mia app di contabilità e invia a ogni cliente un sollecito cortese dalla mia email, al massimo uno a settimana per fattura e 20 al giorno. Non modificare mai una fattura e non offrire sconti. Dimmi chi è in ritardo di oltre 30 giorni.",
+        "say": "Ogni mattina dei giorni feriali, trova le mie fatture scadute nella mia app di contabilità o di fatturazione e invia a ogni cliente un sollecito cortese dalla mia email, al massimo uno a settimana per fattura e 20 al giorno. Non modificare mai una fattura e non offrire sconti. Dimmi chi è in ritardo di oltre 30 giorni.",
         "card": {
           "allows": [
             "Solleciti fino a 20 al giorno, al massimo uno a settimana per fattura"
@@ -472,7 +473,7 @@ export const RECIPES = [
         "headline": "Receba sem andar atrás de ninguém.",
         "today": "Quem paga tarde continua a pagar tarde até alguém ter tempo para lembrar.",
         "line": "Lembra os clientes das faturas em atraso segundo um calendário e indica quem não pagou; não movimenta dinheiro.",
-        "say": "Todas as manhãs de dias úteis, encontra as minhas faturas em atraso na minha app de contabilidade e envia a cada cliente um lembrete simpático a partir do meu email, no máximo um por semana e por fatura e 20 por dia. Nunca alteres uma fatura nem ofereças um desconto. Diz-me quem tem mais de 30 dias de atraso.",
+        "say": "Todas as manhãs de dias úteis, encontra as minhas faturas em atraso na minha app de contabilidade ou de faturação e envia a cada cliente um lembrete simpático a partir do meu email, no máximo um por semana e por fatura e 20 por dia. Nunca alteres uma fatura nem ofereças um desconto. Diz-me quem tem mais de 30 dias de atraso.",
         "card": {
           "allows": [
             "Lembretes até 20 por dia, no máximo um por semana e por fatura"
@@ -491,7 +492,7 @@ export const RECIPES = [
         "headline": "Krijg betaald zonder achter mensen aan te gaan.",
         "today": "Wie laat betaalt, blijft laat tot iemand tijd vindt om een herinnering te sturen.",
         "line": "Herinnert klanten volgens een schema aan achterstallige facturen en meldt wie niet heeft betaald; verplaatst geen geld.",
-        "say": "Zoek elke werkdagochtend mijn achterstallige facturen in mijn boekhoudapp en stuur elke klant een vriendelijke herinnering vanuit mijn e-mail, hoogstens één per week per factuur en 20 per dag. Wijzig nooit een factuur en bied geen korting aan. Vertel me wie meer dan 30 dagen achterloopt.",
+        "say": "Zoek elke werkdagochtend mijn achterstallige facturen in mijn boekhoud- of facturatieapp en stuur elke klant een vriendelijke herinnering vanuit mijn e-mail, hoogstens één per week per factuur en 20 per dag. Wijzig nooit een factuur en bied geen korting aan. Vertel me wie meer dan 30 dagen achterloopt.",
         "card": {
           "allows": [
             "Herinneringen tot 20 per dag, hoogstens één per week per factuur"
@@ -510,7 +511,7 @@ export const RECIPES = [
         "headline": "Dostawaj pieniądze bez ganiania za nikim.",
         "today": "Kto płaci późno, płaci późno dalej, dopóki ktoś nie znajdzie czasu, żeby mu przypomnieć.",
         "line": "Przypomina klientom o zaległych fakturach według harmonogramu i zgłasza, kto nie zapłacił; nie przelewa pieniędzy.",
-        "say": "W każdy poranek dnia roboczego znajdź moje zaległe faktury w mojej aplikacji księgowej i wyślij każdemu klientowi uprzejme przypomnienie z mojego e-maila, najwyżej jedno na tydzień i fakturę oraz 20 dziennie. Nigdy nie zmieniaj faktury i nie proponuj rabatu. Powiedz mi, kto zalega ponad 30 dni.",
+        "say": "W każdy poranek dnia roboczego znajdź moje zaległe faktury w mojej aplikacji księgowej lub do fakturowania i wyślij każdemu klientowi uprzejme przypomnienie z mojego e-maila, najwyżej jedno na tydzień i fakturę oraz 20 dziennie. Nigdy nie zmieniaj faktury i nie proponuj rabatu. Powiedz mi, kto zalega ponad 30 dni.",
         "card": {
           "allows": [
             "Przypomnienia do 20 dziennie, najwyżej jedno na tydzień i fakturę"

@@ -12,4 +12,4 @@ card:
     - Eine Rechnung ändern
     - Eine Gutschrift oder ein Rabatt
 ---
-Suche jeden Werktag morgens meine überfälligen Rechnungen in meiner Buchhaltungs-App und schicke jedem Kunden von meiner E-Mail eine höfliche Erinnerung, höchstens eine pro Woche und Rechnung und 20 am Tag. Ändere nie eine Rechnung und biete keinen Rabatt an. Sag mir, wer mehr als 30 Tage im Verzug ist.
+Suche jeden Werktag morgens meine überfälligen Rechnungen in meiner Buchhaltungs- oder Rechnungs-App und schicke jedem Kunden von meiner E-Mail eine höfliche Erinnerung, höchstens eine pro Woche und Rechnung und 20 am Tag. Ändere nie eine Rechnung und biete keinen Rabatt an. Sag mir, wer mehr als 30 Tage im Verzug ist.
