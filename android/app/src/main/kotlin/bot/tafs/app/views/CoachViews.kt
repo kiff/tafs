@@ -519,7 +519,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
     "notice" -> NoticeCard(c)
     "confirm" -> ConfirmCard(c, answered, error, actions.answer)
     "questions" -> QuestionsCard(c, answered, error, actions.answer)
-    "approval" -> ApprovalCard(c, state, answered, error, actions)
+    "approval" -> ApprovalCard(c, shown.session.ifEmpty { null } ?: state.coachChat, state, answered, error, actions)
     "sign_in" -> SignInCard(c, state, answered, error, actions)
     "knob" -> KnobDraftCard(c, state, answered, error, actions)
     // Coach's drafted door "From another application" (ApiDoorViews.kt), behind its switch.
@@ -534,7 +534,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
  * reads it, and the one confirmation signs exactly what is shown. Coach's own description of it is never what is approved.
  */
 @Composable
-private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
+private fun ApprovalCard(c: SetupComponent, setup: String?, state: AppState, answered: String?, error: String?, actions: CoachActions) {
   val grant = state.grants.firstOrNull { it.id == c.grant }
   val draft = c.draft?.let { state.setupDrafts[it] }
   val busy = approvalHeld(state, c.grant)
@@ -636,7 +636,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           // An app connected with a key, not connected yet: the chat never takes a secret. The card opens the key sheet, outside it.
           val needsKey = grant.takesKey && !grant.connected && !grant.needsReconnect
           // The window's words only where Approve is a tap, as tafs cloud marks the card: never over one that takes the fingerprint.
-          val windowWords = windowWordsFor(c, state.windowWords)
+          val windowWords = windowWordsFor(c, state.windowWords, state.windowSetup, setup)
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready || grant.needsReconnect) OutlineButton(
               when {
@@ -789,7 +789,8 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
  * KIFF's approval-window words for [c], only when its Approve is a tap ([CoachWords.approvesAsTap]): the same answer signing
  * follows, so the button never says one thing and does another.
  */
-internal fun windowWordsFor(c: SetupComponent, windowWords: String?): String? = windowWords?.takeIf { CoachWords.approvesAsTap(c, it) }
+internal fun windowWordsFor(c: SetupComponent, windowWords: String?, windowSetup: String?, setup: String?): String? =
+  windowWords?.takeIf { CoachWords.approvesAsTap(c, it, windowSetup, setup) }
 
 /**
  * Another approval holds this card's buttons: the one that runs at a time ([AppState.connecting]) is this card's own, or
