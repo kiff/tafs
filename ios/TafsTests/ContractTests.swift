@@ -72,6 +72,19 @@ final class ContractTests: XCTestCase {
         XCTAssertNotNil(read.labels, "the sheet's words")
     }
 
+    /// A held call's arguments under Details, every case of contracts/held-arguments.json: the lines every app writes,
+    /// exactly. Nothing is ever shortened to "…" (red-team, 27 Nov: a held browse_act's steps showed as "steps: …").
+    func testAHeldCallsArgumentsAreTheContractsLinesExactly() throws {
+        for c in try cases("held-arguments.json") {
+            let name = try XCTUnwrap(c["name"] as? String)
+            let arguments = try JSONSerialization.data(withJSONObject: try XCTUnwrap(c["arguments"]), options: [.fragmentsAllowed])
+            let held = #"{"id":"ce_c","subject":"a","action":"x","entity_id":"e","status":"held","breaches":[],"created_at":"2026-11-27T16:00:00Z","arguments":"#
+                + String(decoding: arguments, as: UTF8.self) + "}"
+            let e = try KIFFClient.decoder.decode(KIFFClient.CardException.self, from: Data(held.utf8))
+            XCTAssertEqual(KIFFMapping.details(of: e), try XCTUnwrap(c["lines"] as? [String]), name)
+        }
+    }
+
     /// One contract, decoded with the app's decoder as the type its read decodes; a failure names the file and why.
     private func decodes<T: Decodable>(_ type: T.Type, _ file: String, line: UInt = #line) -> T? {
         do {

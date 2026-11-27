@@ -566,6 +566,11 @@ the app in sample mode.
   - They never stand in for KIFF's amount, rule or action, and nothing is read from them.
   - The gateway's `kiff_about` and `kiff_reason` arguments aren't listed again under Details,
     where the ids stay (`TafSaysTests`).
+  - Every other argument is written out in full under Details, never "…" (`KIFFMapping.details`): a plain one on
+    its line, a list's items (1, 2, …) and an object's fields below its name, two spaces deeper each level, keys in
+    code point order at every level, an empty string below the top as `""`, an integer exactly as sent, and a line
+    break or control character as a space, so a held browser call's `steps` are what the owner reads before
+    approving. Every app writes the same lines, from `contracts/held-arguments.json` (`ContractTests`).
 - **Allow this from now on** (`HoldAllow`, `AllowSheetView`; `docs/allow-from-now-on.md`): a third answer on a held
   call's card, beside Approve once and Refuse, that changes the Card so calls like it go on their own.
   - **The button** is the app's own rule, from the held call KIFF sent, with no request (`AppModel.offersAllow`):

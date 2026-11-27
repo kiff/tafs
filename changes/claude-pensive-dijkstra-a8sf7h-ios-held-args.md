@@ -1,0 +1,1 @@
+- **iPhone and iPad: a held call's Details writes every argument out in full.** A list or object (such as a held browser call's `steps`) was shown as "…"; now each item and field is written out, indented, keys in order, as `contracts/held-arguments.json` says every app does, so the owner reads every step before approving.
