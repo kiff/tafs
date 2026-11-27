@@ -37,7 +37,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, chatLeftAgents, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, browserLine, chromeLine, tafPageSites } from "./connections.js";
+import { type AccountConnection, type AppGuide, accountConnections, chatLeftAgents, otherForm, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, browserLine, chromeLine, tafPageSites } from "./connections.js";
 import { maskedPath, normalHost, onSites, pageSiteRefused } from "./page-sites.js";
 import { maskedCodes } from "./page-codes.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
@@ -11714,10 +11714,15 @@ async function connectionUses(event: HTTPEvent, me: KIFFIdentity, deps: Deps): P
     const agents = new Set(live.map((t) => t.kiffAgent).filter(Boolean));
     const seen = new Map<string, AppUser[]>();
     const any = new Set<string>();
+    // A taf's connection may sit under the other form of its agent's name (with or without the generated suffix,
+    // otherForm): it counts as that taf's, so an app a taf runs on never reads "Not used by any taf". Named under a
+    // taf the person sees only when that form is no other live taf's own.
+    const ownerOf = (agent: string) => [...agents].find((k) => otherForm(agent, k));
     for (const c of conns) {
       const keys = [c.entry, foldVendor(c.vendor)].filter((k): k is string => !!k);
-      if (agents.has(c.agent)) for (const key of keys) any.add(key);
-      const taf = tafs.get(c.agent);
+      const owner = agents.has(c.agent) ? c.agent : ownerOf(c.agent);
+      if (owner !== undefined) for (const key of keys) any.add(key);
+      const taf = owner === undefined ? undefined : tafs.get(owner);
       if (!taf) continue;
       for (const key of keys) {
         const list = seen.get(key) ?? [];

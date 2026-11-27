@@ -2134,7 +2134,8 @@ describe("Connect apps' contracts", () => {
           }
           if (url === "https://planque.test/v1/accounts/t_acme/connections") return ok({ connections: [
             { agent: "rae", vendor: "Stripe", kind: "vendor_sign_in", server: "https://mcp.stripe.com", status: "connected" },
-            { agent: "rae", vendor: "gmail", kind: "provider", entry: "connector:p:gmail", status: "needs_reconnect" },
+            // Rae's Gmail asked under the suffixed form of its agent's name: still Rae's (otherForm).
+            { agent: "rae-k3f9x2ab", vendor: "gmail", kind: "provider", entry: "connector:p:gmail", status: "needs_reconnect" },
             // A chat's connection isn't a taf's: it doesn't count as a use.
             { agent: "coach-chat-1", vendor: "pipedrive", kind: "provider", entry: "connector:p:pipedrive", status: "listed" },
           ] });
@@ -2156,6 +2157,8 @@ describe("Connect apps' contracts", () => {
     // Every sign-in the account holds is its own, one no taf uses included, and says so.
     expect(page.apps.find((a) => a.name === "Pipedrive")).toMatchObject({ state: "signed_in", connected: false, whose: "Company", line: "Sign in · Signed in · Not used by any taf" });
     expect(page.apps.find((a) => a.name === "Stripe")!.line).toBe("Sign in · Connected · Used by Rae");
+    // A taf's connection under the other form of its agent's name is still that taf's, never "Not used by any taf".
+    expect(page.apps.find((a) => a.name === "Gmail")!.line).toBe("Sign in · Sign in again · Used by Rae");
     expect(page).toMatchObject({ by_key: true, provider: "p", next_cursor: "cur_2" });
     expect(page.apps.find((a) => a.name === "Stripe")!.logo).toMatch(/^\/v1\/logos\/[0-9a-f]{32}$/);
     expect(page.apps.find((a) => a.name === "Qonto")!.subtitle).toBe("Invoicing: reads and drafts");
