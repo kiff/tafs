@@ -1626,7 +1626,7 @@
     <string name="onboarding_age">Tem de ter pelo menos 16 anos, ou a idade de consentimento digital do seu país, se for superior.</string>
     <string name="onboarding_age_n">Tem de ter pelo menos %1$s anos.</string>
     <string name="onboarding_card_lead">Cada taf trabalha dentro de um Card que emite: o que pode fazer, com que app e quanto. Para além disso, pergunta-lhe.</string>
-    <string name="onboarding_card_title">Uma Card é a sua autorização</string>
+    <string name="onboarding_card_title">Um Card é a sua autorização</string>
     <string name="onboarding_coach_title">O Coach configura-o consigo</string>
     <string name="onboarding_consent_tick">Aceito %1$s e %2$s.</string>
     <string name="onboarding_control_lead">Quando um taf precisa de si, espera em «Precisa de si» e, se tiver um, no relógio. Aprova com Face ID ou Touch ID, ou recusa.</string>

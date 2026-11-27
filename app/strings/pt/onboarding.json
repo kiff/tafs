@@ -2,7 +2,7 @@
   "onboarding.age": "Tem de ter pelo menos 16 anos, ou a idade de consentimento digital do seu país, se for superior.",
   "onboarding.age_n": "Tem de ter pelo menos {age} anos.",
   "onboarding.card_lead": "Cada taf trabalha dentro de um Card que emite: o que pode fazer, com que app e quanto. Para além disso, pergunta-lhe.",
-  "onboarding.card_title": "Uma Card é a sua autorização",
+  "onboarding.card_title": "Um Card é a sua autorização",
   "onboarding.coach_title": "O Coach configura-o consigo",
   "onboarding.consent_tick": "Aceito {kiff_terms} e {tafs_terms}.",
   "onboarding.control_lead": "Quando um taf precisa de si, espera em «Precisa de si» e, se tiver um, no relógio. Aprova com Face ID ou Touch ID, ou recusa.",
