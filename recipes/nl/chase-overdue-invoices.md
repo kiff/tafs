@@ -16,11 +16,11 @@ guide:
   - - Do: Lees de regels die Coach je toont en ga akkoord.
   - - You see: De taak wijzigt nooit een factuur en biedt nooit een creditnota of korting aan, en vraagt het je eerst voordat hij meer dan 20 herinneringen op een dag verstuurt.
   - Keur de Card goed
-  - - Do: Keur de Card goed om je Stripe-facturen te lezen.
-  - - You see: De Card, met zijn daglimiet voor het lezen van facturen.
+  - - Do: Keur de Card goed.
+  - - You see: De Card: wat de taak zelf doet, wat hij je eerst vraagt en wat hij nooit doet.
   - Start hem
   - - Do: Open de chat van de taak en vraag hem te starten.
-  - - You see: Hoeveel facturen te laat zijn, voor elke een opgestelde herinnering en wie meer dan 30 dagen te laat is. Er wordt niets verstuurd.
+  - - You see: Hoeveel facturen te laat zijn, voor elke een opgestelde herinnering en wie meer dan 30 dagen te laat is. Er wordt niets verstuurd: er is geen e-mailapp verbonden.
 card:
   allows:
     - Herinneringen tot 20 per dag, hoogstens één per week per factuur

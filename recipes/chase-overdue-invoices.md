@@ -23,11 +23,11 @@ guide:
   - - Do: Read the rules Coach shows you, and agree.
   - - You see: The job never edits an invoice and never offers a credit note or a discount, and it asks you first before sending more than 20 reminders in a day.
   - Approve the Card
-  - - Do: Approve the Card for reading your Stripe invoices.
-  - - You see: The Card, with its daily limit on invoice reads.
+  - - Do: Approve the Card.
+  - - You see: The Card: what the job does on its own, what asks you first, and what it never does.
   - Run it
   - - Do: Open the job's chat and ask it to run.
-  - - You see: How many invoices are overdue, a reminder drafted for each, and who is more than 30 days late. Nothing is sent.
+  - - You see: How many invoices are overdue, a reminder drafted for each, and who is more than 30 days late. Nothing is sent: no email app is connected.
 card:
   allows:
     - Reminders up to 20 a day, at most one a week per invoice

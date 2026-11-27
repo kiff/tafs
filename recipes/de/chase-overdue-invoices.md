@@ -10,17 +10,17 @@ sample:
   - Ich habe keine Rechnung geändert und keinen Rabatt angeboten.
 guide:
   - Stripe verbinden
-  - - Do: Öffne den Job. Coach bittet dich, Stripe zu verbinden, nur zum Lesen deiner Rechnungen. Genehmige es.
+  - - Do: Öffne die Aufgabe. Coach bittet dich, Stripe zu verbinden, nur zum Lesen deiner Rechnungen. Genehmige es.
   - - You see: Stripe als verbunden aufgeführt, nur zum Lesen.
   - Die Regeln lesen
   - - Do: Lies die Regeln, die Coach dir zeigt, und stimme zu.
-  - - You see: Der Job ändert nie eine Rechnung und bietet nie eine Gutschrift oder einen Rabatt an, und er fragt dich zuerst, bevor er mehr als 20 Erinnerungen an einem Tag sendet.
+  - - You see: Die Aufgabe ändert nie eine Rechnung und bietet nie eine Gutschrift oder einen Rabatt an, und sie fragt dich zuerst, bevor sie mehr als 20 Erinnerungen an einem Tag sendet.
   - Die Card genehmigen
-  - - Do: Genehmige die Card zum Lesen deiner Stripe-Rechnungen.
-  - - You see: Die Card mit ihrem Tageslimit für das Lesen von Rechnungen.
+  - - Do: Genehmige die Card.
+  - - You see: Die Card: was die Aufgabe selbst macht, was sie dich zuerst fragt und was sie nie macht.
   - Starten
-  - - Do: Öffne den Chat des Jobs und bitte ihn, zu starten.
-  - - You see: Wie viele Rechnungen überfällig sind, zu jeder eine entworfene Erinnerung und wer mehr als 30 Tage im Rückstand ist. Es wird nichts gesendet.
+  - - Do: Öffne den Chat der Aufgabe und bitte sie zu starten.
+  - - You see: Wie viele Rechnungen überfällig sind, zu jeder eine entworfene Erinnerung und wer mehr als 30 Tage im Rückstand ist. Es wird nichts gesendet: Keine E-Mail-App ist verbunden.
 card:
   allows:
     - Erinnerungen bis zu 20 am Tag, höchstens eine pro Woche und Rechnung

@@ -16,11 +16,11 @@ guide:
   - - Do: Leggi le regole che Coach ti mostra e accetta.
   - - You see: Il lavoro non modifica mai una fattura e non offre mai una nota di credito o uno sconto, e ti chiede prima di inviare più di 20 solleciti in un giorno.
   - Approva la Card
-  - - Do: Approva la Card per leggere le tue fatture Stripe.
-  - - You see: La Card, con il suo limite giornaliero di letture di fatture.
+  - - Do: Approva la Card.
+  - - You see: La Card: ciò che il lavoro fa da solo, ciò che ti chiede prima e ciò che non fa mai.
   - Avvialo
   - - Do: Apri la chat del lavoro e chiedigli di partire.
-  - - You see: Quante fatture sono scadute, un sollecito scritto per ciascuna e chi ha più di 30 giorni di ritardo. Non viene inviato nulla.
+  - - You see: Quante fatture sono scadute, un sollecito scritto per ciascuna e chi ha più di 30 giorni di ritardo. Non viene inviato nulla: nessuna app di posta è collegata.
 card:
   allows:
     - Solleciti fino a 20 al giorno, al massimo uno a settimana per fattura

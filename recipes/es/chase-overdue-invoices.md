@@ -16,11 +16,11 @@ guide:
   - - Do: Lee las reglas que Coach te muestra y acepta.
   - - You see: El trabajo nunca modifica una factura ni ofrece una nota de crédito o un descuento, y te pregunta antes de enviar más de 20 recordatorios en un día.
   - Aprueba la Card
-  - - Do: Aprueba la Card para leer tus facturas de Stripe.
-  - - You see: La Card, con su límite diario de lecturas de facturas.
+  - - Do: Aprueba la Card.
+  - - You see: La Card: lo que el trabajo hace solo, lo que te pregunta primero y lo que nunca hace.
   - Ejecútalo
   - - Do: Abre el chat del trabajo y pídele que se ejecute.
-  - - You see: Cuántas facturas están vencidas, un recordatorio redactado para cada una y quién lleva más de 30 días de retraso. No se envía nada.
+  - - You see: Cuántas facturas están vencidas, un recordatorio redactado para cada una y quién lleva más de 30 días de retraso. No se envía nada: no hay ninguna app de correo conectada.
 card:
   allows:
     - Recordatorios hasta 20 al día, como mucho uno por semana y factura

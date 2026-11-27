@@ -14,13 +14,13 @@ guide:
   - - You see: Stripe pokazany jako połączony, tylko do odczytu.
   - Przeczytaj zasady
   - - Do: Przeczytaj zasady, które pokazuje Coach, i zgódź się.
-  - - You see: Zadanie nigdy nie zmienia faktury i nigdy nie oferuje noty kredytowej ani rabatu, a przed wysłaniem więcej niż 20 przypomnień w ciągu dnia najpierw pyta ciebie.
+  - - You see: Zadanie nigdy nie zmienia faktury i nigdy nie oferuje noty kredytowej ani rabatu, a przed wysłaniem więcej niż 20 przypomnień w ciągu dnia najpierw Cię pyta.
   - Zatwierdź Card
-  - - Do: Zatwierdź Card do odczytu faktur ze Stripe.
-  - - You see: Card z jej dziennym limitem odczytów faktur.
+  - - Do: Zatwierdź Card.
+  - - You see: Card: co zadanie robi samo, o co najpierw Cię pyta i czego nigdy nie robi.
   - Uruchom
   - - Do: Otwórz czat zadania i poproś o uruchomienie.
-  - - You see: Ile faktur jest przeterminowanych, przypomnienie napisane do każdej i kto spóźnia się ponad 30 dni. Nic nie jest wysyłane.
+  - - You see: Ile faktur jest przeterminowanych, przypomnienie napisane do każdej i kto spóźnia się ponad 30 dni. Nic nie jest wysyłane: żadna aplikacja pocztowa nie jest połączona.
 card:
   allows:
     - Przypomnienia do 20 dziennie, najwyżej jedno na tydzień i fakturę

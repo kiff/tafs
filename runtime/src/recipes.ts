@@ -406,13 +406,13 @@ export const RECIPES = [
       },
       {
         "title": "Approve the Card",
-        "do": "Approve the Card for reading your Stripe invoices.",
-        "see": "The Card, with its daily limit on invoice reads."
+        "do": "Approve the Card.",
+        "see": "The Card: what the job does on its own, what asks you first, and what it never does."
       },
       {
         "title": "Run it",
         "do": "Open the job's chat and ask it to run.",
-        "see": "How many invoices are overdue, a reminder drafted for each, and who is more than 30 days late. Nothing is sent."
+        "see": "How many invoices are overdue, a reminder drafted for each, and who is more than 30 days late. Nothing is sent: no email app is connected."
       }
     ],
     "languages": {
@@ -438,23 +438,23 @@ export const RECIPES = [
         "guide": [
           {
             "title": "Stripe verbinden",
-            "do": "Öffne den Job. Coach bittet dich, Stripe zu verbinden, nur zum Lesen deiner Rechnungen. Genehmige es.",
+            "do": "Öffne die Aufgabe. Coach bittet dich, Stripe zu verbinden, nur zum Lesen deiner Rechnungen. Genehmige es.",
             "see": "Stripe als verbunden aufgeführt, nur zum Lesen."
           },
           {
             "title": "Die Regeln lesen",
             "do": "Lies die Regeln, die Coach dir zeigt, und stimme zu.",
-            "see": "Der Job ändert nie eine Rechnung und bietet nie eine Gutschrift oder einen Rabatt an, und er fragt dich zuerst, bevor er mehr als 20 Erinnerungen an einem Tag sendet."
+            "see": "Die Aufgabe ändert nie eine Rechnung und bietet nie eine Gutschrift oder einen Rabatt an, und sie fragt dich zuerst, bevor sie mehr als 20 Erinnerungen an einem Tag sendet."
           },
           {
             "title": "Die Card genehmigen",
-            "do": "Genehmige die Card zum Lesen deiner Stripe-Rechnungen.",
-            "see": "Die Card mit ihrem Tageslimit für das Lesen von Rechnungen."
+            "do": "Genehmige die Card.",
+            "see": "Die Card: was die Aufgabe selbst macht, was sie dich zuerst fragt und was sie nie macht."
           },
           {
             "title": "Starten",
-            "do": "Öffne den Chat des Jobs und bitte ihn, zu starten.",
-            "see": "Wie viele Rechnungen überfällig sind, zu jeder eine entworfene Erinnerung und wer mehr als 30 Tage im Rückstand ist. Es wird nichts gesendet."
+            "do": "Öffne den Chat der Aufgabe und bitte sie zu starten.",
+            "see": "Wie viele Rechnungen überfällig sind, zu jeder eine entworfene Erinnerung und wer mehr als 30 Tage im Rückstand ist. Es wird nichts gesendet: Keine E-Mail-App ist verbunden."
           }
         ]
       },
@@ -490,13 +490,13 @@ export const RECIPES = [
           },
           {
             "title": "Approuver la Card",
-            "do": "Approuvez la Card pour lire vos factures Stripe.",
-            "see": "La Card, avec sa limite quotidienne de lectures de factures."
+            "do": "Approuvez la Card.",
+            "see": "La Card : ce que la tâche fait seule, ce qu'elle vous demande d'abord et ce qu'elle ne fait jamais."
           },
           {
             "title": "Lancer",
-            "do": "Ouvrez la conversation de la tâche et demandez-lui de s'exécuter.",
-            "see": "Combien de factures sont en retard, une relance rédigée pour chacune et qui a plus de 30 jours de retard. Rien n'est envoyé."
+            "do": "Ouvrez la conversation de la tâche et demandez-lui de se lancer.",
+            "see": "Combien de factures sont en retard, une relance rédigée pour chacune et qui a plus de 30 jours de retard. Rien n'est envoyé : aucune appli de messagerie n'est connectée."
           }
         ]
       },
@@ -532,13 +532,13 @@ export const RECIPES = [
           },
           {
             "title": "Aprueba la Card",
-            "do": "Aprueba la Card para leer tus facturas de Stripe.",
-            "see": "La Card, con su límite diario de lecturas de facturas."
+            "do": "Aprueba la Card.",
+            "see": "La Card: lo que el trabajo hace solo, lo que te pregunta primero y lo que nunca hace."
           },
           {
             "title": "Ejecútalo",
             "do": "Abre el chat del trabajo y pídele que se ejecute.",
-            "see": "Cuántas facturas están vencidas, un recordatorio redactado para cada una y quién lleva más de 30 días de retraso. No se envía nada."
+            "see": "Cuántas facturas están vencidas, un recordatorio redactado para cada una y quién lleva más de 30 días de retraso. No se envía nada: no hay ninguna app de correo conectada."
           }
         ]
       },
@@ -574,13 +574,13 @@ export const RECIPES = [
           },
           {
             "title": "Approva la Card",
-            "do": "Approva la Card per leggere le tue fatture Stripe.",
-            "see": "La Card, con il suo limite giornaliero di letture di fatture."
+            "do": "Approva la Card.",
+            "see": "La Card: ciò che il lavoro fa da solo, ciò che ti chiede prima e ciò che non fa mai."
           },
           {
             "title": "Avvialo",
             "do": "Apri la chat del lavoro e chiedigli di partire.",
-            "see": "Quante fatture sono scadute, un sollecito scritto per ciascuna e chi ha più di 30 giorni di ritardo. Non viene inviato nulla."
+            "see": "Quante fatture sono scadute, un sollecito scritto per ciascuna e chi ha più di 30 giorni di ritardo. Non viene inviato nulla: nessuna app di posta è collegata."
           }
         ]
       },
@@ -605,24 +605,24 @@ export const RECIPES = [
         "sample": "Há quatro faturas vencidas e ainda em aberto. Redigi um lembrete para cada uma e não enviei nada.\n\nNinguém está mais de 30 dias atrasado. As faturas mais antigas venceram há 22 dias.\n\nCada lembrete começa com a linha que avisa que foi escrito por uma IA, indica a fatura e o valor, e diz para ignorar se já estiver paga.\n\nNão alterei nenhuma fatura nem ofereci qualquer desconto.",
         "guide": [
           {
-            "title": "Liga o Stripe",
-            "do": "Abre o trabalho. O Coach pede-te para ligar o Stripe, só para ler as tuas faturas. Aprova.",
+            "title": "Ligue o Stripe",
+            "do": "Abra o trabalho. O Coach pede-lhe que ligue o Stripe, só para ler as suas faturas. Aprove.",
             "see": "O Stripe aparece como ligado, só para leitura."
           },
           {
-            "title": "Lê as regras",
-            "do": "Lê as regras que o Coach te mostra e aceita.",
-            "see": "O trabalho nunca altera uma fatura nem oferece uma nota de crédito ou um desconto, e pergunta-te primeiro antes de enviar mais de 20 lembretes num dia."
+            "title": "Leia as regras",
+            "do": "Leia as regras que o Coach lhe mostra e aceite.",
+            "see": "O trabalho nunca altera uma fatura nem oferece uma nota de crédito ou um desconto, e pergunta-lhe primeiro antes de enviar mais de 20 lembretes num dia."
           },
           {
-            "title": "Aprova o Card",
-            "do": "Aprova o Card para ler as tuas faturas do Stripe.",
-            "see": "O Card, com o seu limite diário de leituras de faturas."
+            "title": "Aprove o Card",
+            "do": "Aprove o Card.",
+            "see": "O Card: o que o trabalho faz sozinho, o que lhe pergunta primeiro e o que nunca faz."
           },
           {
-            "title": "Executa",
-            "do": "Abre o chat do trabalho e pede-lhe que execute.",
-            "see": "Quantas faturas estão vencidas, um lembrete redigido para cada uma e quem tem mais de 30 dias de atraso. Não é enviado nada."
+            "title": "Execute",
+            "do": "Abra o chat do trabalho e peça-lhe que execute.",
+            "see": "Quantas faturas estão vencidas, um lembrete redigido para cada uma e quem tem mais de 30 dias de atraso. Não é enviado nada: nenhuma app de correio está ligada."
           }
         ]
       },
@@ -658,13 +658,13 @@ export const RECIPES = [
           },
           {
             "title": "Keur de Card goed",
-            "do": "Keur de Card goed om je Stripe-facturen te lezen.",
-            "see": "De Card, met zijn daglimiet voor het lezen van facturen."
+            "do": "Keur de Card goed.",
+            "see": "De Card: wat de taak zelf doet, wat hij je eerst vraagt en wat hij nooit doet."
           },
           {
             "title": "Start hem",
             "do": "Open de chat van de taak en vraag hem te starten.",
-            "see": "Hoeveel facturen te laat zijn, voor elke een opgestelde herinnering en wie meer dan 30 dagen te laat is. Er wordt niets verstuurd."
+            "see": "Hoeveel facturen te laat zijn, voor elke een opgestelde herinnering en wie meer dan 30 dagen te laat is. Er wordt niets verstuurd: er is geen e-mailapp verbonden."
           }
         ]
       },
@@ -696,17 +696,17 @@ export const RECIPES = [
           {
             "title": "Przeczytaj zasady",
             "do": "Przeczytaj zasady, które pokazuje Coach, i zgódź się.",
-            "see": "Zadanie nigdy nie zmienia faktury i nigdy nie oferuje noty kredytowej ani rabatu, a przed wysłaniem więcej niż 20 przypomnień w ciągu dnia najpierw pyta ciebie."
+            "see": "Zadanie nigdy nie zmienia faktury i nigdy nie oferuje noty kredytowej ani rabatu, a przed wysłaniem więcej niż 20 przypomnień w ciągu dnia najpierw Cię pyta."
           },
           {
             "title": "Zatwierdź Card",
-            "do": "Zatwierdź Card do odczytu faktur ze Stripe.",
-            "see": "Card z jej dziennym limitem odczytów faktur."
+            "do": "Zatwierdź Card.",
+            "see": "Card: co zadanie robi samo, o co najpierw Cię pyta i czego nigdy nie robi."
           },
           {
             "title": "Uruchom",
             "do": "Otwórz czat zadania i poproś o uruchomienie.",
-            "see": "Ile faktur jest przeterminowanych, przypomnienie napisane do każdej i kto spóźnia się ponad 30 dni. Nic nie jest wysyłane."
+            "see": "Ile faktur jest przeterminowanych, przypomnienie napisane do każdej i kto spóźnia się ponad 30 dni. Nic nie jest wysyłane: żadna aplikacja pocztowa nie jest połączona."
           }
         ]
       }
