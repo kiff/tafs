@@ -6993,15 +6993,23 @@ describe("the account's connections a Coach conversation starts with", () => {
     await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
     const hosted = planque(w, () => new Response(JSON.stringify({ connections, browser: { pay: false } }), { status: 200 }));
     const said = (await firstMessage(w, (await send(hosted, `/v1/tafs/${COACH}/messages`, { text: "a taf that can pay for orders on shop.example", new_chat: true })).session))!;
-    expect(said).toContain("treated as live\n- Hosted browser: offered; paying off: it never pays: no browse_pay, and browse_checkout only reads a checkout\n");
+    expect(said).toContain("treated as live\n- Hosted browser: offered; paying off: it never pays (no browse_pay)\n");
     // The owner's Chrome isn't offered here, so Coach is told nothing of it, and nothing of "your Chrome".
     expect(said).not.toContain("Chrome:");
     expect(ownerWords(said)).toBe("a taf that can pay for orders on shop.example");
     // Coach's browser skill says what the line means: no payment line in the rules, and "this browser", never "your Chrome".
     const skill = COACH_SKILLS.find((s) => s.name === "a-browser-taf")!.body;
-    expect(skill).toContain("**Hosted browser, paying off:** no browse_pay, and no currency asked, whatever the owner asks; browse_checkout only to read a checkout and stop.");
+    // The paying-off rule comes before the sentence for browsers that pay, which says whose it is.
+    const off = skill.indexOf("**Hosted browser, paying off,** first: no browse_pay and no currency, whatever the owner asks; don't ask for browse_checkout");
+    const pays = skill.indexOf("In the owner's Chrome, or a hosted browser that pays: browse_checkout and browse_pay only when the owner asks the taf to pay");
+    expect(off).toBeGreaterThan(-1);
+    expect(pays).toBeGreaterThan(off);
     expect(skill).toContain("Its rules carry no payment line: nothing waits for a pay approval, no amount limit.");
-    expect(skill).toContain('say "this browser", never "your Chrome"');
+    // Its live view is for signing in alone: no hand-over, which planque refuses off the owner's Chrome.
+    expect(skill).toContain('The owner signs in to a site in this browser\'s live view in the app: say "this browser", never "your Chrome". It hands no other step over');
+    expect(skill).not.toMatch(/has no browse_checkout|step that's the owner's is done in this browser's live view/);
+    // Picking a paired Chrome is the owner's Chrome only.
+    expect(skill).toContain("In the hosted browser, the request names no driver and the owner approves its sites on the phone.");
     const paying = planque(w, () => new Response(JSON.stringify({ connections, browser: { pay: true } }), { status: 200 }));
     expect((await firstMessage(w, (await send(paying, `/v1/tafs/${COACH}/messages`, { text: "a taf that can pay", new_chat: true })).session))!)
       .toContain("- Hosted browser: offered; it pays, each pay held for the owner\n");
