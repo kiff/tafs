@@ -23,7 +23,7 @@ const LISTS = ["allows", "holds", "never"];
  * What a recipe's proof run passed on, as `proved:` names it (English only): each key has its line in every
  * language in tafs cloud's words (`recipes_proved_<key>`). A recipe with no proof run names none.
  */
-export const PROVED = ["help_desk"];
+export const PROVED = ["help_desk", "billing"];
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VENDOR = /^[a-z0-9_]+(?:-[a-z0-9_]+)*$/;
 

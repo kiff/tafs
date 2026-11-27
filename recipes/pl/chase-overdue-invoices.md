@@ -3,6 +3,11 @@ title: Upominanie się o zaległe faktury
 headline: Dostawaj pieniądze bez ganiania za nikim.
 today: Kto płaci późno, płaci późno dalej, dopóki ktoś nie znajdzie czasu, żeby mu przypomnieć.
 line: Przypomina klientom o zaległych fakturach według harmonogramu i zgłasza, kto nie zapłacił; nie przelewa pieniędzy.
+sample:
+  - Cztery faktury są przeterminowane i wciąż otwarte. Napisałem przypomnienie do każdej i niczego nie wysłałem.
+  - Nikt nie spóźnia się dłużej niż 30 dni. Najstarsze faktury miały termin 22 dni temu.
+  - Każde przypomnienie zaczyna się od informacji, że napisała je AI, podaje fakturę i kwotę oraz mówi, żeby je zignorować, jeśli już zapłacono.
+  - Nie zmieniłem żadnej faktury i nie zaproponowałem rabatu.
 card:
   allows:
     - Przypomnienia do 20 dziennie, najwyżej jedno na tydzień i fakturę
@@ -12,4 +17,4 @@ card:
     - Zmiana faktury
     - Nota kredytowa lub rabat
 ---
-W każdy poranek dnia roboczego znajdź moje zaległe faktury w mojej aplikacji księgowej i wyślij każdemu klientowi uprzejme przypomnienie z mojego e-maila, najwyżej jedno na tydzień i fakturę oraz 20 dziennie. Nigdy nie zmieniaj faktury i nie proponuj rabatu. Powiedz mi, kto zalega ponad 30 dni.
+W każdy poranek dnia roboczego znajdź moje zaległe faktury w mojej aplikacji księgowej lub do fakturowania i wyślij każdemu klientowi uprzejme przypomnienie z mojego e-maila, najwyżej jedno na tydzień i fakturę oraz 20 dziennie. Nigdy nie zmieniaj faktury i nie proponuj rabatu. Powiedz mi, kto zalega ponad 30 dni.

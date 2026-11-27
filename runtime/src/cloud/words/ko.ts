@@ -357,6 +357,7 @@ export const ko: Words = {
   gallery_try: "Coach와 해 보기",
   gallery_sample: "테스트 실행 후 보고한 내용",
   recipes_proved_help_desk: "테스트 헬프데스크에서 검증했습니다.",
+  recipes_proved_billing: "테스트 청구 앱에서 검증했습니다.",
   suggestions_on: "계정의 첫 taf가 적용될 때까지 Coach와의 새 대화에 제안이 표시됩니다.",
   suggestions_off: "이 계정에서는 제안이 꺼져 있습니다.",
   suggestions_live: "계정에 적용된 taf가 있어 Coach와의 새 대화가 빈 상태로 열립니다. 제안은 영구적으로 끌 수 있습니다.",

@@ -200,7 +200,7 @@ Bezahle meine Rechnungen unter 100 EUR.
     // Filtered or in another language, the order holds.
     expect(recipesFor(undefined, "pl").recipes[0]!.id).toBe("refunds-within-a-limit");
     const stripeAndGmail = [{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gmail", vendor: "Gmail" }];
-    expect(recipesFor(stripeAndGmail).recipes.map((r) => r.id)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels", "failed-card-payments"]);
+    expect(recipesFor(stripeAndGmail).recipes.map((r) => r.id)).toEqual(["refunds-within-a-limit", "chase-overdue-invoices", "save-a-customer-who-cancels", "failed-card-payments"]);
   });
 
   it("leads Home with the recipes only for a person who manages tafs, and only with one to lead with", () => {
@@ -235,7 +235,11 @@ Bezahle meine Rechnungen unter 100 EUR.
   // can't connect yet stays out, and comes back once its app is added to CONNECTS_TODAY after a check proves it.
   it("lists only the jobs whose every connection has an app that connects today", () => {
     const ids = recipesFor(undefined).recipes.map((r) => r.id);
-    expect(ids).not.toContain("chase-overdue-invoices");
+    // Overdue invoices takes Stripe as its billing app (invoices read there, reminders by the person's own mail), so it is listed
+    // with Stripe and Gmail; without a billing app that connects, it would not be.
+    expect(ids).toContain("chase-overdue-invoices");
+    const noStripe = new Set([...CONNECTS_TODAY].filter((v) => v !== "stripe"));
+    expect(recipesFor(undefined, "en", true, noStripe).recipes.map((r) => r.id)).not.toContain("chase-overdue-invoices");
     for (const id of ids) expect(connectsToday(RECIPES.find((r) => r.id === id)!), id).toBe(true);
     expect(ids).toEqual(expect.arrayContaining(["ship-when-green", "refunds-within-a-limit", "save-a-customer-who-cancels", "acknowledge-every-ticket"]));
     // Once an app is proved, its jobs come back with no other change: Typeform was proved by a sign-in on a phone
@@ -328,7 +332,7 @@ Bezahle meine Rechnungen unter 100 EUR.
   it("filters by every connection, taking any vendor that would do for it, by category", () => {
     const ids = (apps: Array<{ entry: string; vendor: string }>) => recipesFor(apps, "en", true, null).recipes.map((r) => r.id);
     const stripeAndGmail = [{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gmail", vendor: "Gmail" }];
-    expect(ids(stripeAndGmail)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels", "failed-card-payments"]);
+    expect(ids(stripeAndGmail)).toEqual(["refunds-within-a-limit", "chase-overdue-invoices", "save-a-customer-who-cancels", "failed-card-payments"]);
     // Gorgias instead of Gmail does as well for Refunds; Chargebacks needs Stripe and a shop or help desk; a help desk alone does for tickets.
     expect(ids([{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gorgias", vendor: "Gorgias" }]))
       .toEqual(["refunds-within-a-limit", "chargebacks-with-evidence", "acknowledge-every-ticket"]);

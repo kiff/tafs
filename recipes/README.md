@@ -50,8 +50,8 @@ Handle refund requests from my help desk. Refund in my payment provider up to 15
   what is refused outright (`never`). These are the owner's choices; the words to Coach carry
   the same limits, and the person edits them before sending.
 - `proved` (optional) names what the recipe's proof run passed on, once one has: `help_desk` for
-  a test help desk. tafs cloud turns it into a line in the person's language ("Proved on a test
-  help desk."), which the job's sheet shows. A recipe with no proof run has none.
+  a test help desk, `billing` for a test billing app. tafs cloud turns it into a line in the person's language ("Proved on a test
+  help desk.", "Proved on a test billing app."), which the job's sheet shows. A recipe with no proof run has none.
 - `sample` (optional, only with `proved`) is what the taf reported after that proof run, as it
   wrote it: a list of lines, one per paragraph. The job's sheet shows it read-only, under "What it
   reported after its test run", so a person can see what they'd get before setting anything up.

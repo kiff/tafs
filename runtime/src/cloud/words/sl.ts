@@ -353,6 +353,7 @@ export const sl: Words = {
   gallery_try: "Preizkusi s Coachem",
   gallery_sample: "Kaj je sporočil po preizkusnem zagonu",
   recipes_proved_help_desk: "Preverjeno na preizkusni podpori.",
+  recipes_proved_billing: "Preverjeno na preizkusni aplikaciji za obračun.",
   suggestions_on: "Predlogi se prikažejo v novem pogovoru s Coachem, dokler prvi taf računa ni v živo.",
   suggestions_off: "Predlogi so za ta račun izklopljeni.",
   suggestions_live: "Račun ima delujoč taf, zato se nov pogovor s Coachem odpre prazen. Predloge lahko izklopiš za vedno.",

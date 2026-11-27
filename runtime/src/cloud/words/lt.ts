@@ -353,6 +353,7 @@ export const lt: Words = {
   gallery_try: "Išbandyti su Coach",
   gallery_sample: "Ką jis pranešė po bandomojo paleidimo",
   recipes_proved_help_desk: "Išbandyta bandomojoje pagalbos tarnyboje.",
+  recipes_proved_billing: "Išbandyta bandomojoje sąskaitų programoje.",
   suggestions_on: "Pasiūlymai rodomi naujame pokalbyje su Coach, kol veiks pirmasis paskyros taf.",
   suggestions_off: "Pasiūlymai šiai paskyrai išjungti.",
   suggestions_live: "Paskyroje yra veikiantis taf, todėl naujas pokalbis su Coach atsidaro tuščias. Pasiūlymus galima išjungti visam laikui.",
