@@ -406,11 +406,11 @@ Read against kiff/tafs main and each desktop repo's main. **done** means merged 
 | Feature | iPhone/iPad | Android | Apple Watch | Wear OS | macOS 12 | Windows | Linux | Chrome extension |
 | :- | :- | :- | :- | :- | :- | :- | :- | :- |
 | The approval window is one taf's: one fingerprint or Face ID covers that taf's next approvals for up to 5 minutes. The button says "Approve" only inside it, and names the fingerprint or Face ID everywhere else. Another taf's approval, leaving the app or locking the screen ends it. Widening a Card always asks again. KIFF holds the window to its taf and to 5 minutes (kiff/cloud#189, live since 27 Nov). | done on main (tafs#2207: the window is the taf's, the opening names its agent); ships in the iOS build after 1.0 | done in 149, on Play's internal track since 27 Nov (tafs#2208; the opening names its agent, tafs#2215) | — (never approves) | — (never approves) | done: no window; a Card is the security key's, behind its PIN and a touch | done: no window; every approval is the passkey, with user verification | done: no window; every approval is the passkey, with user verification | — (never approves) |
-| "{amount} moved" only when KIFF says money moved. tafs cloud marks a done call `money_moved` only when KIFF's `payment` says the tool moved money (tafs#2206). The receipt and the Record's Money moved count it only then; an invoice written or a transfer requested reads "Done." | not yet: any amount reads "moved" | done in 149, on Play's internal track since 27 Nov (tafs#2206) | — | — | not yet: any amount reads "moved" | not yet: any amount reads "moved" | not yet: any amount reads "moved" | — |
+| "{amount} moved" only when KIFF says money moved. tafs cloud marks a done call `money_moved` only when KIFF's `payment` says the tool moved money (tafs#2206). The receipt and the Record's Money moved count it only then; an invoice written or a transfer requested reads "Done." | done on main (tafs#2212); ships in the iOS build after 1.0 | done in 149, on Play's internal track since 27 Nov (tafs#2206) | — | — | not yet: any amount reads "moved" | not yet: any amount reads "moved" | not yet: any amount reads "moved" | — |
 
 **Still open from 27 Nov:**
 - The approval window on iPhone and iPad reaches people with the iOS build after 1.0 (tafs#2207 is merged); Android has it in 149.
-- "Money moved" from `money_moved` on iPhone and iPad, and on the three desktops.
+- "Money moved" from `money_moved` on the three desktops. iPhone and iPad have it on main (tafs#2212), for the build after 1.0.
 
 ## Counting checks
 
