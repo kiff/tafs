@@ -8,7 +8,7 @@
   "approval.approving_asks_none_set_up": "Zum Genehmigen wird {either} abgefragt, und auf diesem {device} ist noch nichts davon eingerichtet. Richte es unter {kind} ein und komm dann zurück.",
   "approval.approving_needs_none_set_up": "Zum Genehmigen brauchst du {either}, und nichts davon ist eingerichtet. Richte es unter {kind} ein.",
   "approval.approving_needs_passcode_set_passcode": "Zum Genehmigen brauchst du einen Code und {either}. Lege unter {kind} einen Code fest und füge dann {either_2} hinzu.",
-  "approval.biometry.face": "Entsperrung per Gesicht",
+  "approval.biometry.face": "der Entsperrung per Gesicht",
   "approval.biometry.fingerprint": "deinem Fingerabdruck",
   "approval.biometry.screen_lock": "deiner Displaysperre",
   "approval.biometry_timed_out": "Zeitüberschreitung bei {biometry}. Versuch es erneut.",

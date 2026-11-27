@@ -68,7 +68,7 @@
     <string name="approval_approving_asks_none_set_up">Zum Genehmigen wird %1$s abgefragt, und auf diesem %2$s ist noch nichts davon eingerichtet. Richte es unter %3$s ein und komm dann zurück.</string>
     <string name="approval_approving_needs_none_set_up">Zum Genehmigen brauchst du %1$s, und nichts davon ist eingerichtet. Richte es unter %2$s ein.</string>
     <string name="approval_approving_needs_passcode_set_passcode">Zum Genehmigen brauchst du einen Code und %1$s. Lege unter %2$s einen Code fest und füge dann %3$s hinzu.</string>
-    <string name="approval_biometry_face">Entsperrung per Gesicht</string>
+    <string name="approval_biometry_face">der Entsperrung per Gesicht</string>
     <string name="approval_biometry_fingerprint">deinem Fingerabdruck</string>
     <string name="approval_biometry_screen_lock">deiner Displaysperre</string>
     <string name="approval_biometry_timed_out">Zeitüberschreitung bei %1$s. Versuch es erneut.</string>
