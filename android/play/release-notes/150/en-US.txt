@@ -1,3 +1,3 @@
-• A job's page shows how it goes, step by step.
-• Record says "Approved once" only when you approved.
+• Jobs with a guide show how they go, step by step.
+• Record says "Approved once by you" only when you approved.
 • The first-run cards say what approves: your fingerprint or face, never the screen lock.

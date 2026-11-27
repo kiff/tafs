@@ -1,3 +1,3 @@
-• A página de um trabalho mostra como funciona, passo a passo.
-• O registro diz "Aprovado uma vez" só quando você aprovou.
+• Trabalhos com guia mostram como funcionam, passo a passo.
+• O registro diz "Aprovada uma vez por você" só quando você aprovou.
 • Os cartões da primeira abertura dizem com o que você aprova: sua digital ou seu rosto, nunca o bloqueio de tela.

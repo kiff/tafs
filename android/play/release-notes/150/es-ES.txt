@@ -1,3 +1,3 @@
-• La página de un trabajo muestra cómo va, paso a paso.
-• El registro dice "Aprobado una vez" solo cuando has aprobado tú.
+• Los trabajos con guía muestran cómo van, paso a paso.
+• El registro dice "Aprobada una vez por ti" solo cuando has aprobado tú.
 • Las tarjetas del inicio dicen con qué apruebas: tu huella o tu cara, nunca el bloqueo de pantalla.
