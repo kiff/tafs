@@ -924,7 +924,8 @@ what a sign-in covers is planque's card to show, so Coach never says it, in a me
 the sign-in (`connect-an-app@36`, `draft-the-card@52`; an Eval's Plan words run offered "Connect your Gmail; its
 sign-in covers the whole mailbox" as a button). The one exception is an app guide's lines to tell before its sign-in
 (Qonto's: its own sign-in, the admin's approval of planque's address, the owner's own login, the professional-secrecy
-consent, what it can read): they go in the text of the card that asks to go ahead, as written (a paraphrase such as
+consent, what it can read): they go in the text of the card that asks to go ahead, as written or faithfully translated, adding and dropping
+nothing (a paraphrase such as
 "read-only" is what the wording rules refuse, on a card as on a message), one a line, above its question, never in a message alone, so the
 card never asks about lines the owner can't see. A vendor's own sign-in entry (`qonto`,
 `stripe`, which planque's search marks `sign_in`) is asked with `request {entry, name, taf_name, tools: []}` and its

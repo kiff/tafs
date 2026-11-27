@@ -87,10 +87,10 @@ describe("Coach's skills, as files", () => {
             // draft-the-card at 2,400: a [tafs connections] line's "; unproved" or "; on_demand" too, for a reused connection (kiff/planque#474). At 2,380: the search's unproved read too, before any grant (kiff/planque#473; the emulator, 27 Nov). At 2,360: an unproved app's writes (planque's unproved: true) are held as an on-demand app's, and
       // Coach never asks how many a day for a held write (the owner's phone, 27 Nov: Coach offered 10, 25 or 50 Pipedrive
       // deals a day, and tafs cloud refused the Card twice, since an unproved app's every write must ask; a number the owner gave for one is said back as asking, never put on the Card).
-      // connect-an-app at 2,310: a vendor's own sign-in entry is asked with no uses and never server and entry together, a refused
+      // connect-an-app at 2,320: a vendor's own sign-in entry is asked with no uses and never server and entry together, a refused
       // request is corrected once, a failed own sign-in is never replaced by its key, and a guide's lines before the sign-in go in
-      // the card's text as written (Qonto re-test 2, 27 Nov: "Have you read these?" with nothing above it, then the key route).
-      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2310, "draft-the-card": 2400, "name-the-tools": 1900 };
+      // the card's text as written or faithfully translated (Qonto re-test 2, 27 Nov: "Have you read these?" with nothing above it, then the key route).
+      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2320, "draft-the-card": 2400, "name-the-tools": 1900 };
       expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(budget[s.name] ?? 1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
@@ -623,7 +623,7 @@ describe("Coach's core", () => {
   // replaced by its key.
   it("puts a guide's before-sign-in lines in the card as written, asks a vendor's own sign-in alone, and never falls back to its key", () => {
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
-    expect(connect).toContain("One exception: lines the app's guide says to tell before its sign-in go in the text of the card that asks to go ahead, as written, one a line, above its question, never in a message alone.");
+    expect(connect).toContain("One exception: lines the app's guide says to tell before its sign-in go in the text of the card that asks to go ahead, as written or faithfully translated, adding and dropping nothing, one a line, above its question, never in a message alone.");
     expect(connect).toContain("planque request with its server, or its entry when search gives one, never both,");
     expect(connect).not.toContain("(by entry too)");
     expect(connect).toContain("A vendor's own sign-in entry (search marks it sign_in, with no tools) takes no uses: request {entry, name, taf_name, tools: []}, with your setup_reads, connected first.");
@@ -635,14 +635,14 @@ describe("Coach's core", () => {
   });
 
   // "As written" because the guide's own lines pass the wording rules kiff/agents' show applies to a card's text: Qonto's five,
-  // as planque's deploy/guides/qonto.md writes them (27 Nov), trip none, while the paraphrase the re-test's message used does.
+  // as planque's deploy/guides/qonto.md writes them (27 Nov, spoken to the owner), trip none, while the paraphrase the re-test's message used does.
   it("lets the Qonto guide's five lines through the card wording rules as written, and refuses the paraphrase", () => {
     const lines = [
-      "Qonto's own sign-in, no key. They sign in on Qonto's own page; no one makes or pastes a key.",
-      "An owner or admin approves planque's address first: Qonto AI, then Qonto MCP, then Advanced settings, add https://planque.kiff.dev/oauth/callback.",
-      "Use their own Qonto login, and \"Desktop site\" on a phone. If Qonto's page offers to create a company, they close it; if it shows only Apple, they open the browser's \"Desktop site\" view.",
-      "Professional secrecy. Qonto's consent page asks them to accept the lifting of Qonto's professional secrecy for the tool they chose. Their choice; without the tick, nothing is connected.",
-      "What it can read, as Qonto's page lists it: the account balance, IBAN, transactions, the business and its team; supplier invoices; receipts and other attachments; client invoices and credit notes. It can draft a client invoice, which they send themselves, and add or update clients. It can't finalise, cancel, send or mark an invoice paid, or delete an invoice or a client. It can't make payments, approve or refuse card and transfer requests, set trusted beneficiaries, or store their login.",
+      "Qonto's own sign-in, no key. You sign in on Qonto's own page; no one makes or pastes a key.",
+      "An owner or admin approves planque's address first: in Qonto, open Qonto AI, then Qonto MCP, then Advanced settings, and add https://planque.kiff.dev/oauth/callback.",
+      "Use your own Qonto login, and \"Desktop site\" on a phone. If Qonto's page offers to create a company, close it. If it shows only Apple, open your browser's \"Desktop site\" view.",
+      "Professional secrecy. Qonto's consent page asks you to accept the lifting of Qonto's professional secrecy for the tool you chose. It's your choice; without the tick, nothing is connected.",
+      "What it can read: the account balance, IBAN, transactions, the business and its team; supplier invoices; receipts and other attachments; client invoices and credit notes; products. It can draft a client invoice, which you send yourself, and add or update clients. It can't finalise, cancel, send or mark an invoice paid, or delete an invoice or a client. It can't make payments, approve or refuse card and transfer requests, set trusted beneficiaries, or store your login.",
     ];
     // As test/coach-wording.test.ts reads them: RE2 \pL is \p{L}, and a match needs a word edge on each side.
     const js = (p: string) => p.replace(/\\p([LN])/g, "\\p{$1}");
