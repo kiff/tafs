@@ -200,6 +200,18 @@ class MappingTest {
     assertEquals(listOf("charge: ch_1"), KiffMapping.details(list[1]))
   }
 
+  /**
+   * Keys go in Unicode code point order at every level, as KIFF writes them: U+FF01 (a full-width "!") comes before an emoji
+   * (U+1F600), though a String's own order puts the emoji's surrogate pair (0xD83D) first.
+   */
+  @Test fun keysGoInCodePointOrderNotUtf16Order() {
+    val e = exceptions(
+      """{"exceptions":[{"id":"ce_k","subject":"a","action":"x","entity_id":"e","created_at":"2026-11-27T18:00:00Z",
+        "arguments":{"\uD83D\uDE00":1,"\uFF01":2,"a":{"\uD83D\uDE00":3,"\uFF01":4}}}]}""",
+    )[0]
+    assertEquals(listOf("a:", "  \uFF01: 4", "  \uD83D\uDE00: 3", "\uFF01: 2", "\uD83D\uDE00: 1"), KiffMapping.details(e))
+  }
+
   @Test fun aHugeNumberIsWrittenAsSentNeverPadded() {
     fun text(n: String) = KiffMapping.argumentText(kotlinx.serialization.json.Json.parseToJsonElement(n))
     assertEquals("1" + "0".repeat(99), text("1e99"))
