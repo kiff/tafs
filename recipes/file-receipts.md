@@ -20,9 +20,9 @@ guide:
   - Connect your mailbox, your folder and your sheet
   - - Do: Open the job. Coach asks you to connect your email, your file storage and your spreadsheet, one after the other. Sign in to each and approve.
   - - You see: Each app listed as connected.
-  - Name the folder, the sheet and its tab
-  - - Do: Tell Coach which folder is for receipts, which spreadsheet holds your expenses, and the name of the tab in it.
-  - - You see: The job uses that tab when it adds a row.
+  - Link the folder and the sheet, and name the tab
+  - - Do: Give Coach the links to your receipts folder and to your spreadsheet, and the name of the tab.
+  - - You see: The job uses them when it saves a file and adds a row.
   - Approve the Card
   - - Do: Approve the Card.
   - - You see: The Card: what the job does on its own, what asks you first, and what it never does.

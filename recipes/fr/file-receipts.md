@@ -12,9 +12,9 @@ guide:
   - Connecter votre boîte mail, votre dossier et votre tableur
   - - Do: Ouvrez la tâche. Coach vous demande de connecter votre messagerie, votre stockage de fichiers et votre tableur, l'un après l'autre. Connectez-vous à chacun et approuvez.
   - - You see: Chaque appli indiquée comme connectée.
-  - Indiquer le dossier, le tableur et son onglet
-  - - Do: Dites à Coach quel dossier est pour les justificatifs, quel tableur contient vos dépenses et comment s'appelle l'onglet.
-  - - You see: La tâche utilise cet onglet quand elle ajoute une ligne.
+  - Donner les liens du dossier et du tableur, et nommer l'onglet
+  - - Do: Donnez à Coach les liens vers votre dossier de justificatifs et vers votre tableur, ainsi que le nom de l'onglet.
+  - - You see: La tâche les utilise quand elle enregistre un fichier et ajoute une ligne.
   - Approuver la Card
   - - Do: Approuvez la Card.
   - - You see: La Card : ce que la tâche fait seule, ce qu'elle vous demande d'abord et ce qu'elle ne fait jamais.

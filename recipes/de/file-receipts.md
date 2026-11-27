@@ -12,9 +12,9 @@ guide:
   - Postfach, Ordner und Tabelle verbinden
   - - Do: Öffne die Aufgabe. Coach bittet dich, deine E-Mail, deinen Dateispeicher und deine Tabelle nacheinander zu verbinden. Melde dich bei jedem an und genehmige.
   - - You see: Jede App als verbunden aufgeführt.
-  - Ordner, Tabelle und Blatt nennen
-  - - Do: Sag Coach, welcher Ordner für Belege gedacht ist, welche Tabelle deine Ausgaben enthält und wie das Blatt darin heißt.
-  - - You see: Die Aufgabe nutzt dieses Blatt, wenn sie eine Zeile hinzufügt.
+  - Ordner und Tabelle verlinken und das Blatt nennen
+  - - Do: Gib Coach die Links zu deinem Belege-Ordner und zu deiner Tabelle sowie den Namen des Blatts.
+  - - You see: Die Aufgabe nutzt sie, wenn sie eine Datei ablegt und eine Zeile hinzufügt.
   - Die Card genehmigen
   - - Do: Genehmige die Card.
   - - You see: Die Card: was die Aufgabe selbst macht, was sie dich zuerst fragt und was sie nie macht.

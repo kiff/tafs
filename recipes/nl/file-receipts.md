@@ -12,9 +12,9 @@ guide:
   - Verbind je mailbox, je map en je spreadsheet
   - - Do: Open de taak. Coach vraagt je je e-mail, je bestandsopslag en je spreadsheet na elkaar te verbinden. Log in bij elk en keur goed.
   - - You see: Elke app als verbonden getoond.
-  - Noem de map, de spreadsheet en het tabblad
-  - - Do: Vertel Coach welke map voor bonnetjes is, welke spreadsheet je uitgaven bevat en hoe het tabblad heet.
-  - - You see: De taak gebruikt dat tabblad wanneer hij een regel toevoegt.
+  - Link de map en de spreadsheet en noem het tabblad
+  - - Do: Geef Coach de links naar je bonnetjesmap en naar je spreadsheet, en de naam van het tabblad.
+  - - You see: De taak gebruikt ze wanneer hij een bestand bewaart en een regel toevoegt.
   - Keur de Card goed
   - - Do: Keur de Card goed.
   - - You see: De Card: wat de taak zelf doet, wat hij je eerst vraagt en wat hij nooit doet.

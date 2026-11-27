@@ -1,0 +1,1 @@
+- **"File receipts" guide, step 2 now asks for the links.** The job keeps the folder and the sheet by name and asks in the chat for their links, so step 2 says: give Coach the links to the receipts folder and the spreadsheet, and the name of the tab. All 8 recipe languages (recipes/file-receipts.md).
