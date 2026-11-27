@@ -357,6 +357,7 @@ export const zhHant: Words = {
   gallery_guide_see: "您會看到",
   gallery_guide_if: "如果",
   recipes_proved_help_desk: "已在測試客服台上驗證。",
+  recipes_proved_billing: "已在測試帳單應用程式上驗證。",
   suggestions_on: "在帳號的第一個 taf 上線之前，建議會顯示在與 Coach 的新對話中。",
   suggestions_off: "此帳號已關閉建議。",
   suggestions_live: "帳號已有上線的 taf，所以與 Coach 的新對話會以空白開啟。建議可以永久關閉。",

@@ -357,6 +357,7 @@ export const tr: Words = {
   gallery_guide_see: "Göreceğiniz",
   gallery_guide_if: "Eğer",
   recipes_proved_help_desk: "Bir deneme yardım masasında kanıtlandı.",
+  recipes_proved_billing: "Bir deneme faturalama uygulamasında kanıtlandı.",
   suggestions_on: "Öneriler hesabın ilk taf'ı canlı olana kadar Coach ile yeni bir sohbette görünür.",
   suggestions_off: "Öneriler bu hesap için kapalı.",
   suggestions_live: "Hesabın canlı bir taf'ı var, bu yüzden Coach ile yeni bir sohbet boş açılır. Öneriler kalıcı olarak kapatılabilir.",

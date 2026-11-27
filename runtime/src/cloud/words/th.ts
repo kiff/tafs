@@ -357,6 +357,7 @@ export const th: Words = {
   gallery_guide_see: "สิ่งที่คุณเห็น",
   gallery_guide_if: "ถ้า",
   recipes_proved_help_desk: "พิสูจน์แล้วบนฝ่ายช่วยเหลือทดลอง",
+  recipes_proved_billing: "พิสูจน์แล้วบนแอปเรียกเก็บเงินทดลอง",
   suggestions_on: "คำแนะนำจะแสดงในการสนทนาใหม่กับ Coach จนกว่า taf ตัวแรกของบัญชีจะทำงานจริง",
   suggestions_off: "ปิดคำแนะนำสำหรับบัญชีนี้แล้ว",
   suggestions_live: "บัญชีมี taf ที่ทำงานอยู่ การสนทนาใหม่กับ Coach จึงเปิดขึ้นว่างเปล่า ปิดคำแนะนำถาวรได้",

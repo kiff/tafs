@@ -363,6 +363,7 @@ export const it: Words = {
   gallery_guide_see: "Vedi",
   gallery_guide_if: "Se",
   recipes_proved_help_desk: "Provato su un helpdesk di prova.",
+  recipes_proved_billing: "Provato su un'app di fatturazione di prova.",
   suggestions_on: "I suggerimenti compaiono in una nuova conversazione con Coach finché l'account non ha il suo primo taf.",
   suggestions_off: "I suggerimenti sono disattivati per questo account.",
   suggestions_live: "L'account ha già un taf, quindi una nuova conversazione con Coach si apre vuota. I suggerimenti si possono disattivare per sempre.",

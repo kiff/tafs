@@ -357,6 +357,7 @@ export const hu: Words = {
   gallery_guide_see: "Ezt látod",
   gallery_guide_if: "Ha",
   recipes_proved_help_desk: "Teszt ügyfélszolgálaton kipróbálva.",
+  recipes_proved_billing: "Teszt számlázóalkalmazáson kipróbálva.",
   suggestions_on: "A javaslatok egy új Coach-beszélgetésben jelennek meg, amíg a fiók első tafja él.",
   suggestions_off: "A javaslatok ennél a fióknál ki vannak kapcsolva.",
   suggestions_live: "A fióknak van élő tafja, ezért az új Coach-beszélgetés üresen nyílik meg. A javaslatok végleg kikapcsolhatók.",

@@ -23,7 +23,7 @@ const LISTS = ["allows", "holds", "never"];
  * What a recipe's proof run passed on, as `proved:` names it (English only): each key has its line in every
  * language in tafs cloud's words (`recipes_proved_<key>`). A recipe with no proof run names none.
  */
-export const PROVED = ["help_desk"];
+export const PROVED = ["help_desk", "billing"];
 /** The three kinds of line in a guide step, as the recipe files mark them (in English in every language: the apps draw the labels). */
 export const GUIDE_LABELS = { Do: "do", "You see": "see", If: "if" };
 const GUIDE_KINDS = ["do", "see", "if"];

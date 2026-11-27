@@ -2359,6 +2359,8 @@ class PlanqueTest {
     assertEquals(listOf("Connect Stripe to Refunds"), auth.asked)
     val opening = transport.requestsTo("POST /v1/me/window").single()
     assertEquals("kiff.window.v1", bodyOf(opening).getValue("message").jsonPrimitive.content)
+    // The window is the taf's whose step opened it: its grant's KIFF agent, so KIFF confirms no other taf's Card in it.
+    assertEquals("refunds-1", bodyOf(opening).getValue("agent").jsonPrimitive.content)
     assertTrue(opening.headers.getValue("KIFF-Device-Signature").contains(",v1="))
     // planque's approve goes as a tap: the device key, with the window's id.
     val header = transport.requestsTo(approve).single().headers.getValue("Planque-Device-Signature")

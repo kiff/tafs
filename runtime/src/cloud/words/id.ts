@@ -357,6 +357,7 @@ export const id: Words = {
   gallery_guide_see: "Anda lihat",
   gallery_guide_if: "Jika",
   recipes_proved_help_desk: "Terbukti di meja bantuan uji coba.",
+  recipes_proved_billing: "Terbukti di aplikasi penagihan uji coba.",
   suggestions_on: "Saran muncul dalam percakapan baru dengan Coach sampai taf pertama akun aktif.",
   suggestions_off: "Saran dimatikan untuk akun ini.",
   suggestions_live: "Akun ini punya taf yang aktif, jadi percakapan baru dengan Coach terbuka kosong. Saran bisa dimatikan selamanya.",

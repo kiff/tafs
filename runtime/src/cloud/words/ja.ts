@@ -364,6 +364,7 @@ export const ja: Words = {
   gallery_guide_see: "表示される内容",
   gallery_guide_if: "もし",
   recipes_proved_help_desk: "テスト用のヘルプデスクで検証済みです。",
+  recipes_proved_billing: "テスト用の請求アプリで検証済みです。",
   suggestions_on: "アカウントの最初のtafが適用されるまで、Coachとの新しい会話に提案が表示されます。",
   suggestions_off: "このアカウントでは提案はオフです。",
   suggestions_live: "アカウントに適用中のtafがあるため、Coachとの新しい会話は空白で開きます。提案は完全にオフにできます。",

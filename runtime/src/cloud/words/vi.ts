@@ -357,6 +357,7 @@ export const vi: Words = {
   gallery_guide_see: "Bạn thấy",
   gallery_guide_if: "Nếu",
   recipes_proved_help_desk: "Đã được chứng minh trên một bộ phận hỗ trợ thử nghiệm.",
+  recipes_proved_billing: "Đã được chứng minh trên một ứng dụng thanh toán thử nghiệm.",
   suggestions_on: "Gợi ý hiện trong cuộc trò chuyện mới với Coach cho đến khi taf đầu tiên của tài khoản hoạt động.",
   suggestions_off: "Gợi ý đã tắt cho tài khoản này.",
   suggestions_live: "Tài khoản có một taf đang hoạt động, nên cuộc trò chuyện mới với Coach mở ra trống. Có thể tắt gợi ý vĩnh viễn.",
