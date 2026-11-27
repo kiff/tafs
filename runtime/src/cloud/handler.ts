@@ -3659,7 +3659,12 @@ async function markSteps(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     const grant = grants.find((g) => g.id === card.grant);
     const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
     const asked = grant && stepFor(grant, { draft, can }, flags);
-    if (!asked) continue;
+    if (!asked) {
+      // Approve signs nothing here: decide answers it (already approved, nothing new, past approving). The card says so,
+      // so no app names the fingerprint over a tap that asks for none. An app that doesn't know "none" draws it as before.
+      if (grant) c.component = { ...card, signs: { card: false, takes: "none" } };
+      continue;
+    }
     // A Card while its chat's newest rules notice isn't agreed is never offered: Approve would refuse it (rules_unagreed),
     // and that needs nothing of the draft, so it doesn't wait on the draft's read in time.
     const agreement = agreements?.get(c.session);

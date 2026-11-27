@@ -1769,6 +1769,24 @@ describe("each waiting approval card says what its fingerprint signs", () => {
     expect(await signs(first)).toEqual({ card: false, takes: "tap" });
   });
 
+  // A card whose Approve signs nothing (decide answers it) never lets an app name the fingerprint over it: unmarked,
+  // such a card drew "Approve with your fingerprint", and the tap answered "Approved" with no prompt.
+  it("marks a card whose Approve signs nothing, as decide then answers it", async () => {
+    // Connected with no draft (already approved, or nothing new), signed in with its tools waiting for their own
+    // approval (already approved), or past approving: each answered with nothing signed.
+    for (const status of ["connected", "listed", "revoked"]) {
+      const s = services();
+      s.grants = [grant({ status })];
+      const w = await world(s);
+      expect(await signs(w)).toEqual({ card: false, takes: "none" });
+      expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: s.grants[0].digest })).body).toMatchObject({ outcome: "answered" });
+    }
+    // Anything Approve does sign keeps its mark.
+    const s = services();
+    s.grants = [grant({ status: "pending" })];
+    expect(await signs(await world(s))).toMatchObject({ takes: "tap" });
+  });
+
   it("leaves the card as it was without the phone's proof, when the connections can't be read, or once answered", async () => {
     const s = services();
     s.grants = [grant({ status: "pending" })];
