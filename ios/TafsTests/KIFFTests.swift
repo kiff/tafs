@@ -310,6 +310,7 @@ final class KIFFTests: XCTestCase {
             XCTAssertEqual(HeldArgumentsReader.plainLiteral(sent), sent)
         }
         XCTAssertEqual(HeldArgumentsReader.plainLiteral("0e500"), "0")
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("0e99999999999999999999"), "0")
         XCTAssertEqual(HeldArgumentsReader.plainLiteral("-0.0"), "0")
         XCTAssertEqual(HeldArgumentsReader.plainLiteral("1.5e-05"), "0.000015")
         XCTAssertEqual(HeldArgumentsReader.plainLiteral("1E+3"), "1000")

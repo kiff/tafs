@@ -180,18 +180,19 @@ enum HeldArgumentsReader {
         var n = Substring(sent)
         var sign = ""
         if n.first == "-" { sign = "-"; n = n.dropFirst() }
-        var mantissa = n
-        var exponent = 0
-        if let e = n.firstIndex(where: { $0 == "e" || $0 == "E" }) {
-            guard let value = Int(n[n.index(after: e)...].drop { $0 == "+" }) else { return sent }
-            exponent = value
-            mantissa = n[..<e]
-        }
+        let e = n.firstIndex(where: { $0 == "e" || $0 == "E" })
+        let mantissa = e.map { n[..<$0] } ?? n
         let parts = mantissa.split(separator: ".", omittingEmptySubsequences: false)
         guard (1...2).contains(parts.count), parts.allSatisfy({ $0.allSatisfy { $0.isASCII && $0.isNumber } }) else { return sent }
         let fraction = parts.count > 1 ? String(parts[1]) : ""
         var digits = Substring(String(parts[0]) + fraction).drop { $0 == "0" }
+        // A zero is one written digit, whatever its exponent ("0e500", and one past Int too).
         if digits.isEmpty { return "0" }
+        var exponent = 0
+        if let e {
+            guard let value = Int(n[n.index(after: e)...].drop { $0 == "+" }) else { return sent }
+            exponent = value
+        }
         // Past these, the number can't be written in plainDigitsMax digits: no arithmetic on an exponent that large.
         if exponent > plainDigitsMax + mantissa.count || exponent < -plainDigitsMax - mantissa.count { return sent }
         var scale = fraction.count - exponent
