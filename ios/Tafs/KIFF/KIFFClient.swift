@@ -680,7 +680,7 @@ final class KIFFClient {
         /// One argument of a held call as KIFF keeps it: a plain value written out (a decimal plainly, as
         /// `ArgumentText`), or a list or object kept whole, so Details writes every item and field
         /// (contracts/held-arguments.json), never "…".
-        indirect enum Argument: Decodable, Equatable {
+        indirect enum Argument: Decodable, Equatable, Sendable {
             case text(String), number(String), flag(Bool), null
             case list([Argument]), object([String: Argument])
 
