@@ -1567,7 +1567,7 @@
     <string name="onboarding_card_title">Card là sự cho phép của bạn</string>
     <string name="onboarding_consent_tick">Tôi đồng ý với %1$s và %2$s.</string>
     <string name="onboarding_control_lead">Khi một taf cần bạn, nó chờ trong Đang chờ bạn, và trên đồng hồ của bạn nếu có. Bạn phê duyệt bằng Face ID hoặc Touch ID, hoặc từ chối.</string>
-    <string name="onboarding_control_lead_android">Khi một taf cần bạn, nó chờ trong Đang chờ bạn, và trên đồng hồ của bạn nếu có. Bạn phê duyệt bằng khóa màn hình, hoặc từ chối.</string>
+    <string name="onboarding_control_lead_android">Khi một taf cần bạn, nó chờ trong Đang chờ bạn, và trên đồng hồ của bạn nếu có. Bạn phê duyệt bằng vân tay hoặc khuôn mặt, hoặc từ chối.</string>
     <string name="onboarding_control_lead_desktop">Khi một taf cần bạn, nó chờ trong Đang chờ bạn. Bạn phê duyệt trên điện thoại, hoặc từ chối.</string>
     <string name="onboarding_control_lead_mac">Khi một taf cần bạn, nó chờ trong Đang chờ bạn. Bạn phê duyệt bằng Touch ID hoặc trên điện thoại, hoặc từ chối.</string>
     <string name="onboarding_control_title">Bạn luôn nắm quyền kiểm soát</string>

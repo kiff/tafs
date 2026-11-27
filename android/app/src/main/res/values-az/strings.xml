@@ -1627,7 +1627,7 @@
     <string name="onboarding_card_title">Card sizin icazənizdir</string>
     <string name="onboarding_consent_tick">%1$s və %2$s ilə razıyam.</string>
     <string name="onboarding_control_lead">Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində və saatınız varsa, onda gözləyir. Face ID və ya Touch ID ilə təsdiq edirsiniz, ya da rədd edirsiniz.</string>
-    <string name="onboarding_control_lead_android">Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində və saatınız varsa, onda gözləyir. Ekran kilidinizlə təsdiq edirsiniz, ya da rədd edirsiniz.</string>
+    <string name="onboarding_control_lead_android">Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində və saatınız varsa, onda gözləyir. Barmaq iziniz və ya üzünüzlə təsdiq edirsiniz, ya da rədd edirsiniz.</string>
     <string name="onboarding_control_lead_desktop">Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində gözləyir. Telefonunuzda təsdiq edirsiniz, ya da rədd edirsiniz.</string>
     <string name="onboarding_control_lead_mac">Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində gözləyir. Touch ID ilə və ya telefonunuzda təsdiq edirsiniz, ya da rədd edirsiniz.</string>
     <string name="onboarding_control_title">İdarə sizdə qalır</string>

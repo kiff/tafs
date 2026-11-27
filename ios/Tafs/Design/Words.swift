@@ -3119,7 +3119,7 @@ enum Words {
         static func consentTick(kiffTerms: String, tafsTerms: String) -> String { Words.line("onboarding.consent_tick", kiffTerms, tafsTerms) }
         /// When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse.
         static var controlLead: String { Words.line("onboarding.control_lead") }
-        /// When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your screen lock, or refuse.
+        /// When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your fingerprint or face, or refuse.
         static var controlLeadAndroid: String { Words.line("onboarding.control_lead_android") }
         /// When a taf needs you, it waits in Needs you. You approve on your phone, or refuse.
         static var controlLeadDesktop: String { Words.line("onboarding.control_lead_desktop") }

@@ -3,7 +3,7 @@
   "onboarding.age_n": "Você precisa ter pelo menos {age} anos.",
   "onboarding.card_lead": "Cada taf trabalha dentro de um Card que você emite: o que pode fazer, com qual app e quanto. Além disso, ele pergunta a você.",
   "onboarding.control_lead": "Quando um taf precisa de você, espera em «Precisa de você» e, se tiver um, no relógio. Aprova com Face ID ou Touch ID, ou recusa.",
-  "onboarding.control_lead_android": "Quando um taf precisa de você, espera em «Precisa de você» e, se tiver um, no relógio. Aprova com o bloqueio de tela, ou recusa.",
+  "onboarding.control_lead_android": "Quando um taf precisa de você, espera em «Precisa de você» e, se tiver um, no relógio. Aprova com a impressão digital ou o rosto, ou recusa.",
   "onboarding.control_lead_desktop": "Quando um taf precisa de você, espera em «Precisa de você». Aprova no celular, ou recusa.",
   "onboarding.control_lead_mac": "Quando um taf precisa de você, espera em «Precisa de você». Aprova com Touch ID ou no celular, ou recusa.",
   "onboarding.control_title": "O controle é seu",

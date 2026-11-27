@@ -5,7 +5,7 @@
   "onboarding.card_title": "Card – tai jūsų leidimas",
   "onboarding.consent_tick": "Sutinku su {kiff_terms} ir {tafs_terms}.",
   "onboarding.control_lead": "Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“ ir jūsų laikrodyje, jei jį turite. Tvirtinate su Face ID ar Touch ID arba atmetate.",
-  "onboarding.control_lead_android": "Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“ ir jūsų laikrodyje, jei jį turite. Tvirtinate ekrano užraktu arba atmetate.",
+  "onboarding.control_lead_android": "Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“ ir jūsų laikrodyje, jei jį turite. Tvirtinate piršto atspaudu arba veidu arba atmetate.",
   "onboarding.control_lead_desktop": "Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate telefone arba atmetate.",
   "onboarding.control_lead_mac": "Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate su Touch ID ar telefone arba atmetate.",
   "onboarding.control_title": "Valdote jūs",

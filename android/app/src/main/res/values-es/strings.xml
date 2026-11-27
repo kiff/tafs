@@ -1627,7 +1627,7 @@
     <string name="onboarding_card_title">Una Card es tu permiso</string>
     <string name="onboarding_consent_tick">Acepto %1$s y %2$s.</string>
     <string name="onboarding_control_lead">Cuando un taf te necesita, espera en «Te necesita» y, si tienes uno, en tu reloj. Apruebas con Face ID o Touch ID, o rechazas.</string>
-    <string name="onboarding_control_lead_android">Cuando un taf te necesita, espera en «Te necesita» y, si tienes uno, en tu reloj. Apruebas con el bloqueo de pantalla, o rechazas.</string>
+    <string name="onboarding_control_lead_android">Cuando un taf te necesita, espera en «Te necesita» y, si tienes uno, en tu reloj. Apruebas con tu huella o tu cara, o rechazas.</string>
     <string name="onboarding_control_lead_desktop">Cuando un taf te necesita, espera en «Te necesita». Apruebas en tu teléfono, o rechazas.</string>
     <string name="onboarding_control_lead_mac">Cuando un taf te necesita, espera en «Te necesita». Apruebas con Touch ID o en tu teléfono, o rechazas.</string>
     <string name="onboarding_control_title">Tú tienes el control</string>

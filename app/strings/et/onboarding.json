@@ -5,7 +5,7 @@
   "onboarding.card_title": "Card on sinu luba",
   "onboarding.consent_tick": "Nõustun tingimustega: {kiff_terms} ja {tafs_terms}.",
   "onboarding.control_lead": "Kui taf vajab sind, ootab see vaates Vajab sind ja kellas, kui sul see on. Kinnitad Face ID või Touch ID abil või keeldud.",
-  "onboarding.control_lead_android": "Kui taf vajab sind, ootab see vaates Vajab sind ja kellas, kui sul see on. Kinnitad ekraaniluku abil või keeldud.",
+  "onboarding.control_lead_android": "Kui taf vajab sind, ootab see vaates Vajab sind ja kellas, kui sul see on. Kinnitad sõrmejälje või näoga või keeldud.",
   "onboarding.control_lead_desktop": "Kui taf vajab sind, ootab see vaates Vajab sind. Kinnitad telefonis või keeldud.",
   "onboarding.control_lead_mac": "Kui taf vajab sind, ootab see vaates Vajab sind. Kinnitad Touch ID abil või telefonis või keeldud.",
   "onboarding.control_title": "Otsustad sina",

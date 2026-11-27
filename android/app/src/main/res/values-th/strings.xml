@@ -1567,7 +1567,7 @@
     <string name="onboarding_card_title">Card คือการอนุญาตของคุณ</string>
     <string name="onboarding_consent_tick">ฉันยอมรับ%1$sและ%2$s</string>
     <string name="onboarding_control_lead">เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ และบนนาฬิกาของคุณหากมี คุณอนุมัติด้วย Face ID หรือ Touch ID หรือปฏิเสธ</string>
-    <string name="onboarding_control_lead_android">เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ และบนนาฬิกาของคุณหากมี คุณอนุมัติด้วยการล็อกหน้าจอ หรือปฏิเสธ</string>
+    <string name="onboarding_control_lead_android">เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ และบนนาฬิกาของคุณหากมี คุณอนุมัติด้วยลายนิ้วมือหรือใบหน้า หรือปฏิเสธ</string>
     <string name="onboarding_control_lead_desktop">เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ คุณอนุมัติบนโทรศัพท์ หรือปฏิเสธ.</string>
     <string name="onboarding_control_lead_mac">เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ คุณอนุมัติด้วย Touch ID หรือบนโทรศัพท์ หรือปฏิเสธ.</string>
     <string name="onboarding_control_title">คุณยังคงควบคุมได้</string>

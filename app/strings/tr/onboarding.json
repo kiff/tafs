@@ -5,7 +5,7 @@
   "onboarding.card_title": "Card sizin izninizdir",
   "onboarding.consent_tick": "Şunları kabul ediyorum: {kiff_terms} ve {tafs_terms}.",
   "onboarding.control_lead": "Bir taf'ın size ihtiyacı olduğunda Sizi bekliyor'da, varsa saatinizde bekler. Face ID veya Touch ID ile onaylar ya da reddedersiniz.",
-  "onboarding.control_lead_android": "Bir taf'ın size ihtiyacı olduğunda Sizi bekliyor'da, varsa saatinizde bekler. Ekran kilidinizle onaylar ya da reddedersiniz.",
+  "onboarding.control_lead_android": "Bir taf'ın size ihtiyacı olduğunda Sizi bekliyor'da, varsa saatinizde bekler. Parmak izinizle ya da yüzünüzle onaylar ya da reddedersiniz.",
   "onboarding.control_lead_desktop": "Bir taf'ın size ihtiyacı olduğunda Sizi bekliyor'da bekler. Telefonunuzdan onaylar ya da reddedersiniz.",
   "onboarding.control_lead_mac": "Bir taf'ın size ihtiyacı olduğunda Sizi bekliyor'da bekler. Touch ID ile veya telefonunuzdan onaylar ya da reddedersiniz.",
   "onboarding.control_title": "Kontrol sizde kalır",

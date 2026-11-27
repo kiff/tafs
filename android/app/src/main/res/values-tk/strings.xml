@@ -1627,7 +1627,7 @@
     <string name="onboarding_card_title">Card siziň rugsadyňyz</string>
     <string name="onboarding_consent_tick">Men %1$s we %2$s razy.</string>
     <string name="onboarding_control_lead">Taf size zerur bolanda, ol Size garaşýar bölüminde, we sagadyňyz bar bolsa, sagatda garaşýar. Siz Face ID ýa-da Touch ID bilen tassyklaýarsyňyz, ýa-da ret edýärsiňiz.</string>
-    <string name="onboarding_control_lead_android">Taf size zerur bolanda, ol Size garaşýar bölüminde, we sagadyňyz bar bolsa, sagatda garaşýar. Siz ekran gulpyňyz bilen tassyklaýarsyňyz, ýa-da ret edýärsiňiz.</string>
+    <string name="onboarding_control_lead_android">Taf size zerur bolanda, ol Size garaşýar bölüminde, we sagadyňyz bar bolsa, sagatda garaşýar. Siz barmak yzyňyz ýa-da ýüzüňiz bilen tassyklaýarsyňyz, ýa-da ret edýärsiňiz.</string>
     <string name="onboarding_control_lead_desktop">Taf size zerur bolanda, ol Size garaşýar bölüminde garaşýar. Siz telefonyňyzda tassyklaýarsyňyz, ýa-da ret edýärsiňiz.</string>
     <string name="onboarding_control_lead_mac">Taf size zerur bolanda, ol Size garaşýar bölüminde garaşýar. Siz Touch ID bilen ýa-da telefonyňyzda tassyklaýarsyňyz, ýa-da ret edýärsiňiz.</string>
     <string name="onboarding_control_title">Gözegçilik sizde galýar</string>

@@ -5,7 +5,7 @@
   "onboarding.card_title": "Card je vaše dozvola",
   "onboarding.consent_tick": "Slažem se s: {kiff_terms} i {tafs_terms}.",
   "onboarding.control_lead": "Kad tafu trebate vi, čeka u Čeka vas, a na satu ako ga imate. Odobravate Face ID-jem ili Touch ID-jem ili odbijate.",
-  "onboarding.control_lead_android": "Kad tafu trebate vi, čeka u Čeka vas, a na satu ako ga imate. Odobravate zaključavanjem ekrana ili odbijate.",
+  "onboarding.control_lead_android": "Kad tafu trebate vi, čeka u Čeka vas, a na satu ako ga imate. Odobravate otiskom prsta ili licem ili odbijate.",
   "onboarding.control_lead_desktop": "Kad tafu trebate vi, čeka u Čeka vas. Odobravate na telefonu ili odbijate.",
   "onboarding.control_lead_mac": "Kad tafu trebate vi, čeka u Čeka vas. Odobravate Touch ID-jem ili na telefonu ili odbijate.",
   "onboarding.control_title": "Vi ostajete u kontroli",

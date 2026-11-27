@@ -1687,7 +1687,7 @@
     <string name="onboarding_card_title">Card je vaše dopuštenje</string>
     <string name="onboarding_consent_tick">Slažem se s: %1$s i %2$s.</string>
     <string name="onboarding_control_lead">Kad tafu trebate vi, čeka u Čeka vas, a na satu ako ga imate. Odobravate Face ID-jem ili Touch ID-jem ili odbijate.</string>
-    <string name="onboarding_control_lead_android">Kad tafu trebate vi, čeka u Čeka vas, a na satu ako ga imate. Odobravate zaključavanjem zaslona ili odbijate.</string>
+    <string name="onboarding_control_lead_android">Kad tafu trebate vi, čeka u Čeka vas, a na satu ako ga imate. Odobravate otiskom prsta ili licem ili odbijate.</string>
     <string name="onboarding_control_lead_desktop">Kad tafu trebate vi, čeka u Čeka vas. Odobravate na telefonu ili odbijate.</string>
     <string name="onboarding_control_lead_mac">Kad tafu trebate vi, čeka u Čeka vas. Odobravate Touch ID-jem ili na telefonu ili odbijate.</string>
     <string name="onboarding_control_title">Vi ostajete u kontroli</string>

@@ -5,7 +5,7 @@
   "onboarding.card_title": "Cardはあなたの許可です",
   "onboarding.consent_tick": "{kiff_terms}と{tafs_terms}に同意します。",
   "onboarding.control_lead": "tafがあなたを必要とすると、要確認で待ちます。Apple Watchがあればそこでも待ちます。Face IDまたはTouch IDで承認するか、拒否してください。",
-  "onboarding.control_lead_android": "tafがあなたを必要とすると、要確認で待ちます。スマートウォッチがあればそこでも待ちます。画面ロックで承認するか、拒否してください。",
+  "onboarding.control_lead_android": "tafがあなたを必要とすると、要確認で待ちます。スマートウォッチがあればそこでも待ちます。指紋または顔で承認するか、拒否してください。",
   "onboarding.control_lead_desktop": "tafがあなたを必要とすると要確認で待ちます。スマートフォンで承認するか、拒否してください。",
   "onboarding.control_lead_mac": "Macでは、tafがあなたを必要とすると要確認で待ちます。Touch IDまたはスマートフォンで承認するか、拒否してください。",
   "onboarding.control_title": "主導権はあなたに",

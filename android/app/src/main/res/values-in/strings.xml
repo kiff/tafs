@@ -1567,7 +1567,7 @@
     <string name="onboarding_card_title">Card adalah izin Anda</string>
     <string name="onboarding_consent_tick">Saya setuju dengan %1$s dan %2$s.</string>
     <string name="onboarding_control_lead">Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda, dan di jam tangan Anda jika ada. Anda menyetujui dengan Face ID atau Touch ID, atau menolak.</string>
-    <string name="onboarding_control_lead_android">Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda, dan di jam tangan Anda jika ada. Anda menyetujui dengan kunci layar, atau menolak.</string>
+    <string name="onboarding_control_lead_android">Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda, dan di jam tangan Anda jika ada. Anda menyetujui dengan sidik jari atau wajah Anda, atau menolak.</string>
     <string name="onboarding_control_lead_desktop">Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda. Anda menyetujui di ponsel, atau menolak.</string>
     <string name="onboarding_control_lead_mac">Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda. Anda menyetujui dengan Touch ID atau di ponsel, atau menolak.</string>
     <string name="onboarding_control_title">Anda tetap memegang kendali</string>

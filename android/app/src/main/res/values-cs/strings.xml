@@ -1687,7 +1687,7 @@
     <string name="onboarding_card_title">Card je vaše svolení</string>
     <string name="onboarding_consent_tick">Souhlasím s %1$s a %2$s.</string>
     <string name="onboarding_control_lead">Když vás taf potřebuje, čeká v Čeká na vás, a na hodinkách, pokud je máte. Schválíte přes Face ID nebo Touch ID, nebo odmítnete.</string>
-    <string name="onboarding_control_lead_android">Když vás taf potřebuje, čeká v Čeká na vás, a na hodinkách, pokud je máte. Schválíte zámkem obrazovky, nebo odmítnete.</string>
+    <string name="onboarding_control_lead_android">Když vás taf potřebuje, čeká v Čeká na vás, a na hodinkách, pokud je máte. Schválíte otiskem prstu nebo obličejem, nebo odmítnete.</string>
     <string name="onboarding_control_lead_desktop">Když vás taf potřebuje, čeká v Čeká na vás. Schválíte v telefonu, nebo odmítnete.</string>
     <string name="onboarding_control_lead_mac">Když vás taf potřebuje, čeká v Čeká na vás. Schválíte přes Touch ID nebo v telefonu, nebo odmítnete.</string>
     <string name="onboarding_control_title">Kontrolu máte vy</string>

@@ -1627,7 +1627,7 @@
     <string name="onboarding_card_title">Un Card és el teu permís</string>
     <string name="onboarding_consent_tick">Accepto %1$s i %2$s.</string>
     <string name="onboarding_control_lead">Quan un taf et necessita, espera a «Et necessita», i al teu rellotge si en tens un. Aproves amb Face ID o Touch ID, o rebutges.</string>
-    <string name="onboarding_control_lead_android">Quan un taf et necessita, espera a «Et necessita», i al teu rellotge si en tens un. Aproves amb el bloqueig de pantalla, o rebutges.</string>
+    <string name="onboarding_control_lead_android">Quan un taf et necessita, espera a «Et necessita», i al teu rellotge si en tens un. Aproves amb l\'empremta digital o la cara, o rebutges.</string>
     <string name="onboarding_control_lead_desktop">Quan un taf et necessita, espera a «Et necessita». Aproves al telèfon, o rebutges.</string>
     <string name="onboarding_control_lead_mac">Quan un taf et necessita, espera a «Et necessita». Aproves amb Touch ID o al telèfon, o rebutges.</string>
     <string name="onboarding_control_title">Tu tens el control</string>
