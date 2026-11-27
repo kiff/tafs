@@ -329,8 +329,8 @@ things (`runtime/src/cloud/approval.ts`):
   day); the owner widens it later as a version. A managed app no recorded run has proved yet
   (planque's `unproved: true`, kiff/planque#457) is held the same way, and its note says so
   ("… hasn't been tested with tafs yet …") rather than "set up today". Coach drafts both
-  that way from the start (`draft-the-card@54`): it reads `on_demand` or `unproved` on the
-  grant, never asks "how many a day" for those writes, and says "every change asks you first"
+  that way from the start: it reads `on_demand` or `unproved` on the
+  grant, and `unproved` on planque's tool search before any grant exists (`draft-the-card@55`), never asks "how many a day" for those writes, and says "every change asks you first"
   as one line of the rules notice, so the owner's first Card isn't refused.
   A draft that leaves one of the taf's tools on no Card is answered `failed: …` too, naming
   the tool, when no Card in force for the taf's agent covers it either (KIFF's
