@@ -435,7 +435,10 @@ describe("tafs cloud", () => {
     expect(fresh.body.shown).toBe(true);
     expect(fresh.body.recipes.length).toBeGreaterThan(0);
     expect(fresh.body.suggestions).toEqual({ show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." });
-    expect(fresh.body.home).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: own });
+    { const { first_taf, ...rest } = fresh.body.home;
+      expect(rest).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: own });
+      // The first proved job, its words as the gallery serves them.
+      expect(first_taf).toEqual({ title: "Chase overdue invoices", line: expect.any(String), say: expect.any(String) }); }
     { const { home, labels: shownLabels, suggestions, shown, filtered } = fresh.body;
       contract("recipes-home", "GET /v1/recipes for someone who manages the tafs, with no live taf: Home's part of the answer (the recipes themselves are left out).", { shown, filtered, suggestions, home, labels: shownLabels }); }
     expect(fresh.body.labels).toEqual(labels);
@@ -446,7 +449,9 @@ describe("tafs cloud", () => {
     const de = (await call(w, "GET", "/v1/recipes", { token: "ana", headers: { "Accept-Language": "de-DE,de;q=0.9,en;q=0.8" } })).body;
     expect(de.categories[0]).toEqual({ id: "money", title: "Geld" });
     expect(de.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).toMatchObject({ title: "Erstattungen bis zu einem Limit", headline: "Beantwortet Erstattungsanfragen aus dem Support und erstattet beim Zahlungsanbieter, innerhalb der Card.", today: "" });
-    expect(de.home).toEqual({ shown: true, words: "Wähle eine Aufgabe für deinen ersten taf.", own_words: { title: "Sag es in deinen eigenen Worten", line: "Coach baut den taf mit dir." } });
+    { const { first_taf, ...rest } = de.home;
+      expect(rest).toEqual({ shown: true, words: "Wähle eine Aufgabe für deinen ersten taf.", own_words: { title: "Sag es in deinen eigenen Worten", line: "Coach baut den taf mit dir." } });
+      expect(first_taf?.title).toBe("Überfällige Rechnungen anmahnen"); }
     expect(de.labels.hand).toBe("An Coach übergeben");
     expect(de.suggestions.words).toBe("Vorschläge erscheinen in einem neuen Gespräch mit Coach, bis das Konto seinen ersten taf hat.");
     expect((await call(w, "GET", "/v1/me/suggestions", { token: "ana", headers: { "Accept-Language": "pl" } })).body.suggestions.words).toBe("Sugestie pojawiają się w nowej rozmowie z Coachem, dopóki konto nie ma pierwszego tafa.");

@@ -14,6 +14,11 @@
       "own_words": {
         "title": "Say it in your own words",
         "line": "Coach builds the taf with you."
+      },
+      "first_taf": {
+        "title": "Chase overdue invoices",
+        "line": "Reminds customers of overdue invoices on a schedule and reports who hasn't paid; moves no money.",
+        "say": "Each weekday morning, find my overdue invoices in my accounting or billing app and send a polite reminder to each customer from my email, at most one a week per invoice and 20 a day. Never change an invoice or offer a discount. Tell me who is more than 30 days late."
       }
     },
     "labels": {

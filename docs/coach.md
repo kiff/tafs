@@ -1097,7 +1097,11 @@ tafs cloud sends them in the person's language, with the categories' titles, the
 the suggestions words. It also says whether **Home** leads with them (`home: {shown, words}`): only
 while the list is shown, for a person who manages the account's tafs (`cards.manage`), and with
 at least one recipe listed. Otherwise `home.words` is Home's empty line, so a catalog that connects
-none of them, or suggestions turned off, leave Home as it was.
+none of them, or suggestions turned off, leave Home as it was. While Home leads with them, `home.first_taf:
+{title, line, say}` names one job to try first: the first listed recipe that is proved and written in
+the person's language (`line` is its headline, `say` what Coach is handed). It's absent in a language
+with no translation (never an English fallback), for someone who doesn't manage the tafs, and when
+no recipe fits; with no field, the apps show no card.
 
 ### The gallery
 
