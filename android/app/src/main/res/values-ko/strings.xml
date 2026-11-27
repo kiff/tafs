@@ -1567,8 +1567,8 @@
     <string name="onboarding_card_title">Card는 나의 허락입니다</string>
     <string name="onboarding_consent_tick">%1$s 및 %2$s에 동의합니다.</string>
     <string name="onboarding_control_lead">taf에 내가 필요하면 확인 필요에서 기다리고, 워치가 있으면 워치에서도 기다립니다. Face ID나 Touch ID로 승인하거나 거절하세요.</string>
-    <string name="onboarding_control_lead_android">taf에 내가 필요하면 확인 필요에서 기다리고, 워치가 있으면 워치에서도 기다립니다. 화면 잠금으로 승인하거나 거절하세요.</string>
-    <string name="onboarding_control_lead_desktop">taf에 내가 필요하면 확인 필요에서 기다립니다. 휴대폰으로 승인하거나 거절하세요.</string>
+    <string name="onboarding_control_lead_android">taf에 내가 필요하면 확인 필요에서 기다리고, 워치가 있으면 워치에서도 기다립니다. 지문 또는 얼굴로 승인하거나 거절하세요.</string>
+    <string name="onboarding_control_lead_desktop">taf에 내가 필요하면 확인 필요에서 기다립니다. 휴대폰으로 승인하거나, 패스키나 보안 키로 로그인한 이 컴퓨터에서 승인하거나 거절하세요.</string>
     <string name="onboarding_control_lead_mac">Mac에서는 taf에 내가 필요하면 확인 필요에서 기다립니다. Touch ID나 휴대폰으로 승인하거나 거절하세요.</string>
     <string name="onboarding_control_title">결정은 내가 합니다</string>
     <string name="onboarding_get_started">시작하기</string>

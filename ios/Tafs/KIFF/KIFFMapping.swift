@@ -169,11 +169,15 @@ enum KIFFMapping {
     static func record(_ calls: [KIFFClient.ActivityCall], ids: [String: UUID], vendors: [String: String] = [:]) -> [RecordEntry] {
         calls.compactMap { c in
             guard let actor = c.actorID, let tafID = ids[actor] else { return nil }
+            // Approved once only when KIFF says the owner answered this call with an approval (kiff/tafs#2225).
+            // A held call that went through some other way (its Card changed, room given) is the Card's, as
+            // KIFF's own trail on the receipt shows. As Android's KiffMapping.record.
+            let approvedOnce = c.held && c.answer != nil && c.answer?.decision != "refused"
             let kind: RecordEntry.Kind
             let detail: String
             switch c.outcome {
             case "allowed":
-                (kind, detail) = executed(c.toolOutcome, approved: c.held, vendor: vendors[c.actionName], counts: counted(c))
+                (kind, detail) = executed(c.toolOutcome, approved: approvedOnce, vendor: vendors[c.actionName], counts: counted(c))
             case "owner_required", "approval_required":
                 kind = .held; detail = Words.Record.waitingForYou
             default:
@@ -186,7 +190,7 @@ enum KIFFMapping {
                 entry.detail = c.detail.map(visible) ?? Words.Record.connectionRefusedBeforeSending
             }
             entry.proposalID = c.proposalID
-            if c.outcome == "allowed", c.held { entry.ownerApproved = true }
+            if c.outcome == "allowed", approvedOnce { entry.ownerApproved = true }
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool" {
                 entry.refusedByTool = true
                 entry.refusedBy = c.toolOutcome?.refusedBy == "connection" ? Words.Record.theConnection : vendors[c.actionName]

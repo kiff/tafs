@@ -364,6 +364,7 @@ export const pt: Words = {
   gallery_guide_if: "Se",
   recipes_proved_help_desk: "Testado num helpdesk de teste.",
   recipes_proved_billing: "Testado numa app de faturação de teste.",
+  recipes_proved_receipts: "Testado numa caixa de correio, numa pasta e numa folha de cálculo de teste.",
   suggestions_on: "As sugestões aparecem numa nova conversa com o Coach até a conta ter o primeiro taf.",
   suggestions_off: "As sugestões estão desativadas nesta conta.",
   suggestions_live: "A conta já tem um taf, por isso uma nova conversa com o Coach abre em branco. As sugestões podem ser desativadas de vez.",

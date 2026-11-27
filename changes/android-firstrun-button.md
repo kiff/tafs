@@ -1,0 +1,1 @@
+- **Android: the first-run card's sample button no longer says "Approve once with your screen lock"** on a phone with no strong biometric. The screen lock never approves; it now names the fingerprint.

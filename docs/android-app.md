@@ -1961,7 +1961,7 @@ since Play refuses a phone screenshot whose long side is more than twice its sho
 6. **You're connected.**
 
 The sample runs on the phone's own clock, so its held calls are waiting rather than expired, and the phone's fingerprint is set
-up for approvals and named in its language (`LocalBiometry`, as `MainActivity` provides it). The sample's templates (`TafTemplates`) read their words each time, so each language draws its own. Its five jobs are
+up for approvals and named in its language (`LocalBiometry`, as `MainActivity` provides it). The first-run card's picture of Needs you names it through `Biometry.approvingWith`: never the screen lock, which never approves, so a phone with no strong biometric reads "Approve once with your fingerprint" there. The sample's templates (`TafTemplates`) read their words each time, so each language draws its own. Its five jobs are
 Support replies, Late parcels, Lead follow-up, Access and Deploys (app/strings' `sample.support.*`, `sample.parcels.*`,
 `sample.leads.*`, since 18 Nov in place of Refunds, Bill pay and Chargebacks): their Cards count calls, ask the owner first
 (a promised replacement, a reship, a discount) or never let a call through (a customer's details, an address change), with no

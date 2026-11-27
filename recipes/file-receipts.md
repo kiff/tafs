@@ -10,6 +10,25 @@ connections:
   - gmail | outlook
   - googledrive
   - googlesheets
+proved: receipts
+sample:
+  - I found one receipt in the mailbox and saved its attachment to the Receipts folder.
+  - I added one row to the expenses sheet, with the date, the sender and the subject.
+  - When it ran again, I didn't save the same attachment twice.
+  - I didn't delete or move any email.
+guide:
+  - Connect your mailbox, your folder and your sheet
+  - - Do: Open the job. Coach asks you to connect your email, your file storage and your spreadsheet, one after the other. Sign in to each and approve.
+  - - You see: Each app listed as connected.
+  - Give the job the links and the tab's name
+  - - Do: In the job's chat, give it the links to your receipts folder and to your spreadsheet, and the name of the tab.
+  - - You see: The job uses them when it saves a file and adds a row.
+  - Approve the Card
+  - - Do: Approve the Card.
+  - - You see: The Card: what the job does on its own, what asks you first, and what it never does.
+  - Run it
+  - - Do: Open the job's chat and ask it to run.
+  - - You see: The receipt found in your email, its attachment saved in your folder, and a row added to your sheet with the date, the sender and the subject. Run it again, and the same attachment isn't saved twice.
 card:
   allows:
     - Files saved and rows added, up to 50 a day each

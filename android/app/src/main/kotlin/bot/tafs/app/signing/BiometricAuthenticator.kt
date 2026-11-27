@@ -142,6 +142,12 @@ object Biometry {
     else -> Words.Approval.Biometry.screenLock
   }
 
+  /**
+   * What an approve button names, from [name]: never the screen lock, which never approves. A real approve button sits in
+   * `ApprovalGate`, which asks for a fingerprint in its place; a picture of one (the first-run card) names the fingerprint.
+   */
+  fun approvingWith(name: String): String = if (name == Words.Approval.Biometry.screenLock) Words.Approval.Biometry.fingerprint else name
+
   fun of(context: Context): String {
     val strong = BiometricManager.from(context).canAuthenticate(BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
     val pm = context.packageManager

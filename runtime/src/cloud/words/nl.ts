@@ -364,6 +364,7 @@ export const nl: Words = {
   gallery_guide_if: "Als",
   recipes_proved_help_desk: "Getest op een testhelpdesk.",
   recipes_proved_billing: "Getest op een test-factureringsapp.",
+  recipes_proved_receipts: "Getest op een test-mailbox, -map en -spreadsheet.",
   suggestions_on: "Suggesties verschijnen in een nieuw gesprek met Coach tot het account zijn eerste taf heeft.",
   suggestions_off: "Suggesties staan uit voor dit account.",
   suggestions_live: "Het account heeft al een taf, dus een nieuw gesprek met Coach begint leeg. Suggesties kunnen voorgoed uit.",

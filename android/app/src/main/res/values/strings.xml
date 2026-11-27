@@ -1627,8 +1627,8 @@
     <string name="onboarding_card_title">A Card is your permission</string>
     <string name="onboarding_consent_tick">I agree to %1$s and %2$s.</string>
     <string name="onboarding_control_lead">When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse.</string>
-    <string name="onboarding_control_lead_android">When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your screen lock, or refuse.</string>
-    <string name="onboarding_control_lead_desktop">When a taf needs you, it waits in Needs you. You approve on your phone, or refuse.</string>
+    <string name="onboarding_control_lead_android">When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your fingerprint or face, or refuse.</string>
+    <string name="onboarding_control_lead_desktop">When a taf needs you, it waits in Needs you. You approve on your phone, or on this computer if you signed it in with a passkey or security key, or refuse.</string>
     <string name="onboarding_control_lead_mac">When a taf needs you, it waits in Needs you. You approve with Touch ID or on your phone, or refuse.</string>
     <string name="onboarding_control_title">You stay in control</string>
     <string name="onboarding_get_started">Get started</string>

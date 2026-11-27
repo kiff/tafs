@@ -224,6 +224,14 @@ class SigningTest {
     assertEquals("your fingerprint", Biometry.name(strongEnrolled = true, face = true, fingerprint = true))
   }
 
+  @Test fun anApproveButtonNeverNamesTheScreenLock() {
+    // The first-run card's picture isn't behind ApprovalGate: on a phone with no strong biometric it named the screen lock.
+    val noStrong = Biometry.name(strongEnrolled = false, face = true, fingerprint = true)
+    assertEquals("your fingerprint", Biometry.approvingWith(noStrong))
+    assertEquals("face unlock", Biometry.approvingWith(Biometry.name(strongEnrolled = true, face = true, fingerprint = false)))
+    assertEquals("your fingerprint", Biometry.approvingWith(Biometry.name(strongEnrolled = true, face = false, fingerprint = true)))
+  }
+
   @Test fun withoutAnEnrolledBiometricItIsTheScreenLock() {
     assertEquals("your screen lock", Biometry.name(strongEnrolled = false, face = true, fingerprint = true))
     assertEquals("your screen lock", Biometry.name(strongEnrolled = true, face = false, fingerprint = false))
