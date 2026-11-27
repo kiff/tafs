@@ -2030,5 +2030,6 @@ extension KIFFClient.ActivityCall {
         madeAt = try c.decodeIfPresent(Date.self, forKey: .madeAt)
         reason = try c.decodeIfPresent(String.self, forKey: .reason)
         detail = try c.decodeIfPresent(String.self, forKey: .detail)
+        payment = try c.decodeIfPresent(Bool.self, forKey: .payment)
     }
 }
