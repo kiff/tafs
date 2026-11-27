@@ -188,25 +188,25 @@ describe("connections no taf uses", () => {
       call("c3", "cb", "status"), result("c3", "cb"),
       { kind: "tool_call", body: { call_id: "c4", tool: "other", input: { action: "request", name: "other-tool" } } }, result("c4", "other-tool"),
       // A browser request's answer nests its grant.
-      call("c5", "shop"), { kind: "tool_result", body: { call_id: "c5", text: JSON.stringify({ grant: { id: "grt_c5", agent: "shop-runner-ab12cd34" } }) } },
+      call("c5", "shop"), { kind: "tool_result", body: { call_id: "c5", text: JSON.stringify({ grant: { id: "grt_c5", agent: "shop-runner-example3" } }) } },
       // An answer that isn't JSON, or names an agent no id could be, names none.
       call("c6", "odd"), { kind: "tool_result", body: { call_id: "c6", text: "agent: qonto-morning" } },
       call("c7", "odd"), result("c7", "Not An Id!"),
       // An answer cut short after its agent, inside the guide that follows it, still names it.
-      call("c8", "cut"), { kind: "tool_result", body: { call_id: "c8", text: '{"agent":"cut-short-zz99yy88","guide":{"text":"Qonto is' } }];
+      call("c8", "cut"), { kind: "tool_result", body: { call_id: "c8", text: '{"agent":"cut-short-example2","guide":{"text":"Qonto is' } }];
     const conns: AccountConnection[] = [
       qonto,
       // The name Coach sent is no agent of this chat's.
       { ...qonto, agent: "qonto-morning" },
       { ...qonto, agent: "refused-one" },
       { ...qonto, agent: "other-tool" },
-      { ...qonto, agent: "shop-runner-ab12cd34", kind: "browser" },
-      { ...qonto, agent: "cut-short-zz99yy88" },
+      { ...qonto, agent: "shop-runner-example3", kind: "browser" },
+      { ...qonto, agent: "cut-short-example2" },
       { ...stripe, since: "2026-11-27" },
     ];
-    expect(chatLeftAgents(events, conns, new Set(["cb"]), "2026-11-27T20:44:00.000Z")).toEqual(["qonto-balance-k3f9x2a1", "shop-runner-ab12cd34", "cut-short-zz99yy88"]);
+    expect(chatLeftAgents(events, conns, new Set(["cb"]), "2026-11-27T20:44:00.000Z")).toEqual(["qonto-balance-k3f9x2a1", "shop-runner-example3", "cut-short-example2"]);
     // The taf it made is live: its connections stay.
-    expect(chatLeftAgents(events, conns, new Set(["qonto-balance-k3f9x2a1"]), "2026-11-27T20:44:00.000Z")).toEqual(["shop-runner-ab12cd34", "cut-short-zz99yy88"]);
+    expect(chatLeftAgents(events, conns, new Set(["qonto-balance-k3f9x2a1"]), "2026-11-27T20:44:00.000Z")).toEqual(["shop-runner-example3", "cut-short-example2"]);
     // An agent with one connection asked before the chat began isn't the chat's alone.
     expect(chatLeftAgents(events, [qonto, { ...qonto, since: "2026-11-26" }], new Set(), "2026-11-27T20:44:00.000Z")).toEqual([]);
     expect(chatLeftAgents([], conns, new Set(), "2026-11-27T20:44:00.000Z")).toEqual([]);
