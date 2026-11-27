@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type AccountConnection, accountConnections, accountConnectionsAndChromes, chromeLine, connectionLines, MAX_CHROMES, GUIDES_LINES, heldGuides, MAX_CONNECTIONS, MAX_GUIDES, withConnections } from "../src/cloud/connections.js";
+import { type AccountConnection, accountConnections, accountConnectionsAndChromes, browserLine, chromeLine, connectionLines, MAX_CHROMES, GUIDES_LINES, heldGuides, MAX_CONNECTIONS, MAX_GUIDES, withConnections } from "../src/cloud/connections.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { entryOf } from "../src/cloud/coach-skills.js";
 
@@ -47,6 +47,20 @@ describe("the account's connections, as Coach starts with them", () => {
       expect(ownerWords(text)).toBe(ownerWords(opened));
       expect(entryOf(text)).toBe(entryOf(opened));
     }
+  });
+});
+
+describe("planque's hosted browser, as Coach starts with it (kiff/tafs#2238)", () => {
+  const read = (body: unknown) => accountConnectionsAndChromes((async () => new Response(JSON.stringify(body))) as never, "https://planque.test", "t_acme", "ana");
+
+  it("is said only while planque offers it, with whether it pays; anything but pay: true is paying off", async () => {
+    expect(browserLine((await read({ connections: [] })).browser)).toEqual([]);
+    const off = ["- Hosted browser: offered; paying off: it never pays, and has no browse_checkout or browse_pay"];
+    expect(browserLine((await read({ connections: [], browser: { pay: false } })).browser)).toEqual(off);
+    expect(browserLine((await read({ connections: [], browser: {} })).browser)).toEqual(off);
+    expect(browserLine((await read({ connections: [], browser: { pay: "yes" } })).browser)).toEqual(off);
+    expect(browserLine((await read({ connections: [], browser: { pay: true } })).browser)).toEqual(["- Hosted browser: offered; it pays, each pay held for the owner"]);
+    expect(browserLine((await read({ connections: [], browser: [true] })).browser)).toEqual([]);
   });
 });
 

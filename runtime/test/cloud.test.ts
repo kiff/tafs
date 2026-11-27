@@ -25,6 +25,7 @@ import { RECIPES } from "../src/recipes.js";
 import { contract } from "./contract.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { connectsToday } from "../src/cloud/recipes.js";
+import { COACH_SKILLS } from "../src/coach-skills.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -6985,6 +6986,27 @@ describe("the account's connections a Coach conversation starts with", () => {
     const off = planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 }));
     const said = (await firstMessage(w, (await send(off, `/v1/tafs/${COACH}/messages`, { text: "watch my shop's orders page", new_chat: true })).session))!;
     expect(said).not.toContain("Chrome");
+  });
+
+  it("says planque's hosted browser after the connections, and that it never pays while paying is off (kiff/tafs#2238)", async () => {
+    const w = setUp();
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const hosted = planque(w, () => new Response(JSON.stringify({ connections, browser: { pay: false } }), { status: 200 }));
+    const said = (await firstMessage(w, (await send(hosted, `/v1/tafs/${COACH}/messages`, { text: "a taf that can pay for orders on shop.example", new_chat: true })).session))!;
+    expect(said).toContain("treated as live\n- Hosted browser: offered; paying off: it never pays, and has no browse_checkout or browse_pay\n");
+    // The owner's Chrome isn't offered here, so Coach is told nothing of it, and nothing of "your Chrome".
+    expect(said).not.toContain("Chrome:");
+    expect(ownerWords(said)).toBe("a taf that can pay for orders on shop.example");
+    // Coach's browser skill says what the line means: no payment line in the rules, and "this browser", never "your Chrome".
+    const skill = COACH_SKILLS.find((s) => s.name === "a-browser-taf")!.body;
+    expect(skill).toContain("**Hosted browser, paying off:** no browse_checkout or browse_pay");
+    expect(skill).toContain("Its rules carry no payment line: nothing waits for a pay approval, no amount limit.");
+    expect(skill).toContain('say "this browser", never "your Chrome"');
+    const paying = planque(w, () => new Response(JSON.stringify({ connections, browser: { pay: true } }), { status: 200 }));
+    expect((await firstMessage(w, (await send(paying, `/v1/tafs/${COACH}/messages`, { text: "a taf that can pay", new_chat: true })).session))!)
+      .toContain("- Hosted browser: offered; it pays, each pay held for the owner\n");
+    const none = planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 }));
+    expect((await firstMessage(w, (await send(none, `/v1/tafs/${COACH}/messages`, { text: "a taf that can pay", new_chat: true })).session))!).not.toContain("Hosted browser");
   });
 
   it("starts with the guides of the apps the account's tafs hold, after their connections, read with the person's session", async () => {
