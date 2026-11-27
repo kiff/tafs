@@ -31,6 +31,13 @@ export interface AccountConnection {
    */
   sites?: string[];
   any_site?: true;
+  /**
+   * As planque's grant view says them (kiff/planque#474): an app set up on the owner's pick, or a managed one no recorded
+   * run has proved. tafs cloud holds every change of either for the owner, so a new taf that reuses this connection asks
+   * no daily number for its writes (draft-the-card@55); only a `true` planque states is kept.
+   */
+  on_demand?: true;
+  unproved?: true;
 }
 
 /** At most this many sites are read from a browser connection: planque's own bound (maxSites). */
@@ -104,6 +111,8 @@ function parseConnections(list: unknown): AccountConnection[] {
       ...(typeof c.since === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.since) ? { since: c.since } : {}),
       ...(typeof c.agent_name === "string" && line(c.agent_name, 100) ? { agent_name: line(c.agent_name, 100) } : {}),
       ...(c.kind === "browser" ? browserSites(c) : {}),
+      ...(c.on_demand === true ? { on_demand: true as const } : {}),
+      ...(c.unproved === true ? { unproved: true as const } : {}),
     });
   }
   return out;
@@ -153,7 +162,9 @@ export function connectionLines(conns: AccountConnection[], tafs: Map<string, st
       : c.kind === "key" && c.api ? `, api ${c.api.url}` : "";
     const mode = c.mode_words ? `; mode: ${c.mode_words}` : "";
     const status = c.status && c.status !== "connected" ? `; ${c.status}` : "";
-    out.push(`- ${c.vendor}, for ${line(taf, 60)}: ${c.kind}${how}${mode}${status}`);
+    // Every write of such an app asks the owner: a new taf reusing it is drafted that way from its first question.
+    const held = (c.on_demand ? "; on_demand" : "") + (c.unproved ? "; unproved" : "");
+    out.push(`- ${c.vendor}, for ${line(taf, 60)}: ${c.kind}${how}${mode}${status}${held}`);
     if (out.length === MAX_CONNECTIONS) break;
   }
   return out;

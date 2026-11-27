@@ -83,10 +83,10 @@ describe("Coach's skills, as files", () => {
       // only a string argument (Eval 45774332687, 26 Nov, replay-intros run 2: `row` as the resource, planque's 400).
       // set-up-a-taf at 2,030: a form, sheet, folder or board the job names goes in the result's sources with its id
       // (kiff/tafs#2227: a taf's first run asked the owner for a form's id that setup had seen by name).
-            // draft-the-card at 2,380: the search's unproved read too, before any grant (kiff/planque#473; the emulator, 27 Nov). At 2,360: an unproved app's writes (planque's unproved: true) are held as an on-demand app's, and
+            // draft-the-card at 2,400: a [tafs connections] line's "; unproved" or "; on_demand" too, for a reused connection (kiff/planque#474). At 2,380: the search's unproved read too, before any grant (kiff/planque#473; the emulator, 27 Nov). At 2,360: an unproved app's writes (planque's unproved: true) are held as an on-demand app's, and
       // Coach never asks how many a day for a held write (the owner's phone, 27 Nov: Coach offered 10, 25 or 50 Pipedrive
       // deals a day, and tafs cloud refused the Card twice, since an unproved app's every write must ask; a number the owner gave for one is said back as asking, never put on the Card).
-      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2150, "draft-the-card": 2380, "name-the-tools": 1900 };
+      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2150, "draft-the-card": 2400, "name-the-tools": 1900 };
       expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(budget[s.name] ?? 1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
@@ -146,13 +146,13 @@ describe("Coach's core", () => {
   // so a new taf's first questions never ask a number for such a write (draft-the-card@55).
   it("holds a write the search marks unproved before any grant exists, so a new taf's first questions ask no number for it", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
-    expect(body).toContain("or an app whose tools the search marks unproved: true, before any grant: draft every tool of it that changes data or moves money to ask the owner each time");
+    expect(body).toContain("or an app whose tools the search marks unproved: true, or a [tafs connections] line ending \"; unproved\" or \"; on_demand\" (a connection a new taf reuses), before any grant: draft every tool of it that changes data or moves money to ask the owner each time");
     expect(body).toContain("Never ask how many a day for those writes, or offer a number");
   });
 
   it("holds an unproved app's writes as an on-demand app's, and never asks how many a day for a held write", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
-    expect(body).toContain("on_demand: true (set up on the owner's pick, not reviewed by an operator) or unproved: true (a managed app no run has proved yet), or an app whose tools the search marks unproved: true, before any grant: draft every tool of it that changes data or moves money to ask the owner each time (0 a day, held;");
+    expect(body).toContain("on_demand: true (set up on the owner's pick, not reviewed by an operator) or unproved: true (a managed app no run has proved yet), or an app whose tools the search marks unproved: true, or a [tafs connections] line ending \"; unproved\" or \"; on_demand\" (a connection a new taf reuses), before any grant: draft every tool of it that changes data or moves money to ask the owner each time (0 a day, held;");
     expect(body).toContain("Never ask how many a day for those writes, or offer a number; a number the owner already gave for one is said back as asking each time, never put on the Card.");
     expect(body).toContain("unproved: \"{app} hasn't been tested with tafs yet: every change asks you first\"");
     expect(body).toContain("Ask about each limit they didn't give, but a held write's (below).");
