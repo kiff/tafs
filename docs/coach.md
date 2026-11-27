@@ -922,7 +922,19 @@ address, and replies land where its staff work. Coach suggests a dedicated mailb
 or a separate one), never a person's own inbox, since the app's access covers the whole mailbox. That reason is Coach's own:
 what a sign-in covers is planque's card to show, so Coach never says it, in a message or an option, before or during
 the sign-in (`connect-an-app@36`, `draft-the-card@52`; an Eval's Plan words run offered "Connect your Gmail; its
-sign-in covers the whole mailbox" as a button). A
+sign-in covers the whole mailbox" as a button). The one exception is an app guide's lines to tell before its sign-in
+(Qonto's: its own sign-in, the admin's approval of planque's address, the owner's own login, the professional-secrecy
+consent, what it can read): they go in the text of the card that asks to go ahead, as written or faithfully translated, adding and dropping
+nothing (a paraphrase such as
+"read-only" is what the wording rules refuse, on a card as on a message), one a line, above its question, never in a message alone, so the
+card never asks about lines the owner can't see. A vendor's own sign-in entry (`qonto`,
+`stripe`, which planque's search marks `sign_in`) is asked with `request {entry, name, taf_name, tools: []}` and its
+`setup_reads`, never with `server` too or with `uses`; a
+request refused for its shape is corrected once; and a vendor's own sign-in that still fails is never replaced by its
+key: Coach says the sign-in couldn't start, and stops (`connect-an-app@37`; Qonto re-test 2,
+27 Nov: Coach's message with the five lines was refused for "read-only", the card asked "Have you read these?" with
+nothing above it, and the search, which listed none of planque's own sign-in entries, gave Coach only Qonto's key, which its
+guide forbids). A
 connection the account has comes first only when it is that dedicated mailbox, and since the
 connections lines don't say which mailbox a connection is, Coach asks. One that is a person's own inbox,
 such as a Gmail connected for another taf, is never reused for customer mail (the one exception to gap
@@ -1097,7 +1109,11 @@ tafs cloud sends them in the person's language, with the categories' titles, the
 the suggestions words. It also says whether **Home** leads with them (`home: {shown, words}`): only
 while the list is shown, for a person who manages the account's tafs (`cards.manage`), and with
 at least one recipe listed. Otherwise `home.words` is Home's empty line, so a catalog that connects
-none of them, or suggestions turned off, leave Home as it was.
+none of them, or suggestions turned off, leave Home as it was. While Home leads with them, `home.first_taf:
+{title, line, say}` names one job to try first: the first listed recipe that is proved and written in
+the person's language (`line` is its headline, `say` what Coach is handed). It's absent in a language
+with no translation (never an English fallback), for someone who doesn't manage the tafs, and when
+no recipe fits; with no field, the apps show no card.
 
 ### The gallery
 

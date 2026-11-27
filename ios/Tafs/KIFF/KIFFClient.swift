@@ -677,6 +677,38 @@ final class KIFFClient {
             }
         }
 
+        /// One argument of a held call as KIFF keeps it: a plain value written out (a decimal plainly, as
+        /// `ArgumentText`), or a list or object kept whole, so Details writes every item and field
+        /// (contracts/held-arguments.json), never "…".
+        indirect enum Argument: Decodable, Equatable, Sendable {
+            case text(String), number(String), flag(Bool), null
+            case list([Argument]), object([String: Argument])
+
+            init(from decoder: Decoder) throws {
+                let c = try decoder.singleValueContainer()
+                if c.decodeNil() { self = .null }
+                else if let s = try? c.decode(String.self) { self = .text(s) }
+                else if let b = try? c.decode(Bool.self) { self = .flag(b) }
+                // An integer exactly as sent, past 2^53 too; a decimal plainly ("0.000015", never "1.5e-05").
+                else if let i = try? c.decode(Int64.self) { self = .number(String(i)) }
+                else if let d = try? c.decode(Double.self) { self = .number(ArgumentText.plain(d)) }
+                else if let l = try? c.decode([Argument].self) { self = .list(l) }
+                else if let o = try? c.decode([String: Argument].self) { self = .object(o) }
+                else { self = .null }
+            }
+
+            /// A plain value as text, as `ArgumentText` writes it; "" for a list, an object or a null, which only
+            /// Details writes, in full.
+            var text: String {
+                switch self {
+                case .text(let t): return t
+                case .number(let n): return HeldArgumentsReader.plainLiteral(n)
+                case .flag(let b): return b ? "true" : "false"
+                case .null, .list, .object: return ""
+                }
+            }
+        }
+
         /// A parameter's declared unit and decimal places ("EUR", 2).
         struct ParameterUnit: Decodable, Equatable {
             let unit: String
@@ -704,9 +736,9 @@ final class KIFFClient {
 
         /// The held call's tool, as KIFF names it for people.
         var title: String? = nil
-        /// What a held gateway call asks, as KIFF keeps it (its arguments), each as text:
-        /// what the call is on, which the tool-call id it's filed under doesn't say.
-        var arguments: [String: ArgumentText]? = nil
+        /// What a held gateway call asks, as KIFF keeps it (its arguments), each whole: what the call is on,
+        /// which the tool-call id it's filed under doesn't say, and every step of a call that has them.
+        var arguments: [String: Argument]? = nil
         /// The proposal KIFF held: what its activity files the call under, so the owner's
         /// answer and KIFF's outcome are one line (kiff/tafs#138, item 51).
         var proposalID: String? = nil
@@ -1140,13 +1172,26 @@ final class KIFFClient {
     }
 
     func heldCalls() async throws -> [CardException] {
+        let raw: RawBody = try await send("GET", "/v1/me/card-exceptions?status=held")
+        return try Self.heldList(raw.data)
+    }
+
+    /// The held list as KIFF sends it, each call's arguments read from KIFF's own bytes (`HeldArgumentsReader`), so a
+    /// number keeps every digit sent; a call whose bytes don't read keeps what `JSONDecoder` read.
+    static func heldList(_ data: Data) throws -> [CardException] {
         struct Response: Decodable { let exceptions: [CardException] }
-        let response: Response = try await send("GET", "/v1/me/card-exceptions?status=held")
-        return response.exceptions
+        let (rest, byID) = HeldArgumentsReader.apart(data)
+        var list = try decoder.decode(Response.self, from: rest).exceptions
+        for i in list.indices { if let arguments = byID[list[i].id] { list[i].arguments = arguments } }
+        return list
     }
 
     func cardException(_ id: String) async throws -> CardException {
-        try await send("GET", "/v1/me/card-exceptions/\(escaped(id))")
+        let raw: RawBody = try await send("GET", "/v1/me/card-exceptions/\(escaped(id))")
+        let (rest, byID) = HeldArgumentsReader.apart(raw.data)
+        var held = try Self.decoder.decode(CardException.self, from: rest)
+        if let arguments = byID[held.id] { held.arguments = arguments }
+        return held
     }
 
     /// The phone's signature on an answer, as KIFF checks it.

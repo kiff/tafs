@@ -286,6 +286,48 @@ final class KIFFTests: XCTestCase {
         XCTAssertEqual(args["weight"]?.text, "2.5")
     }
 
+    /// A held list read from KIFF's own bytes: every digit sent, a number past 100 written digits as sent, a key sent
+    /// twice as the last, which is what runs (contracts/held-arguments.json, cases 6 and 7). `JSONDecoder` alone reads
+    /// numbers through `Double` and would round them.
+    func testAHeldCallsNumbersAreReadAsSent() throws {
+        let json = #"{"exceptions":[{"id":"ce_1","subject":"a","action":"x","entity_id":"e","status":"held","breaches":[],"created_at":"2026-11-27T16:00:00Z","arguments":{"long":0.12345678901234567890,"id_like":12345678901234567.89,"big":98765432109876543210987,"huge":1e400,"small":1e-400,"neg":-1E+400,"zero":0e500,"to":"first","to":"last","n":{"a":1.50,"a":2.0}}}]}"#
+        let held = try XCTUnwrap(KIFFClient.heldList(Data(json.utf8)).first)
+        XCTAssertEqual(KIFFMapping.details(of: held), [
+            "big: 98765432109876543210987", "huge: 1e400", "id_like: 12345678901234567.89", "long: 0.1234567890123456789",
+            "n:", "  a: 2", "neg: -1E+400", "small: 1e-400", "to: last", "zero: 0",
+        ])
+    }
+
+    /// Case 7's edge: 100 written digits are written out, 101 are as sent, and an exponent too large to work with
+    /// returns at once, as sent.
+    func testANumberPastAHundredDigitsIsWrittenAsSent() {
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("1e99"), "1" + String(repeating: "0", count: 99))
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("1e-99"), "0." + String(repeating: "0", count: 98) + "1")
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("1.000e-99"), "0." + String(repeating: "0", count: 98) + "1")
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("1234567890e90"), "1234567890" + String(repeating: "0", count: 90))
+        for sent in ["1e100", "1e-100", "1e400", "1e-400", "-1E+400", "1e999999999", "-2.5E+999999999", "1000e2147483647",
+                     "1e99999999999999999999", "1234567890e91"] {
+            XCTAssertEqual(HeldArgumentsReader.plainLiteral(sent), sent)
+        }
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("0e500"), "0")
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("0e99999999999999999999"), "0")
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("-0.0"), "0")
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("1.5e-05"), "0.000015")
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("1E+3"), "1000")
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral("-0.5"), "-0.5")
+        // What JSONDecoder's fallback wrote is unchanged.
+        XCTAssertEqual(HeldArgumentsReader.plainLiteral(KIFFClient.CardException.ArgumentText.plain(0.000015)), "0.000015")
+    }
+
+    /// Not JSON, or nested past what KIFF holds, doesn't read; the decoded arguments then stay.
+    func testHeldBytesThatDontReadAreNotArguments() {
+        XCTAssertNil(HeldArgumentsReader.parse(Data((String(repeating: "[", count: 100) + "1" + String(repeating: "]", count: 100)).utf8)))
+        for bad in [#"{"a": 1"#, #"{"a" 1}"#, "{} x", #"{"a": tru}"#, #"{"a": 01}"#, ""] {
+            XCTAssertNil(HeldArgumentsReader.parse(Data(bad.utf8)), bad)
+        }
+        XCTAssertEqual(HeldArgumentsReader.parse(Data(#"{"e":"\u00e9","s":"a\nb"}"#.utf8)), .object(["e": .text("é"), "s": .text("a\nb")]))
+    }
+
     /// The home list is tafs cloud's (#91): the app shows each entry as it is, its state in
     /// the app's words and its Card's lines and use in KIFF's units.
     func testATafFromTafsCloudIsShownAsItIs() throws {

@@ -126,5 +126,8 @@
   },
   "KIFF/PlanqueClient.swift": {
     "chromes/screenshots?op=\\(query)": "a planque route path, never shown"
+  },
+  "KIFF/KIFFMapping.swift": {
+    "\\(pad)\\(label): null": "A JSON null argument written as the contract writes it on every app, in no language (contracts/held-arguments.json): a value, not words."
   }
 }

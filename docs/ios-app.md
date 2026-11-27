@@ -566,6 +566,17 @@ the app in sample mode.
   - They never stand in for KIFF's amount, rule or action, and nothing is read from them.
   - The gateway's `kiff_about` and `kiff_reason` arguments aren't listed again under Details,
     where the ids stay (`TafSaysTests`).
+  - Every other argument is written out in full under Details, never "…" (`KIFFMapping.details`): a plain one on
+    its line, a list's items (1, 2, …) and an object's fields below its name, two spaces deeper each level, keys in
+    code point order at every level, an empty string below the top as `""`, and a line break or control character
+    as a space, so a held browser call's `steps` are what the owner reads before approving. Every app writes the
+    same lines, from `contracts/held-arguments.json` (`ContractTests`).
+  - The arguments are read from KIFF's own bytes (`HeldArgumentsReader`, the Mac's reader), never through `Double`:
+    a number is written from the text sent, every digit kept, with no exponent and no trailing zero after the point
+    (`plainLiteral`). One whose plain form would pass 100 written digits is written as sent (`1e400`), so a taf's
+    `1e999999999` is never a billion zeros. `JSONDecoder` reads the held list without them (`apart`): on iOS 16 it
+    would refuse the whole list for one number out of `Double`'s range. A key sent twice shows the last, which is
+    what runs.
 - **Allow this from now on** (`HoldAllow`, `AllowSheetView`; `docs/allow-from-now-on.md`): a third answer on a held
   call's card, beside Approve once and Refuse, that changes the Card so calls like it go on their own.
   - **The button** is the app's own rule, from the held call KIFF sent, with no request (`AppModel.offersAllow`):

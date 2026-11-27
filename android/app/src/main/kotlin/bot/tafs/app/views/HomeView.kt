@@ -98,6 +98,8 @@ fun HomeView(
   onExplore: (() -> Unit)? = null,
   /** "Say it in your own words", first on Home: Coach, empty, to build the taf with the person. */
   onOwnWords: (() -> Unit)? = null,
+  /** A first taf to try's Set it up with Coach: its words into Coach's box. */
+  onFirstTaf: ((String) -> Unit)? = null,
   /** A mission's Log, from its row on the list filtered to its label (Missions v2.1); null where there's none to open. */
   onMissionLog: ((bot.tafs.app.kiff.HomeLabelMission) -> Unit)? = null,
   /** How tafs works (docs/onboarding.md): the three cards again, from the first Home; null with the new onboarding off. */
@@ -254,7 +256,7 @@ fun HomeView(
           val labels = recipes?.labels
           item {
             if (state.homeLeadsWithRecipes && recipes != null && labels != null) {
-              HomeRecipes(recipes, labels, onRecipe, onOwnWords.takeIf { state.mayUseCoach })
+              HomeRecipes(recipes, labels, onRecipe, onOwnWords.takeIf { state.mayUseCoach }, onFirstTaf.takeIf { state.mayUseCoach })
             } else {
               // No taf and no job listed: the owner's board 2, above Home's own line.
               bot.tafs.app.design.Illustrated(Modifier.padding(bottom = 12.dp)) { bot.tafs.app.design.NoTafsArt(it) }
@@ -267,6 +269,7 @@ fun HomeView(
                     Text(title, style = scaled(15, FontWeight.SemiBold, Theme.ink))
                     lead?.let { Text(it, style = scaled(14, color = Theme.soft)) }
                   }
+                  FirstTafCard(recipes?.home, onFirstTaf.takeIf { state.mayUseCoach })
                   PrimaryButton(Words.Coach.ask, onOwnWords, Modifier.testTag(HOME_ASK_COACH))
                   onHowItWorks?.let { OutlineButton(Words.Onboarding.howItWorks, it, Modifier.fillMaxWidth().testTag(HOME_HOW_IT_WORKS)) }
                 }

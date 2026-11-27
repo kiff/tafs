@@ -48,22 +48,63 @@ class OnboardingCardsTest {
     var steps = OnboardingSteps()
     assertEquals(OnboardingPage.Tafs, steps.page)
     steps = steps.advanced()
+    assertEquals(OnboardingPage.Coach, steps.page)
+    steps = steps.advanced()
     assertEquals(OnboardingPage.Card, steps.page)
     steps = steps.advanced()
-    assertEquals(OnboardingPage.Control, steps.page)
+    assertEquals(OnboardingPage.Credits, steps.page)
     assertTrue("the last card's button is Get started", steps.isLast)
     assertFalse(steps.finished)
     steps = steps.advanced()
     assertTrue(steps.finished)
-    assertEquals("Get started ends on the last card, never past it", OnboardingPage.Control, steps.page)
+    assertEquals("Get started ends on the last card, never past it", OnboardingPage.Credits, steps.page)
   }
 
   @Test fun skipEndsFromAnyCard() = OnboardingPage.entries.forEach { assertTrue(OnboardingSteps(it).skipped().finished) }
 
-  /** The last card names Android's own way to approve, the screen lock, never Face ID. */
-  @Test fun theLastCardNamesTheScreenLock() {
-    assertEquals(Words.Onboarding.controlLeadAndroid, OnboardingPage.Control.lead)
-    assertTrue(Words.Onboarding.controlLeadAndroid != Words.Onboarding.controlLead)
+  /**
+   * First run v2's four cards, as the iPhone and the Mac: the Card's line ends with how this phone approves (a fingerprint or
+   * face, never the screen lock); Coach's says what Coach does; the credits' what they pay for.
+   */
+  @Test fun theFourCardsSayTheirLines() {
+    assertEquals(listOf(OnboardingPage.Tafs, OnboardingPage.Coach, OnboardingPage.Card, OnboardingPage.Credits), OnboardingPage.entries)
+    // Two lines, two paragraphs: never joined with a space a language may not use.
+    assertEquals(listOf(Words.Onboarding.cardLead, Words.Onboarding.controlLeadAndroid), OnboardingPage.Card.lines)
+    assertFalse(OnboardingPage.Card.lines.contains(Words.Onboarding.controlLead))
+    assertEquals(listOf(Words.Onboarding.homeLead), OnboardingPage.Coach.lines)
+    assertEquals(listOf(Words.Billing.creditsBuy), OnboardingPage.Credits.lines)
+    assertEquals(listOf(Words.Onboarding.tafsLead), OnboardingPage.Tafs.lines)
+    assertEquals(Words.Onboarding.coachTitle, OnboardingPage.Coach.title)
+    assertEquals(Words.Onboarding.creditsTitle, OnboardingPage.Credits.title)
+  }
+
+  /** Coach's picture is its first exchange; the credits' is Plan & usage's, with Coach's own work counted apart. */
+  @Test fun theCoachAndCreditsPicturesDrawTheSamplesWords() {
+    tall()
+    compose.setContent { TafsTheme { OnboardingCards(OnboardingPage.Coach) {} } }
+    compose.onNodeWithText(Words.Sample.Coach.ask, useUnmergedTree = true).assertExists()
+    compose.onNodeWithText(Words.Sample.Coach.connectFirst, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag("onboarding.next").performClick()
+    compose.onNodeWithText(Words.Sample.Deploys.deployApi, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag("onboarding.next").performClick()
+    compose.onNodeWithText(Words.Billing.soloOn, useUnmergedTree = true).assertExists()
+    compose.onNodeWithText(Words.Sample.Credits.notCountedCoach, useUnmergedTree = true).assertExists()
+  }
+
+  /** The first taf to try: tafs cloud's title and line, and Set it up with Coach hands its words over. None served: no card. */
+  @Test fun theFirstTafToTryHandsItsWordsToCoach() {
+    val home = bot.tafs.app.kiff.RecipesHome(shown = true, firstTaf = bot.tafs.app.kiff.RecipesHome.FirstTaf("Chase overdue invoices", "Reminds customers.", "Each weekday morning…"))
+    var said: String? = null
+    compose.setContent { TafsTheme { bot.tafs.app.views.FirstTafCard(home) { said = it } } }
+    compose.onNodeWithText(Words.Home.firstTafTry, ignoreCase = true).assertExists()
+    compose.onNodeWithText("Chase overdue invoices").assertExists()
+    compose.onNodeWithText(Words.Home.firstTafCoach).performClick()
+    assertEquals("Each weekday morning…", said)
+  }
+
+  @Test fun noFirstTafServedDrawsNoCard() {
+    compose.setContent { TafsTheme { bot.tafs.app.views.FirstTafCard(bot.tafs.app.kiff.RecipesHome(shown = true)) {} } }
+    assertTrue(compose.onAllNodesWithTag(bot.tafs.app.views.HOME_FIRST_TAF).fetchSemanticsNodes().isEmpty())
   }
 
   @Test fun theCardsShowOnceAndOnlyWhenOn() {
@@ -96,12 +137,12 @@ class OnboardingCardsTest {
     assertEquals(4, rows.map { it.first }.toSet().size)
   }
 
-  /** How tafs works lists the three cards; one tapped opens the cards there. */
+  /** How tafs works lists the four cards; one tapped opens the cards there. */
   @Test fun howTafsWorksOpensTheCardTapped() {
     tall()
     compose.setContent { TafsTheme { bot.tafs.app.views.HowTafsWorksSheet(onClose = {}) } }
     compose.onNodeWithText(Words.Onboarding.rowTafsTerms).assertExists()
-    compose.onNodeWithTag("how_it_works.Control").performClick()
+    compose.onNodeWithTag("how_it_works.Credits").performClick()
     compose.waitForIdle()
     compose.onNodeWithText(Words.Onboarding.getStarted).assertExists()
   }

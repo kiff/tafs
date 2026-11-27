@@ -1,0 +1,1 @@
+- **Android: a held call's fields go in code point order.** Under Details, fields are sorted by Unicode code point at every level, as KIFF and the other apps sort them; a field named with an emoji no longer comes before one named with a character from U+E000 to U+FFFF.

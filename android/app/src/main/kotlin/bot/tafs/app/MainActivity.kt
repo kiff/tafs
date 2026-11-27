@@ -970,6 +970,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
               onNewTaf = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = false; galleryOpen = true }) else null,
               onExplore = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = true; galleryOpen = true }) else null,
               onOwnWords = if (state.mode == Mode.kiff) model::openCoachEmpty else null,
+              onFirstTaf = if (state.mode == Mode.kiff) model::handFirstTafToCoach else null,
               onMissionLog = if (state.mode == Mode.kiff) ({ m -> coachOpen = false; trialTaf = null; missionOpen = m.id }) else null,
               onFinishSetup = if (state.mode == Mode.kiff) ({ f -> scope.launch { model.finishSetup(f) } }) else null,
               onDiscardSetup = if (state.mode == Mode.kiff) ({ agent -> scope.launch { model.discardSetup(agent) } }) else null,

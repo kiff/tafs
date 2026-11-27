@@ -97,6 +97,16 @@ class FirstRunTest {
     assertNull(KiffClient.json.decodeFromString(Recipes.serializer(), """{"home":{"shown":true,"words":"Pick a job"}}""").home?.ownWords)
   }
 
+  /** tafs cloud's first taf to try (first run v2): whole and trimmed, or none, as the Mac reads it. */
+  @Test fun theFirstTafToTryIsReadWholeOrNotAtAll() {
+    fun first(home: String) = KiffClient.json.decodeFromString(Recipes.serializer(), """{"home":$home}""").home?.firstTafToTry
+    val whole = first("""{"shown":true,"first_taf":{"title":" Chase overdue invoices ","line":"Reminds customers.","say":"Each weekday morning…"}}""")
+    assertEquals(bot.tafs.app.kiff.RecipesHome.FirstTaf("Chase overdue invoices", "Reminds customers.", "Each weekday morning…"), whole)
+    assertNull("no words for Coach: no card", first("""{"shown":true,"first_taf":{"title":"Chase","line":"Reminds."}}"""))
+    assertNull("a blank line: no card", first("""{"shown":true,"first_taf":{"title":"Chase","line":"  ","say":"Each"}}"""))
+    assertNull("none served", first("""{"shown":true}"""))
+  }
+
   @Test fun aTafMadeWithNoPlanSaysSoOnItsCard() {
     val o = KiffClient.json.decodeFromString(ResultOutcome.serializer(), """{"taf_id":"taf-1","plan_needed":{"words":"Choose a plan to start it."}}""")
     assertEquals("taf-1", o.tafId)

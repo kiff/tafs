@@ -173,9 +173,85 @@ class MappingTest {
          "arguments":{"b_flag":true,"a_small":1.5e-05,"c_count":50,"d_name":"Ana","e_list":[1,2],"f_null":null,"g_empty":""}}]}""",
     )[0]
     assertEquals(
-      listOf("a_small: 0.000015", "b_flag: true", "c_count: 50", "d_name: Ana", "e_list: …", "f_null: …"),
+      listOf("a_small: 0.000015", "b_flag: true", "c_count: 50", "d_name: Ana", "e_list:", "  1: 1", "  2: 2", "f_null: null"),
       KiffMapping.details(e),
     )
+  }
+
+  // Red-team, 27 Nov: a held browser call's steps showed as "steps: …", so the owner signed steps they never saw; a step the
+  // line hid could have clicked Submit while the taf's words said only "fill". Every step is written out, in order, indented.
+  /**
+   * A number past 100 written digits is written as sent, at once: a taf's 1e999999999 would be a billion zeros (case 7, as
+   * KIFF writes `details`). The edge counts the 0 before a point and no trailing zero.
+   */
+  /**
+   * One held call whose arguments hold a number no double can read never empties Needs you: the list still has every call, and
+   * that call's Details write the number as sent. KIFF passes a taf's arguments through as sent, so a taf could otherwise blank
+   * the owner's list with one call (a reader through Double refuses 1e400).
+   */
+  @Test fun aNumberNoDoubleReadsLeavesEveryHeldCallListed() {
+    val list = exceptions(
+      """{"exceptions":[
+        {"id":"ce_1","subject":"a","action":"browse_act","entity_id":"e","created_at":"2026-11-27T18:00:00Z","arguments":{"huge":1e400,"tiny":1e-400,"long":0.12345678901234567890,"big":98765432109876543210987}},
+        {"id":"ce_2","subject":"a","action":"refund","entity_id":"e","created_at":"2026-11-27T18:01:00Z","arguments":{"charge":"ch_1"}}]}""",
+    )
+    assertEquals(listOf("ce_1", "ce_2"), list.map { it.id })
+    assertEquals(listOf("big: 98765432109876543210987", "huge: 1e400", "long: 0.1234567890123456789", "tiny: 1e-400"), KiffMapping.details(list[0]))
+    assertEquals(listOf("charge: ch_1"), KiffMapping.details(list[1]))
+  }
+
+  /**
+   * Keys go in Unicode code point order at every level, as KIFF writes them: U+FF01 (a full-width "!") comes before an emoji
+   * (U+1F600), though a String's own order puts the emoji's surrogate pair (0xD83D) first.
+   */
+  @Test fun keysGoInCodePointOrderNotUtf16Order() {
+    val e = exceptions(
+      """{"exceptions":[{"id":"ce_k","subject":"a","action":"x","entity_id":"e","created_at":"2026-11-27T18:00:00Z",
+        "arguments":{"\uD83D\uDE00":1,"\uFF01":2,"a":{"\uD83D\uDE00":3,"\uFF01":4}}}]}""",
+    )[0]
+    assertEquals(listOf("a:", "  \uFF01: 4", "  \uD83D\uDE00: 3", "\uFF01: 2", "\uD83D\uDE00: 1"), KiffMapping.details(e))
+  }
+
+  @Test fun aHugeNumberIsWrittenAsSentNeverPadded() {
+    fun text(n: String) = KiffMapping.argumentText(kotlinx.serialization.json.Json.parseToJsonElement(n))
+    assertEquals("1" + "0".repeat(99), text("1e99"))
+    assertEquals("0." + "0".repeat(98) + "1", text("1e-99"))
+    for (n in listOf("1e100", "1e-100", "1e400", "1e-400", "-1E+400", "1e999999999", "-2.5E+999999999", "1e2147483648", "1e99999999999999999999", "1000e2147483647", "-1000E+2147483647")) {
+      assertEquals(n, text(n))
+    }
+    assertEquals("15" + "0".repeat(97), text("1.50e98"))
+    assertEquals("0", text("-0.0e5"))
+    // A zero whose exponent is too large to read is still 0, as KIFF writes it.
+    for (n in listOf("0e500", "0e99999999999999999999", "-0.000E-999999999", "0.0")) assertEquals(n, "0", text(n))
+  }
+
+  @Test fun aHeldBrowserCallsStepsAreWrittenOutInFullNeverFolded() {
+    val e = exceptions(
+      """{"exceptions":[{"id":"ce_6b","subject":"a","action":"browse_act","entity_id":"e","created_at":"2026-11-27T16:35:00Z",
+         "arguments":{"kiff_reason":"Owner asked to fill customer name Test","url":"https://www.httpbin.org/forms/post",
+           "steps":[{"kind":"fill","selector":"input[name=custname]","value":"Test"},{"kind":"click","text":"Submit order"}],
+           "options":{},"tags":[]}}]}""",
+    )[0]
+    val lines = KiffMapping.details(e)
+    assertEquals(
+      listOf(
+        "options: {}",
+        "steps:",
+        "  1:",
+        "    kind: fill",
+        "    selector: input[name=custname]",
+        "    value: Test",
+        "  2:",
+        "    kind: click",
+        "    text: Submit order",
+        "tags: []",
+        "url: https://www.httpbin.org/forms/post",
+      ),
+      lines,
+    )
+    // Nothing is folded, and the taf's own words stay out of the call's lines.
+    assertTrue(lines.none { "…" in it })
+    assertTrue(lines.none { "Owner asked" in it })
   }
 
   @Test fun aHoldKiffsWordsAreTheLastResort() {

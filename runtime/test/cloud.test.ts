@@ -7,7 +7,7 @@ import { FULL_LANGUAGES, LANGUAGES, withLanguage, wordsIn } from "../src/cloud/w
 import { ja } from "../src/cloud/words/ja.js";
 import { ko } from "../src/cloud/words/ko.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
-import { sweepBriefs, approvalWaits, COACH_FIXES, retriedResults, type ThreadComponent, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { sweepBriefs, approvalWaits, COACH_FIXES, retriedResults, type ThreadComponent, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, upgradeTenants, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -435,7 +435,10 @@ describe("tafs cloud", () => {
     expect(fresh.body.shown).toBe(true);
     expect(fresh.body.recipes.length).toBeGreaterThan(0);
     expect(fresh.body.suggestions).toEqual({ show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." });
-    expect(fresh.body.home).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: own });
+    { const { first_taf, ...rest } = fresh.body.home;
+      expect(rest).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: own });
+      // The first proved job, its words as the gallery serves them.
+      expect(first_taf).toEqual({ title: "Chase overdue invoices", line: expect.any(String), say: expect.any(String) }); }
     { const { home, labels: shownLabels, suggestions, shown, filtered } = fresh.body;
       contract("recipes-home", "GET /v1/recipes for someone who manages the tafs, with no live taf: Home's part of the answer (the recipes themselves are left out).", { shown, filtered, suggestions, home, labels: shownLabels }); }
     expect(fresh.body.labels).toEqual(labels);
@@ -446,7 +449,9 @@ describe("tafs cloud", () => {
     const de = (await call(w, "GET", "/v1/recipes", { token: "ana", headers: { "Accept-Language": "de-DE,de;q=0.9,en;q=0.8" } })).body;
     expect(de.categories[0]).toEqual({ id: "money", title: "Geld" });
     expect(de.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).toMatchObject({ title: "Erstattungen bis zu einem Limit", headline: "Beantwortet Erstattungsanfragen aus dem Support und erstattet beim Zahlungsanbieter, innerhalb der Card.", today: "" });
-    expect(de.home).toEqual({ shown: true, words: "Wähle eine Aufgabe für deinen ersten taf.", own_words: { title: "Sag es in deinen eigenen Worten", line: "Coach baut den taf mit dir." } });
+    { const { first_taf, ...rest } = de.home;
+      expect(rest).toEqual({ shown: true, words: "Wähle eine Aufgabe für deinen ersten taf.", own_words: { title: "Sag es in deinen eigenen Worten", line: "Coach baut den taf mit dir." } });
+      expect(first_taf?.title).toBe("Überfällige Rechnungen anmahnen"); }
     expect(de.labels.hand).toBe("An Coach übergeben");
     expect(de.suggestions.words).toBe("Vorschläge erscheinen in einem neuen Gespräch mit Coach, bis das Konto seinen ersten taf hat.");
     expect((await call(w, "GET", "/v1/me/suggestions", { token: "ana", headers: { "Accept-Language": "pl" } })).body.suggestions.words).toBe("Sugestie pojawiają się w nowej rozmowie z Coachem, dopóki konto nie ma pierwszego tafa.");
@@ -3294,6 +3299,36 @@ describe("upgrading running tafs (kiff/tafs#69)", () => {
     const again = await upgradeDefinitions(depsOf(w), { dryRun: false });
     expect(again.every((o) => o.outcome === "current")).toBe(true);
     expect(w.agents.calls.filter((c) => c.startsWith("putAgent") || c.startsWith("getAgent"))).toEqual([]);
+  });
+
+  // The owner's test-account upgrade (27 Nov): definitions no Eval measured may reach the accounts the run names, and
+  // never any other. An empty list writes nothing, and a list that isn't one is refused before anything is read.
+  it("upgrades only the accounts a test-account run names, and none for an empty list", async () => {
+    const w = world();
+    const old = definition(RAE, jobById("refunds"), { budgetCents: 150 });
+    await w.agents.api.putAgent("t_acme", RAE, { ...old, instructions: old.instructions.replace("five ways", "four ways") });
+    const maxOld = definition(MAX, jobById("refunds"), { budgetCents: 150 });
+    await w.agents.api.putAgent("t_other", MAX, { ...maxOld, instructions: maxOld.instructions.replace("five ways", "four ways") });
+    w.agents.calls.length = 0;
+
+    const none = await upgradeDefinitions(depsOf(w), { dryRun: false, tenants: [] });
+    expect(none).toEqual([]);
+    expect(w.agents.calls.filter((c) => c.startsWith("putAgent"))).toEqual([]);
+
+    const only = await upgradeDefinitions(depsOf(w), { dryRun: false, tenants: ["t_other", "t_nobody"] });
+    expect(only.map((o) => o.tenant)).toEqual(only.map(() => "t_other"));
+    expect(only.find((o) => o.taf === MAX)?.outcome).toBe("written");
+    expect(w.agents.calls.filter((c) => c.startsWith("putAgent"))).toEqual([`putAgent ${MAX}`]);
+    // The account it didn't name is as it was, read by no one.
+    expect((await w.agents.api.getAgent("t_acme", RAE))?.instructions).toContain("four ways");
+    expect((await w.tafs.get("t_acme", RAE))?.definition).toBeUndefined();
+
+    // The Lambda's event: absent is every account (the plain gate's run), a list is those accounts, anything else refused.
+    expect(upgradeTenants({ dry_run: true })).toBeUndefined();
+    expect(upgradeTenants({ tenants: [" t_acme ", "t_other"] })).toEqual(["t_acme", "t_other"]);
+    for (const bad of [[], [""], ["  "], "t_acme", [1], null, {}]) {
+      expect(() => upgradeTenants({ tenants: bad }), JSON.stringify(bad)).toThrow(/one or more ids/);
+    }
   });
 
   it("builds Setup from its own definition, skips a taf being removed, and says why one fails", async () => {
@@ -6579,7 +6614,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@36,draft-the-card@55,name-the-tools@22,set-up-a-taf@16,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@37,draft-the-card@55,name-the-tools@22,set-up-a-taf@16,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -6587,23 +6622,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@36,draft-the-card@55,name-the-tools@22,set-up-a-taf@16,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@37,draft-the-card@55,name-the-tools@22,set-up-a-taf@16,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@36,draft-the-card@55,halting@1,name-the-tools@22,set-up-a-taf@16,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@37,draft-the-card@55,halting@1,name-the-tools@22,set-up-a-taf@16,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@36,draft-the-card@55,halting@1,name-the-tools@22,set-up-a-taf@16,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@37,draft-the-card@55,halting@1,name-the-tools@22,set-up-a-taf@16,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@36,draft-the-card@55,halting@1,improve-a-taf@4,name-the-tools@22`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@37,draft-the-card@55,halting@1,improve-a-taf@4,name-the-tools@22`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -6621,7 +6656,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@36,draft-the-card@55,halting@1,name-the-tools@22,set-up-a-taf@2,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@37,draft-the-card@55,halting@1,name-the-tools@22,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
@@ -7029,7 +7064,7 @@ describe("the account's connections a Coach conversation starts with", () => {
     expect(text).not.toContain("Docs");
     expect(ownerWords(text)).toBe("I want a taf that chases overdue invoices");
     // The skills are chosen from how the owner opened, as before.
-    expect(w.agents.calls.at(-1)).toContain("skills=cards-and-holds@3,connect-an-app@36,");
+    expect(w.agents.calls.at(-1)).toContain("skills=cards-and-holds@3,connect-an-app@37,");
     // The same chat goes on with what the session holds: nothing is read or sent again.
     await send(deps, `/v1/tafs/${COACH}/messages`, { text: "and remind them twice", session: started.session });
     expect(asked).toHaveLength(1);

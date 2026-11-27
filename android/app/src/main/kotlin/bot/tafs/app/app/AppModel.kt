@@ -2236,6 +2236,12 @@ class AppModel(
     _state.update { it.copy(coachRequested = true) }
   }
 
+  /**
+   * The first taf to try's Set it up with Coach (first run v2): a new conversation with tafs cloud's words for it in the message
+   * box, for the person to edit and send, as a recipe handed to Coach. Nothing is sent.
+   */
+  fun handFirstTafToCoach(say: String) = openCoachWith(say)
+
   /** "Say it in your own words": a new Coach conversation, empty, to build a taf with the person. */
   fun openCoachEmpty() {
     if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach) return

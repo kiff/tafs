@@ -1,0 +1,1 @@
+- **Held calls: a decimal argument under Details has no trailing zero.** `1.50` is written `1.5` and `2.0` `2` on every app, since not every app's JSON reader keeps them; `contracts/held-arguments.json` pins it with a fifth case, and Android drops them as the others do.

@@ -21,7 +21,10 @@ import java.math.RoundingMode
 import java.time.Duration
 import java.util.Currency
 import java.util.UUID
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
@@ -544,29 +547,86 @@ object KiffMapping {
   fun ordinal(n: Long): String = bot.tafs.app.model.Res.ordinal(n)
 
   /**
-   * What a held gateway call is on, one line an argument, as KIFF keeps them ("payment_intent: pi_…"). The
-   * amount isn't repeated (it's shown above), nor KIFF's own operation id.
+   * What a held gateway call is on, as KIFF keeps its arguments ("payment_intent: pi_…"): one line an argument, and a
+   * list or object written out in full below its name, each item on its own line in the order sent, each field in its
+   * key's order at every level (a dictionary can't keep the order sent), indented.
+   * Nothing the call carries is ever folded to "…": a held browser call's `steps` are what the owner signs, and a step
+   * the line hid could click what the taf's words never said (red-team, 27 Nov). The amount isn't repeated (it's shown
+   * above), nor the gateway's own arguments; an empty string at the top says nothing and isn't shown.
    */
   fun details(e: CardException): List<String> {
     val arguments = e.arguments ?: return emptyList()
     val shown = (e.parameterUnits?.keys.orEmpty() + e.parameters?.keys.orEmpty()).map { it.lowercase() }.toSet()
-    return arguments.keys.sorted().mapNotNull { key ->
+    return arguments.keys.sortedWith(CODE_POINT_ORDER).flatMap { key ->
       val k = key.lowercase()
       // The gateway's own arguments: the operation's id, and the taf's words, which show under "The taf says".
-      if (k in shown || k == "kiff_operation_id" || k == "kiff_reason" || k == "kiff_about") return@mapNotNull null
-      val text = argumentText(arguments[key]).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-      "${visible(key)}: ${visible(text)}"
+      if (k in shown || k == "kiff_operation_id" || k == "kiff_reason" || k == "kiff_about") return@flatMap emptyList()
+      val value = arguments[key]
+      if ((value as? JsonPrimitive)?.let { it.isString && it.content.isEmpty() } == true) return@flatMap emptyList()
+      argumentLines(visible(key), value, 0)
     }
   }
 
-  /** One argument of a held call, as text: a string as it is, a number or a flag written out, anything else left as "…". */
-  fun argumentText(value: JsonElement?): String {
-    val p = value as? JsonPrimitive ?: return "…"
-    if (p.isString) return p.content
-    p.content.toBooleanStrictOrNull()?.let { return it.toString() }
-    // A decimal written out plainly, as sent: "0.000015", never "1.5e-05".
-    return p.content.toBigDecimalOrNull()?.toPlainString() ?: "…"
+  /** [label]'s [value] as lines: a plain value on its label's line; a list's items (1, 2, …) and an object's fields below it, two spaces deeper each level. */
+  fun argumentLines(label: String, value: JsonElement?, depth: Int): List<String> {
+    val pad = "  ".repeat(depth)
+    return when (value) {
+      is JsonArray ->
+        if (value.isEmpty()) listOf("$pad$label: []")
+        else listOf("$pad$label:") + value.flatMapIndexed { i, item -> argumentLines("${i + 1}", item, depth + 1) }
+      is JsonObject ->
+        if (value.isEmpty()) listOf("$pad$label: {}")
+        else listOf("$pad$label:") + value.keys.sortedWith(CODE_POINT_ORDER).flatMap { k -> argumentLines(visible(k), value[k], depth + 1) }
+      else -> listOf("$pad$label: ${visible(argumentText(value))}")
+    }
   }
+
+  /**
+   * One plain argument as text: a string as it is (an empty one as "", so a fill with nothing still shows), a number
+   * written out plainly with no trailing zero after its point (an integer past 2^53 exactly), a flag as true or false, a
+   * null as null. A number that would take more than [PLAIN_DIGITS_MAX] digits written so (the 0 before a point counted) is
+   * written as sent ("1e400"): a taf's 1e999999999 is never a billion zeros on the card (contracts/held-arguments.json,
+   * case 7, as KIFF writes `details`).
+   */
+  fun argumentText(value: JsonElement?): String {
+    val p = value as? JsonPrimitive ?: return "null"
+    if (p is JsonNull) return "null"
+    if (p.isString) return p.content.ifEmpty { "\"\"" }
+    p.content.toBooleanStrictOrNull()?.let { return it.toString() }
+    // A decimal written out plainly: "0.000015", never "1.5e-05"; "1.5", never "1.50" (the iPhone reads a Double).
+    // A zero is one written digit, whatever its exponent, even one too large to read ("0e99999999999999999999" is 0).
+    if (ZERO.matches(p.content)) return "0"
+    // Dropping the zeros can overflow the scale ("1000e2147483647" throws): then it's written as sent.
+    val n = runCatching { p.content.toBigDecimalOrNull()?.stripTrailingZeros() }.getOrNull() ?: return p.content
+    // Counted in Long: a scale near Int.MIN_VALUE can't wrap the count round to a small one.
+    val precision = n.precision().toLong()
+    val scale = n.scale().toLong()
+    val written = if (scale <= 0) precision - scale else maxOf(precision, scale + 1)
+    return if (written > PLAIN_DIGITS_MAX) p.content else n.toPlainString()
+  }
+
+  /** A JSON number whose digits are all zeros, with any exponent. */
+  private val ZERO = Regex("-?0+(\\.0*)?([eE][+-]?[0-9]+)?")
+
+  /**
+   * Keys in Unicode code point order, as KIFF and every app sort them (contracts/held-arguments.json). A String's own order
+   * compares UTF-16 units, which puts a key with an emoji (a surrogate pair, 0xD800 and up) before one with U+E000 to U+FFFF.
+   */
+  val CODE_POINT_ORDER: Comparator<String> = Comparator { a, b ->
+    var i = 0
+    var j = 0
+    while (i < a.length && j < b.length) {
+      val x = a.codePointAt(i)
+      val y = b.codePointAt(j)
+      if (x != y) return@Comparator x.compareTo(y)
+      i += Character.charCount(x)
+      j += Character.charCount(y)
+    }
+    (a.length - i).compareTo(b.length - j)
+  }
+
+  /** The most digits a held call's number is written out in; past it, it's written as sent. */
+  const val PLAIN_DIGITS_MAX = 100L
 
   /**
    * The amount to show above the answer: a parameter KIFF declares a unit for, in that unit; otherwise the

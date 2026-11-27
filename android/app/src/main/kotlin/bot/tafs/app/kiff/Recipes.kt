@@ -176,9 +176,21 @@ data class RecipesHome(
   val words: String = "",
   /** "Say it in your own words" and its line, first on Home for someone who manages tafs: Coach, empty, builds the taf with them. */
   @kotlinx.serialization.SerialName("own_words") val ownWords: OwnWords? = null,
+  /**
+   * A first taf to try (first run v2), tafs cloud's: its first proved job in the person's language, sent only to who manages the
+   * tafs while the list is shown. Read through [firstTafToTry].
+   */
+  @kotlinx.serialization.SerialName("first_taf") val firstTaf: FirstTaf? = null,
 ) {
   @Serializable
   data class OwnWords(val title: String = "", val line: String = "")
+
+  @Serializable
+  data class FirstTaf(val title: String = "", val line: String = "", val say: String = "")
+
+  /** The first taf to try as served, trimmed, or null unless its title, line and words for Coach are all there: no card then. */
+  val firstTafToTry: FirstTaf? get() = firstTaf?.let { FirstTaf(it.title.trim(), it.line.trim(), it.say.trim()) }
+    ?.takeIf { it.title.isNotEmpty() && it.line.isNotEmpty() && it.say.isNotEmpty() }
 }
 
 /** The recipe sheet's words, in the person's language. */

@@ -9042,9 +9042,14 @@ final class AppModel: ObservableObject {
     /// sent, and nothing is asked of the person yet: on a phone where Coach isn't started, the
     /// words show first and Send starts it (`submitSetup`).
     func handRecipeToCoach(_ recipe: TafsCloud.Recipes.Recipe) {
+        handWordsToCoach(recipe.say)
+    }
+
+    /// Words handed to Coach from Home (a recipe's, or the first taf to try's `say`), as a recipe tap does.
+    func handWordsToCoach(_ words: String) {
         guard mode == .kiff, mayUseCoach else { return }
         newSetupChat()
-        setupDraft = recipe.say
+        setupDraft = words
         setupHanded = true
         coachOpen = true
     }
