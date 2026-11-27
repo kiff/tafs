@@ -329,8 +329,8 @@ things (`runtime/src/cloud/approval.ts`):
   day); the owner widens it later as a version. A managed app no recorded run has proved yet
   (planque's `unproved: true`, kiff/planque#457) is held the same way, and its note says so
   ("… hasn't been tested with tafs yet …") rather than "set up today". Coach drafts both
-  that way from the start (`draft-the-card@54`): it reads `on_demand` or `unproved` on the
-  grant, never asks "how many a day" for those writes, and says "every change asks you first"
+  that way from the start: it reads `on_demand` or `unproved` on the
+  grant, and `unproved` on planque's tool search before any grant exists (`draft-the-card@55`), never asks "how many a day" for those writes, and says "every change asks you first"
   as one line of the rules notice, so the owner's first Card isn't refused.
   A draft that leaves one of the taf's tools on no Card is answered `failed: …` too, naming
   the tool, when no Card in force for the taf's agent covers it either (KIFF's
@@ -924,14 +924,16 @@ what a sign-in covers is planque's card to show, so Coach never says it, in a me
 the sign-in (`connect-an-app@36`, `draft-the-card@52`; an Eval's Plan words run offered "Connect your Gmail; its
 sign-in covers the whole mailbox" as a button). The one exception is an app guide's lines to tell before its sign-in
 (Qonto's: its own sign-in, the admin's approval of planque's address, the owner's own login, the professional-secrecy
-consent, what it can read): they go in the text of the card that asks to go ahead, in the guide's own words (a paraphrase
-such as "read-only" is what the wording rules refuse), one a line, above its question, never in a message alone, so the
+consent, what it can read): they go in the text of the card that asks to go ahead, as written (a paraphrase such as
+"read-only" is what the wording rules refuse, on a card as on a message), one a line, above its question, never in a message alone, so the
 card never asks about lines the owner can't see. A vendor's own sign-in entry (`qonto`,
-`stripe`) is asked with `request {entry, name, taf_name, tools: []}` alone, never with `server` too or with `uses`; a
+`stripe`, which planque's search marks `sign_in`) is asked with `request {entry, name, taf_name, tools: []}` and its
+`setup_reads`, never with `server` too or with `uses`; a
 request refused for its shape is corrected once; and a vendor's own sign-in that still fails is never replaced by its
-key: Coach says the sign-in couldn't start and the team was told, and stops (`connect-an-app@37`; Qonto re-test 2,
+key: Coach says the sign-in couldn't start, and stops (`connect-an-app@37`; Qonto re-test 2,
 27 Nov: Coach's message with the five lines was refused for "read-only", the card asked "Have you read these?" with
-nothing above it, and Coach then requested Qonto's key, which its guide forbids). A
+nothing above it, and the search, which listed none of planque's own sign-in entries, gave Coach only Qonto's key, which its
+guide forbids). A
 connection the account has comes first only when it is that dedicated mailbox, and since the
 connections lines don't say which mailbox a connection is, Coach asks. One that is a person's own inbox,
 such as a Gmail connected for another taf, is never reused for customer mail (the one exception to gap

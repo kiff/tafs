@@ -1495,6 +1495,8 @@
     <string name="home_empty_coach">Připojte aplikaci a nastavte svůj první taf.</string>
     <string name="home_empty_shared">Tady se zobrazí tafy sdílené s vámi.</string>
     <string name="home_explore_jobs">Prozkoumat práce</string>
+    <string name="home_first_taf_coach">Nastavit s Coachem</string>
+    <string name="home_first_taf_try">První taf na vyzkoušení</string>
     <string name="home_footer">Přihlášeno přes KIFF.</string>
     <string name="home_halted_open_halt">Zastaveno. Otevřít Zastavení</string>
     <string name="home_labels_all">Vše</string>
@@ -1685,12 +1687,14 @@
     <string name="onboarding_age_n">Musí vám být alespoň %1$s let.</string>
     <string name="onboarding_card_lead">Každý taf pracuje v rámci Card, kterou vydáte: co smí dělat, v které aplikaci a za kolik. Nad rámec se zeptá vás.</string>
     <string name="onboarding_card_title">Card je vaše svolení</string>
+    <string name="onboarding_coach_title">Coach ho nastaví s vámi</string>
     <string name="onboarding_consent_tick">Souhlasím s %1$s a %2$s.</string>
     <string name="onboarding_control_lead">Když vás taf potřebuje, čeká v Čeká na vás, a na hodinkách, pokud je máte. Schválíte přes Face ID nebo Touch ID, nebo odmítnete.</string>
     <string name="onboarding_control_lead_android">Když vás taf potřebuje, čeká v Čeká na vás, a na hodinkách, pokud je máte. Schválíte otiskem prstu nebo obličejem, nebo odmítnete.</string>
     <string name="onboarding_control_lead_desktop">Když vás taf potřebuje, čeká v Čeká na vás. Schválíte v telefonu, nebo na tomto počítači, pokud jste se na něm přihlásili přístupovým klíčem nebo bezpečnostním klíčem, nebo odmítnete.</string>
     <string name="onboarding_control_lead_mac">Když vás taf potřebuje, čeká v Čeká na vás. Schválíte přes Touch ID nebo v telefonu, nebo odmítnete.</string>
     <string name="onboarding_control_title">Kontrolu máte vy</string>
+    <string name="onboarding_credits_title">Práci platí kredity</string>
     <string name="onboarding_get_started">Začít</string>
     <string name="onboarding_home_lead">Řekněte Coachovi vlastními slovy, co chcete udělat. Nastaví s vámi taf a ukáže vám jeho Card dřív, než se cokoli spustí.</string>
     <string name="onboarding_how_it_works">Jak tafs funguje</string>

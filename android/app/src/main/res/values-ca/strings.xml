@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Connecta una aplicació per configurar el teu primer taf.</string>
     <string name="home_empty_shared">Els taf compartits amb tu es mostren aquí.</string>
     <string name="home_explore_jobs">Explora les feines</string>
+    <string name="home_first_taf_coach">Configura\'l amb Coach</string>
+    <string name="home_first_taf_try">Un primer taf per provar</string>
     <string name="home_footer">Sessió iniciada amb KIFF.</string>
     <string name="home_halted_open_halt">Bloquejat. Obre Bloqueig</string>
     <string name="home_labels_all">Tots</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Has de tenir almenys %1$s anys.</string>
     <string name="onboarding_card_lead">Cada taf treballa dins d\'un Card que tu emets: què pot fer, amb quina aplicació i quant. Més enllà, et pregunta.</string>
     <string name="onboarding_card_title">Un Card és el teu permís</string>
+    <string name="onboarding_coach_title">Coach el configura amb tu</string>
     <string name="onboarding_consent_tick">Accepto %1$s i %2$s.</string>
     <string name="onboarding_control_lead">Quan un taf et necessita, espera a «Et necessita», i al teu rellotge si en tens un. Aproves amb Face ID o Touch ID, o rebutges.</string>
     <string name="onboarding_control_lead_android">Quan un taf et necessita, espera a «Et necessita», i al teu rellotge si en tens un. Aproves amb l\'empremta digital o la cara, o rebutges.</string>
     <string name="onboarding_control_lead_desktop">Quan un taf et necessita, espera a «Et necessita». Aproves al telèfon, o en aquest ordinador si hi has iniciat la sessió amb una clau d\'accés o una clau de seguretat, o rebutges.</string>
     <string name="onboarding_control_lead_mac">Quan un taf et necessita, espera a «Et necessita». Aproves amb Touch ID o al telèfon, o rebutges.</string>
     <string name="onboarding_control_title">Tu tens el control</string>
+    <string name="onboarding_credits_title">Els crèdits paguen la feina</string>
     <string name="onboarding_get_started">Comença</string>
     <string name="onboarding_home_lead">Digues a Coach què voldries que es fes, amb les teves paraules. Configura el taf amb tu i et mostra el seu Card abans que s\'executi res.</string>
     <string name="onboarding_how_it_works">Com funciona tafs</string>

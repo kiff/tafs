@@ -33,6 +33,27 @@ describe("the account's connections, as Coach starts with them", () => {
     expect(connectionLines(many, new Map(many.map((c) => [c.agent, c.agent])))).toHaveLength(MAX_CONNECTIONS);
   });
 
+  // The emulator, 27 Nov: Coach offered to reuse New leads' Pipedrive connection for a new taf and asked "how many deals a day";
+  // Pipedrive is a managed app no run has proved, so tafs cloud holds every change of it. planque's connections now say it
+  // (kiff/planque#474), and the line carries it, so Coach drafts a reused connection's writes to ask (draft-the-card@55).
+  it("keeps planque's unproved and on_demand on a connection, only as true, and ends its line with them", async () => {
+    const got = await accountConnections((async () => new Response(JSON.stringify({ connections: [
+      { agent: "nl", vendor: "Pipedrive", kind: "provider", entry: "connector:composio:pipedrive", status: "connected", unproved: true },
+      { agent: "od", vendor: "Desk", kind: "provider", entry: "connector:composio:desk", status: "connected", on_demand: true, unproved: "yes" },
+      { agent: "cb", vendor: "Stripe", kind: "vendor_sign_in", server: "https://mcp.stripe.com", status: "connected", unproved: false },
+    ] }))) as never, "https://planque.test", "t_acme", "ana");
+    expect(got).toEqual([
+      { agent: "nl", vendor: "Pipedrive", kind: "provider", entry: "connector:composio:pipedrive", status: "connected", unproved: true },
+      { agent: "od", vendor: "Desk", kind: "provider", entry: "connector:composio:desk", status: "connected", on_demand: true },
+      { agent: "cb", vendor: "Stripe", kind: "vendor_sign_in", server: "https://mcp.stripe.com", status: "connected" },
+    ]);
+    expect(connectionLines(got, new Map([["nl", "New leads"], ["od", "Desk replies"], ["cb", "Chargebacks"]]))).toEqual([
+      "- Pipedrive, for New leads: provider, entry connector:composio:pipedrive; unproved",
+      "- Desk, for Desk replies: provider, entry connector:composio:desk; on_demand",
+      "- Stripe, for Chargebacks: vendor_sign_in, server https://mcp.stripe.com",
+    ]);
+  });
+
   it("goes before the owner's words, after tafs' own first line, and the thread and the entry read as before", () => {
     const lines = ["- Stripe, for Chargebacks: vendor_sign_in, server https://mcp.stripe.com"];
     expect(withConnections("chase invoices", [])).toBe("chase invoices");

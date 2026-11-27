@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">اپنا پہلا taf بنانے کے لیے ایک ایپ جوڑیں۔</string>
     <string name="home_empty_shared">آپ کے ساتھ شیئر کیے گئے tafs یہاں دکھائے جاتے ہیں۔</string>
     <string name="home_explore_jobs">کام تلاش کریں</string>
+    <string name="home_first_taf_coach">Coach کے ساتھ سیٹ اپ کریں</string>
+    <string name="home_first_taf_try">آزمانے کے لیے پہلا taf</string>
     <string name="home_footer">KIFF سے سائن اِن ہیں۔</string>
     <string name="home_halted_open_halt">روکا ہوا ہے۔ Halt کھولیں</string>
     <string name="home_labels_all">سب</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">آپ کی عمر کم از کم %1$s سال ہونی چاہیے۔</string>
     <string name="onboarding_card_lead">ہر taf آپ کے جاری کیے ہوئے Card کے اندر کام کرتا ہے: وہ کیا کر سکتا ہے، کس ایپ کے ساتھ، اور کتنا۔ اس سے آگے وہ آپ سے پوچھتا ہے۔</string>
     <string name="onboarding_card_title">Card آپ کی اجازت ہے</string>
+    <string name="onboarding_coach_title">Coach آپ کے ساتھ اسے سیٹ اپ کرتا ہے</string>
     <string name="onboarding_consent_tick">میں %1$s اور %2$s سے اتفاق کرتا ہوں۔</string>
     <string name="onboarding_control_lead">جب کسی taf کو آپ کی ضرورت ہوتی ہے تو وہ آپ کی ضرورت میں انتظار کرتا ہے، اور اگر آپ کے پاس گھڑی ہے تو اس پر بھی۔ آپ Face ID یا Touch ID سے منظور کرتے ہیں، یا مسترد کرتے ہیں۔</string>
     <string name="onboarding_control_lead_android">جب کسی taf کو آپ کی ضرورت ہوتی ہے تو وہ آپ کی ضرورت میں انتظار کرتا ہے، اور اگر آپ کے پاس گھڑی ہے تو اس پر بھی۔ آپ اپنے فنگر پرنٹ یا چہرے سے منظور کرتے ہیں، یا مسترد کرتے ہیں۔</string>
     <string name="onboarding_control_lead_desktop">جب کسی taf کو آپ کی ضرورت ہوتی ہے تو وہ آپ کی ضرورت میں انتظار کرتا ہے۔ آپ اپنے فون پر منظور کرتے ہیں، یا اس کمپیوٹر پر اگر آپ نے اس میں پاس کی یا سیکیورٹی کی سے سائن اِن کیا ہے، یا مسترد کرتے ہیں۔</string>
     <string name="onboarding_control_lead_mac">جب کسی taf کو آپ کی ضرورت ہوتی ہے تو وہ آپ کی ضرورت میں انتظار کرتا ہے۔ آپ Touch ID سے یا اپنے فون پر منظور کرتے ہیں، یا مسترد کرتے ہیں۔</string>
     <string name="onboarding_control_title">کنٹرول آپ کے پاس رہتا ہے</string>
+    <string name="onboarding_credits_title">کام کی ادائیگی کریڈٹس سے ہوتی ہے</string>
     <string name="onboarding_get_started">شروع کریں</string>
     <string name="onboarding_home_lead">Coach کو اپنے الفاظ میں بتائیں کہ آپ کیا کروانا چاہتے ہیں۔ وہ آپ کے ساتھ taf سیٹ اپ کرتا ہے اور کچھ چلنے سے پہلے اس کا Card آپ کو دکھاتا ہے۔</string>
     <string name="onboarding_how_it_works">tafs کیسے کام کرتا ہے</string>

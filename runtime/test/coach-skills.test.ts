@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { COACH_SKILLS } from "../src/coach-skills.js";
+import { COACH_WORDING } from "../src/cloud/coach-wording.js";
 import { allSkillRefs, NAMED_ONLY, approxTokens, entryOf, loadedKey, skillFiles, skillRef, startSkills, toolSkills } from "../src/cloud/coach-skills.js";
 import { DELIVERY_WORDS } from "../src/cloud/delivery.js";
 import { disclosureLine } from "../src/jobs.js";
@@ -44,7 +45,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@37", "did-this-happen@1", "draft-the-card@54", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@22", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@37", "did-this-happen@1", "draft-the-card@55", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@22", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -83,13 +84,13 @@ describe("Coach's skills, as files", () => {
       // only a string argument (Eval 45774332687, 26 Nov, replay-intros run 2: `row` as the resource, planque's 400).
       // set-up-a-taf at 2,030: a form, sheet, folder or board the job names goes in the result's sources with its id
       // (kiff/tafs#2227: a taf's first run asked the owner for a form's id that setup had seen by name).
-            // draft-the-card at 2,360: an unproved app's writes (planque's unproved: true) are held as an on-demand app's, and
+            // draft-the-card at 2,400: a [tafs connections] line's "; unproved" or "; on_demand" too, for a reused connection (kiff/planque#474). At 2,380: the search's unproved read too, before any grant (kiff/planque#473; the emulator, 27 Nov). At 2,360: an unproved app's writes (planque's unproved: true) are held as an on-demand app's, and
       // Coach never asks how many a day for a held write (the owner's phone, 27 Nov: Coach offered 10, 25 or 50 Pipedrive
       // deals a day, and tafs cloud refused the Card twice, since an unproved app's every write must ask; a number the owner gave for one is said back as asking, never put on the Card).
       // connect-an-app at 2,310: a vendor's own sign-in entry is asked with no uses and never server and entry together, a refused
       // request is corrected once, a failed own sign-in is never replaced by its key, and a guide's lines before the sign-in go in
-      // the card's text (Qonto re-test 2, 27 Nov: "Have you read these?" with nothing above it, then the key route).
-      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2310, "draft-the-card": 2360, "name-the-tools": 1900 };
+      // the card's text as written (Qonto re-test 2, 27 Nov: "Have you read these?" with nothing above it, then the key route).
+      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2310, "draft-the-card": 2400, "name-the-tools": 1900 };
       expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(budget[s.name] ?? 1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
@@ -142,10 +143,20 @@ describe("Coach's core", () => {
   // The owner's phone, 27 Nov (New leads on 150): Pipedrive is a managed app no run has proved (planque's unproved: true), so
   // tafs cloud holds its every write. Coach still asked "how many deals a day" (10, 25 or 50), and the Card the owner agreed
   // was refused twice before Coach redrafted it at 0 a day. An unproved app is held as one set up on demand, and a held
-  // write's rule is never asked as a number (draft-the-card@54).
+  // write's rule is never asked as a number (draft-the-card@55).
+  // The emulator, 27 Nov, after @54 (a new taf "Deal adder" adding a Pipedrive deal for each lead): Coach asked the sign-in and
+  // "How many deals may it add a day? 10 / 25 / 50" in one card, before any grant existed, so no grant's unproved could say
+  // otherwise. planque's search now marks an unproved managed app's tools (kiff/planque#473), and the rule reads it there too,
+  // so a new taf's first questions never ask a number for such a write (draft-the-card@55).
+  it("holds a write the search marks unproved before any grant exists, so a new taf's first questions ask no number for it", () => {
+    const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
+    expect(body).toContain("or an app whose tools the search marks unproved: true, or a [tafs connections] line ending \"; unproved\" or \"; on_demand\" (a connection a new taf reuses), before any grant: draft every tool of it that changes data or moves money to ask the owner each time");
+    expect(body).toContain("Never ask how many a day for those writes, or offer a number");
+  });
+
   it("holds an unproved app's writes as an on-demand app's, and never asks how many a day for a held write", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
-    expect(body).toContain("on_demand: true (set up on the owner's pick, not reviewed by an operator) or unproved: true (a managed app no run has proved yet): draft every tool of it that changes data or moves money to ask the owner each time (0 a day, held;");
+    expect(body).toContain("on_demand: true (set up on the owner's pick, not reviewed by an operator) or unproved: true (a managed app no run has proved yet), or an app whose tools the search marks unproved: true, or a [tafs connections] line ending \"; unproved\" or \"; on_demand\" (a connection a new taf reuses), before any grant: draft every tool of it that changes data or moves money to ask the owner each time (0 a day, held;");
     expect(body).toContain("Never ask how many a day for those writes, or offer a number; a number the owner already gave for one is said back as asking each time, never put on the Card.");
     expect(body).toContain("unproved: \"{app} hasn't been tested with tafs yet: every change asks you first\"");
     expect(body).toContain("Ask about each limit they didn't give, but a held write's (below).");
@@ -312,7 +323,7 @@ describe("Coach's core", () => {
     // Eval 44876949969 (replay-intros, 21 Nov): the row number again, then the sheet it had pinned (a pin isn't one of the
     // tool's arguments), and a row's values as additionalProperties alone, refused 5 times (name-the-tools@20).
     // Eval 45774332687 (replay-intros run 2, 26 Nov): `row` as the resource once more, planque's 400 ("resource_argument row
-    // must be one of the tool's string arguments"), from a per-item limit on the sheet (name-the-tools@22, draft-the-card@54).
+    // must be one of the tool's string arguments"), from a per-item limit on the sheet (name-the-tools@22, draft-the-card@55).
     expect(tools).toContain("A row number, or an argument you pinned, is never `resource_argument` (planque refuses it): with no other string argument, leave it out and limit the tool by calls a day.");
     expect(tools).toContain("An object argument (a row's values) names in properties each field the taf writes (the columns the job marks), never additionalProperties alone.");
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
@@ -566,7 +577,7 @@ describe("Coach's core", () => {
 
   // An Eval, 26 Nov (billing, run 2): Coach showed the rules notice and the key's approval with the draft, with no confirm
   // between them. tafs cloud refused the draft (rules_unagreed), and the card after the notice was an approval, never the
-  // confirm that agrees to it (draft-the-card@54).
+  // confirm that agrees to it (draft-the-card@55).
   it("shows the rules notice's confirm right after it, and nothing else until the owner agrees", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
     expect(body).toContain("The confirm comes right after its notice, in the same turn, and nothing follows them until the owner taps Agree: no planque request, no tools, no draft, no approval.");
@@ -605,21 +616,47 @@ describe("Coach's core", () => {
   // Eval 45762771656, 26 Nov (Plan words, Gmail, run 1): Coach offered "Connect your Gmail; its sign-in covers the whole
   // mailbox" as a button, lifting draft-the-card's own reason for a dedicated mailbox. What a sign-in covers is planque's card
   // to show: the reason stays Coach's, and neither skill lets it be said, in a message or an option.
-  // Qonto re-test 2, 27 Nov: Coach asked "Have you read these and want to go ahead with the Qonto sign-in?" with nothing
-  // above it (@36 forbade saying what a sign-in covers, and the message Coach wrote anyway said "read-only", which show's
-  // wording rules refused), the search listed only Qonto's key entries, and Coach offered Qonto's key, which the guide forbids. @37: a guide's lines go inside the card, a vendor's own sign-in entry is
-  // asked alone with no uses, a refused shape is corrected once, and a failed own sign-in is never replaced by its key.
-  it("puts a guide's before-sign-in lines in the card, asks a vendor's own sign-in alone, and never falls back to its key", () => {
+  // Qonto re-test 2, 27 Nov (the run record): Coach's message with the guide's five lines was refused by the wording rules for
+  // its own paraphrase ("read-only"), so the card asked "Have you read these…?" with nothing above it; the search listed only
+  // Qonto's key entries, and Coach requested a key, which the guide forbids. @37: a guide's lines go on the card as written, a
+  // vendor's own sign-in entry is asked alone with no uses, a refused shape is corrected once, and a failed own sign-in is never
+  // replaced by its key.
+  it("puts a guide's before-sign-in lines in the card as written, asks a vendor's own sign-in alone, and never falls back to its key", () => {
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
-    expect(connect).toContain("One exception: lines the app's guide says to tell before its sign-in go in the text of the card that asks to go ahead, in the guide's words, one a line, above its question, never in a message alone.");
-    // In the guide's words: a paraphrase ("read-only") is what show's wording rules refuse (re-test 2: Coach's message with the
-    // five points was refused for "read-only"), and the guide's own lines trip none of them.
+    expect(connect).toContain("One exception: lines the app's guide says to tell before its sign-in go in the text of the card that asks to go ahead, as written, one a line, above its question, never in a message alone.");
     expect(connect).toContain("planque request with its server, or its entry when search gives one, never both,");
     expect(connect).not.toContain("(by entry too)");
-    expect(connect).toContain("A vendor's own sign-in entry (qonto, stripe: search lists no tools for it) takes no uses: request {entry, name, taf_name, tools: []}, connected first.");
-    expect(connect).toContain("A request refused for its shape: correct it as the refusal says and ask once more. A vendor's own sign-in entry that still fails is never replaced by its key: say its sign-in couldn't start and the team was told, and stop.");
+    expect(connect).toContain("A vendor's own sign-in entry (search marks it sign_in, with no tools) takes no uses: request {entry, name, taf_name, tools: []}, with your setup_reads, connected first.");
+    expect(connect).toContain("A request refused for its shape: correct it as the refusal says and ask once more. A vendor's own sign-in entry that still fails is never replaced by its key: say its sign-in couldn't start, and stop.");
+    // Nothing tells anyone when a connect fails, so Coach doesn't say the team was told.
+    expect(connect).not.toMatch(/team (was|has been|is) told/);
     // The fallback to a key comes after the general way forward, so it overrides it for a vendor's own sign-in.
     expect(connect.indexOf("never replaced by its key")).toBeGreaterThan(connect.indexOf("offer a way forward then: the same app's key entry"));
+  });
+
+  // "As written" because the guide's own lines pass the wording rules kiff/agents' show applies to a card's text: Qonto's five,
+  // as planque's deploy/guides/qonto.md writes them (27 Nov), trip none, while the paraphrase the re-test's message used does.
+  it("lets the Qonto guide's five lines through the card wording rules as written, and refuses the paraphrase", () => {
+    const lines = [
+      "Qonto's own sign-in, no key. They sign in on Qonto's own page; no one makes or pastes a key.",
+      "An owner or admin approves planque's address first: Qonto AI, then Qonto MCP, then Advanced settings, add https://planque.kiff.dev/oauth/callback.",
+      "Use their own Qonto login, and \"Desktop site\" on a phone. If Qonto's page offers to create a company, they close it; if it shows only Apple, they open the browser's \"Desktop site\" view.",
+      "Professional secrecy. Qonto's consent page asks them to accept the lifting of Qonto's professional secrecy for the tool they chose. Their choice; without the tick, nothing is connected.",
+      "What it can read, as Qonto's page lists it: the account balance, IBAN, transactions, the business and its team; supplier invoices; receipts and other attachments; client invoices and credit notes. It can draft a client invoice, which they send themselves, and add or update clients. It can't finalise, cancel, send or mark an invoice paid, or delete an invoice or a client. It can't make payments, approve or refuse card and transfer requests, set trusted beneficiaries, or store their login.",
+    ];
+    // As test/coach-wording.test.ts reads them: RE2 \pL is \p{L}, and a match needs a word edge on each side.
+    const js = (p: string) => p.replace(/\\p([LN])/g, "\\p{$1}");
+    const edge = "(?:^|[^\\p{L}\\p{N}])";
+    const refuses = (text: string) => COACH_WORDING.some((w) => w.patterns.some((p) => {
+      for (const m of text.matchAll(new RegExp(`${edge}(?:${js(p)})(?=$|[^\\p{L}\\p{N}])`, "giu"))) {
+        const next = (m[1] ?? "").trim().toLowerCase();
+        if (next && (w.unless_next ?? []).includes(next)) continue;
+        return true;
+      }
+      return false;
+    }));
+    for (const line of lines) expect(refuses(line), line).toBe(false);
+    expect(refuses("Qonto gives the taf read-only access to your balance.")).toBe(true);
   });
 
   it("never says what a sign-in covers before its card, in a message or an option", () => {
@@ -710,15 +747,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   });
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@54", "halting@1", "name-the-tools@22", "set-up-a-taf@16", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@54", "improve-a-taf@4", "name-the-tools@22"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@55", "halting@1", "name-the-tools@22", "set-up-a-taf@16", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@55", "improve-a-taf@4", "name-the-tools@22"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@54", "halting@1", "name-the-tools@22", "set-up-a-taf@16", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@54", "halting@1", "improve-a-taf@4", "name-the-tools@22"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@55", "halting@1", "name-the-tools@22", "set-up-a-taf@16", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@55", "halting@1", "improve-a-taf@4", "name-the-tools@22"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });

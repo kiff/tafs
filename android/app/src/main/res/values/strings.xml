@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Connect an app to set up your first taf.</string>
     <string name="home_empty_shared">Tafs shared with you show here.</string>
     <string name="home_explore_jobs">Explore jobs</string>
+    <string name="home_first_taf_coach">Set it up with Coach</string>
+    <string name="home_first_taf_try">A first taf to try</string>
     <string name="home_footer">Signed in with KIFF.</string>
     <string name="home_halted_open_halt">Halted. Open Halt</string>
     <string name="home_labels_all">All</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">You must be at least %1$s.</string>
     <string name="onboarding_card_lead">Each taf works within a Card you issue: what it may do, with which app, and how much. Past it, it asks you.</string>
     <string name="onboarding_card_title">A Card is your permission</string>
+    <string name="onboarding_coach_title">Coach sets it up with you</string>
     <string name="onboarding_consent_tick">I agree to %1$s and %2$s.</string>
     <string name="onboarding_control_lead">When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse.</string>
     <string name="onboarding_control_lead_android">When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your fingerprint or face, or refuse.</string>
     <string name="onboarding_control_lead_desktop">When a taf needs you, it waits in Needs you. You approve on your phone, or on this computer if you signed it in with a passkey or security key, or refuse.</string>
     <string name="onboarding_control_lead_mac">When a taf needs you, it waits in Needs you. You approve with Touch ID or on your phone, or refuse.</string>
     <string name="onboarding_control_title">You stay in control</string>
+    <string name="onboarding_credits_title">Credits pay for the work</string>
     <string name="onboarding_get_started">Get started</string>
     <string name="onboarding_home_lead">Tell Coach what you\'d like done, in your own words. It sets the taf up with you and shows you its Card before anything runs.</string>
     <string name="onboarding_how_it_works">How tafs works</string>

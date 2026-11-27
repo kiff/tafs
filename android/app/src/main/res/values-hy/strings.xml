@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Միացրեք հավելված՝ ձեր առաջին taf-ը կարգավորելու համար։</string>
     <string name="home_empty_shared">Ձեզ հետ կիսված taf-երը կերևան այստեղ։</string>
     <string name="home_explore_jobs">Ծանոթացեք աշխատանքներին</string>
+    <string name="home_first_taf_coach">Կարգավորել Coach-ի հետ</string>
+    <string name="home_first_taf_try">Առաջին taf՝ փորձելու համար</string>
     <string name="home_footer">Մուտք գործած եք KIFF-ով։</string>
     <string name="home_halted_open_halt">Կանգնեցված է։ Բացեք «Կանգնեցնել»</string>
     <string name="home_labels_all">Բոլորը</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Դուք պետք է առնվազն %1$s տարեկան լինեք։</string>
     <string name="onboarding_card_lead">Յուրաքանչյուր taf աշխատում է ձեր թողարկած Card-ի շրջանակներում՝ ինչ կարող է անել, որ հավելվածով և որքան։ Դրանից դուրս նա հարցնում է ձեզ։</string>
     <string name="onboarding_card_title">Card-ը ձեր թույլտվությունն է</string>
+    <string name="onboarding_coach_title">Coach-ը այն կարգավորում է ձեզ հետ</string>
     <string name="onboarding_consent_tick">Համաձայն եմ %1$s-ի և %2$s-ի հետ։</string>
     <string name="onboarding_control_lead">Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում և ձեր ժամացույցում, եթե ունեք։ Դուք հաստատում եք Face ID-ով կամ Touch ID-ով, կամ մերժում եք։</string>
     <string name="onboarding_control_lead_android">Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում և ձեր ժամացույցում, եթե ունեք։ Դուք հաստատում եք մատնահետքով կամ դեմքով, կամ մերժում եք։</string>
     <string name="onboarding_control_lead_desktop">Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում։ Դուք հաստատում եք հեռախոսով, կամ այս համակարգչում, եթե մուտք եք գործել դրանում passkey-ով կամ անվտանգության բանալիով, կամ մերժում եք։</string>
     <string name="onboarding_control_lead_mac">Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում։ Դուք հաստատում եք Touch ID-ով կամ հեռախոսով, կամ մերժում եք։</string>
     <string name="onboarding_control_title">Վերահսկողությունը ձեր ձեռքում է</string>
+    <string name="onboarding_credits_title">Աշխատանքի դիմաց վճարում են կրեդիտները</string>
     <string name="onboarding_get_started">Սկսեք</string>
     <string name="onboarding_home_lead">Ասեք Coach-ին ձեր բառերով, թե ինչ եք ուզում, որ արվի։ Նա taf-ը կարգավորում է ձեզ հետ և ցույց է տալիս նրա Card-ը, նախքան որևէ բան գործարկելը։</string>
     <string name="onboarding_how_it_works">Ինչպես է աշխատում tafs-ը</string>

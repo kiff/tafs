@@ -1385,6 +1385,8 @@
     <string name="home_empty_coach">Hubungkan aplikasi untuk menyiapkan taf pertama Anda.</string>
     <string name="home_empty_shared">tafs yang dibagikan kepada Anda muncul di sini.</string>
     <string name="home_explore_jobs">Jelajahi tugas</string>
+    <string name="home_first_taf_coach">Siapkan dengan Coach</string>
+    <string name="home_first_taf_try">Taf pertama untuk dicoba</string>
     <string name="home_footer">Masuk dengan KIFF.</string>
     <string name="home_halted_open_halt">Dibekukan. Buka Bekukan</string>
     <string name="home_labels_all">Semua</string>
@@ -1565,12 +1567,14 @@
     <string name="onboarding_age_n">Usia Anda minimal %1$s tahun.</string>
     <string name="onboarding_card_lead">Setiap taf bekerja dalam Card yang Anda terbitkan: apa yang boleh dilakukan, dengan aplikasi apa, dan seberapa banyak. Di luar itu, taf bertanya kepada Anda.</string>
     <string name="onboarding_card_title">Card adalah izin Anda</string>
+    <string name="onboarding_coach_title">Coach menyiapkannya bersama Anda</string>
     <string name="onboarding_consent_tick">Saya setuju dengan %1$s dan %2$s.</string>
     <string name="onboarding_control_lead">Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda, dan di jam tangan Anda jika ada. Anda menyetujui dengan Face ID atau Touch ID, atau menolak.</string>
     <string name="onboarding_control_lead_android">Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda, dan di jam tangan Anda jika ada. Anda menyetujui dengan sidik jari atau wajah Anda, atau menolak.</string>
     <string name="onboarding_control_lead_desktop">Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda. Anda menyetujui di ponsel, atau di komputer ini jika Anda masuk dengan kunci sandi atau kunci keamanan, atau menolak.</string>
     <string name="onboarding_control_lead_mac">Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda. Anda menyetujui dengan Touch ID atau di ponsel, atau menolak.</string>
     <string name="onboarding_control_title">Anda tetap memegang kendali</string>
+    <string name="onboarding_credits_title">Kredit membayar pekerjaannya</string>
     <string name="onboarding_get_started">Mulai</string>
     <string name="onboarding_home_lead">Katakan kepada Coach apa yang ingin Anda selesaikan, dengan kata-kata Anda sendiri. Coach menyiapkan taf bersama Anda dan menunjukkan Card-nya sebelum apa pun berjalan.</string>
     <string name="onboarding_how_it_works">Cara kerja tafs</string>

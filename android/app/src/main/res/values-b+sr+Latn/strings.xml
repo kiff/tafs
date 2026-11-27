@@ -1495,6 +1495,8 @@
     <string name="home_empty_coach">Povežite aplikaciju da podesite svoj prvi taf.</string>
     <string name="home_empty_shared">Ovdje se prikazuju tafovi podeljeni s vama.</string>
     <string name="home_explore_jobs">Istražite poslove</string>
+    <string name="home_first_taf_coach">Podesite sa Coachom</string>
+    <string name="home_first_taf_try">Prvi taf za probu</string>
     <string name="home_footer">Prijavljeni ste KIFF-om.</string>
     <string name="home_halted_open_halt">Blokirano. Otvorite Blokiranje</string>
     <string name="home_labels_all">Svi</string>
@@ -1685,12 +1687,14 @@
     <string name="onboarding_age_n">Morate imati najmanje %1$s.</string>
     <string name="onboarding_card_lead">Svaki taf radi unutar Carda koji mu izdate: šta sme raditi, s kojom aplikacijom i koliko. Izvan toga pita vas.</string>
     <string name="onboarding_card_title">Card je vaše dozvola</string>
+    <string name="onboarding_coach_title">Coach ga podešava s vama</string>
     <string name="onboarding_consent_tick">Slažem se s: %1$s i %2$s.</string>
     <string name="onboarding_control_lead">Kad tafu trebate vi, čeka u Čeka vas, a na satu ako ga imate. Odobravate Face ID-jem ili Touch ID-jem ili odbijate.</string>
     <string name="onboarding_control_lead_android">Kad tafu trebate vi, čeka u Čeka vas, a na satu ako ga imate. Odobravate otiskom prsta ili licem ili odbijate.</string>
     <string name="onboarding_control_lead_desktop">Kad tafu trebate vi, čeka u Čeka vas. Odobravate na telefonu, ili na ovom računaru ako ste se na njemu prijavili pristupnim ključem ili bezbednosnim ključem, ili odbijate.</string>
     <string name="onboarding_control_lead_mac">Kad tafu trebate vi, čeka u Čeka vas. Odobravate Touch ID-jem ili na telefonu ili odbijate.</string>
     <string name="onboarding_control_title">Vi ostajete u kontroli</string>
+    <string name="onboarding_credits_title">Rad plaćaju krediti</string>
     <string name="onboarding_get_started">Započnite</string>
     <string name="onboarding_home_lead">Recite Coachu šta želite da se napravi, svojim rečima. On s vama podešava taf i prikazuje mu Card pre nego išta krene.</string>
     <string name="onboarding_how_it_works">Kako tafs radi</string>

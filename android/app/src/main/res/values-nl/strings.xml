@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Koppel een app om je eerste taf in te stellen.</string>
     <string name="home_empty_shared">Tafs die met je zijn gedeeld, verschijnen hier.</string>
     <string name="home_explore_jobs">Taken verkennen</string>
+    <string name="home_first_taf_coach">Met Coach opzetten</string>
+    <string name="home_first_taf_try">Een eerste taf om te proberen</string>
     <string name="home_footer">Ingelogd met KIFF.</string>
     <string name="home_halted_open_halt">Stilgezet. Open Stilzetten</string>
     <string name="home_labels_all">Alle</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Je moet minstens %1$s zijn.</string>
     <string name="onboarding_card_lead">Elke taf werkt binnen een Card die jij uitgeeft: wat hij mag, met welke app en hoeveel. Daarbuiten vraagt hij het jou.</string>
     <string name="onboarding_card_title">Een Card is jouw toestemming</string>
+    <string name="onboarding_coach_title">Coach zet hem met je op</string>
     <string name="onboarding_consent_tick">Ik ga akkoord met %1$s en %2$s.</string>
     <string name="onboarding_control_lead">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’ en, als je er een hebt, op je horloge. Je keurt goed met Face ID of Touch ID, of weigert.</string>
     <string name="onboarding_control_lead_android">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’ en, als je er een hebt, op je horloge. Je keurt goed met je vingerafdruk of gezicht, of weigert.</string>
     <string name="onboarding_control_lead_desktop">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed op je telefoon, of op deze computer als je er met een toegangssleutel of beveiligingssleutel bent ingelogd, of weigert.</string>
     <string name="onboarding_control_lead_mac">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed met Touch ID of op je telefoon, of weigert.</string>
     <string name="onboarding_control_title">Jij houdt de controle</string>
+    <string name="onboarding_credits_title">Credits betalen het werk</string>
     <string name="onboarding_get_started">Aan de slag</string>
     <string name="onboarding_home_lead">Vertel Coach in je eigen woorden wat je gedaan wilt hebben. Die zet de taf met je op en laat je de Card zien voordat er iets draait.</string>
     <string name="onboarding_how_it_works">Zo werkt tafs</string>

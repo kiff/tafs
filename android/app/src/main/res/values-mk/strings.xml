@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Поврзи апликација за да го поставиш твојот прв taf.</string>
     <string name="home_empty_shared">Tafовите споделени со тебе се прикажуваат тука.</string>
     <string name="home_explore_jobs">Истражи работи</string>
+    <string name="home_first_taf_coach">Постави го со Coach</string>
+    <string name="home_first_taf_try">Прв taf за пробување</string>
     <string name="home_footer">Најавен со KIFF.</string>
     <string name="home_halted_open_halt">Запрено. Отвори Запри</string>
     <string name="home_labels_all">Сите</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Мора да имаш најмалку %1$s години.</string>
     <string name="onboarding_card_lead">Секој taf работи во рамки на Card што ти го издаваш: што смее да прави, со која апликација и колку. Над тоа, те прашува тебе.</string>
     <string name="onboarding_card_title">Card е твоја дозвола</string>
+    <string name="onboarding_coach_title">Coach го поставува со тебе</string>
     <string name="onboarding_consent_tick">Се согласувам со %1$s и %2$s.</string>
     <string name="onboarding_control_lead">Кога на некој taf му си потребен, чека во Те чека, и на твојот часовник ако имаш. Одобруваш со Face ID или Touch ID, или одбиваш.</string>
     <string name="onboarding_control_lead_android">Кога на некој taf му си потребен, чека во Те чека, и на твојот часовник ако имаш. Одобруваш со отпечаток од прст или лице, или одбиваш.</string>
     <string name="onboarding_control_lead_desktop">Кога на некој taf му си потребен, чека во Те чека. Одобруваш на твојот телефон, или на овој компјутер ако си се најавил на него со клуч за пристап или безбедносен клуч, или одбиваш.</string>
     <string name="onboarding_control_lead_mac">Кога на некој taf му си потребен, чека во Те чека. Одобруваш со Touch ID или на телефонот, или одбиваш.</string>
     <string name="onboarding_control_title">Ти ја држиш контролата</string>
+    <string name="onboarding_credits_title">Кредитите ја плаќаат работата</string>
     <string name="onboarding_get_started">Започни</string>
     <string name="onboarding_home_lead">Кажи му на Coach што сакаш да се направи, со свои зборови. Го поставува tafот со тебе и ти го покажува неговиот Card пред да се изврши нешто.</string>
     <string name="onboarding_how_it_works">Како работи tafs</string>

@@ -1495,6 +1495,8 @@
     <string name="home_empty_coach">Pievieno lietotni, lai iestatītu savu pirmo taf.</string>
     <string name="home_empty_shared">Šeit parādās ar tevi kopīgotie taf.</string>
     <string name="home_explore_jobs">Izpētīt darbus</string>
+    <string name="home_first_taf_coach">Iestatīt ar Coach</string>
+    <string name="home_first_taf_try">Pirmais taf izmēģinājumam</string>
     <string name="home_footer">Pierakstījies ar KIFF.</string>
     <string name="home_halted_open_halt">Apturēts. Atvērt “Apturēt”</string>
     <string name="home_labels_all">Visi</string>
@@ -1685,12 +1687,14 @@
     <string name="onboarding_age_n">Tev jābūt vismaz %1$s gadus vecam.</string>
     <string name="onboarding_card_lead">Katrs taf strādā tevis izsniegtas Card ietvaros: ko tas drīkst darīt, ar kuru lietotni un par cik. Ārpus tās tas jautā tev.</string>
     <string name="onboarding_card_title">Card ir tava atļauja</string>
+    <string name="onboarding_coach_title">Coach to iestata kopā ar tevi</string>
     <string name="onboarding_consent_tick">Es piekrītu %1$s un %2$s.</string>
     <string name="onboarding_control_lead">Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi” un tavā pulkstenī, ja tev tāds ir. Tu apstiprini ar Face ID vai Touch ID vai atsaki.</string>
     <string name="onboarding_control_lead_android">Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi” un tavā pulkstenī, ja tev tāds ir. Tu apstiprini ar pirksta nospiedumu vai seju vai atsaki.</string>
     <string name="onboarding_control_lead_desktop">Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi”. Tu apstiprini savā tālrunī, vai šajā datorā, ja tajā pierakstījies ar piekļuves atslēgu vai drošības atslēgu, vai atsaki.</string>
     <string name="onboarding_control_lead_mac">Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi”. Tu apstiprini ar Touch ID vai savā tālrunī vai atsaki.</string>
     <string name="onboarding_control_title">Kontrole paliek tev</string>
+    <string name="onboarding_credits_title">Kredīti apmaksā darbu</string>
     <string name="onboarding_get_started">Sākt</string>
     <string name="onboarding_home_lead">Pasaki Coach saviem vārdiem, ko vēlies paveikt. Tas kopā ar tevi iestata taf un parāda tev tā Card, pirms kaut kas tiek palaists.</string>
     <string name="onboarding_how_it_works">Kā darbojas tafs</string>

@@ -9,6 +9,8 @@
   "home.empty.coach": "アプリを接続して、最初のtafを設定しましょう。",
   "home.empty.shared": "共有されたtafsはここに表示されます。",
   "home.explore_jobs": "仕事を探す",
+  "home.first_taf_coach": "Coachと設定する",
+  "home.first_taf_try": "まず試すtaf",
   "home.footer": "KIFFでサインイン済み。",
   "home.halted_open_halt": "遮断済み。遮断を開く",
   "home.labels_all": "すべて",
