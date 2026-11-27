@@ -90,7 +90,15 @@ data class GalleryWords(
   @kotlinx.serialization.SerialName("try") val tryIt: String = "",
   /** The label over a job's sample report. */
   val sample: String = "",
-)
+  /** The heading over a job's guide ("How it goes") and the labels of its three kinds of line. Absent from an older tafs cloud. */
+  val guide: String = "",
+  @kotlinx.serialization.SerialName("guide_do") val guideDo: String = "",
+  @kotlinx.serialization.SerialName("guide_see") val guideSee: String = "",
+  @kotlinx.serialization.SerialName("guide_if") val guideIf: String = "",
+) {
+  /** [recipe]'s guide as the sheet draws it: none without its heading, so an older tafs cloud never shows an empty section. */
+  fun guideOf(recipe: Recipe): List<GuideStep> = if (guide.isBlank()) emptyList() else recipe.guide
+}
 
 /** The account's "Show suggestions" setting, kept in tafs cloud: whether it's on, and tafs cloud's words for it. */
 @Serializable
@@ -151,9 +159,9 @@ data class GuideStep(
   @kotlinx.serialization.SerialName("see") val seeLine: String? = null,
   @kotlinx.serialization.SerialName("if") val ifLine: String? = null,
 ) {
-  /** The step's lines that came, each with its label from [labels], in tafs cloud's order: Do, You see, If. */
-  fun lines(labels: RecipeLabels): List<Pair<String, String>> =
-    listOf(labels.guideDo to doLine, labels.guideSee to seeLine, labels.guideIf to ifLine)
+  /** The step's lines that came, each with its label from the gallery's [words], in tafs cloud's order: Do, You see, If. */
+  fun lines(words: GalleryWords): List<Pair<String, String>> =
+    listOf(words.guideDo to doLine, words.guideSee to seeLine, words.guideIf to ifLine)
       .mapNotNull { (label, line) -> line?.trim()?.takeIf { it.isNotEmpty() }?.let { label to it } }
 }
 
@@ -175,17 +183,4 @@ data class RecipesHome(
 
 /** The recipe sheet's words, in the person's language. */
 @Serializable
-data class RecipeLabels(
-  val allows: String = "",
-  val holds: String = "",
-  val never: String = "",
-  val hand: String = "",
-  /** The heading over a job's guide ("How it goes") and the labels of its three kinds of line. Absent from an older tafs cloud. */
-  val guide: String = "",
-  @kotlinx.serialization.SerialName("guide_do") val guideDo: String = "",
-  @kotlinx.serialization.SerialName("guide_see") val guideSee: String = "",
-  @kotlinx.serialization.SerialName("guide_if") val guideIf: String = "",
-) {
-  /** [recipe]'s guide as the sheet draws it: none without its heading, so an older tafs cloud never shows an empty section. */
-  fun guideOf(recipe: Recipe): List<GuideStep> = if (guide.isBlank()) emptyList() else recipe.guide
-}
+data class RecipeLabels(val allows: String = "", val holds: String = "", val never: String = "", val hand: String = "")
