@@ -1,0 +1,6 @@
+• Goedkeuringen: de knop zegt altijd wanneer je vingerafdruk nodig is, en wie de app verlaat, wordt opnieuw gevraagd.
+• Bewijzen zeggen alleen dat er geld is verplaatst als dat zo is.
+• Tijden volgen de 12- of 24-uursklok van je telefoon.
+• Abonnement en gebruik zegt wat je krijgt, en een abonnement kiezen is eenvoudiger.
+• Vingerafdrukvragen zeggen waarom ze vragen.
+• Vastgehouden aanroepen bereiken je Wear OS-horloge, ook met de app gesloten.

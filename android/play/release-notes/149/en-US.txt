@@ -1,0 +1,6 @@
+• Approvals: the button always says when it needs your fingerprint, and leaving the app asks for it again.
+• Receipts say money moved only when it did.
+• Times follow your phone's 12- or 24-hour clock.
+• Plan & usage says what you get, and choosing a plan is simpler.
+• Fingerprint prompts say why they ask.
+• Held calls reach your Wear OS watch even with the app closed.
