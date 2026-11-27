@@ -37,9 +37,12 @@ back (`AppSignIn.Failure.refused("unsupported_client")`). The sign-up's email co
    Card is your permission, Credits pay for the work. Each draws the app's own components with the sample's words
    (Home's taf rows; Coach's first exchange; a Card, then a held call; Plan & usage's credits and meter), so they read
    in the person's language and theme. The Card card ends with each device's approval as its own paragraph: Face ID
-   or Touch ID on iPhone and iPad, Touch ID or the phone on the Mac (`onboarding.control_lead_mac`). Skip on every
-   card, Next on the first three and Get started on the last; a swipe left or right moves between cards (never past
-   either end), and with reduced motion they don't slide.
+   or Touch ID on iPhone and iPad, a fingerprint or face on Android (`onboarding.control_lead_android`), Touch ID or
+   the phone on the Mac (`onboarding.control_lead_mac`). Skip on every card, Next on the first three and Get started on
+   the last; a swipe left or right moves between cards (never past either end, and never ending them as Get started
+   does), and with reduced motion they don't slide. On Android (`OnboardingCards`, `OnboardingSteps.swiped`), the next
+   card is toward the start of the line: a swipe left, or right in a right-to-left language; with the system's Remove
+   animations on, the cards change in place.
 4. **The first Home** (the iPhone's Home, and the iPad's and Mac's wide Overview, which is where a wide layout opens: `FirstHome`, one block for both): with no taf, for anyone who may use Coach: board 2, tafs cloud's own empty line when it sends
    one (else the app's "No tafs yet" and what Coach does), Ask Coach, and How tafs works, which reopens the cards with
    the privacy and terms links (also in Account). Where tafs cloud lists recipes instead, Home is as it ships.

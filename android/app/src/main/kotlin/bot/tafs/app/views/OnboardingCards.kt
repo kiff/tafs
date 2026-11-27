@@ -1,6 +1,14 @@
 package bot.tafs.app.views
 
+import android.provider.Settings
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,16 +29,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.design.Eyebrow
 import bot.tafs.app.design.LocalBiometry
@@ -56,11 +70,19 @@ import bot.tafs.app.model.Words
  * The four cards on how tafs works (docs/onboarding.md, step 3): after signing in, before the first Home, and again from How
  * tafs works ([start]). Each picture is the app's own view over the sample's words, so the person knows it a minute later and
  * reads it in their language. Skip and Get started call [done].
+ *
+ * A swipe moves between the cards, as on the iPhone: toward the reading direction's end for the next card (left in a
+ * left-to-right language, right in a right-to-left one) and back the other way, never past either end and never ending the
+ * cards ([OnboardingSteps.swiped]). The cards slide, unless the system's animations are off (Remove animations), when
+ * they change in place.
  */
 @Composable
 fun OnboardingCards(start: OnboardingPage = OnboardingPage.Tafs, done: () -> Unit) {
   var page by rememberSaveable { mutableStateOf(start) }
   val steps = OnboardingSteps(page)
+  val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+  val still = reducedMotion()
+  val far = with(LocalDensity.current) { SWIPE_DISTANCE.toPx() }
   Column(
     Modifier.fillMaxSize().background(Theme.background).statusBarsPadding().navigationBarsPadding()
       .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
@@ -71,12 +93,35 @@ fun OnboardingCards(start: OnboardingPage = OnboardingPage.Tafs, done: () -> Uni
       style = scaled(15, FontWeight.SemiBold, Theme.soft),
       modifier = Modifier.align(Alignment.End).heightIn(min = 44.dp).tapping { done() }.padding(8.dp).testTag(ONBOARDING_SKIP),
     )
-    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-      // A picture of the app, not a control: what it says is in the title and the lead.
-      Box(Modifier.fillMaxWidth().clearAndSetSemantics {}, contentAlignment = Alignment.Center) { OnboardingPicture(page) }
-      Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(page.title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.semantics { heading() })
-        page.lines.forEach { Text(it, style = scaled(16, color = Theme.soft)) }
+    AnimatedContent(
+      targetState = page,
+      modifier = Modifier.weight(1f).testTag(ONBOARDING_PAGES).pointerInput(rtl) {
+        var moved = 0f
+        detectHorizontalDragGestures(
+          onDragStart = { moved = 0f },
+          onDragEnd = {
+            // Toward the start of the line (left, or right in a right-to-left language) is on to the next card.
+            val towardStart = if (rtl) moved > 0 else moved < 0
+            if (kotlin.math.abs(moved) >= far) page = OnboardingSteps(page).swiped(forward = towardStart).page
+          },
+        ) { _, dx -> moved += dx }
+      },
+      transitionSpec = {
+        if (still) EnterTransition.None togetherWith ExitTransition.None
+        else {
+          // The next card comes in from the end of the line, a card back from its start.
+          val fromEnd = (targetState.ordinal > initialState.ordinal) != rtl
+          slideInHorizontally { w -> if (fromEnd) w else -w } togetherWith slideOutHorizontally { w -> if (fromEnd) -w else w }
+        }
+      },
+    ) { shown ->
+      Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        // A picture of the app, not a control: what it says is in the title and the lead.
+        Box(Modifier.fillMaxWidth().clearAndSetSemantics {}, contentAlignment = Alignment.Center) { OnboardingPicture(shown) }
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+          Text(shown.title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.semantics { heading() })
+          shown.lines.forEach { Text(it, style = scaled(16, color = Theme.soft)) }
+        }
       }
     }
     Row(Modifier.fillMaxWidth().clearAndSetSemantics {}, horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
@@ -90,6 +135,19 @@ fun OnboardingCards(start: OnboardingPage = OnboardingPage.Tafs, done: () -> Uni
       Modifier.testTag(ONBOARDING_NEXT),
     )
   }
+}
+
+/** How far a finger goes across the cards before it moves to another. */
+private val SWIPE_DISTANCE = 48.dp
+
+/** The cards' swipe area, for tests. */
+const val ONBOARDING_PAGES = "onboarding.pages"
+
+/** Whether the system's animations are off (Settings › Accessibility › Remove animations): the cards change in place. */
+@Composable
+internal fun reducedMotion(): Boolean {
+  val context = LocalContext.current
+  return remember(context) { Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }
 }
 
 /** Each card's picture, drawn by the app's own views with the sample's words. */
