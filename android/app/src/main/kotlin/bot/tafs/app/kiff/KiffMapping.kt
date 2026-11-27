@@ -594,7 +594,8 @@ object KiffMapping {
     if (p.isString) return p.content.ifEmpty { "\"\"" }
     p.content.toBooleanStrictOrNull()?.let { return it.toString() }
     // A decimal written out plainly: "0.000015", never "1.5e-05"; "1.5", never "1.50" (the iPhone reads a Double).
-    val n = p.content.toBigDecimalOrNull()?.stripTrailingZeros() ?: return p.content
+    // Dropping the zeros can overflow the scale ("1000e2147483647" throws): then it's written as sent.
+    val n = runCatching { p.content.toBigDecimalOrNull()?.stripTrailingZeros() }.getOrNull() ?: return p.content
     // Counted in Long: a scale near Int.MIN_VALUE can't wrap the count round to a small one.
     val precision = n.precision().toLong()
     val scale = n.scale().toLong()

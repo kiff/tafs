@@ -188,7 +188,7 @@ class MappingTest {
     fun text(n: String) = KiffMapping.argumentText(kotlinx.serialization.json.Json.parseToJsonElement(n))
     assertEquals("1" + "0".repeat(99), text("1e99"))
     assertEquals("0." + "0".repeat(98) + "1", text("1e-99"))
-    for (n in listOf("1e100", "1e-100", "1e400", "1e-400", "-1E+400", "1e999999999", "-2.5E+999999999", "1e2147483648", "1e99999999999999999999")) {
+    for (n in listOf("1e100", "1e-100", "1e400", "1e-400", "-1E+400", "1e999999999", "-2.5E+999999999", "1e2147483648", "1e99999999999999999999", "1000e2147483647", "-1000E+2147483647")) {
       assertEquals(n, text(n))
     }
     assertEquals("15" + "0".repeat(97), text("1.50e98"))
