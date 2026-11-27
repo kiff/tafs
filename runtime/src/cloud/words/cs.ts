@@ -358,6 +358,7 @@ export const cs: Words = {
   gallery_guide_if: "Pokud",
   recipes_proved_help_desk: "Ověřeno na zkušební podpoře.",
   recipes_proved_billing: "Ověřeno na zkušební fakturační aplikaci.",
+  recipes_proved_receipts: "Ověřeno na zkušební schránce, složce a tabulce.",
   suggestions_on: "Návrhy se zobrazují v nové konverzaci s Coachem, dokud první taf účtu nebude živý.",
   suggestions_off: "Návrhy jsou pro tento účet vypnuté.",
   suggestions_live: "Účet má živý taf, takže nová konverzace s Coachem se otevře prázdná. Návrhy lze vypnout natrvalo.",

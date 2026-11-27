@@ -3,6 +3,24 @@ title: Bonnetjes archiveren
 headline: Nooit meer bonnetjes zoeken bij de belastingaangifte.
 today: Bonnetjes blijven in de inbox staan tot de boekhouder erom vraagt.
 line: Vindt bonnetjes en facturen in de mailbox, bewaart elk in een map en voegt een regel toe aan de uitgavenlijst; verwijdert niets.
+sample:
+  - Ik heb één bonnetje in de mailbox gevonden en de bijlage in de map Bonnetjes bewaard.
+  - Ik heb één regel aan de uitgavenlijst toegevoegd, met de datum, de afzender en het onderwerp.
+  - Toen ik het opnieuw liet lopen, heb ik dezelfde bijlage niet twee keer bewaard.
+  - Ik heb geen e-mail verwijderd of verplaatst.
+guide:
+  - Verbind je mailbox, je map en je spreadsheet
+  - - Do: Open de taak. Coach vraagt je je e-mail, je bestandsopslag en je spreadsheet na elkaar te verbinden. Log in bij elk en keur goed.
+  - - You see: Elke app als verbonden getoond.
+  - Geef de taak de links en de naam van het tabblad
+  - - Do: Geef hem in de chat van de taak de links naar je bonnetjesmap en naar je spreadsheet, en de naam van het tabblad.
+  - - You see: De taak gebruikt ze wanneer hij een bestand bewaart en een regel toevoegt.
+  - Keur de Card goed
+  - - Do: Keur de Card goed.
+  - - You see: De Card: wat de taak zelf doet, wat hij je eerst vraagt en wat hij nooit doet.
+  - Start hem
+  - - Do: Open de chat van de taak en vraag hem te starten.
+  - - You see: Het bonnetje gevonden in je e-mail, de bijlage bewaard in je map en een regel toegevoegd aan je spreadsheet met de datum, de afzender en het onderwerp. Start hem opnieuw, en dezelfde bijlage wordt niet twee keer bewaard.
 card:
   allows:
     - Bestanden bewaard en regels toegevoegd, tot 50 van elk per dag

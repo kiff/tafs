@@ -358,6 +358,7 @@ export const ro: Words = {
   gallery_guide_if: "Dacă",
   recipes_proved_help_desk: "Dovedit pe un serviciu de asistență de test.",
   recipes_proved_billing: "Dovedit pe o aplicație de facturare de test.",
+  recipes_proved_receipts: "Dovedit pe o căsuță de e-mail, un dosar și o foaie de calcul de test.",
   suggestions_on: "Sugestiile apar într-o conversație nouă cu Coach până când primul taf al contului este activ.",
   suggestions_off: "Sugestiile sunt oprite pentru acest cont.",
   suggestions_live: "Contul are un taf activ, așa că o conversație nouă cu Coach se deschide goală. Sugestiile pot fi oprite definitiv.",
