@@ -71,6 +71,8 @@
   "connect.disconnect.rest": "Các taf khác dùng {vendor} vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị thu hồi tại {vendor}; nếu không, nó bị thu hồi khi taf cuối cùng bị gỡ. Dùng {vendor} lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại.",
   "connect.disconnect.rest_deleted": "Các taf khác dùng {vendor} vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị xóa khỏi tafs; nếu không, nó bị xóa khi taf cuối cùng bị gỡ. Dùng {vendor} lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại.",
   "connect.disconnect.rest_key": "Các taf khác dùng {vendor} vẫn giữ quyền truy cập. Khóa bị xóa khỏi tafs khi không còn taf nào dùng nó. Dùng {vendor} lại sẽ yêu cầu bạn phê duyệt và dán lại một khóa.",
+  "connect.disconnect.rest_requested": "Các taf khác dùng {vendor} vẫn giữ quyền truy cập. Nếu không taf nào khác dùng cùng tài khoản đó, việc đăng nhập sẽ bị tắt ngay và {vendor} được yêu cầu thu hồi; nếu không, việc này xảy ra khi taf cuối cùng bị gỡ. Dùng {vendor} lại sẽ yêu cầu bạn phê duyệt và đăng nhập lại.",
+  "connect.disconnect.revoke_requested": "Việc đăng nhập đã tắt. {vendor} được yêu cầu thu hồi, việc này có thể hoàn tất muộn hơn một chút.",
   "connect.disconnect.title": "Gỡ quyền truy cập vào {vendor}?",
   "connect.disconnect.title_from": "Gỡ quyền truy cập vào {vendor} của {taf}?",
   "connect.disconnect.tools_stop": "Các công cụ {vendor} của {owner} ngừng hoạt động.",

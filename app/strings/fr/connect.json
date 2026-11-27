@@ -75,6 +75,8 @@
   "connect.disconnect.rest": "Les autres tafs qui utilisent {vendor} gardent leur accès. Si aucun autre taf n'utilise le même compte, l'identifiant est révoqué chez {vendor} ; sinon, quand le dernier est retiré. Utiliser {vendor} à nouveau vous demande d'approuver et de vous reconnecter.",
   "connect.disconnect.rest_deleted": "Les autres tafs qui utilisent {vendor} gardent leur accès. Si aucun autre taf n'utilise le même compte, l'identifiant est supprimé de tafs ; sinon, quand le dernier est retiré. Utiliser {vendor} à nouveau vous demande d'approuver et de vous reconnecter.",
   "connect.disconnect.rest_key": "Les autres tafs qui utilisent {vendor} gardent leur accès. La clé est supprimée de tafs dès qu'aucun taf ne l'utilise. Utiliser {vendor} à nouveau vous demande d'approuver et de coller une clé à nouveau.",
+  "connect.disconnect.rest_requested": "Les autres tafs qui utilisent {vendor} gardent leur accès. Si aucun autre taf n'utilise le même compte, l'identifiant est désactivé aussitôt et {vendor} est invité à le révoquer ; sinon, quand le dernier est retiré. Utiliser {vendor} à nouveau vous demande d'approuver et de vous reconnecter.",
+  "connect.disconnect.revoke_requested": "L'identifiant est désactivé. {vendor} est invité à le révoquer, ce qui peut aboutir un peu plus tard.",
   "connect.disconnect.title": "Retirer l'accès à {vendor} ?",
   "connect.disconnect.title_from": "Retirer l'accès à {vendor} pour {taf} ?",
   "connect.disconnect.tools_stop": "Les outils {vendor} de {owner} cessent de fonctionner.",

@@ -1129,6 +1129,8 @@
     <string name="connect_disconnect_rest">تحتفظ بقية tafs التي تستخدم %1$s بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُلغى تسجيل الدخول لدى %1$s؛ وإلا فعند إزالة آخرها. يطلب منك استخدام %1$s مرة أخرى الموافقة وتسجيل الدخول مجددًا.</string>
     <string name="connect_disconnect_rest_deleted">تحتفظ بقية tafs التي تستخدم %1$s بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُحذف تسجيل الدخول من tafs؛ وإلا فعند إزالة آخرها. يطلب منك استخدام %1$s مرة أخرى الموافقة وتسجيل الدخول مجددًا.</string>
     <string name="connect_disconnect_rest_key">تحتفظ بقية tafs التي تستخدم %1$s بوصولها. يُحذف المفتاح من tafs متى لم يعد أي taf يستخدمه. يطلب منك استخدام %1$s مرة أخرى الموافقة ولصق مفتاح مجددًا.</string>
+    <string name="connect_disconnect_rest_requested">تحتفظ بقية tafs التي تستخدم %1$s بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُوقف تسجيل الدخول فورًا ويُطلب من %1$s إلغاؤه؛ وإلا فعند إزالة آخرها. يطلب منك استخدام %1$s مرة أخرى الموافقة وتسجيل الدخول مجددًا.</string>
+    <string name="connect_disconnect_revoke_requested">أُوقف تسجيل الدخول. ويُطلب من %1$s إلغاؤه، وقد يكتمل ذلك بعد قليل.</string>
     <string name="connect_disconnect_title">إزالة الوصول إلى %1$s؟</string>
     <string name="connect_disconnect_title_from">إزالة الوصول إلى %1$s لـ %2$s؟</string>
     <string name="connect_disconnect_tools_stop">تتوقف أدوات %2$s الخاصة بـ %1$s عن العمل.</string>

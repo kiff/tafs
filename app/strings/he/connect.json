@@ -79,6 +79,8 @@
   "connect.disconnect.rest": "taf אחרים שמשתמשים ב-{vendor} שומרים על הגישה שלהם. אם אף taf אחר לא משתמש שם באותו חשבון, הכניסה מבוטלת אצל {vendor}; אחרת, כשהאחרון יוסר. שימוש חוזר ב-{vendor} מבקש ממך לאשר ולהיכנס שוב.",
   "connect.disconnect.rest_deleted": "taf אחרים שמשתמשים ב-{vendor} שומרים על הגישה שלהם. אם אף taf אחר לא משתמש שם באותו חשבון, הכניסה נמחקת מ-tafs; אחרת, כשהאחרון יוסר. שימוש חוזר ב-{vendor} מבקש ממך לאשר ולהיכנס שוב.",
   "connect.disconnect.rest_key": "taf אחרים שמשתמשים ב-{vendor} שומרים על הגישה שלהם. המפתח נמחק מ-tafs כשאף taf לא משתמש בו. שימוש חוזר ב-{vendor} מבקש ממך לאשר ולהדביק מפתח שוב.",
+  "connect.disconnect.rest_requested": "taf אחרים שמשתמשים ב-{vendor} שומרים על הגישה שלהם. אם אף taf אחר לא משתמש שם באותו חשבון, הכניסה מושבתת מיד ו-{vendor} מתבקש לבטל אותה; אחרת, כשהאחרון יוסר. שימוש חוזר ב-{vendor} מבקש ממך לאשר ולהיכנס שוב.",
+  "connect.disconnect.revoke_requested": "הכניסה הושבתה. {vendor} מתבקש לבטל אותה, וזה עשוי להסתיים מעט מאוחר יותר.",
   "connect.disconnect.title": "להסיר את הגישה ל-{vendor}?",
   "connect.disconnect.title_from": "להסיר את הגישה ל-{vendor} עבור {taf}?",
   "connect.disconnect.tools_stop": "הכלים של {vendor} של {owner} מפסיקים לעבוד.",

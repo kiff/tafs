@@ -71,6 +71,8 @@
   "connect.disconnect.rest": "其他使用 {vendor} 的 taf 仍保有存取權限。若沒有其他 taf 在該處使用同一個帳號，登入會在 {vendor} 撤銷；否則會在最後一個被移除時撤銷。再次使用 {vendor} 時，會請您核准並重新登入。",
   "connect.disconnect.rest_deleted": "其他使用 {vendor} 的 taf 仍保有存取權限。若沒有其他 taf 在該處使用同一個帳號，登入會從 tafs 刪除；否則會在最後一個被移除時刪除。再次使用 {vendor} 時，會請您核准並重新登入。",
   "connect.disconnect.rest_key": "其他使用 {vendor} 的 taf 仍保有存取權限。當沒有 taf 使用該金鑰時，金鑰會從 tafs 中刪除。再次使用 {vendor} 時，會請您核准並重新貼上金鑰。",
+  "connect.disconnect.rest_requested": "其他使用 {vendor} 的 taf 仍保有存取權限。若沒有其他 taf 在該處使用同一個帳號，登入會立即停用，並要求 {vendor} 撤銷；否則會在最後一個被移除時如此。再次使用 {vendor} 時，會請您核准並重新登入。",
+  "connect.disconnect.revoke_requested": "登入已停用。已要求 {vendor} 撤銷，可能稍後才會完成。",
   "connect.disconnect.title": "要移除 {vendor} 的存取權限嗎？",
   "connect.disconnect.title_from": "要移除 {taf} 對 {vendor} 的存取權限嗎？",
   "connect.disconnect.tools_stop": "{owner}的 {vendor} 工具將停止運作。",

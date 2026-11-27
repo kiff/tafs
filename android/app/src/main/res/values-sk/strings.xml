@@ -1018,6 +1018,8 @@
     <string name="connect_disconnect_rest">Ostatné tafy, ktoré používajú %1$s, si prístup nechajú. Ak tam rovnaký účet nepoužíva žiadny iný taf, prihlásenie sa u %1$s odvolá; inak až po odstránení posledného. Opätovné použitie %1$s vás požiada o schválenie a nové prihlásenie.</string>
     <string name="connect_disconnect_rest_deleted">Ostatné tafy, ktoré používajú %1$s, si prístup nechajú. Ak tam rovnaký účet nepoužíva žiadny iný taf, prihlásenie sa z tafs vymaže; inak až po odstránení posledného. Opätovné použitie %1$s vás požiada o schválenie a nové prihlásenie.</string>
     <string name="connect_disconnect_rest_key">Ostatné tafy, ktoré používajú %1$s, si prístup nechajú. Kľúč sa z tafs odstráni, keď ho žiadny taf nepoužíva. Opätovné použitie %1$s vás požiada o schválenie a nové vloženie kľúča.</string>
+    <string name="connect_disconnect_rest_requested">Ostatné tafy, ktoré používajú %1$s, si prístup nechajú. Ak tam rovnaký účet nepoužíva žiadny iný taf, prihlásenie sa hneď vypne a %1$s sa požiada o jeho odvolanie; inak až po odstránení posledného. Opätovné použitie %1$s vás požiada o schválenie a nové prihlásenie.</string>
+    <string name="connect_disconnect_revoke_requested">Prihlásenie je vypnuté. %1$s sa žiada o jeho odvolanie, čo sa môže dokončiť o niečo neskôr.</string>
     <string name="connect_disconnect_title">Odobrať prístup k %1$s?</string>
     <string name="connect_disconnect_title_from">Odobrať prístup k %1$s pre %2$s?</string>
     <string name="connect_disconnect_tools_stop">Nástroje %2$s tafu %1$s prestanú fungovať.</string>

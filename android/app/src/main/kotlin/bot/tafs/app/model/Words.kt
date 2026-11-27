@@ -1015,6 +1015,8 @@ object Words {
       fun rest(vendor: String): String = Res.s(R.string.connect_disconnect_rest, vendor)
       fun restDeleted(vendor: String): String = Res.s(R.string.connect_disconnect_rest_deleted, vendor)
       fun restKey(vendor: String): String = Res.s(R.string.connect_disconnect_rest_key, vendor)
+      fun restRequested(vendor: String): String = Res.s(R.string.connect_disconnect_rest_requested, vendor)
+      fun revokeRequested(vendor: String): String = Res.s(R.string.connect_disconnect_revoke_requested, vendor)
       fun title(vendor: String): String = Res.s(R.string.connect_disconnect_title, vendor)
       fun titleFrom(vendor: String, taf: String): String = Res.s(R.string.connect_disconnect_title_from, vendor, taf)
       fun toolsStop(owner: String, vendor: String): String = Res.s(R.string.connect_disconnect_tools_stop, owner, vendor, Words.possessive(owner))

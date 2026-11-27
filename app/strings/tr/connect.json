@@ -75,6 +75,8 @@
   "connect.disconnect.rest": "{vendor} kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma {vendor} tarafında iptal edilir; aksi halde sonuncusu kaldırıldığında. {vendor} uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister.",
   "connect.disconnect.rest_deleted": "{vendor} kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma tafs'tan silinir; aksi halde sonuncusu kaldırıldığında. {vendor} uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister.",
   "connect.disconnect.rest_key": "{vendor} kullanan diğer tafs erişimini korur. Hiçbir taf kullanmadığında anahtar tafs'tan silinir. {vendor} uygulamasını tekrar kullanmak, onaylamanızı ve bir anahtarı tekrar yapıştırmanızı ister.",
+  "connect.disconnect.rest_requested": "{vendor} kullanan diğer tafs erişimini korur. Orada aynı hesabı kullanan başka taf yoksa oturum açma hemen kapatılır ve {vendor} tarafından iptal edilmesi istenir; aksi halde sonuncusu kaldırıldığında. {vendor} uygulamasını tekrar kullanmak, onaylamanızı ve tekrar oturum açmanızı ister.",
+  "connect.disconnect.revoke_requested": "Oturum açma kapatıldı. {vendor} tarafından iptal edilmesi istendi; bu biraz sonra tamamlanabilir.",
   "connect.disconnect.title": "{vendor} erişimi kaldırılsın mı?",
   "connect.disconnect.title_from": "{taf} taf'ı için {vendor} erişimi kaldırılsın mı?",
   "connect.disconnect.tools_stop": "{owner} için {vendor} araçları çalışmayı bırakır.",

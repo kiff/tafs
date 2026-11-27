@@ -1055,6 +1055,8 @@
     <string name="connect_disconnect_rest">Inne tafy, które używają %1$s, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie cofnięte w %1$s; w przeciwnym razie, gdy usuniesz ostatni. Ponowne użycie %1$s poprosi Cię o zatwierdzenie i ponowne zalogowanie.</string>
     <string name="connect_disconnect_rest_deleted">Inne tafy, które używają %1$s, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie usunięte z tafs; w przeciwnym razie, gdy usuniesz ostatni. Ponowne użycie %1$s poprosi Cię o zatwierdzenie i ponowne zalogowanie.</string>
     <string name="connect_disconnect_rest_key">Inne tafy, które używają %1$s, zachowują dostęp. Klucz zostanie usunięty z tafs, gdy żaden taf nie będzie go już używał. Ponowne użycie %1$s poprosi Cię o zatwierdzenie i ponowne wklejenie klucza.</string>
+    <string name="connect_disconnect_rest_requested">Inne tafy, które używają %1$s, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie od razu wyłączone, a %1$s zostanie poproszony o jego cofnięcie; w przeciwnym razie, gdy usuniesz ostatni. Ponowne użycie %1$s poprosi Cię o zatwierdzenie i ponowne zalogowanie.</string>
+    <string name="connect_disconnect_revoke_requested">Logowanie jest wyłączone. %1$s zostanie poproszony o jego cofnięcie, co może zakończyć się nieco później.</string>
     <string name="connect_disconnect_title">Usunąć dostęp do %1$s?</string>
     <string name="connect_disconnect_title_from">Usunąć dostęp do %1$s dla %2$s?</string>
     <string name="connect_disconnect_tools_stop">Narzędzia %2$s tafa %1$s przestaną działać.</string>

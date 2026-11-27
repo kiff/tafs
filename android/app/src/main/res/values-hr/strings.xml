@@ -1018,6 +1018,8 @@
     <string name="connect_disconnect_rest">Ostali tafovi koji koriste aplikaciju %1$s zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti račun, prijava se opoziva kod pružatelja %1$s; inače, kad se ukloni zadnji. Ponovno korištenje aplikacije %1$s traži da odobrite i ponovno se prijavite.</string>
     <string name="connect_disconnect_rest_deleted">Ostali tafovi koji koriste aplikaciju %1$s zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti račun, prijava se briše iz tafsa; inače, kad se ukloni zadnji. Ponovno korištenje aplikacije %1$s traži da odobrite i ponovno se prijavite.</string>
     <string name="connect_disconnect_rest_key">Ostali tafovi koji koriste aplikaciju %1$s zadržavaju svoj pristup. Ključ se briše iz tafsa čim ga nijedan taf ne koristi. Ponovno korištenje aplikacije %1$s traži da odobrite i ponovno zalijepite ključ.</string>
+    <string name="connect_disconnect_rest_requested">Ostali tafovi koji koriste aplikaciju %1$s zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti račun, prijava se odmah isključuje, a od pružatelja %1$s traži se da je opozove; inače, kad se ukloni zadnji. Ponovno korištenje aplikacije %1$s traži da odobrite i ponovno se prijavite.</string>
+    <string name="connect_disconnect_revoke_requested">Prijava je isključena. Od pružatelja %1$s traži se da je opozove, što može završiti nešto kasnije.</string>
     <string name="connect_disconnect_title">Ukloniti pristup aplikaciji %1$s?</string>
     <string name="connect_disconnect_title_from">Ukloniti pristup aplikaciji %1$s za taf %2$s?</string>
     <string name="connect_disconnect_tools_stop">Prestaju raditi alati aplikacije %2$s za: %1$s.</string>

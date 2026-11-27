@@ -981,6 +981,8 @@
     <string name="connect_disconnect_rest">Tafs-et e tjerë që përdorin %1$s e mbajnë qasjen e tyre. Nëse asnjë taf tjetër nuk përdor të njëjtën llogari aty, hyrja revokohet te %1$s; përndryshe, kur të hiqet i fundit. Përdorimi i %1$s sërish ju kërkon të miratoni dhe të hyni sërish.</string>
     <string name="connect_disconnect_rest_deleted">Tafs-et e tjerë që përdorin %1$s e mbajnë qasjen e tyre. Nëse asnjë taf tjetër nuk përdor të njëjtën llogari aty, hyrja fshihet nga tafs; përndryshe, kur të hiqet i fundit. Përdorimi i %1$s sërish ju kërkon të miratoni dhe të hyni sërish.</string>
     <string name="connect_disconnect_rest_key">Tafs-et e tjerë që përdorin %1$s e mbajnë qasjen e tyre. Çelësi fshihet nga tafs sapo asnjë taf nuk e përdor. Përdorimi i %1$s sërish ju kërkon të miratoni dhe të ngjitni një çelës sërish.</string>
+    <string name="connect_disconnect_rest_requested">Tafs-et e tjerë që përdorin %1$s e mbajnë qasjen e tyre. Nëse asnjë taf tjetër nuk përdor të njëjtën llogari aty, hyrja çaktivizohet menjëherë dhe %1$s i kërkohet ta revokojë; përndryshe, kur të hiqet i fundit. Përdorimi i %1$s sërish ju kërkon të miratoni dhe të hyni sërish.</string>
+    <string name="connect_disconnect_revoke_requested">Hyrja është çaktivizuar. %1$s i kërkohet ta revokojë, gjë që mund të përfundojë pak më vonë.</string>
     <string name="connect_disconnect_title">Ta hiqni qasjen te %1$s?</string>
     <string name="connect_disconnect_title_from">Ta hiqni qasjen te %1$s për %2$s?</string>
     <string name="connect_disconnect_tools_stop">Mjetet e: %1$s te %2$s pushojnë së punuari.</string>

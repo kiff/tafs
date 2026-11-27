@@ -79,6 +79,8 @@
   "connect.disconnect.rest": "Ostatné tafy, ktoré používajú {vendor}, si prístup nechajú. Ak tam rovnaký účet nepoužíva žiadny iný taf, prihlásenie sa u {vendor} odvolá; inak až po odstránení posledného. Opätovné použitie {vendor} vás požiada o schválenie a nové prihlásenie.",
   "connect.disconnect.rest_deleted": "Ostatné tafy, ktoré používajú {vendor}, si prístup nechajú. Ak tam rovnaký účet nepoužíva žiadny iný taf, prihlásenie sa z tafs vymaže; inak až po odstránení posledného. Opätovné použitie {vendor} vás požiada o schválenie a nové prihlásenie.",
   "connect.disconnect.rest_key": "Ostatné tafy, ktoré používajú {vendor}, si prístup nechajú. Kľúč sa z tafs odstráni, keď ho žiadny taf nepoužíva. Opätovné použitie {vendor} vás požiada o schválenie a nové vloženie kľúča.",
+  "connect.disconnect.rest_requested": "Ostatné tafy, ktoré používajú {vendor}, si prístup nechajú. Ak tam rovnaký účet nepoužíva žiadny iný taf, prihlásenie sa hneď vypne a {vendor} sa požiada o jeho odvolanie; inak až po odstránení posledného. Opätovné použitie {vendor} vás požiada o schválenie a nové prihlásenie.",
+  "connect.disconnect.revoke_requested": "Prihlásenie je vypnuté. {vendor} sa žiada o jeho odvolanie, čo sa môže dokončiť o niečo neskôr.",
   "connect.disconnect.title": "Odobrať prístup k {vendor}?",
   "connect.disconnect.title_from": "Odobrať prístup k {vendor} pre {taf}?",
   "connect.disconnect.tools_stop": "Nástroje {vendor} tafu {owner} prestanú fungovať.",

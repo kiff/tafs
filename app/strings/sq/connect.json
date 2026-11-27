@@ -75,6 +75,8 @@
   "connect.disconnect.rest": "Tafs-et e tjerë që përdorin {vendor} e mbajnë qasjen e tyre. Nëse asnjë taf tjetër nuk përdor të njëjtën llogari aty, hyrja revokohet te {vendor}; përndryshe, kur të hiqet i fundit. Përdorimi i {vendor} sërish ju kërkon të miratoni dhe të hyni sërish.",
   "connect.disconnect.rest_deleted": "Tafs-et e tjerë që përdorin {vendor} e mbajnë qasjen e tyre. Nëse asnjë taf tjetër nuk përdor të njëjtën llogari aty, hyrja fshihet nga tafs; përndryshe, kur të hiqet i fundit. Përdorimi i {vendor} sërish ju kërkon të miratoni dhe të hyni sërish.",
   "connect.disconnect.rest_key": "Tafs-et e tjerë që përdorin {vendor} e mbajnë qasjen e tyre. Çelësi fshihet nga tafs sapo asnjë taf nuk e përdor. Përdorimi i {vendor} sërish ju kërkon të miratoni dhe të ngjitni një çelës sërish.",
+  "connect.disconnect.rest_requested": "Tafs-et e tjerë që përdorin {vendor} e mbajnë qasjen e tyre. Nëse asnjë taf tjetër nuk përdor të njëjtën llogari aty, hyrja çaktivizohet menjëherë dhe {vendor} i kërkohet ta revokojë; përndryshe, kur të hiqet i fundit. Përdorimi i {vendor} sërish ju kërkon të miratoni dhe të hyni sërish.",
+  "connect.disconnect.revoke_requested": "Hyrja është çaktivizuar. {vendor} i kërkohet ta revokojë, gjë që mund të përfundojë pak më vonë.",
   "connect.disconnect.title": "Ta hiqni qasjen te {vendor}?",
   "connect.disconnect.title_from": "Ta hiqni qasjen te {vendor} për {taf}?",
   "connect.disconnect.tools_stop": "Mjetet e: {owner} te {vendor} pushojnë së punuari.",

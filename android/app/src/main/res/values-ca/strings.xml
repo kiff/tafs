@@ -981,6 +981,8 @@
     <string name="connect_disconnect_rest">Els altres taf que fan servir %1$s conserven l\'accés. Si cap altre taf hi fa servir el mateix compte, l\'inici de sessió es revoca a %1$s; si no, quan s\'elimini l\'últim. Tornar a fer servir %1$s et demana que aprovis i iniciïs la sessió de nou.</string>
     <string name="connect_disconnect_rest_deleted">Els altres taf que fan servir %1$s conserven l\'accés. Si cap altre taf hi fa servir el mateix compte, l\'inici de sessió s\'elimina de tafs; si no, quan s\'elimini l\'últim. Tornar a fer servir %1$s et demana que aprovis i iniciïs la sessió de nou.</string>
     <string name="connect_disconnect_rest_key">Els altres taf que fan servir %1$s conserven l\'accés. La clau se suprimeix de tafs quan cap taf no la fa servir. Tornar a fer servir %1$s et demana que aprovis i enganxis una clau de nou.</string>
+    <string name="connect_disconnect_rest_requested">Els altres taf que fan servir %1$s conserven l\'accés. Si cap altre taf hi fa servir el mateix compte, l\'inici de sessió es desactiva de seguida i es demana a %1$s que el revoqui; si no, quan s\'elimini l\'últim. Tornar a fer servir %1$s et demana que aprovis i iniciïs la sessió de nou.</string>
+    <string name="connect_disconnect_revoke_requested">L\'inici de sessió està desactivat. Es demana a %1$s que el revoqui, i pot completar-se una mica més tard.</string>
     <string name="connect_disconnect_title">Treure l\'accés a %1$s?</string>
     <string name="connect_disconnect_title_from">Treure l\'accés a %1$s per a %2$s?</string>
     <string name="connect_disconnect_tools_stop">Les eines de %2$s de %1$s deixen de funcionar.</string>

@@ -79,6 +79,8 @@
   "connect.disconnect.rest": "Ostali tafovi koji koriste aplikaciju {vendor} zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti račun, prijava se opoziva kod pružatelja {vendor}; inače, kad se ukloni zadnji. Ponovno korištenje aplikacije {vendor} traži da odobrite i ponovno se prijavite.",
   "connect.disconnect.rest_deleted": "Ostali tafovi koji koriste aplikaciju {vendor} zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti račun, prijava se briše iz tafsa; inače, kad se ukloni zadnji. Ponovno korištenje aplikacije {vendor} traži da odobrite i ponovno se prijavite.",
   "connect.disconnect.rest_key": "Ostali tafovi koji koriste aplikaciju {vendor} zadržavaju svoj pristup. Ključ se briše iz tafsa čim ga nijedan taf ne koristi. Ponovno korištenje aplikacije {vendor} traži da odobrite i ponovno zalijepite ključ.",
+  "connect.disconnect.rest_requested": "Ostali tafovi koji koriste aplikaciju {vendor} zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti račun, prijava se odmah isključuje, a od pružatelja {vendor} traži se da je opozove; inače, kad se ukloni zadnji. Ponovno korištenje aplikacije {vendor} traži da odobrite i ponovno se prijavite.",
+  "connect.disconnect.revoke_requested": "Prijava je isključena. Od pružatelja {vendor} traži se da je opozove, što može završiti nešto kasnije.",
   "connect.disconnect.title": "Ukloniti pristup aplikaciji {vendor}?",
   "connect.disconnect.title_from": "Ukloniti pristup aplikaciji {vendor} za taf {taf}?",
   "connect.disconnect.tools_stop": "Prestaju raditi alati aplikacije {vendor} za: {owner}.",

@@ -1018,6 +1018,8 @@
     <string name="connect_disconnect_rest">Kiti %1$s naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas atšaukiamas %1$s pusėje; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti %1$s, reikės dar kartą patvirtinti ir prisijungti.</string>
     <string name="connect_disconnect_rest_deleted">Kiti %1$s naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas ištrinamas iš tafs; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti %1$s, reikės dar kartą patvirtinti ir prisijungti.</string>
     <string name="connect_disconnect_rest_key">Kiti %1$s naudojantys taf išlaiko savo prieigą. Raktas ištrinamas iš tafs, kai jo nebenaudoja nė vienas taf. Norint vėl naudoti %1$s, reikės dar kartą patvirtinti ir įklijuoti raktą.</string>
+    <string name="connect_disconnect_rest_requested">Kiti %1$s naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas iškart išjungiamas, o %1$s paprašoma jį atšaukti; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti %1$s, reikės dar kartą patvirtinti ir prisijungti.</string>
+    <string name="connect_disconnect_revoke_requested">Prisijungimas išjungtas. %1$s paprašyta jį atšaukti; tai gali užtrukti šiek tiek ilgiau.</string>
     <string name="connect_disconnect_title">Pašalinti prieigą prie %1$s?</string>
     <string name="connect_disconnect_title_from">Pašalinti taf %2$s prieigą prie %1$s?</string>
     <string name="connect_disconnect_tools_stop">%1$s %2$s įrankiai nustos veikti.</string>

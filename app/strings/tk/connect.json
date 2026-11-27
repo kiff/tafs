@@ -75,6 +75,8 @@
   "connect.disconnect.rest": "{vendor}-y ulanýan beýleki taf-lar elýeterligini saklaýar. Eger başga hiç bir taf şol ýerdäki şol bir hasaby ulanmasa, giriş {vendor}-da ýatyrylýar; ýogsa soňky aýrylanda. {vendor}-y täzeden ulanmak sizden tassyklamagy we täzeden girmegi soraýar.",
   "connect.disconnect.rest_deleted": "{vendor}-y ulanýan beýleki taf-lar elýeterligini saklaýar. Eger başga hiç bir taf şol ýerdäki şol bir hasaby ulanmasa, giriş tafs-dan pozulýar; ýogsa soňky aýrylanda. {vendor}-y täzeden ulanmak sizden tassyklamagy we täzeden girmegi soraýar.",
   "connect.disconnect.rest_key": "{vendor}-y ulanýan beýleki taf-lar elýeterligini saklaýar. Açar hiç bir taf ulanmanda tafs-dan pozulýar. {vendor}-y täzeden ulanmak sizden tassyklamagy we açary täzeden goýmagy soraýar.",
+  "connect.disconnect.rest_requested": "{vendor}-y ulanýan beýleki taf-lar elýeterligini saklaýar. Eger başga hiç bir taf şol ýerdäki şol bir hasaby ulanmasa, giriş derrew öçürilýär we {vendor}-dan ony ýatyrmagy haýyş edilýär; ýogsa soňky aýrylanda. {vendor}-y täzeden ulanmak sizden tassyklamagy we täzeden girmegi soraýar.",
+  "connect.disconnect.revoke_requested": "Giriş öçürildi. {vendor}-dan ony ýatyrmagy haýyş edilýär; bu birneme soňra tamamlanyp biler.",
   "connect.disconnect.title": "{vendor} elýeterligini aýyrýarsyňyzmy?",
   "connect.disconnect.title_from": "{taf} üçin {vendor} elýeterligini aýyrýarsyňyzmy?",
   "connect.disconnect.tools_stop": "{owner} üçin {vendor} gurallary işlemeýär.",

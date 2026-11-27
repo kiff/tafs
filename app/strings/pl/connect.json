@@ -83,6 +83,8 @@
   "connect.disconnect.rest": "Inne tafy, które używają {vendor}, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie cofnięte w {vendor}; w przeciwnym razie, gdy usuniesz ostatni. Ponowne użycie {vendor} poprosi Cię o zatwierdzenie i ponowne zalogowanie.",
   "connect.disconnect.rest_deleted": "Inne tafy, które używają {vendor}, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie usunięte z tafs; w przeciwnym razie, gdy usuniesz ostatni. Ponowne użycie {vendor} poprosi Cię o zatwierdzenie i ponowne zalogowanie.",
   "connect.disconnect.rest_key": "Inne tafy, które używają {vendor}, zachowują dostęp. Klucz zostanie usunięty z tafs, gdy żaden taf nie będzie go już używał. Ponowne użycie {vendor} poprosi Cię o zatwierdzenie i ponowne wklejenie klucza.",
+  "connect.disconnect.rest_requested": "Inne tafy, które używają {vendor}, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie od razu wyłączone, a {vendor} zostanie poproszony o jego cofnięcie; w przeciwnym razie, gdy usuniesz ostatni. Ponowne użycie {vendor} poprosi Cię o zatwierdzenie i ponowne zalogowanie.",
+  "connect.disconnect.revoke_requested": "Logowanie jest wyłączone. {vendor} zostanie poproszony o jego cofnięcie, co może zakończyć się nieco później.",
   "connect.disconnect.title": "Usunąć dostęp do {vendor}?",
   "connect.disconnect.title_from": "Usunąć dostęp do {vendor} dla {taf}?",
   "connect.disconnect.tools_stop": "Narzędzia {vendor} tafa {owner} przestaną działać.",

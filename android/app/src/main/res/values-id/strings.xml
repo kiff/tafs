@@ -944,6 +944,8 @@
     <string name="connect_disconnect_rest">Taf lain yang memakai %1$s tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk dicabut di %1$s; jika tidak, saat yang terakhir dihapus. Memakai %1$s lagi meminta Anda menyetujui dan masuk lagi.</string>
     <string name="connect_disconnect_rest_deleted">Taf lain yang memakai %1$s tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk dihapus dari tafs; jika tidak, saat yang terakhir dihapus. Memakai %1$s lagi meminta Anda menyetujui dan masuk lagi.</string>
     <string name="connect_disconnect_rest_key">Taf lain yang memakai %1$s tetap memiliki aksesnya. Kunci dihapus dari tafs setelah tidak ada taf yang memakainya. Memakai %1$s lagi meminta Anda menyetujui dan menempelkan kunci lagi.</string>
+    <string name="connect_disconnect_rest_requested">Taf lain yang memakai %1$s tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk langsung dinonaktifkan dan %1$s diminta mencabutnya; jika tidak, saat yang terakhir dihapus. Memakai %1$s lagi meminta Anda menyetujui dan masuk lagi.</string>
+    <string name="connect_disconnect_revoke_requested">Proses masuk dinonaktifkan. %1$s diminta mencabutnya, yang mungkin selesai sedikit lebih lambat.</string>
     <string name="connect_disconnect_title">Hapus akses ke %1$s?</string>
     <string name="connect_disconnect_title_from">Hapus akses ke %1$s untuk %2$s?</string>
     <string name="connect_disconnect_tools_stop">Alat %2$s milik %1$s berhenti berfungsi.</string>

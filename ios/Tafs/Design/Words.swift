@@ -1880,6 +1880,10 @@ enum Words {
             static func restDeleted(vendor: String) -> String { Words.line("connect.disconnect.rest_deleted", vendor) }
             /// Other tafs that use {vendor} keep their access. The key is deleted from tafs once no taf uses it. Using {vendor} again asks you to approve and paste a key again.
             static func restKey(vendor: String) -> String { Words.line("connect.disconnect.rest_key", vendor) }
+            /// Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is turned off at once and {vendor} is asked to revoke it; otherwise, when the last one is removed. Using {vendor} again asks you to approve and sign in again.
+            static func restRequested(vendor: String) -> String { Words.line("connect.disconnect.rest_requested", vendor) }
+            /// The sign-in is turned off. {vendor} is asked to revoke it, which may complete a little later.
+            static func revokeRequested(vendor: String) -> String { Words.line("connect.disconnect.revoke_requested", vendor) }
             /// Remove access to {vendor}?
             static func title(vendor: String) -> String { Words.line("connect.disconnect.title", vendor) }
             /// Remove access to {vendor} for {taf}?

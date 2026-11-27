@@ -75,6 +75,8 @@
   "connect.disconnect.rest": "A többi taf, amely ezt használja ({vendor}), megtartja a hozzáférését. Ha ott egyetlen másik taf sem használja ugyanazt a fiókot, a bejelentkezés visszavonásra kerül itt: {vendor}; egyébként akkor, amikor az utolsót is eltávolítod. Ha újra használod ezt ({vendor}), újra jóvá kell hagynod és be kell jelentkezned.",
   "connect.disconnect.rest_deleted": "A többi taf, amely ezt használja ({vendor}), megtartja a hozzáférését. Ha ott egyetlen másik taf sem használja ugyanazt a fiókot, a bejelentkezést töröljük a tafsból; egyébként akkor, amikor az utolsót is eltávolítod. Ha újra használod ezt ({vendor}), újra jóvá kell hagynod és be kell jelentkezned.",
   "connect.disconnect.rest_key": "A többi taf, amely ezt használja ({vendor}), megtartja a hozzáférését. A kulcs törlődik a tafsből, amint egyetlen taf sem használja. Ha újra használod ezt ({vendor}), újra jóvá kell hagynod és be kell illesztened egy kulcsot.",
+  "connect.disconnect.rest_requested": "A többi taf, amely ezt használja ({vendor}), megtartja a hozzáférését. Ha ott egyetlen másik taf sem használja ugyanazt a fiókot, a bejelentkezést azonnal kikapcsoljuk, és kérjük a visszavonását itt: {vendor}; egyébként akkor, amikor az utolsót is eltávolítod. Ha újra használod ezt ({vendor}), újra jóvá kell hagynod és be kell jelentkezned.",
+  "connect.disconnect.revoke_requested": "A bejelentkezés ki van kapcsolva. Kérjük a visszavonását itt: {vendor}; ez kicsit később fejeződhet be.",
   "connect.disconnect.title": "Megszünteted a hozzáférést ehhez: {vendor}?",
   "connect.disconnect.title_from": "Megszünteted a hozzáférést ehhez ({vendor}) ennél: {taf}?",
   "connect.disconnect.tools_stop": "{owner} {vendor}-eszközei nem működnek tovább.",
