@@ -44,7 +44,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@36", "did-this-happen@1", "draft-the-card@54", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@22", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@37", "did-this-happen@1", "draft-the-card@54", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@22", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -86,7 +86,10 @@ describe("Coach's skills, as files", () => {
             // draft-the-card at 2,360: an unproved app's writes (planque's unproved: true) are held as an on-demand app's, and
       // Coach never asks how many a day for a held write (the owner's phone, 27 Nov: Coach offered 10, 25 or 50 Pipedrive
       // deals a day, and tafs cloud refused the Card twice, since an unproved app's every write must ask; a number the owner gave for one is said back as asking, never put on the Card).
-      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2150, "draft-the-card": 2360, "name-the-tools": 1900 };
+      // connect-an-app at 2,300: a vendor's own sign-in entry is asked with no uses and never server and entry together, a refused
+      // request is corrected once, a failed own sign-in is never replaced by its key, and a guide's lines before the sign-in go in
+      // the card's text (Qonto re-test 2, 27 Nov: "Have you read these?" with nothing above it, then the key route).
+      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2300, "draft-the-card": 2360, "name-the-tools": 1900 };
       expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(budget[s.name] ?? 1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
@@ -319,7 +322,7 @@ describe("Coach's core", () => {
   it("finds a vendor's published API description with web_read, and loads connect-an-app when it reads a page", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Find the description with web_read on the vendor's docs, or use the owner's; never make one up.");
-    expect(toolSkills("web_read")).toEqual(["connect-an-app@36"]);
+    expect(toolSkills("web_read")).toEqual(["connect-an-app@37"]);
   });
 
   // planque declares a key request's tools to KIFF before the key only when the request names them, and only
@@ -414,7 +417,7 @@ describe("Coach's core", () => {
 
   it("says only what the taf will do, and leaves what a sign-in allows to the card", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
-    expect(body).toContain("Say only what the taf will do (it reads your sheet's rows); never narrow what it or its connection can do in words (\"only\", \"just\", \"read-only\", or the language's own forms): its Card is the limit. What a sign-in allows is the card's to show, from planque: never say it yourself; if asked, say the card shows it.");
+    expect(body).toContain("Say only what the taf will do (it reads your sheet's rows); never narrow what it or its connection can do in words (\"only\", \"just\", \"read-only\", or the language's own forms): its Card is the limit. What a sign-in allows is the card's to show, from planque: never say it yourself, but for the guide's lines below; if asked, say the card shows it.");
     // It comes before the ask to connect, so it holds for the plan and the first card too.
     expect(body.indexOf("What a sign-in allows is the card's to show")).toBeLessThan(body.indexOf("Ask before you connect a sign-in."));
     // No skill tells Coach to describe a sign-in's access: neither harmless nor wider.
@@ -570,7 +573,7 @@ describe("Coach's core", () => {
   });
 
   // The same Eval (Replay, run 3): Coach asked for the sheet's key alone to read its columns, then the sheet's tools in a
-  // second approval, then the mailbox's with the Card: two approvals for one app (connect-an-app@36).
+  // second approval, then the mailbox's with the Card: two approvals for one app (connect-an-app@37).
   it("approves each key app once, with its tools, never its key alone to read first, and the Card on the last app's", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Else, key then Card. Never a key alone to read the owner's data first (a sheet's columns): ask the owner, or leave it to the taf's first run. With a key, nothing is read before the rules. Two apps: the first's approval has its tools, the last's the Card, each once.");
@@ -581,7 +584,8 @@ describe("Coach's core", () => {
   // (draft-the-card@50) both read as "don't read during setup". Each now says what it's about.
   it("a sign-in's setup reads are Coach's own, done before the rules' notice, and nothing follows the notice until Agree", () => {
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
-    expect(connect).toContain("setup_reads: your reads' names, approved with sign-in (by entry too). Before and during a sign-in, never say what it covers, in a message or an option: the card shows it. After the sign-in, make one read through them, before the rules: they're yours.");
+    expect(connect).toContain("setup_reads: your reads' names, approved with sign-in. Before and during a sign-in, never say what it covers, in a message or an option: the card shows it.");
+    expect(connect).toContain("never in a message alone. After the sign-in, make one read through them, before the rules: they're yours.");
     const draft = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
     expect(draft).toContain("Before the notice, a sign-in's setup reads are done; after it, nothing until Agree. The confirm comes right after its notice, in the same turn, and nothing follows them until the owner taps Agree: no planque request, no tools, no draft, no approval.");
   });
@@ -601,6 +605,22 @@ describe("Coach's core", () => {
   // Eval 45762771656, 26 Nov (Plan words, Gmail, run 1): Coach offered "Connect your Gmail; its sign-in covers the whole
   // mailbox" as a button, lifting draft-the-card's own reason for a dedicated mailbox. What a sign-in covers is planque's card
   // to show: the reason stays Coach's, and neither skill lets it be said, in a message or an option.
+  // Qonto re-test 2, 27 Nov: Coach asked "Have you read these and want to go ahead with the Qonto sign-in?" with nothing
+  // above it (@36 forbade saying what a sign-in covers, and the guide's five lines are about exactly that), then its request
+  // for the sign-in never reached planque (refused in the tool: @36 said "with its server … (by entry too)"), and Coach
+  // offered Qonto's key, which the guide forbids. @37: a guide's lines go inside the card, a vendor's own sign-in entry is
+  // asked alone with no uses, a refused shape is corrected once, and a failed own sign-in is never replaced by its key.
+  it("puts a guide's before-sign-in lines in the card, asks a vendor's own sign-in alone, and never falls back to its key", () => {
+    const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
+    expect(connect).toContain("One exception: lines the app's guide says to tell before its sign-in go in the text of the card that asks to go ahead, one a line, above its question, never in a message alone.");
+    expect(connect).toContain("planque request with its server, or its entry when search gives one, never both,");
+    expect(connect).not.toContain("(by entry too)");
+    expect(connect).toContain("A vendor's own sign-in entry (qonto, stripe: search lists no tools for it) takes no uses: request {entry, name, taf_name, tools: []}, connected first.");
+    expect(connect).toContain("A request refused for its shape: correct it as the refusal says and ask once more. A vendor's own sign-in entry that still fails is never replaced by its key: say its sign-in couldn't start and the team was told, and stop.");
+    // The fallback to a key comes after the general way forward, so it overrides it for a vendor's own sign-in.
+    expect(connect.indexOf("never replaced by its key")).toBeGreaterThan(connect.indexOf("offer a way forward then: the same app's key entry"));
+  });
+
   it("never says what a sign-in covers before its card, in a message or an option", () => {
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(connect).toContain("Before and during a sign-in, never say what it covers, in a message or an option: the card shows it.");
@@ -689,15 +709,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   });
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@54", "halting@1", "name-the-tools@22", "set-up-a-taf@16", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@54", "improve-a-taf@4", "name-the-tools@22"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@54", "halting@1", "name-the-tools@22", "set-up-a-taf@16", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@54", "improve-a-taf@4", "name-the-tools@22"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@54", "halting@1", "name-the-tools@22", "set-up-a-taf@16", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@36", "draft-the-card@54", "halting@1", "improve-a-taf@4", "name-the-tools@22"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@54", "halting@1", "name-the-tools@22", "set-up-a-taf@16", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@37", "draft-the-card@54", "halting@1", "improve-a-taf@4", "name-the-tools@22"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });
