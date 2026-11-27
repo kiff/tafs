@@ -162,7 +162,7 @@ final class AfterTheTestTests: XCTestCase {
     func testTheRecordIsWhatKIFFRecorded() throws {
         let json = #"""
         {"calls":[
-          {"proposal_id":"p3","action_name":"create_refund","title":"Refund a payment","actor_id":"refunds-k5j6m5qx","outcome":"allowed","held":true,"created_at":"2026-10-19T19:02:09Z","tool_outcome":{"status":"done"}},
+          {"proposal_id":"p3","action_name":"create_refund","title":"Refund a payment","actor_id":"refunds-k5j6m5qx","outcome":"allowed","held":true,"created_at":"2026-10-19T19:02:09Z","tool_outcome":{"status":"done"},"answer":{"decision":"approved_once","you":true}},
           {"proposal_id":"p2","action_name":"create_refund","actor_id":"refunds-k5j6m5qx","outcome":"allowed","held":false,"created_at":"2026-10-19T19:02:08Z","tool_outcome":{"status":"done"}},
           {"proposal_id":"p1","action_name":"create_refund","actor_id":"someone-else","outcome":"allowed","held":false,"created_at":"2026-10-19T18:57:48Z"}]}
         """#
@@ -187,7 +187,8 @@ final class AfterTheTestTests: XCTestCase {
         for held in [false, true] {
             for (i, status) in statuses.enumerated() {
                 let outcome = status.map { #","tool_outcome":{"status":"\#($0)","message":"card_declined"}"# } ?? ""
-                let json = #"{"proposal_id":"p\#(i)","action_name":"create_refund","actor_id":"rae","outcome":"allowed","held":\#(held),"created_at":"2026-10-20T09:00:00Z"\#(outcome)}"#
+                let answer = held ? #","answer":{"decision":"approved_once","you":true}"# : ""
+                let json = #"{"proposal_id":"p\#(i)","action_name":"create_refund","actor_id":"rae","outcome":"allowed","held":\#(held),"created_at":"2026-10-20T09:00:00Z"\#(outcome)\#(answer)}"#
                 let call = try decoder.decode(KIFFClient.ActivityCall.self, from: Data(json.utf8))
                 let entry = try XCTUnwrap(KIFFMapping.record([call], ids: ["rae": taf]).first)
                 var kind = want[status] ?? .unknown
