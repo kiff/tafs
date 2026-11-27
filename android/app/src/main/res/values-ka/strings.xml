@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">დააკავშირეთ აპი თქვენი პირველი taf-ის დასაყენებლად.</string>
     <string name="home_empty_shared">თქვენთვის გაზიარებული taf-ები აქ გამოჩნდება.</string>
     <string name="home_explore_jobs">გაეცანით სამუშაოებს</string>
+    <string name="home_first_taf_coach">დააყენეთ Coach-თან ერთად</string>
+    <string name="home_first_taf_try">პირველი taf საცდელად</string>
     <string name="home_footer">შესულია KIFF-ით.</string>
     <string name="home_halted_open_halt">გაჩერებულია. გახსენით „გაჩერება“</string>
     <string name="home_labels_all">ყველა</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">უნდა იყოთ მინიმუმ %1$s წლის.</string>
     <string name="onboarding_card_lead">თითოეული taf მუშაობს თქვენ მიერ გაცემული Card-ის ფარგლებში: რისი გაკეთება შეუძლია, რომელ აპთან და რამდენად. მის მიღმა გეკითხებათ.</string>
     <string name="onboarding_card_title">Card არის თქვენი ნებართვა</string>
+    <string name="onboarding_coach_title">Coach მას თქვენთან ერთად აყენებს</string>
     <string name="onboarding_consent_tick">ვეთანხმები %1$s-ს და %2$s-ს.</string>
     <string name="onboarding_control_lead">როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“ და თქვენს საათზე, თუ გაქვთ. ამტკიცებთ Face ID-ით ან Touch ID-ით, ან უარს ამბობთ.</string>
     <string name="onboarding_control_lead_android">როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“ და თქვენს საათზე, თუ გაქვთ. ამტკიცებთ თითის ანაბეჭდით ან სახით, ან უარს ამბობთ.</string>
     <string name="onboarding_control_lead_desktop">როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“. ამტკიცებთ ტელეფონზე, ან ამ კომპიუტერზე, თუ მასში passkey-ით ან უსაფრთხოების გასაღებით შეხვედით, ან უარს ამბობთ.</string>
     <string name="onboarding_control_lead_mac">როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“. ამტკიცებთ Touch ID-ით ან ტელეფონზე, ან უარს ამბობთ.</string>
     <string name="onboarding_control_title">კონტროლი თქვენთანაა</string>
+    <string name="onboarding_credits_title">სამუშაოს საფასურს კრედიტები იხდიან</string>
     <string name="onboarding_get_started">დაიწყეთ</string>
     <string name="onboarding_home_lead">უთხარით Coach-ს თქვენი სიტყვებით, რისი გაკეთება გსურთ. ის თქვენთან ერთად დააყენებს taf-ს და გაჩვენებთ მის Card-ს, სანამ რამე გაეშვება.</string>
     <string name="onboarding_how_it_works">როგორ მუშაობს tafs</string>

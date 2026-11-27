@@ -1495,6 +1495,8 @@
     <string name="home_empty_coach">יש לחבר אפליקציה כדי להגדיר את ה-taf הראשון שלך.</string>
     <string name="home_empty_shared">taf ששותפו איתך מוצגים כאן.</string>
     <string name="home_explore_jobs">עיון בעבודות</string>
+    <string name="home_first_taf_coach">הגדרה עם Coach</string>
+    <string name="home_first_taf_try">taf ראשון לנסות</string>
     <string name="home_footer">מחובר עם KIFF.</string>
     <string name="home_halted_open_halt">נעצר. פתיחת העצירה</string>
     <string name="home_labels_all">הכול</string>
@@ -1685,12 +1687,14 @@
     <string name="onboarding_age_n">עליך להיות בן %1$s לפחות.</string>
     <string name="onboarding_card_lead">כל taf פועל בתוך Card שאתה מנפיק: מה מותר לו לעשות, באיזו אפליקציה, ובאיזה היקף. מעבר לכך הוא שואל אותך.</string>
     <string name="onboarding_card_title">Card הוא ההרשאה שלך</string>
+    <string name="onboarding_coach_title">Coach מגדיר אותו איתך</string>
     <string name="onboarding_consent_tick">אני מסכים ל%1$s ול%2$s.</string>
     <string name="onboarding_control_lead">כש-taf זקוק לך, הוא ממתין ב«זקוק לך», ובשעון שלך אם יש לך. אתה מאשר עם Face ID או Touch ID, או דוחה.</string>
     <string name="onboarding_control_lead_android">כש-taf זקוק לך, הוא ממתין ב«זקוק לך», ובשעון שלך אם יש לך. אתה מאשר עם טביעת האצבע או הפנים שלך, או דוחה.</string>
     <string name="onboarding_control_lead_desktop">כש-taf זקוק לך, הוא ממתין ב«זקוק לך». אתה מאשר בטלפון, או במחשב הזה אם התחברת אליו עם מפתח גישה או מפתח אבטחה, או דוחה.</string>
     <string name="onboarding_control_lead_mac">כש-taf זקוק לך, הוא ממתין ב«זקוק לך». אתה מאשר עם Touch ID או בטלפון, או דוחה.</string>
     <string name="onboarding_control_title">השליטה נשארת בידיים שלך</string>
+    <string name="onboarding_credits_title">הקרדיטים משלמים על העבודה</string>
     <string name="onboarding_get_started">להתחיל</string>
     <string name="onboarding_home_lead">אפשר לומר ל-Coach מה היית רוצה שייעשה, במילים שלך. הוא מגדיר איתך את ה-taf ומראה לך את ה-Card שלו לפני שמשהו רץ.</string>
     <string name="onboarding_how_it_works">איך tafs עובד</string>

@@ -1495,6 +1495,8 @@
     <string name="home_empty_coach">Prijunkite programėlę, kad nustatytumėte savo pirmą taf.</string>
     <string name="home_empty_shared">Čia rodomi su jumis bendrinami taf.</string>
     <string name="home_explore_jobs">Naršyti darbus</string>
+    <string name="home_first_taf_coach">Nustatyti su Coach</string>
+    <string name="home_first_taf_try">Pirmasis taf išbandyti</string>
     <string name="home_footer">Prisijungta su KIFF.</string>
     <string name="home_halted_open_halt">Sustabdyta. Atidaryti „Sustabdyti“</string>
     <string name="home_labels_all">Visi</string>
@@ -1685,12 +1687,14 @@
     <string name="onboarding_age_n">Jums turi būti ne mažiau kaip %1$s metų.</string>
     <string name="onboarding_card_lead">Kiekvienas taf dirba jūsų išduotos Card ribose: ką jis gali daryti, su kuria programėle ir už kiek. Už šių ribų jis klausia jūsų.</string>
     <string name="onboarding_card_title">Card – tai jūsų leidimas</string>
+    <string name="onboarding_coach_title">Coach jį nustato kartu su jumis</string>
     <string name="onboarding_consent_tick">Sutinku su %1$s ir %2$s.</string>
     <string name="onboarding_control_lead">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“ ir jūsų laikrodyje, jei jį turite. Tvirtinate su Face ID ar Touch ID arba atmetate.</string>
     <string name="onboarding_control_lead_android">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“ ir jūsų laikrodyje, jei jį turite. Tvirtinate piršto atspaudu arba veidu arba atmetate.</string>
     <string name="onboarding_control_lead_desktop">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate telefone, arba šiame kompiuteryje, jei prisijungėte prie jo prieigos raktu ar saugos raktu, arba atmetate.</string>
     <string name="onboarding_control_lead_mac">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate su Touch ID ar telefone arba atmetate.</string>
     <string name="onboarding_control_title">Valdote jūs</string>
+    <string name="onboarding_credits_title">Už darbą mokama kreditais</string>
     <string name="onboarding_get_started">Pradėti</string>
     <string name="onboarding_home_lead">Savo žodžiais pasakykite Coach, ką norite atlikti. Jis kartu su jumis nustato taf ir parodo jo Card, kol dar niekas nepaleista.</string>
     <string name="onboarding_how_it_works">Kaip veikia tafs</string>

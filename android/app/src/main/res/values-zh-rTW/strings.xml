@@ -1385,6 +1385,8 @@
     <string name="home_empty_coach">連接一個 App 來設定您的第一個 taf。</string>
     <string name="home_empty_shared">與您分享的 taf 會顯示在這裡。</string>
     <string name="home_explore_jobs">探索工作</string>
+    <string name="home_first_taf_coach">與 Coach 一起設定</string>
+    <string name="home_first_taf_try">先試試這個 taf</string>
     <string name="home_footer">已以 KIFF 登入。</string>
     <string name="home_halted_open_halt">已凍結。開啟「凍結」</string>
     <string name="home_labels_all">全部</string>
@@ -1565,12 +1567,14 @@
     <string name="onboarding_age_n">您必須年滿 %1$s 歲。</string>
     <string name="onboarding_card_lead">每個 taf 都在您發出的 Card 範圍內運作：它能做什麼、使用哪個 App、金額多少。超出範圍，它會先詢問您。</string>
     <string name="onboarding_card_title">Card 就是您的許可</string>
+    <string name="onboarding_coach_title">Coach 與您一起設定</string>
     <string name="onboarding_consent_tick">我同意%1$s和%2$s。</string>
     <string name="onboarding_control_lead">當 taf 需要您時，它會在「等您處理」中等候，若您有手錶，也會顯示在手錶上。您可用 Face ID 或 Touch ID 核准，或拒絕。</string>
     <string name="onboarding_control_lead_android">當 taf 需要您時，它會在「等您處理」中等候，若您有手錶，也會顯示在手錶上。您可用指紋或臉部核准，或拒絕。</string>
     <string name="onboarding_control_lead_desktop">當 taf 需要您時，它會在「等您處理」中等候。您可在手機上核准，或在以密碼金鑰或安全金鑰登入的這台電腦上核准，或拒絕。</string>
     <string name="onboarding_control_lead_mac">當 taf 需要您時，它會在「等您處理」中等候。您可用 Touch ID 或在手機上核准，或拒絕。</string>
     <string name="onboarding_control_title">一切由您掌控</string>
+    <string name="onboarding_credits_title">工作由點數支付</string>
     <string name="onboarding_get_started">開始使用</string>
     <string name="onboarding_home_lead">用您自己的話告訴 Coach 您想完成什麼。它會與您一起設定 taf，並在任何執行之前讓您檢視它的 Card。</string>
     <string name="onboarding_how_it_works">tafs 如何運作</string>

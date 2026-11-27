@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Csatlakoztass egy alkalmazást az első tafod beállításához.</string>
     <string name="home_empty_shared">Itt jelennek meg a veled megosztott tafok.</string>
     <string name="home_explore_jobs">Munkák felfedezése</string>
+    <string name="home_first_taf_coach">Beállítás a Coachcsal</string>
+    <string name="home_first_taf_try">Egy első taf kipróbálásra</string>
     <string name="home_footer">Bejelentkezve a KIFF-fel.</string>
     <string name="home_halted_open_halt">Leállítva. Leállítás megnyitása</string>
     <string name="home_labels_all">Összes</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Legalább %1$s évesnek kell lenned.</string>
     <string name="onboarding_card_lead">Minden taf az általad kiadott Card keretein belül dolgozik: mit tehet, melyik alkalmazással és mennyiért. Azon túl téged kérdez.</string>
     <string name="onboarding_card_title">A Card az engedélyed</string>
+    <string name="onboarding_coach_title">A Coach veled együtt beállítja</string>
     <string name="onboarding_consent_tick">Elfogadom a következőket: %1$s és %2$s.</string>
     <string name="onboarding_control_lead">Ha egy tafnak szüksége van rád, a Rád vár részben vár, és az órádon is, ha van. Face ID-val vagy Touch ID-val hagyod jóvá, vagy elutasítod.</string>
     <string name="onboarding_control_lead_android">Ha egy tafnak szüksége van rád, a Rád vár részben vár, és az órádon is, ha van. Az ujjlenyomatoddal vagy az arcoddal hagyod jóvá, vagy elutasítod.</string>
     <string name="onboarding_control_lead_desktop">Ha egy tafnak szüksége van rád, a Rád vár részben vár. A telefonodon hagyod jóvá, vagy ezen a számítógépen, ha azonosítókulccsal vagy biztonsági kulccsal jelentkeztél be rajta, vagy elutasítod.</string>
     <string name="onboarding_control_lead_mac">Ha egy tafnak szüksége van rád, a Rád vár részben vár. Touch ID-val vagy a telefonodon hagyod jóvá, vagy elutasítod.</string>
     <string name="onboarding_control_title">Az irányítás nálad marad</string>
+    <string name="onboarding_credits_title">A munkát kreditek fizetik</string>
     <string name="onboarding_get_started">Kezdés</string>
     <string name="onboarding_home_lead">Mondd el a Coachnak a saját szavaiddal, mit szeretnél. Veled együtt beállítja a tafot, és megmutatja a Cardját, mielőtt bármi elindulna.</string>
     <string name="onboarding_how_it_works">Így működik a tafs</string>

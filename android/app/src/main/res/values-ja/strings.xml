@@ -1385,6 +1385,8 @@
     <string name="home_empty_coach">アプリを接続して、最初のtafを設定しましょう。</string>
     <string name="home_empty_shared">共有されたtafsはここに表示されます。</string>
     <string name="home_explore_jobs">仕事を探す</string>
+    <string name="home_first_taf_coach">Coachと設定する</string>
+    <string name="home_first_taf_try">まず試すtaf</string>
     <string name="home_footer">KIFFでサインイン済み。</string>
     <string name="home_halted_open_halt">遮断済み。遮断を開く</string>
     <string name="home_labels_all">すべて</string>
@@ -1565,12 +1567,14 @@
     <string name="onboarding_age_n">%1$s歳以上である必要があります。</string>
     <string name="onboarding_card_lead">各tafは、あなたが発行したCardの範囲内で働きます。何をしてよいか、どのアプリで、いくらまでかをCardが決めます。それを超えるときは、あなたに確認します。</string>
     <string name="onboarding_card_title">Cardはあなたの許可です</string>
+    <string name="onboarding_coach_title">Coachが一緒に設定します</string>
     <string name="onboarding_consent_tick">%1$sと%2$sに同意します。</string>
     <string name="onboarding_control_lead">tafがあなたを必要とすると、要確認で待ちます。Apple Watchがあればそこでも待ちます。Face IDまたはTouch IDで承認するか、拒否してください。</string>
     <string name="onboarding_control_lead_android">tafがあなたを必要とすると、要確認で待ちます。スマートウォッチがあればそこでも待ちます。指紋または顔で承認するか、拒否してください。</string>
     <string name="onboarding_control_lead_desktop">tafがあなたを必要とすると要確認で待ちます。スマートフォンで承認するか、パスキーやセキュリティキーでサインインしたこのコンピュータで承認するか、拒否してください。</string>
     <string name="onboarding_control_lead_mac">Macでは、tafがあなたを必要とすると要確認で待ちます。Touch IDまたはスマートフォンで承認するか、拒否してください。</string>
     <string name="onboarding_control_title">主導権はあなたに</string>
+    <string name="onboarding_credits_title">仕事の代金はクレジットで</string>
     <string name="onboarding_get_started">はじめる</string>
     <string name="onboarding_home_lead">やってほしいことを、あなたの言葉でCoachに伝えてください。Coachが一緒にtafを設定し、何かを実行する前にCardを見せます。</string>
     <string name="onboarding_how_it_works">tafsのしくみ</string>

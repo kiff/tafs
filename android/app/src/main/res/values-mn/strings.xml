@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Анхны taf-аа тохируулахын тулд апп холбоно уу.</string>
     <string name="home_empty_shared">Тантай хуваалцсан taf-ууд энд харагдана.</string>
     <string name="home_explore_jobs">Ажлуудыг үзэх</string>
+    <string name="home_first_taf_coach">Coach-тай тохируулах</string>
+    <string name="home_first_taf_try">Туршиж үзэх анхны taf</string>
     <string name="home_footer">KIFF-ээр нэвтэрсэн.</string>
     <string name="home_halted_open_halt">Зогссон. Зогсоох хэсгийг нээх</string>
     <string name="home_labels_all">Бүгд</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Та хамгийн багадаа %1$s настай байх ёстой.</string>
     <string name="onboarding_card_lead">Taf бүр таны олгосон Card-ын хүрээнд ажилладаг: юу хийж болох, аль апп-тай, хэдийг хүртэл. Түүнээс цааш таниас асууна.</string>
     <string name="onboarding_card_title">Card бол таны зөвшөөрөл</string>
+    <string name="onboarding_coach_title">Coach тантай хамт тохируулна</string>
     <string name="onboarding_consent_tick">Би %1$s болон %2$s-тэй санал нийлж байна.</string>
     <string name="onboarding_control_lead">Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ, танд цаг байвал цаган дээр нь ч гэсэн. Та Face ID эсвэл Touch ID-аар зөвшөөрч, эсвэл татгалзана.</string>
     <string name="onboarding_control_lead_android">Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ, танд цаг байвал цаган дээр нь ч гэсэн. Та хурууны хээ эсвэл царайгаараа зөвшөөрч, эсвэл татгалзана.</string>
     <string name="onboarding_control_lead_desktop">Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ. Та утсаараа зөвшөөрч, эсвэл энэ компьютерт passkey эсвэл аюулгүйн түлхүүрээр нэвтэрсэн бол эндээ зөвшөөрч, эсвэл татгалзана.</string>
     <string name="onboarding_control_lead_mac">Taf таныг хэрэгтэй үед Таныг хүлээж байна хэсэгт хүлээнэ. Та Touch ID-аар эсвэл утсаараа зөвшөөрч, эсвэл татгалзана.</string>
     <string name="onboarding_control_title">Хяналт таны гарт</string>
+    <string name="onboarding_credits_title">Ажлын төлбөрийг кредитээр төлнө</string>
     <string name="onboarding_get_started">Эхлэх</string>
     <string name="onboarding_home_lead">Coach-д юу хийлгэхийг хүсэж буйгаа өөрийн үгээр хэлнэ үү. Тэр taf-ыг тантай хамт тохируулж, юу ч ажиллахаас өмнө Card-ыг нь үзүүлнэ.</string>
     <string name="onboarding_how_it_works">tafs хэрхэн ажилладаг</string>

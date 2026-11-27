@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Свържете приложение, за да настроите първия си taf.</string>
     <string name="home_empty_shared">Тук се показват tafs, споделени с вас.</string>
     <string name="home_explore_jobs">Разглеждане на задачи</string>
+    <string name="home_first_taf_coach">Настройте с Coach</string>
+    <string name="home_first_taf_try">Първи taf за опит</string>
     <string name="home_footer">Влезли сте с KIFF.</string>
     <string name="home_halted_open_halt">Спряно. Отваряне на „Спиране“</string>
     <string name="home_labels_all">Всички</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Трябва да сте навършили поне %1$s години.</string>
     <string name="onboarding_card_lead">Всеки taf работи в рамките на Card, която издавате: какво може да прави, с кое приложение и колко. Отвъд нея ви пита.</string>
     <string name="onboarding_card_title">Card е вашето разрешение</string>
+    <string name="onboarding_coach_title">Coach го настройва заедно с вас</string>
     <string name="onboarding_consent_tick">Съгласен съм с %1$s и с %2$s.</string>
     <string name="onboarding_control_lead">Когато taf има нужда от вас, той чака в „Чака ви“ и на часовника ви, ако имате такъв. Одобрявате с Face ID или Touch ID, или отказвате.</string>
     <string name="onboarding_control_lead_android">Когато taf има нужда от вас, той чака в „Чака ви“ и на часовника ви, ако имате такъв. Одобрявате с пръстовия си отпечатък или лицето си или отказвате.</string>
     <string name="onboarding_control_lead_desktop">Когато taf има нужда от вас, той чака в „Чака ви“. Одобрявате от телефона си, или на този компютър, ако сте влезли в него с ключ за достъп или ключ за сигурност, или отказвате.</string>
     <string name="onboarding_control_lead_mac">Когато taf има нужда от вас, той чака в „Чака ви“. Одобрявате с Touch ID или от телефона си, или отказвате.</string>
     <string name="onboarding_control_title">Вие запазвате контрола</string>
+    <string name="onboarding_credits_title">Кредитите плащат работата</string>
     <string name="onboarding_get_started">Да започваме</string>
     <string name="onboarding_home_lead">Кажете на Coach какво искате да се свърши, със свои думи. Той настройва taf заедно с вас и ви показва неговата Card, преди нещо да се изпълни.</string>
     <string name="onboarding_how_it_works">Как работи tafs</string>

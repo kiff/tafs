@@ -1440,6 +1440,8 @@
     <string name="home_empty_coach">Ilkinji taf-yňyzy gurmak üçin programma birikdiriň.</string>
     <string name="home_empty_shared">Siziň bilen paýlaşylan tafs-lar şu ýerde görünýär.</string>
     <string name="home_explore_jobs">Işleri öwreniň</string>
+    <string name="home_first_taf_coach">Coach bilen sazlaň</string>
+    <string name="home_first_taf_try">Synap görmek üçin ilkinji taf</string>
     <string name="home_footer">KIFF bilen girildi.</string>
     <string name="home_halted_open_halt">Togtadyldy. Togtatmany açyň</string>
     <string name="home_labels_all">Hemmesi</string>
@@ -1625,12 +1627,14 @@
     <string name="onboarding_age_n">Ýaşyňyz azyndan %1$s bolmaly.</string>
     <string name="onboarding_card_lead">Her taf siziň berýän Card-yňyzyň çäginde işleýär: näme edip biler, haýsy programma bilen we näçe. Ondan daşarda ol sizden soraýar.</string>
     <string name="onboarding_card_title">Card siziň rugsadyňyz</string>
+    <string name="onboarding_coach_title">Coach ony siz bilen sazlaýar</string>
     <string name="onboarding_consent_tick">Men %1$s we %2$s razy.</string>
     <string name="onboarding_control_lead">Taf size zerur bolanda, ol Size garaşýar bölüminde, we sagadyňyz bar bolsa, sagatda garaşýar. Siz Face ID ýa-da Touch ID bilen tassyklaýarsyňyz, ýa-da ret edýärsiňiz.</string>
     <string name="onboarding_control_lead_android">Taf size zerur bolanda, ol Size garaşýar bölüminde, we sagadyňyz bar bolsa, sagatda garaşýar. Siz barmak yzyňyz ýa-da ýüzüňiz bilen tassyklaýarsyňyz, ýa-da ret edýärsiňiz.</string>
     <string name="onboarding_control_lead_desktop">Taf size zerur bolanda, ol Size garaşýar bölüminde garaşýar. Siz telefonyňyzda tassyklaýarsyňyz, ýa-da bu kompýutere passkey ýa-da howpsuzlyk açary bilen giren bolsaňyz, şu ýerde tassyklaýarsyňyz, ýa-da ret edýärsiňiz.</string>
     <string name="onboarding_control_lead_mac">Taf size zerur bolanda, ol Size garaşýar bölüminde garaşýar. Siz Touch ID bilen ýa-da telefonyňyzda tassyklaýarsyňyz, ýa-da ret edýärsiňiz.</string>
     <string name="onboarding_control_title">Gözegçilik sizde galýar</string>
+    <string name="onboarding_credits_title">Işiň tölegini kreditler edýär</string>
     <string name="onboarding_get_started">Başlaň</string>
     <string name="onboarding_home_lead">Coach-a öz sözleriňiz bilen näme edilmegini isleýändigiňizi aýdyň. Ol taf-y siz bilen guýar we hiç zat işlemänkä size onuň Card-yny görkezýär.</string>
     <string name="onboarding_how_it_works">tafs nähili işleýär</string>

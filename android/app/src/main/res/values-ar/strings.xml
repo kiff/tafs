@@ -1660,6 +1660,8 @@
     <string name="home_empty_coach">اربط تطبيقًا لتجهّز أول taf لديك.</string>
     <string name="home_empty_shared">تظهر هنا tafs التي تمت مشاركتها معك.</string>
     <string name="home_explore_jobs">استكشاف المهام</string>
+    <string name="home_first_taf_coach">جهّزه مع Coach</string>
+    <string name="home_first_taf_try">أول taf للتجربة</string>
     <string name="home_footer">سجّلت الدخول عبر KIFF.</string>
     <string name="home_halted_open_halt">مجمّد. افتح «التجميد»</string>
     <string name="home_labels_all">الكل</string>
@@ -1865,12 +1867,14 @@
     <string name="onboarding_age_n">يجب ألا يقل عمرك عن %1$s.</string>
     <string name="onboarding_card_lead">يعمل كل taf ضمن Card تصدرها له: ما يجوز له فعله، ومع أي تطبيق، وبأي قدر. وما وراء ذلك يسألك.</string>
     <string name="onboarding_card_title">الـ Card هي إذنك</string>
+    <string name="onboarding_coach_title">يجهّزه Coach معك</string>
     <string name="onboarding_consent_tick">أوافق على: %1$s و%2$s.</string>
     <string name="onboarding_control_lead">عندما يحتاجك taf ينتظر في «بانتظارك»، وعلى ساعتك إن كانت لديك. توافق بـ Face ID أو Touch ID، أو ترفض.</string>
     <string name="onboarding_control_lead_android">عندما يحتاجك taf ينتظر في «بانتظارك»، وعلى ساعتك إن كانت لديك. توافق ببصمة إصبعك أو وجهك، أو ترفض.</string>
     <string name="onboarding_control_lead_desktop">عندما يحتاجك taf ينتظر في «بانتظارك». توافق على هاتفك، أو على هذا الكمبيوتر إن سجّلت الدخول عليه بمفتاح مرور أو مفتاح أمان، أو ترفض.</string>
     <string name="onboarding_control_lead_mac">عندما يحتاجك taf ينتظر في «بانتظارك». توافق بـ Touch ID أو على هاتفك، أو ترفض.</string>
     <string name="onboarding_control_title">أنت تبقى المتحكم</string>
+    <string name="onboarding_credits_title">الأرصدة تدفع ثمن العمل</string>
     <string name="onboarding_get_started">ابدأ</string>
     <string name="onboarding_home_lead">أخبر Coach بما تريد إنجازه بكلماتك. يجهّز معك الـ taf ويعرض لك الـ Card الخاصة به قبل أن يعمل أي شيء.</string>
     <string name="onboarding_how_it_works">كيف يعمل tafs</string>

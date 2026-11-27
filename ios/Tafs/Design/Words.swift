@@ -2751,6 +2751,10 @@ enum Words {
         }
         /// Explore jobs
         static var exploreJobs: String { Words.line("home.explore_jobs") }
+        /// Set it up with Coach
+        static var firstTafCoach: String { Words.line("home.first_taf_coach") }
+        /// A first taf to try
+        static var firstTafTry: String { Words.line("home.first_taf_try") }
         /// Signed in with KIFF.
         static var footer: String { Words.line("home.footer") }
         /// Halted. Open Halt
@@ -3115,6 +3119,8 @@ enum Words {
         static var cardLead: String { Words.line("onboarding.card_lead") }
         /// A Card is your permission
         static var cardTitle: String { Words.line("onboarding.card_title") }
+        /// Coach sets it up with you
+        static var coachTitle: String { Words.line("onboarding.coach_title") }
         /// I agree to {kiff_terms} and {tafs_terms}.
         static func consentTick(kiffTerms: String, tafsTerms: String) -> String { Words.line("onboarding.consent_tick", kiffTerms, tafsTerms) }
         /// When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse.
@@ -3127,6 +3133,8 @@ enum Words {
         static var controlLeadMac: String { Words.line("onboarding.control_lead_mac") }
         /// You stay in control
         static var controlTitle: String { Words.line("onboarding.control_title") }
+        /// Credits pay for the work
+        static var creditsTitle: String { Words.line("onboarding.credits_title") }
         /// Get started
         static var getStarted: String { Words.line("onboarding.get_started") }
         /// Tell Coach what you'd like done, in your own words. It sets the taf up with you and shows you its Card before anything runs.

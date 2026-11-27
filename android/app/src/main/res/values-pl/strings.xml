@@ -1550,6 +1550,8 @@
     <string name="home_empty_coach">Połącz aplikację, aby skonfigurować swojego pierwszego tafa.</string>
     <string name="home_empty_shared">Tafs udostępnione Tobie pojawią się tutaj.</string>
     <string name="home_explore_jobs">Przeglądaj zadania</string>
+    <string name="home_first_taf_coach">Skonfiguruj z Coachem</string>
+    <string name="home_first_taf_try">Pierwszy taf na próbę</string>
     <string name="home_footer">Zalogowano przez KIFF.</string>
     <string name="home_halted_open_halt">Zablokowane. Otwórz sekcję Zablokuj</string>
     <string name="home_labels_all">Wszystkie</string>
@@ -1745,12 +1747,14 @@
     <string name="onboarding_age_n">Musisz mieć co najmniej %1$s lat.</string>
     <string name="onboarding_card_lead">Każdy taf działa w ramach Card, którą wydajesz: co może robić, w jakiej aplikacji i za ile. Poza tym pyta Ciebie.</string>
     <string name="onboarding_card_title">Card to Twoje pozwolenie</string>
+    <string name="onboarding_coach_title">Coach konfiguruje go z Tobą</string>
     <string name="onboarding_consent_tick">Akceptuję %1$s i %2$s.</string>
     <string name="onboarding_control_lead">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz przez Face ID lub Touch ID albo odrzucasz.</string>
     <string name="onboarding_control_lead_android">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz odciskiem palca albo twarzą albo odrzucasz.</string>
     <string name="onboarding_control_lead_desktop">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz na telefonie lub na tym komputerze, jeśli zalogowano się na nim kluczem dostępu lub kluczem bezpieczeństwa, albo odrzucasz.</string>
     <string name="onboarding_control_lead_mac">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz przez Touch ID lub na telefonie albo odrzucasz.</string>
     <string name="onboarding_control_title">Kontrola zostaje przy Tobie</string>
+    <string name="onboarding_credits_title">Kredyty opłacają pracę</string>
     <string name="onboarding_get_started">Zaczynamy</string>
     <string name="onboarding_home_lead">Powiedz Coachowi własnymi słowami, co ma zostać zrobione. Skonfiguruje z Tobą tafa i pokaże Ci jego Card, zanim cokolwiek się uruchomi.</string>
     <string name="onboarding_how_it_works">Jak działa tafs</string>

@@ -1385,6 +1385,8 @@
     <string name="home_empty_coach">เชื่อมต่อแอปเพื่อตั้งค่า taf แรกของคุณ</string>
     <string name="home_empty_shared">taf ที่แชร์กับคุณจะแสดงที่นี่</string>
     <string name="home_explore_jobs">สำรวจงาน</string>
+    <string name="home_first_taf_coach">ตั้งค่ากับ Coach</string>
+    <string name="home_first_taf_try">taf แรกที่ลองได้</string>
     <string name="home_footer">เข้าสู่ระบบด้วย KIFF แล้ว</string>
     <string name="home_halted_open_halt">ระงับอยู่ เปิดระงับ</string>
     <string name="home_labels_all">ทั้งหมด</string>
@@ -1565,12 +1567,14 @@
     <string name="onboarding_age_n">คุณต้องมีอายุอย่างน้อย %1$s ปี</string>
     <string name="onboarding_card_lead">แต่ละ taf ทำงานภายใน Card ที่คุณออกให้: สิ่งที่ทำได้ กับแอปใด และมากเท่าใด เกินกว่านั้นมันจะถามคุณ</string>
     <string name="onboarding_card_title">Card คือการอนุญาตของคุณ</string>
+    <string name="onboarding_coach_title">Coach ตั้งค่าร่วมกับคุณ</string>
     <string name="onboarding_consent_tick">ฉันยอมรับ%1$sและ%2$s</string>
     <string name="onboarding_control_lead">เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ และบนนาฬิกาของคุณหากมี คุณอนุมัติด้วย Face ID หรือ Touch ID หรือปฏิเสธ</string>
     <string name="onboarding_control_lead_android">เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ และบนนาฬิกาของคุณหากมี คุณอนุมัติด้วยลายนิ้วมือหรือใบหน้า หรือปฏิเสธ</string>
     <string name="onboarding_control_lead_desktop">เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ คุณอนุมัติบนโทรศัพท์ หรือบนคอมพิวเตอร์เครื่องนี้ หากคุณลงชื่อเข้าใช้ด้วยพาสคีย์หรือคีย์ความปลอดภัย หรือปฏิเสธ.</string>
     <string name="onboarding_control_lead_mac">เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ คุณอนุมัติด้วย Touch ID หรือบนโทรศัพท์ หรือปฏิเสธ.</string>
     <string name="onboarding_control_title">คุณยังคงควบคุมได้</string>
+    <string name="onboarding_credits_title">เครดิตจ่ายค่างาน</string>
     <string name="onboarding_get_started">เริ่มต้นใช้งาน</string>
     <string name="onboarding_home_lead">บอก Coach ว่าคุณอยากให้ทำอะไรด้วยคำพูดของคุณเอง มันจะตั้งค่า taf ร่วมกับคุณและแสดง Card ของมันให้คุณดูก่อนที่จะรันอะไร</string>
     <string name="onboarding_how_it_works">tafs ทำงานอย่างไร</string>
