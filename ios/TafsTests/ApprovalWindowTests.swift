@@ -308,6 +308,7 @@ final class ApprovalWindowTests: XCTestCase {
         let opening = try XCTUnwrap(sent("POST", "/v1/me/window").first)
         XCTAssertEqual(json(opening)["message"] as? String, "kiff.window.v1")
         XCTAssertEqual((json(opening)["nonce"] as? String)?.count, 32)
+        XCTAssertEqual(json(opening)["agent"] as? String, "setup", "the window is opened for the step's taf, by its KIFF agent")
         XCTAssertNotNil(json(opening)["expires"] as? String)
         XCTAssertTrue(opening.value(forHTTPHeaderField: "KIFF-Device-Signature")?.contains(",v1=approval") ?? false, "opened by the approval key")
         // planque's approve goes as a tap: the device key, with the window's id.

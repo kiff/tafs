@@ -133,14 +133,16 @@ final class KIFFClient {
         try await send("GET", Self.windowPath)
     }
 
-    private struct WindowOpenBody: Encodable { let message: String; let expires: String; let nonce: String }
+    /// The opening, signed whole. `agent` is the taf whose step opens it (its KIFF agent): KIFF holds the window to that
+    /// taf, and refuses a window-signed Card change for any other (`window_scope`). Left out for a window no taf opens.
+    private struct WindowOpenBody: Encodable { let message: String; let expires: String; let nonce: String; let agent: String? }
 
     /// Opens an approval window with the approval key, under the Face ID this step just took:
     /// KIFF's `kiff.window.v1`, to `expires` at most five minutes ahead, with a fresh `nonce`; KIFF
     /// takes the signer's own session and device. The window is held once KIFF answers it. Set
     /// `setupSigner` first.
-    func openWindow(expires: String, nonce: String) async throws -> ApprovalWindow {
-        let read: WindowRead = try await send("POST", Self.windowPath, body: WindowOpenBody(message: Self.windowMessage, expires: expires, nonce: nonce))
+    func openWindow(expires: String, nonce: String, agent: String? = nil) async throws -> ApprovalWindow {
+        let read: WindowRead = try await send("POST", Self.windowPath, body: WindowOpenBody(message: Self.windowMessage, expires: expires, nonce: nonce, agent: agent))
         guard let opened = read.window else { throw KIFFError.server(status: 0, message: Words.Error.kiffOpenedNoWindow) }
         window = opened
         return opened

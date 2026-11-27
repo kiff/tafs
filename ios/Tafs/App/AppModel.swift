@@ -10215,7 +10215,7 @@ final class AppModel: ObservableObject {
                     guard gen == accountGeneration else { return }
                     kiff.setupSigner = { try signer.signConfirmed($0) }
                     // The approval key opens the window under that one Face ID.
-                    if takesWindow && !windowed { windowed = try await openWindow(for: s.id) }
+                    if takesWindow && !windowed { windowed = try await openWindow(for: s.id, agent: s.kiffAgent) }
                     guard gen == accountGeneration else { return }
                     useWindow(windowed, reconfirm: confirm)
                     var made = await makeAskedCall(ask, tenant: tenant, gen: gen)
@@ -10232,7 +10232,7 @@ final class AppModel: ObservableObject {
                         }
                         guard gen == accountGeneration else { return }
                         var reopened = false
-                        if windowAvailable { reopened = try await openWindow(for: s.id) }
+                        if windowAvailable { reopened = try await openWindow(for: s.id, agent: s.kiffAgent) }
                         guard gen == accountGeneration else { return }
                         useWindow(reopened, reconfirm: confirm)
                         made = await makeAskedCall(ask, tenant: tenant, gen: gen)
@@ -10651,11 +10651,11 @@ final class AppModel: ObservableObject {
     /// Opens an approval window at KIFF for five minutes, signed by the approval key under the Face ID
     /// this step just took, and shows KIFF's words for it. False for a KIFF without windows (404, 405):
     /// the step then goes on as before.
-    private func openWindow(for taf: String? = nil) async throws -> Bool {
+    private func openWindow(for taf: String? = nil, agent: String? = nil) async throws -> Bool {
         let expires = ISO8601DateFormatter().string(from: clock().addingTimeInterval(Self.windowSeconds))
         let nonce = (0..<16).map { _ in String(format: "%02x", UInt8.random(in: 0...255)) }.joined()
         do {
-            let opened = try await kiff.openWindow(expires: expires, nonce: nonce)
+            let opened = try await kiff.openWindow(expires: expires, nonce: nonce, agent: agent)
             windowWords = opened.words
             windowTaf = taf
             return true
