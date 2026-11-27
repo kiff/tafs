@@ -262,6 +262,7 @@ object KiffMapping {
         id = recordId(c.proposalId), proposalId = c.proposalId, tafId = actor, kind = kind, title = visible(name(c.actionName, c.title)), detail = shown, at = c.createdAt,
         ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
         readOnly = c.readOnly, amountText = c.amount?.let(::amountText), amountValue = c.amount?.value, amountUnit = c.amount?.unit,
+        moneyMoved = if (c.payment == true && (kind == RecordEntry.Kind.done || kind == RecordEntry.Kind.approved)) true else null,
         entityId = c.entityId?.let(::visible), action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt,
         why = c.reasons?.map(::visible), madeAt = c.madeAt, reason = c.reason?.let(::visible),
         refusedByTool = if (refusedByTool) true else null,

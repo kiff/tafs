@@ -23,6 +23,8 @@ import java.net.URLEncoder
   @SerialName("dismiss_title") val dismissTitle: String, @SerialName("can_approve_once") val canApproveOnce: Boolean = false)
 @Serializable data class TafActivityEntry(val id: String, val at: String, val kind: String, val title: String, val detail: String,
   val time: String, @SerialName("amount_text") val amountText: String? = null, val call: ActivityCall,
+  /** tafs cloud: KIFF says this done call moved money. Without it an amount moved nothing (an invoice written, a transfer asked). */
+  @SerialName("money_moved") val moneyMoved: Boolean = false,
   /** What the owner can do about a call that wasn't done, as tafs cloud says it (kiff/tafs#476, gap 10). */
   val next: NextStep? = null,
   /** "Report this payment": only on a payment tafs cloud says this person may report (docs/record.md). */

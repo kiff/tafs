@@ -55,6 +55,12 @@ export interface ActivityEntry {
   id: string; at: string; kind: "done" | "approved" | "held" | "refused" | "not_done" | "sending" | "unknown";
   title: string; detail: string; time: string; day: string; day_title: string;
   amount_text?: string; call: ActivityCall;
+  /**
+   * Only on a done or approved call KIFF says moved money (its `payment`: the tool moves money by its owner-approved profile, and the
+   * call was sent). The apps say "{amount} moved" and count it under "Money moved" only then: an amount alone, such as an invoice
+   * written or a transfer requested, moved nothing.
+   */
+  money_moved?: true;
   /** What the owner can do about a call that wasn't done, when its outcome says (kiff/tafs#476, gap 10). */
   next?: NextStep;
   /** Only on a payment this reader may report and that isn't reported yet: no `report`, no button. */
@@ -297,7 +303,8 @@ export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: st
   const next = kind === "not_done" ? nextStep(c, taf, lang) : undefined;
   const amount = amountWords(c.amount, lang);
   return { id, at: c.created_at, kind, title: c.title || c.action_name, detail: details[kind], time: timeIn(c.created_at, zone, now, lang), day, day_title: dayTitle,
-    ...(amount ? { amount_text: amount } : {}), call: shownCall(c, manages), ...(next ? { next } : {}), ...reportOf(c, reports) };
+    ...(amount ? { amount_text: amount } : {}), ...((kind === "done" || kind === "approved") && c.payment === true ? { money_moved: true as const } : {}),
+    call: shownCall(c, manages), ...(next ? { next } : {}), ...reportOf(c, reports) };
 }
 
 /** Bounded source scanning: a cursor advances even through a page with no matching outcomes. */

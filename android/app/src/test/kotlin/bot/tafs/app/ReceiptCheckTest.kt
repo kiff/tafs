@@ -165,7 +165,8 @@ class ReceiptCheckTest {
 
   @Test fun theSheetSaysWhoDecidedInWords() {
     val words = bot.tafs.app.model.ReceiptWords
-    val done = entry().copy(kind = bot.tafs.app.model.RecordEntry.Kind.done, amountText = "€150.00")
+    // KIFF says this call moved money (its payment flag): only then "moved".
+    val done = entry().copy(kind = bot.tafs.app.model.RecordEntry.Kind.done, amountText = "€150.00", moneyMoved = true)
     assertEquals("Done. €150.00 moved.", words.outcome(done))
     assertEquals("allowed by the Card", words.decision(done))
     assertEquals("KIFF, against the Card", words.decidedBy(done, signedIn = true))

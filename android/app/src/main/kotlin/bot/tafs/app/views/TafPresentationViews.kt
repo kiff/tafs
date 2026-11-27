@@ -239,7 +239,7 @@ internal fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppSta
   val kind = runCatching { RecordEntry.Kind.valueOf(if (source.kind == "not_done") "notDone" else source.kind) }.getOrDefault(RecordEntry.Kind.unknown)
   val call = source.call
   val entry = RecordEntry(id = source.id, tafId = taf.id, kind = kind, title = source.title, detail = source.detail, at = call.createdAt,
-    readOnly = call.readOnly, amountText = source.amountText, amountValue = call.amount?.value, amountUnit = call.amount?.unit,
+    readOnly = call.readOnly, amountText = source.amountText, moneyMoved = if (source.moneyMoved) true else null, amountValue = call.amount?.value, amountUnit = call.amount?.unit,
     entityId = call.entityId, onHash = call.onHash, onArg = call.onArg, answer = call.answer, receipt = call.receipt, why = call.reasons, madeAt = call.madeAt, reason = call.reason,
     report = source.report, reportedAt = source.reportedAt)
   Panel(Modifier.tapping { open = true }) {
