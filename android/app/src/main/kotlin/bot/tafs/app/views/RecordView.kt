@@ -58,7 +58,7 @@ enum class RecordFilter {
 
   fun keeps(e: RecordEntry): Boolean = when (this) {
     All -> true
-    MoneyMoved -> e.amountText != null && (e.kind == Kind.done || e.kind == Kind.approved)
+    MoneyMoved -> e.moneyMoved == true && e.amountText != null && (e.kind == Kind.done || e.kind == Kind.approved)
     Stopped -> e.kind == Kind.refused || e.kind == Kind.notDone || e.kind == Kind.revoked
     Waiting -> e.kind == Kind.held || e.kind == Kind.sending || e.kind == Kind.unknown
   }

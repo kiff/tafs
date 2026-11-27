@@ -229,13 +229,20 @@ class KiffClient(
    */
   var approvalSigner: (suspend (built: () -> ByteArray) -> String)? = null
 
+  /**
+   * Whether a held approval window may sign what the approval key would: on only around the one call whose button said
+   * "Approve" (a tap), as iOS's `signsInWindow`. Off, every authority request asks for the fingerprint even while a window is
+   * open, so a later card under "Approve with your fingerprint" never rides an earlier fingerprint's window.
+   */
+  var signsInWindow: Boolean = false
+
   /** Called when KIFF answers that an act needs the approval key this phone doesn't hold. */
   var approvalKeyRequired: (() -> Unit)? = null
 
   /**
    * The approval window this phone holds at KIFF (kiff/tafs#494), as KIFF last answered it. While it is held, a call the approval
    * key would sign goes with the device key and the window's id, a tap; KIFF decides whether it takes it. A refusal drops back to
-   * the approval key, and `window_required` forgets the window.
+   * the approval key, and `window_required` forgets the window (`window_scope`, another taf's window, keeps it).
    */
   @Volatile var window: ApprovalWindow? = null
 
@@ -258,9 +265,9 @@ class KiffClient(
   }
 
   /** Closes the held window, signed by the device key ([sign]): the app went to the background or the screen locked. Forgotten either way. */
-  suspend fun closeWindow(sign: (ByteArray) -> String) {
-    val held = window ?: return
-    window = null
+  suspend fun closeWindow(held: ApprovalWindow? = window, sign: (ByteArray) -> String) {
+    held ?: return
+    if (window?.id == held.id) window = null
     sendJson("POST", "$WINDOW/${escaped(held.id)}/close", JsonObject(emptyMap()), signedBy = sign)
   }
 
@@ -940,7 +947,8 @@ class KiffClient(
     // Inside a held approval window, what the approval key would sign goes with the device key and the window's id: a tap
     // (kiff/tafs#494). Opening a window is never signed in one, and neither is adding someone to a group: KIFF would take a
     // window-named signature on that route as the device key's, so it's the approval key's, behind its fingerprint, always.
-    val held = window?.id?.takeIf { inWindow && authority && path != WINDOW && !(method == "PUT" && isGroupMember(path)) }
+    // A Card's authority (a draft created or confirmed) is never granted in a window: always the approval key, behind its fingerprint.
+    val held = window?.id?.takeIf { inWindow && signsInWindow && authority && path != WINDOW && !(method == "PUT" && isGroupMember(path)) }
     val signer = if (held != null) plain else if (authority) approvalSigner ?: plain else plain
     val account = tenant
     if (method in WRITES && signed && signer != null && account != null) {
@@ -965,10 +973,11 @@ class KiffClient(
     if (status == 401) throw KiffError.Unauthorized
     if (status !in 200..299) {
       val fields = errorFields(response.body)
-      // Refused in the window: the act takes the fingerprint every time, or the window ended. The approval key signs it
+      // Refused in the window: the act takes the fingerprint every time, the window ended, or it was opened for another taf
+      // (`window_scope`). The approval key signs it
       // again, once, behind its fingerprint; an ended window is forgotten.
       val refused = fields["error"]
-      if (status == 403 && held != null && (refused == CRITICAL_KEY_REQUIRED || refused == WINDOW_REQUIRED)) {
+      if (status == 403 && held != null && (refused == CRITICAL_KEY_REQUIRED || refused == WINDOW_REQUIRED || refused == WINDOW_SCOPE)) {
         if (refused == WINDOW_REQUIRED && window?.id == held) window = null
         // The app's own words: KIFF's `detail` is for the log, never the person.
         if (approvalSigner == null) throw KiffError.WindowRefused(refused, if (refused == WINDOW_REQUIRED) Words.Error.approvalWindowEnded else Words.Error.needsConfirmationFirst)
@@ -1111,6 +1120,8 @@ class KiffClient(
     /** KIFF's refusals inside a window: the act takes the approval key every time, or the window has ended. */
     const val CRITICAL_KEY_REQUIRED = "critical_key_required"
     const val WINDOW_REQUIRED = "window_required"
+    /** The window was opened for another taf: the approval key signs this one again, and the window stays for its own taf. */
+    const val WINDOW_SCOPE = "window_scope"
 
     /**
      * What the device key signs inside an approval window: `kiff.request.v1`'s lines under `kiff.request.v2`, with the window's id
