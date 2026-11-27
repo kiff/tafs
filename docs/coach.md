@@ -995,10 +995,10 @@ way, only when the start's `[tafs connections]` has a Chrome line ("- Chrome: pa
 paired Chromes (`chromes` in its connections answer, while the owner's own Chrome is offered), so
 Coach never offers a taf in Chrome while it's off. Likewise a Hosted browser line, while planque's hosted
 browser is offered to the account (`browser: {pay}` in its connections answer): "- Hosted browser: offered;
-paying off: it never pays, and has no browse_checkout or browse_pay", or "it pays, each pay held for the
+paying off: it never pays: no browse_pay, and browse_checkout only reads a checkout", or "it pays, each pay held for the
 owner"; anything but `pay: true` reads as paying off. `a-browser-taf@8` reads it: a taf on websites runs
-there, never in the owner's Chrome; with paying off, no browse_checkout or browse_pay, no currency, and
-rules with no payment line; and a step that's the owner's is done in "this browser's" live view in the
+there, never in the owner's Chrome; with paying off, no browse_pay, browse_checkout only to read a
+checkout and stop, no currency, and rules with no payment line; and a step that's the owner's is done in "this browser's" live view in the
 app, never "your Chrome" (kiff/tafs#2238). A request from the watch
 opens a conversation of its own with one skill, `ask-a-taf`, named-only: only tafs cloud's signed
 watch route loads it, never a message's text, Coach's map doesn't list it, and that conversation reads

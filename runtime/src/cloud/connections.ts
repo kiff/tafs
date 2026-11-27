@@ -64,8 +64,8 @@ export async function accountConnections(fetchFn: Fetch, base: string, tenant: s
 
 /**
  * planque's hosted browser, while it is offered to the account: whether it pays (kiff/tafs#2238). With `pay` false it
- * offers no browse_checkout or browse_pay, and refuses any click that would pay, so a browser taf's rules carry no
- * payment line.
+ * offers no browse_pay (browse_checkout still reads a checkout) and refuses any click that would pay, so a browser
+ * taf's rules carry no payment line.
  */
 export interface AccountBrowser { pay: boolean }
 
@@ -178,7 +178,7 @@ export function browserLine(browser: AccountBrowser | undefined): string[] {
   if (!browser) return [];
   return [browser.pay
     ? "- Hosted browser: offered; it pays, each pay held for the owner"
-    : "- Hosted browser: offered; paying off: it never pays, and has no browse_checkout or browse_pay"];
+    : "- Hosted browser: offered; paying off: it never pays: no browse_pay, and browse_checkout only reads a checkout"];
 }
 
 /** Opens the guides to the apps the account already holds, after its connections. */

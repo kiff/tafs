@@ -55,7 +55,7 @@ describe("planque's hosted browser, as Coach starts with it (kiff/tafs#2238)", (
 
   it("is said only while planque offers it, with whether it pays; anything but pay: true is paying off", async () => {
     expect(browserLine((await read({ connections: [] })).browser)).toEqual([]);
-    const off = ["- Hosted browser: offered; paying off: it never pays, and has no browse_checkout or browse_pay"];
+    const off = ["- Hosted browser: offered; paying off: it never pays: no browse_pay, and browse_checkout only reads a checkout"];
     expect(browserLine((await read({ connections: [], browser: { pay: false } })).browser)).toEqual(off);
     expect(browserLine((await read({ connections: [], browser: {} })).browser)).toEqual(off);
     expect(browserLine((await read({ connections: [], browser: { pay: "yes" } })).browser)).toEqual(off);

@@ -6993,13 +6993,13 @@ describe("the account's connections a Coach conversation starts with", () => {
     await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
     const hosted = planque(w, () => new Response(JSON.stringify({ connections, browser: { pay: false } }), { status: 200 }));
     const said = (await firstMessage(w, (await send(hosted, `/v1/tafs/${COACH}/messages`, { text: "a taf that can pay for orders on shop.example", new_chat: true })).session))!;
-    expect(said).toContain("treated as live\n- Hosted browser: offered; paying off: it never pays, and has no browse_checkout or browse_pay\n");
+    expect(said).toContain("treated as live\n- Hosted browser: offered; paying off: it never pays: no browse_pay, and browse_checkout only reads a checkout\n");
     // The owner's Chrome isn't offered here, so Coach is told nothing of it, and nothing of "your Chrome".
     expect(said).not.toContain("Chrome:");
     expect(ownerWords(said)).toBe("a taf that can pay for orders on shop.example");
     // Coach's browser skill says what the line means: no payment line in the rules, and "this browser", never "your Chrome".
     const skill = COACH_SKILLS.find((s) => s.name === "a-browser-taf")!.body;
-    expect(skill).toContain("**Hosted browser, paying off:** no browse_checkout or browse_pay");
+    expect(skill).toContain("**Hosted browser, paying off:** no browse_pay, and no currency asked, whatever the owner asks; browse_checkout only to read a checkout and stop.");
     expect(skill).toContain("Its rules carry no payment line: nothing waits for a pay approval, no amount limit.");
     expect(skill).toContain('say "this browser", never "your Chrome"');
     const paying = planque(w, () => new Response(JSON.stringify({ connections, browser: { pay: true } }), { status: 200 }));
