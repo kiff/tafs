@@ -374,6 +374,10 @@ The chat is one thing drawn in several places: Coach's chat and a taf's on the p
 | A run that worked in this Chrome, started by you from another device: its message, steps and answer | — | — | done (kiff/cloud#169, planque#439, tafs#2119; the Privacy line kiff/cloud#167): only that run's turn, never the rest of its chat, read as the person; it leaves when the chat is deleted, the Chrome is unpaired, or its connection moves to another Chrome; an existing Chrome pairs once more. No extension release: the panel's chats list carries it |
 | Asked what was done over a time, a taf answers from a record that covers it (its Card's use, or the app's own list) and says which it read; a chat shows only what was done in it | done once each taf's definition is rewritten (tafs cloud: `SHARED_INSTRUCTIONS`) | done, the same | done, the same: the panel's taf chats run the same taf |
 
+**macOS 12** (the Mac app, tafs-macos) draws Coach's chat and a taf's too, and isn't a column in this table. Two of its rows are done there:
+- Every other time of day on a screen in the same clock as the chat's stamps: done (tafs-macos#281). Every time follows the Mac's own 12- or 24-hour setting, in the app language's pattern (`HourCycle`).
+- A chat refused for no plan keeps tafs cloud's words as a prompt, with Solo's line, Choose a plan and Not now: done (tafs-macos#282), in Coach's chat and a taf's.
+
 ## 25 Nov, device by device
 
 What merged or opened on 25 Nov, read against kiff/tafs main `954be1a` and each desktop repo's main. **done** means merged on main (a phone or watch row still waits for its build to ship); **not yet** says what's missing. "—" means the feature isn't that device's.
