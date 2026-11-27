@@ -248,8 +248,11 @@ object KiffMapping {
     calls.mapNotNull { c ->
       val actor = c.actorId ?: return@mapNotNull null
       if (actor !in holders) return@mapNotNull null
+      // Approved once only when KIFF says the owner answered this call with an approval (kiff/tafs#2225). A held call that
+      // went through some other way (its Card changed, room given) is the Card's, as KIFF's own trail on the receipt shows.
+      val approvedOnce = c.held && c.answer != null && c.answer.decision != "refused"
       val (kind, detail) = when (c.outcome) {
-        "allowed" -> executed(c.toolOutcome, approved = c.held, vendor = vendors[c.actionName], counts = counted(c))
+        "allowed" -> executed(c.toolOutcome, approved = approvedOnce, vendor = vendors[c.actionName], counts = counted(c))
         "owner_required", "approval_required" -> RecordEntry.Kind.held to Words.Record.waitingForYou
         // KIFF's own words for why, when it has them (kiff/tafs#138).
         else -> RecordEntry.Kind.refused to (c.reason?.let { Words.Record.notSentBecause(reason = visible(it)) } ?: Words.Record.notSent)
@@ -260,7 +263,7 @@ object KiffMapping {
       val shown = if (byConnection && c.toolOutcome.code != null) c.detail?.let(::visible) ?: Words.Record.connectionRefusedBeforeSending else detail
       RecordEntry(
         id = recordId(c.proposalId), proposalId = c.proposalId, tafId = actor, kind = kind, title = visible(name(c.actionName, c.title)), detail = shown, at = c.createdAt,
-        ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
+        ownerApproved = if (c.outcome == "allowed" && approvedOnce) true else null,
         readOnly = c.readOnly, amountText = c.amount?.let(::amountText), amountValue = c.amount?.value, amountUnit = c.amount?.unit,
         moneyMoved = if (c.payment == true && (kind == RecordEntry.Kind.done || kind == RecordEntry.Kind.approved)) true else null,
         entityId = c.entityId?.let(::visible), action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt,
