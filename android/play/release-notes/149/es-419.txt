@@ -1,0 +1,6 @@
+• Aprobaciones: el botón siempre dice cuándo necesita tu huella, y al salir de la app te la vuelve a pedir.
+• Los recibos dicen que se movió dinero solo cuando así fue.
+• Las horas siguen el formato de 12 o 24 horas de tu teléfono.
+• Plan y uso dice lo que obtienes, y elegir un plan es más sencillo.
+• Las solicitudes de huella dicen por qué la piden.
+• Las llamadas retenidas llegan a tu reloj Wear OS aunque la app esté cerrada.

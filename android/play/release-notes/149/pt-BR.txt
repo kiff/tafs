@@ -1,0 +1,6 @@
+• Aprovações: o botão sempre diz quando precisa da sua digital, e ao sair do app ela é pedida de novo.
+• Os recibos dizem que houve movimentação de dinheiro só quando houve.
+• Os horários seguem o formato de 12 ou 24 horas do seu celular.
+• Plano e uso diz o que você recebe, e escolher um plano ficou mais simples.
+• Os pedidos de digital dizem por que pedem.
+• As chamadas retidas chegam ao seu relógio Wear OS mesmo com o app fechado.
