@@ -358,6 +358,7 @@ export const es: Words = {
   gallery_try: "Probarlo con Coach",
   gallery_sample: "Lo que informó tras su ejecución de prueba",
   recipes_proved_help_desk: "Probado en un servicio de ayuda de prueba.",
+  recipes_proved_billing: "Probado en una app de facturación de prueba.",
   suggestions_on: "Las sugerencias aparecen en una conversación nueva con Coach hasta que la cuenta tenga su primer taf.",
   suggestions_off: "Las sugerencias están desactivadas en esta cuenta.",
   suggestions_live: "La cuenta ya tiene un taf, así que una conversación nueva con Coach se abre en blanco. Las sugerencias se pueden desactivar para siempre.",

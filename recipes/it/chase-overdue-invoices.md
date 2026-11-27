@@ -3,6 +3,11 @@ title: Sollecitare le fatture scadute
 headline: Fatti pagare senza rincorrere nessuno.
 today: Chi paga in ritardo resta in ritardo finché qualcuno non trova il tempo di ricordarglielo.
 line: Ricorda ai clienti le fatture scadute secondo un calendario e segnala chi non ha pagato; non muove denaro.
+sample:
+  - Quattro fatture sono scadute e ancora aperte. Ho scritto un sollecito per ciascuna e non ho inviato nulla.
+  - Nessuno è in ritardo di più di 30 giorni. Le fatture più vecchie erano scadute 22 giorni fa.
+  - Ogni sollecito inizia con la riga che avvisa che lo ha scritto un'IA, indica la fattura e l'importo, e dice di ignorarlo se è già stata pagata.
+  - Non ho modificato nessuna fattura e non ho offerto sconti.
 card:
   allows:
     - Solleciti fino a 20 al giorno, al massimo uno a settimana per fattura

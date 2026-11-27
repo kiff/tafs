@@ -391,6 +391,8 @@ export const RECIPES = [
         "A credit note or a discount"
       ]
     },
+    "proved": "billing",
+    "sample": "Four invoices are overdue and still open. I drafted a reminder for each and sent nothing.\n\nNobody is more than 30 days late. The oldest invoices were due 22 days ago.\n\nEach reminder starts with the AI disclosure line, names the invoice and the amount, and says to ignore it if it's already paid.\n\nI changed no invoice and offered no discount.",
     "languages": {
       "de": {
         "title": "Überfällige Rechnungen anmahnen",
@@ -409,7 +411,8 @@ export const RECIPES = [
             "Eine Rechnung ändern",
             "Eine Gutschrift oder ein Rabatt"
           ]
-        }
+        },
+        "sample": "Vier Rechnungen sind überfällig und noch offen. Ich habe für jede eine Erinnerung entworfen und nichts gesendet.\n\nNiemand ist mehr als 30 Tage im Rückstand. Die ältesten Rechnungen waren vor 22 Tagen fällig.\n\nJede Erinnerung beginnt mit dem Hinweis, dass eine KI sie geschrieben hat, nennt die Rechnung und den Betrag und sagt, dass man sie ignorieren kann, falls schon bezahlt wurde.\n\nIch habe keine Rechnung geändert und keinen Rabatt angeboten."
       },
       "fr": {
         "title": "Relancer les factures impayées",
@@ -428,7 +431,8 @@ export const RECIPES = [
             "Modifier une facture",
             "Un avoir ou une remise"
           ]
-        }
+        },
+        "sample": "Quatre factures sont en retard et toujours ouvertes. J'ai rédigé une relance pour chacune et je n'ai rien envoyé.\n\nPersonne n'a plus de 30 jours de retard. Les plus anciennes factures étaient dues il y a 22 jours.\n\nChaque relance commence par la mention qu'une IA l'a rédigée, indique la facture et le montant, et précise qu'on peut l'ignorer si elle est déjà payée.\n\nJe n'ai modifié aucune facture et je n'ai offert aucune remise."
       },
       "es": {
         "title": "Reclamar facturas vencidas",
@@ -447,7 +451,8 @@ export const RECIPES = [
             "Modificar una factura",
             "Una nota de crédito o un descuento"
           ]
-        }
+        },
+        "sample": "Hay cuatro facturas vencidas y aún abiertas. He redactado un recordatorio para cada una y no he enviado nada.\n\nNadie lleva más de 30 días de retraso. Las facturas más antiguas vencieron hace 22 días.\n\nCada recordatorio empieza con la línea que avisa de que lo ha escrito una IA, indica la factura y el importe, y dice que se ignore si ya está pagada.\n\nNo he modificado ninguna factura ni he ofrecido ningún descuento."
       },
       "it": {
         "title": "Sollecitare le fatture scadute",
@@ -466,7 +471,8 @@ export const RECIPES = [
             "Modificare una fattura",
             "Una nota di credito o uno sconto"
           ]
-        }
+        },
+        "sample": "Quattro fatture sono scadute e ancora aperte. Ho scritto un sollecito per ciascuna e non ho inviato nulla.\n\nNessuno è in ritardo di più di 30 giorni. Le fatture più vecchie erano scadute 22 giorni fa.\n\nOgni sollecito inizia con la riga che avvisa che lo ha scritto un'IA, indica la fattura e l'importo, e dice di ignorarlo se è già stata pagata.\n\nNon ho modificato nessuna fattura e non ho offerto sconti."
       },
       "pt": {
         "title": "Cobrar faturas em atraso",
@@ -485,7 +491,8 @@ export const RECIPES = [
             "Alterar uma fatura",
             "Uma nota de crédito ou um desconto"
           ]
-        }
+        },
+        "sample": "Há quatro faturas vencidas e ainda em aberto. Redigi um lembrete para cada uma e não enviei nada.\n\nNinguém está mais de 30 dias atrasado. As faturas mais antigas venceram há 22 dias.\n\nCada lembrete começa com a linha que avisa que foi escrito por uma IA, indica a fatura e o valor, e diz para ignorar se já estiver paga.\n\nNão alterei nenhuma fatura nem ofereci qualquer desconto."
       },
       "nl": {
         "title": "Achterstallige facturen opvolgen",
@@ -504,7 +511,8 @@ export const RECIPES = [
             "Een factuur wijzigen",
             "Een creditnota of een korting"
           ]
-        }
+        },
+        "sample": "Vier facturen zijn te laat en nog open. Ik heb voor elke een herinnering opgesteld en niets verstuurd.\n\nNiemand is meer dan 30 dagen te laat. De oudste facturen waren 22 dagen geleden verschuldigd.\n\nElke herinnering begint met de regel dat een AI hem heeft geschreven, noemt de factuur en het bedrag, en zegt dat je hem kunt negeren als er al betaald is.\n\nIk heb geen factuur gewijzigd en geen korting aangeboden."
       },
       "pl": {
         "title": "Upominanie się o zaległe faktury",
@@ -523,7 +531,8 @@ export const RECIPES = [
             "Zmiana faktury",
             "Nota kredytowa lub rabat"
           ]
-        }
+        },
+        "sample": "Cztery faktury są przeterminowane i wciąż otwarte. Napisałem przypomnienie do każdej i niczego nie wysłałem.\n\nNikt nie spóźnia się dłużej niż 30 dni. Najstarsze faktury miały termin 22 dni temu.\n\nKażde przypomnienie zaczyna się od informacji, że napisała je AI, podaje fakturę i kwotę oraz mówi, żeby je zignorować, jeśli już zapłacono.\n\nNie zmieniłem żadnej faktury i nie zaproponowałem rabatu."
       }
     }
   },

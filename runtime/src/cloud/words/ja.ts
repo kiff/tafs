@@ -359,6 +359,7 @@ export const ja: Words = {
   gallery_try: "Coachで試す",
   gallery_sample: "テスト実行後の報告内容",
   recipes_proved_help_desk: "テスト用のヘルプデスクで検証済みです。",
+  recipes_proved_billing: "テスト用の請求アプリで検証済みです。",
   suggestions_on: "アカウントの最初のtafが適用されるまで、Coachとの新しい会話に提案が表示されます。",
   suggestions_off: "このアカウントでは提案はオフです。",
   suggestions_live: "アカウントに適用中のtafがあるため、Coachとの新しい会話は空白で開きます。提案は完全にオフにできます。",

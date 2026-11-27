@@ -358,6 +358,7 @@ export const de: Words = {
   gallery_try: "Mit Coach ausprobieren",
   gallery_sample: "Was er nach seinem Testlauf berichtet hat",
   recipes_proved_help_desk: "Auf einem Test-Helpdesk erprobt.",
+  recipes_proved_billing: "Auf einer Test-Rechnungs-App erprobt.",
   suggestions_on: "Vorschläge erscheinen in einem neuen Gespräch mit Coach, bis das Konto seinen ersten taf hat.",
   suggestions_off: "Vorschläge sind für dieses Konto aus.",
   suggestions_live: "Das Konto hat schon einen taf, daher beginnt ein neues Gespräch mit Coach leer. Vorschläge lassen sich dauerhaft ausschalten.",

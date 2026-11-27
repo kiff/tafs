@@ -380,6 +380,7 @@ export const en = {
   gallery_try: "Try it with Coach",
   gallery_sample: "What it reported after its test run",
   recipes_proved_help_desk: "Proved on a test help desk.",
+  recipes_proved_billing: "Proved on a test billing app.",
   suggestions_on: "Suggestions show in a new conversation with Coach until the account's first taf is live.",
   suggestions_off: "Suggestions are off for this account.",
   suggestions_live: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good.",
