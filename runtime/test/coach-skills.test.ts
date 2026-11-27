@@ -91,7 +91,7 @@ describe("Coach's skills, as files", () => {
       // request is corrected once, a failed own sign-in is never replaced by its key, and a guide's lines before the sign-in go in
       // the card's text as written or faithfully translated (Qonto re-test 2, 27 Nov: "Have you read these?" with nothing above it, then the key route).
       // name-the-tools at 1,980: a tool named only as planque lists it, a read found by the job's words and its fields, and a
-      // refused name chosen again before saying no (Qonto re-test 3's run record, 27 Nov: list_bank_accounts, made up).
+      // refused name chosen again before saying no (Qonto re-test 3's run record, 27 Nov: list_bank_accounts asked with no search).
       // connect-an-app at 2,400: a signed-in connection "for no taf yet" offered by its vendor and gone on with as the same
       // grant (Qonto re-test 3, 27 Nov: a new conversation asked to sign in again over a listed Qonto sign-in no taf used).
       const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2400, "draft-the-card": 2400, "name-the-tools": 1980 };
@@ -755,9 +755,10 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
     for (const tool of ["tafs_state", "taf_task", "taf_run", "read_skill"]) expect(toolSkills(tool)).not.toContain("ask-a-taf@3");
   });
 
-  // Qonto re-test 3 (27 Nov), its run record: Coach asked planque for list_bank_accounts, a name it made up, which the
-  // catalog didn't have and planque refused; Coach then told the owner balances can't be read, though get_organization
-  // gives them. A name is planque's, a read is found by the job's words and its fields, and a refusal is chosen again from.
+  // Qonto re-test 3 (27 Nov), its run record: Coach asked planque for list_bank_accounts with no search; the catalog
+  // didn't have it (it's Qonto's own balance read, which planque doesn't serve) and planque refused it, and Coach told the
+  // owner balances can't be read. A name is planque's, a read is found by the job's words and its fields, and a refusal is
+  // chosen again from.
   it("names a tool only as planque lists it, finds a read by the job's words, and chooses again after a refusal before saying no", () => {
     const body = COACH_SKILLS.find((k) => k.name === "name-the-tools")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Name a tool only as planque lists it (catalog, status, a refusal), never from memory or the vendor's docs");
