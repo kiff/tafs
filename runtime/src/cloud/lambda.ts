@@ -15,7 +15,7 @@ import { fcmSender } from "./fcm.js";
 import { KIFF_API } from "./kiff.js";
 import { PLANQUE } from "./setupdef.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
-import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepConsent, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
+import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepConsent, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure, upgradeTenants } from "./handler.js";
 import { routing, silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
 import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
@@ -731,8 +731,13 @@ function deps(): Deps {
  * event, with requestContext, so it can't take this shape.
  */
 interface UpgradeEvent {
-  upgrade: { dry_run?: boolean };
+  /**
+   * tenants: the test-account upgrade, those accounts only (upgrade.yml's test_accounts_only, from a secret). Present, it
+   * must list at least one account: never read as every account.
+   */
+  upgrade: { dry_run?: boolean; tenants?: unknown };
 }
+
 
 /** The deletion sweep, invoked by its schedule: every deletion not finished, and every hand-over a server error left undone, tried again. */
 interface SweepEvent {
@@ -763,8 +768,10 @@ export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Pro
     return { swept: (deletions ?? []) as unknown[], ...rest };
   }
   if (isUpgrade(event)) {
+    // Checked before anything is read: a malformed list is refused, never taken as every account.
+    const tenants = upgradeTenants(event.upgrade);
     try {
-      return { upgraded: await upgradeDefinitions(deps(), { dryRun: event.upgrade.dry_run !== false }) };
+      return { upgraded: await upgradeDefinitions(deps(), { dryRun: event.upgrade.dry_run !== false, ...(tenants ? { tenants } : {}) }) };
     } catch (err) {
       // Listing the accounts failed. The caller's log is public: it gets the kind, and CloudWatch the rest.
       console.error("upgrade:", err);
