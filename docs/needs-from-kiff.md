@@ -175,3 +175,15 @@ Found on Android's K5 pass; iOS's sheet opens the same page.
   sign-in button.
 - **tafs's part:** none in the apps. The sheet is KIFF's page. A sheet closed with no answer already reads as
   "Signing in didn't work." The K5 checklist checks that a sign-in button is visible, not only the page's title.
+
+## 13. The `kiff` skill says what a held tool's 0 total means — open
+
+A Card holds a tool on every call as a total of 0 a calendar day with `over: ask` (the apps word it "each call asks you
+first"). KIFF's own `kiff` skill, which every taf gets (vendored by `runtime/scripts/vendor-kiff-skill.sh`), explains
+limits, totals and the route past them, but not that one. On 27 Nov 2026 a taf on a test account read its Card's 0 as a
+total already spent, and told its owner the calls would be held or refused (tafs#2226).
+
+- **The need:** one line in the skill, where it explains totals: a total of 0 with `over: ask` means every call waits
+  for an authorized approver. The tool is allowed, and the call is made; it's never "spent".
+- **tafs's part:** the same rule in the taf's own call instructions (`tafdef.ts`, `CALL_INSTRUCTIONS`), until the
+  skill says it.

@@ -112,6 +112,10 @@ export const CALL_INSTRUCTIONS = `How you make a call under your Card:
 - A call KIFF holds for the owner pauses the run until they answer. So make
   every call within your limits first, and a call past a limit your Card or
   your instructions name last, once nothing else this run needs is left.
+- A tool your Card holds on every call (a total of 0 a day that asks the
+  owner: "each call asks you first") is allowed. Make the call when the work
+  needs it, and say the owner will be asked. Its total is never "spent" or
+  "used up", and never a reason to skip the call or say it can't run.
 - Send only what's final: never a placeholder, a test value or text you mean
   to replace. If you can't write it yet, don't make the call; say why.`;
 
