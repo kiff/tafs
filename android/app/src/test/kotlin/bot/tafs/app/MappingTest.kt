@@ -184,6 +184,22 @@ class MappingTest {
    * A number past 100 written digits is written as sent, at once: a taf's 1e999999999 would be a billion zeros (case 7, as
    * KIFF writes `details`). The edge counts the 0 before a point and no trailing zero.
    */
+  /**
+   * One held call whose arguments hold a number no double can read never empties Needs you: the list still has every call, and
+   * that call's Details write the number as sent. KIFF passes a taf's arguments through as sent, so a taf could otherwise blank
+   * the owner's list with one call (a reader through Double refuses 1e400).
+   */
+  @Test fun aNumberNoDoubleReadsLeavesEveryHeldCallListed() {
+    val list = exceptions(
+      """{"exceptions":[
+        {"id":"ce_1","subject":"a","action":"browse_act","entity_id":"e","created_at":"2026-11-27T18:00:00Z","arguments":{"huge":1e400,"tiny":1e-400,"long":0.12345678901234567890,"big":98765432109876543210987}},
+        {"id":"ce_2","subject":"a","action":"refund","entity_id":"e","created_at":"2026-11-27T18:01:00Z","arguments":{"charge":"ch_1"}}]}""",
+    )
+    assertEquals(listOf("ce_1", "ce_2"), list.map { it.id })
+    assertEquals(listOf("big: 98765432109876543210987", "huge: 1e400", "long: 0.1234567890123456789", "tiny: 1e-400"), KiffMapping.details(list[0]))
+    assertEquals(listOf("charge: ch_1"), KiffMapping.details(list[1]))
+  }
+
   @Test fun aHugeNumberIsWrittenAsSentNeverPadded() {
     fun text(n: String) = KiffMapping.argumentText(kotlinx.serialization.json.Json.parseToJsonElement(n))
     assertEquals("1" + "0".repeat(99), text("1e99"))
