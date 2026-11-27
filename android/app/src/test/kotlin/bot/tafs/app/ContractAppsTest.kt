@@ -47,6 +47,10 @@ class ContractAppsTest {
     assertTrue("Home leads with the jobs", read.home?.shown == true)
     assertTrue("Home's line", !read.home?.words.isNullOrBlank())
     assertTrue("the sheet's words", read.labels != null)
+    // First run v2: tafs cloud's first taf to try, read whole.
+    val first = read.home?.firstTafToTry
+    assertEquals("Chase overdue invoices", first?.title)
+    assertTrue("its line and its words for Coach", !first?.line.isNullOrBlank() && !first?.say.isNullOrBlank())
   }
 
   @Test fun theSetupAnswersBeforeCoachExistsRead() {

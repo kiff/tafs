@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.semantics.selected
@@ -54,13 +55,31 @@ internal fun OwnWordsRow(home: bot.tafs.app.kiff.RecipesHome?, onOwnWords: () ->
 }
 
 /**
+ * A first taf to try (first run v2, `home.first_taf`): tafs cloud's title and line for it, as served, and Set it up with Coach,
+ * which puts its words in Coach's box to edit and send. With none served, or no way to Coach, nothing.
+ */
+@Composable
+internal fun FirstTafCard(home: bot.tafs.app.kiff.RecipesHome?, onSetUp: ((String) -> Unit)?) {
+  val first = home?.firstTafToTry ?: return
+  val setUp = onSetUp ?: return
+  Panel(modifier = Modifier.fillMaxWidth().testTag(HOME_FIRST_TAF)) {
+    bot.tafs.app.design.Eyebrow(bot.tafs.app.model.Words.Home.firstTafTry)
+    Text(first.title, style = scaled(17, FontWeight.SemiBold, Theme.ink))
+    Text(first.line, style = scaled(14, color = Theme.soft))
+    bot.tafs.app.design.PrimaryButton(bot.tafs.app.model.Words.Home.firstTafCoach, { setUp(first.say) }, Modifier.padding(top = 8.dp))
+  }
+}
+
+internal const val HOME_FIRST_TAF = "home.first_taf"
+
+/**
  * Home with no taf, where tafs cloud lists the recipes (`home.shown`, docs/android-app.md): its line, then "Say it in your own
  * words", then a chip per category to narrow the list, then each recipe led by the problem it removes ([Recipe.headline]) with
  * its line under it. A tap opens its sheet. Every word is tafs cloud's, in the person's language.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun HomeRecipes(recipes: Recipes, labels: RecipeLabels, onOpen: (Recipe) -> Unit, onOwnWords: (() -> Unit)? = null) {
+internal fun HomeRecipes(recipes: Recipes, labels: RecipeLabels, onOpen: (Recipe) -> Unit, onOwnWords: (() -> Unit)? = null, onFirstTaf: ((String) -> Unit)? = null) {
   // A category picked narrows the list; picked again, every recipe shows. Nothing picked is all of them.
   var picked by rememberSaveable { mutableStateOf<String?>(null) }
   val groups = recipes.byCategory
@@ -68,6 +87,8 @@ internal fun HomeRecipes(recipes: Recipes, labels: RecipeLabels, onOpen: (Recipe
     recipes.home?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(17, FontWeight.SemiBold, Theme.ink)) }
     // In the person's own words, above the jobs: Coach, empty, builds the taf with them. tafs cloud's words, sent only to who may.
     if (onOwnWords != null) OwnWordsRow(recipes.home, onOwnWords)
+    // One job to start from, tafs cloud's, above the list.
+    FirstTafCard(recipes.home, onFirstTaf)
     if (groups.size > 1) {
       FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         groups.forEach { (category, _) ->
