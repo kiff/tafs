@@ -86,10 +86,10 @@ describe("Coach's skills, as files", () => {
             // draft-the-card at 2,360: an unproved app's writes (planque's unproved: true) are held as an on-demand app's, and
       // Coach never asks how many a day for a held write (the owner's phone, 27 Nov: Coach offered 10, 25 or 50 Pipedrive
       // deals a day, and tafs cloud refused the Card twice, since an unproved app's every write must ask; a number the owner gave for one is said back as asking, never put on the Card).
-      // connect-an-app at 2,300: a vendor's own sign-in entry is asked with no uses and never server and entry together, a refused
+      // connect-an-app at 2,310: a vendor's own sign-in entry is asked with no uses and never server and entry together, a refused
       // request is corrected once, a failed own sign-in is never replaced by its key, and a guide's lines before the sign-in go in
       // the card's text (Qonto re-test 2, 27 Nov: "Have you read these?" with nothing above it, then the key route).
-      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2300, "draft-the-card": 2360, "name-the-tools": 1900 };
+      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2310, "draft-the-card": 2360, "name-the-tools": 1900 };
       expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(budget[s.name] ?? 1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
@@ -606,13 +606,14 @@ describe("Coach's core", () => {
   // mailbox" as a button, lifting draft-the-card's own reason for a dedicated mailbox. What a sign-in covers is planque's card
   // to show: the reason stays Coach's, and neither skill lets it be said, in a message or an option.
   // Qonto re-test 2, 27 Nov: Coach asked "Have you read these and want to go ahead with the Qonto sign-in?" with nothing
-  // above it (@36 forbade saying what a sign-in covers, and the guide's five lines are about exactly that), then its request
-  // for the sign-in never reached planque (refused in the tool: @36 said "with its server … (by entry too)"), and Coach
-  // offered Qonto's key, which the guide forbids. @37: a guide's lines go inside the card, a vendor's own sign-in entry is
+  // above it (@36 forbade saying what a sign-in covers, and the message Coach wrote anyway said "read-only", which show's
+  // wording rules refused), the search listed only Qonto's key entries, and Coach offered Qonto's key, which the guide forbids. @37: a guide's lines go inside the card, a vendor's own sign-in entry is
   // asked alone with no uses, a refused shape is corrected once, and a failed own sign-in is never replaced by its key.
   it("puts a guide's before-sign-in lines in the card, asks a vendor's own sign-in alone, and never falls back to its key", () => {
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
-    expect(connect).toContain("One exception: lines the app's guide says to tell before its sign-in go in the text of the card that asks to go ahead, one a line, above its question, never in a message alone.");
+    expect(connect).toContain("One exception: lines the app's guide says to tell before its sign-in go in the text of the card that asks to go ahead, in the guide's words, one a line, above its question, never in a message alone.");
+    // In the guide's words: a paraphrase ("read-only") is what show's wording rules refuse (re-test 2: Coach's message with the
+    // five points was refused for "read-only"), and the guide's own lines trip none of them.
     expect(connect).toContain("planque request with its server, or its entry when search gives one, never both,");
     expect(connect).not.toContain("(by entry too)");
     expect(connect).toContain("A vendor's own sign-in entry (qonto, stripe: search lists no tools for it) takes no uses: request {entry, name, taf_name, tools: []}, connected first.");

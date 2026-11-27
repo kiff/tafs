@@ -924,13 +924,14 @@ what a sign-in covers is planque's card to show, so Coach never says it, in a me
 the sign-in (`connect-an-app@36`, `draft-the-card@52`; an Eval's Plan words run offered "Connect your Gmail; its
 sign-in covers the whole mailbox" as a button). The one exception is an app guide's lines to tell before its sign-in
 (Qonto's: its own sign-in, the admin's approval of planque's address, the owner's own login, the professional-secrecy
-consent, what it can read): they go in the text of the card that asks to go ahead, one a line, above its question, never
-in a message alone, so the card never asks about lines the owner can't see. A vendor's own sign-in entry (`qonto`,
+consent, what it can read): they go in the text of the card that asks to go ahead, in the guide's own words (a paraphrase
+such as "read-only" is what the wording rules refuse), one a line, above its question, never in a message alone, so the
+card never asks about lines the owner can't see. A vendor's own sign-in entry (`qonto`,
 `stripe`) is asked with `request {entry, name, taf_name, tools: []}` alone, never with `server` too or with `uses`; a
 request refused for its shape is corrected once; and a vendor's own sign-in that still fails is never replaced by its
 key: Coach says the sign-in couldn't start and the team was told, and stops (`connect-an-app@37`; Qonto re-test 2,
-27 Nov: "Have you read these?" with nothing above it, a request kiff/agents' tool refused before it reached planque,
-then Qonto's key, which its guide forbids). A
+27 Nov: Coach's message with the five lines was refused for "read-only", the card asked "Have you read these?" with
+nothing above it, and Coach then requested Qonto's key, which its guide forbids). A
 connection the account has comes first only when it is that dedicated mailbox, and since the
 connections lines don't say which mailbox a connection is, Coach asks. One that is a person's own inbox,
 such as a Gmail connected for another taf, is never reused for customer mail (the one exception to gap
