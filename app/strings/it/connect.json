@@ -69,8 +69,11 @@
     "one": "Si ferma anche {names}.",
     "other": "Si fermano anche {names}."
   },
+  "connect.disconnect.key_not_revoked": "La chiave continua a funzionare su {vendor} finché non la elimini lì.",
   "connect.disconnect.no_taf_uses": "Nessun taf usa {vendor} ora.",
+  "connect.disconnect.not_revoked": "{vendor} non ci offre alcun modo per revocare il login: rimuovi l'accesso di tafs in {vendor} per chiuderlo anche lì.",
   "connect.disconnect.rest": "Gli altri taf che usano {vendor} mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene revocato presso {vendor}; altrimenti, quando viene rimosso l'ultimo. Usare di nuovo {vendor} ti chiede di approvare e accedere di nuovo.",
+  "connect.disconnect.rest_deleted": "Gli altri taf che usano {vendor} mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene eliminato da tafs; altrimenti, quando viene rimosso l'ultimo. Usare di nuovo {vendor} ti chiede di approvare e accedere di nuovo.",
   "connect.disconnect.rest_key": "Gli altri taf che usano {vendor} mantengono il loro accesso. La chiave viene eliminata da tafs quando nessun taf la usa più. Usare di nuovo {vendor} ti chiede di approvare e incollare di nuovo una chiave.",
   "connect.disconnect.title": "Rimuovere l'accesso a {vendor}?",
   "connect.disconnect.title_from": "Rimuovere l'accesso a {vendor} per {taf}?",

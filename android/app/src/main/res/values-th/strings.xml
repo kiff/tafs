@@ -938,8 +938,11 @@
     <plurals name="connect_disconnect_also_stops">
         <item quantity="other">%2$s หยุดไปด้วย</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">คีย์ยังใช้งานได้ที่ %1$s จนกว่าคุณจะลบที่นั่น</string>
     <string name="connect_disconnect_no_taf_uses">ตอนนี้ไม่มี taf ใดใช้ %1$s</string>
+    <string name="connect_disconnect_not_revoked">%1$s ไม่มีวิธีให้เราเพิกถอนการเข้าสู่ระบบ โปรดนำสิทธิ์เข้าถึงของ tafs ออกใน %1$s เพื่อสิ้นสุดที่นั่นด้วย</string>
     <string name="connect_disconnect_rest">taf อื่นที่ใช้ %1$s ยังคงมีสิทธิ์เข้าถึง หากไม่มี taf อื่นใช้บัญชีเดียวกันที่นั่น การเข้าสู่ระบบจะถูกเพิกถอนที่ %1$s มิฉะนั้นจะถูกเพิกถอนเมื่อ taf สุดท้ายถูกนำออก การใช้ %1$s อีกครั้งจะขอให้คุณอนุมัติและเข้าสู่ระบบอีกครั้ง</string>
+    <string name="connect_disconnect_rest_deleted">taf อื่นที่ใช้ %1$s ยังคงมีสิทธิ์เข้าถึง หากไม่มี taf อื่นใช้บัญชีเดียวกันที่นั่น การเข้าสู่ระบบจะถูกลบออกจาก tafs มิฉะนั้นจะถูกลบเมื่อ taf สุดท้ายถูกนำออก การใช้ %1$s อีกครั้งจะขอให้คุณอนุมัติและเข้าสู่ระบบอีกครั้ง</string>
     <string name="connect_disconnect_rest_key">taf อื่นที่ใช้ %1$s ยังคงมีสิทธิ์เข้าถึง กุญแจจะถูกลบออกจาก tafs เมื่อไม่มี taf ใดใช้ การใช้ %1$s อีกครั้งจะขอให้คุณอนุมัติและวางกุญแจอีกครั้ง</string>
     <string name="connect_disconnect_title">ถอนสิทธิ์เข้าถึง %1$s หรือไม่</string>
     <string name="connect_disconnect_title_from">ถอนสิทธิ์เข้าถึง %1$s ของ %2$s หรือไม่</string>

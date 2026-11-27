@@ -69,8 +69,11 @@
     "one": "{names} també s'atura.",
     "other": "{names} també s'aturen."
   },
+  "connect.disconnect.key_not_revoked": "La clau continua funcionant a {vendor} fins que l'hi eliminis.",
   "connect.disconnect.no_taf_uses": "Ara cap taf fa servir {vendor}.",
+  "connect.disconnect.not_revoked": "{vendor} no ens ofereix cap manera de revocar l'inici de sessió: treu l'accés de tafs a {vendor} per acabar-lo també allà.",
   "connect.disconnect.rest": "Els altres taf que fan servir {vendor} conserven l'accés. Si cap altre taf hi fa servir el mateix compte, l'inici de sessió es revoca a {vendor}; si no, quan s'elimini l'últim. Tornar a fer servir {vendor} et demana que aprovis i iniciïs la sessió de nou.",
+  "connect.disconnect.rest_deleted": "Els altres taf que fan servir {vendor} conserven l'accés. Si cap altre taf hi fa servir el mateix compte, l'inici de sessió s'elimina de tafs; si no, quan s'elimini l'últim. Tornar a fer servir {vendor} et demana que aprovis i iniciïs la sessió de nou.",
   "connect.disconnect.rest_key": "Els altres taf que fan servir {vendor} conserven l'accés. La clau se suprimeix de tafs quan cap taf no la fa servir. Tornar a fer servir {vendor} et demana que aprovis i enganxis una clau de nou.",
   "connect.disconnect.title": "Treure l'accés a {vendor}?",
   "connect.disconnect.title_from": "Treure l'accés a {vendor} per a {taf}?",

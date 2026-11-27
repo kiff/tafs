@@ -1012,8 +1012,11 @@
         <item quantity="few">%2$s takođe prestaju.</item>
         <item quantity="other">%2$s takođe prestaju.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Ključ i dalje radi u aplikaciji %1$s dok ga tamo ne izbrišete.</string>
     <string name="connect_disconnect_no_taf_uses">Nijedan taf sada ne koristi aplikaciju %1$s.</string>
+    <string name="connect_disconnect_not_revoked">%1$s nam ne nudi način da opozovemo prijavu: uklonite pristup tafs-a u aplikaciji %1$s da biste je prekinuli i tamo.</string>
     <string name="connect_disconnect_rest">Ostali tafovi koji koriste aplikaciju %1$s zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti nalog, prijava se opoziva kod pružatelja %1$s; inače, kad se ukloni poslednji. Ponovo korišćenje aplikacije %1$s traži da odobrite i ponovo se prijavite.</string>
+    <string name="connect_disconnect_rest_deleted">Ostali tafovi koji koriste aplikaciju %1$s zadržavaju svoj pristup. Ako nijedan drugi taf tamo ne koristi isti nalog, prijava se briše iz tafs-a; inače, kad se ukloni poslednji. Ponovo korišćenje aplikacije %1$s traži da odobrite i ponovo se prijavite.</string>
     <string name="connect_disconnect_rest_key">Ostali tafovi koji koriste aplikaciju %1$s zadržavaju svoj pristup. Ključ se briše iz tafsa čim ga nijedan taf ne koristi. Ponovo korišćenje aplikacije %1$s traži da odobrite i ponovo nalepite ključ.</string>
     <string name="connect_disconnect_title">Ukloniti pristup aplikaciji %1$s?</string>
     <string name="connect_disconnect_title_from">Ukloniti pristup aplikaciji %1$s za taf %2$s?</string>

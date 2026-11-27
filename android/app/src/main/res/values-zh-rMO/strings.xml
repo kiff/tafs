@@ -938,8 +938,11 @@
     <plurals name="connect_disconnect_also_stops">
         <item quantity="other">%2$s也會停止。</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">在您於 %1$s 刪除金鑰之前，該金鑰在那裡仍可使用。</string>
     <string name="connect_disconnect_no_taf_uses">目前沒有 taf 使用 %1$s。</string>
+    <string name="connect_disconnect_not_revoked">%1$s 未提供讓我們撤銷登入的方式：請在 %1$s 移除 tafs 的存取權限，才能在該處一併結束。</string>
     <string name="connect_disconnect_rest">其他使用 %1$s 的 taf 仍保有存取權限。若沒有其他 taf 在該處使用同一個帳號，登入會在 %1$s 撤銷；否則會在最後一個被移除時撤銷。再次使用 %1$s 時，會請您核准並重新登入。</string>
+    <string name="connect_disconnect_rest_deleted">其他使用 %1$s 的 taf 仍保有存取權限。若沒有其他 taf 在該處使用同一個帳號，登入會從 tafs 刪除；否則會在最後一個被移除時刪除。再次使用 %1$s 時，會請您核准並重新登入。</string>
     <string name="connect_disconnect_rest_key">其他使用 %1$s 的 taf 仍保有存取權限。當沒有 taf 使用該金鑰時，金鑰會從 tafs 中刪除。再次使用 %1$s 時，會請您核准並重新貼上金鑰。</string>
     <string name="connect_disconnect_title">要移除 %1$s 的存取權限嗎？</string>
     <string name="connect_disconnect_title_from">要移除 %2$s 對 %1$s 的存取權限嗎？</string>

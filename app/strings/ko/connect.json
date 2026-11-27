@@ -65,8 +65,11 @@
   "connect.disconnect.also_stops": {
     "other": "{names}도 멈춥니다."
   },
+  "connect.disconnect.key_not_revoked": "키는 {vendor}에서 삭제할 때까지 그곳에서 계속 작동합니다.",
   "connect.disconnect.no_taf_uses": "이제 {vendor}을(를) 쓰는 taf가 없습니다.",
+  "connect.disconnect.not_revoked": "{vendor}은(는) 로그인을 취소할 방법을 제공하지 않습니다. 그곳에서도 끝내려면 {vendor}에서 tafs의 접근 권한을 제거하세요.",
   "connect.disconnect.rest": "{vendor}을(를) 쓰는 다른 tafs는 접근 권한을 유지합니다. 같은 계정을 쓰는 다른 taf가 없으면 {vendor}에서 로그인이 취소되고, 있으면 마지막 taf를 제거할 때 취소됩니다. {vendor}을(를) 다시 쓰려면 다시 승인하고 로그인해야 합니다.",
+  "connect.disconnect.rest_deleted": "{vendor}을(를) 쓰는 다른 tafs는 접근 권한을 유지합니다. 같은 계정을 쓰는 다른 taf가 없으면 로그인이 tafs에서 삭제되고, 있으면 마지막 taf를 제거할 때 삭제됩니다. {vendor}을(를) 다시 쓰려면 다시 승인하고 로그인해야 합니다.",
   "connect.disconnect.rest_key": "{vendor}을(를) 쓰는 다른 tafs는 접근 권한을 유지합니다. 키를 쓰는 taf가 없으면 tafs에서 키가 삭제됩니다. {vendor}을(를) 다시 쓰려면 다시 승인하고 키를 붙여 넣어야 합니다.",
   "connect.disconnect.title": "{vendor} 접근 권한을 삭제할까요?",
   "connect.disconnect.title_from": "{taf}의 {vendor} 접근 권한을 삭제할까요?",

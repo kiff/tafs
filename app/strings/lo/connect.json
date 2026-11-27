@@ -65,8 +65,11 @@
   "connect.disconnect.also_stops": {
     "other": "{names} ຢຸດນຳ."
   },
+  "connect.disconnect.key_not_revoked": "ກະແຈຍັງໃຊ້ໄດ້ຢູ່ {vendor} ຈົນກວ່າທ່ານຈະລຶບມັນຢູ່ທີ່ນັ້ນ.",
   "connect.disconnect.no_taf_uses": "ດຽວນີ້ບໍ່ມີ taf ໃຊ້ {vendor}.",
+  "connect.disconnect.not_revoked": "{vendor} ບໍ່ມີວິທີໃຫ້ພວກເຮົາຖອນການເຂົ້າສູ່ລະບົບ, ສະນັ້ນ ກະລຸນາເອົາສິດເຂົ້າເຖິງຂອງ tafs ອອກໃນ {vendor} ເພື່ອສິ້ນສຸດຢູ່ທີ່ນັ້ນນຳ.",
   "connect.disconnect.rest": "taf ອື່ນທີ່ໃຊ້ {vendor} ຍັງມີສິດເຂົ້າເຖິງ. ຖ້າບໍ່ມີ taf ອື່ນໃຊ້ບັນຊີດຽວກັນຢູ່ບ່ອນນັ້ນ ການເຂົ້າສູ່ລະບົບຖືກຖອນທີ່ {vendor}; ບໍ່ດັ່ງນັ້ນ, ເມື່ອອັນສຸດທ້າຍຖືກເອົາອອກ. ການໃຊ້ {vendor} ອີກຂໍໃຫ້ທ່ານອະນຸມັດ ແລະ ເຂົ້າສູ່ລະບົບອີກ.",
+  "connect.disconnect.rest_deleted": "taf ອື່ນທີ່ໃຊ້ {vendor} ຍັງມີສິດເຂົ້າເຖິງ. ຖ້າບໍ່ມີ taf ອື່ນໃຊ້ບັນຊີດຽວກັນຢູ່ບ່ອນນັ້ນ ການເຂົ້າສູ່ລະບົບຖືກລຶບອອກຈາກ tafs; ບໍ່ດັ່ງນັ້ນ, ເມື່ອອັນສຸດທ້າຍຖືກເອົາອອກ. ການໃຊ້ {vendor} ອີກຂໍໃຫ້ທ່ານອະນຸມັດ ແລະ ເຂົ້າສູ່ລະບົບອີກ.",
   "connect.disconnect.rest_key": "taf ອື່ນທີ່ໃຊ້ {vendor} ຍັງມີສິດເຂົ້າເຖິງ. ກຸນແຈຖືກລຶບຈາກ tafs ເມື່ອບໍ່ມີ taf ໃຊ້ມັນ. ການໃຊ້ {vendor} ອີກຂໍໃຫ້ທ່ານອະນຸມັດ ແລະ ວາງກຸນແຈອີກ.",
   "connect.disconnect.title": "ເອົາສິດເຂົ້າເຖິງ {vendor} ອອກບໍ?",
   "connect.disconnect.title_from": "ເອົາສິດເຂົ້າເຖິງ {vendor} ຂອງ {taf} ອອກບໍ?",

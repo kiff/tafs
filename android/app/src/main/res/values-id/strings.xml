@@ -938,8 +938,11 @@
     <plurals name="connect_disconnect_also_stops">
         <item quantity="other">%2$s ikut berhenti.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">Kunci tetap berfungsi di %1$s sampai Anda menghapusnya di sana.</string>
     <string name="connect_disconnect_no_taf_uses">Tidak ada taf yang memakai %1$s sekarang.</string>
+    <string name="connect_disconnect_not_revoked">%1$s tidak menyediakan cara bagi kami untuk mencabut proses masuk: hapus akses tafs di %1$s untuk mengakhirinya di sana juga.</string>
     <string name="connect_disconnect_rest">Taf lain yang memakai %1$s tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk dicabut di %1$s; jika tidak, saat yang terakhir dihapus. Memakai %1$s lagi meminta Anda menyetujui dan masuk lagi.</string>
+    <string name="connect_disconnect_rest_deleted">Taf lain yang memakai %1$s tetap memiliki aksesnya. Jika tidak ada taf lain yang memakai akun yang sama di sana, proses masuk dihapus dari tafs; jika tidak, saat yang terakhir dihapus. Memakai %1$s lagi meminta Anda menyetujui dan masuk lagi.</string>
     <string name="connect_disconnect_rest_key">Taf lain yang memakai %1$s tetap memiliki aksesnya. Kunci dihapus dari tafs setelah tidak ada taf yang memakainya. Memakai %1$s lagi meminta Anda menyetujui dan menempelkan kunci lagi.</string>
     <string name="connect_disconnect_title">Hapus akses ke %1$s?</string>
     <string name="connect_disconnect_title_from">Hapus akses ke %1$s untuk %2$s?</string>

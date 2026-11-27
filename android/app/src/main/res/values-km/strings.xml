@@ -938,8 +938,11 @@
     <plurals name="connect_disconnect_also_stops">
         <item quantity="other">%2$s ក៏ឈប់ដែរ។</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">សោនៅតែដំណើរការនៅ %1$s រហូតដល់អ្នកលុបវានៅទីនោះ។</string>
     <string name="connect_disconnect_no_taf_uses">ឥឡូវនេះគ្មាន taf ណាប្រើ %1$s ទេ។</string>
+    <string name="connect_disconnect_not_revoked">%1$s មិនផ្តល់វិធីឱ្យយើងដកហូតការចូលទេ ដូច្នេះសូមដកការចូលប្រើរបស់ tafs នៅក្នុង %1$s ដើម្បីបញ្ចប់វានៅទីនោះផងដែរ។</string>
     <string name="connect_disconnect_rest">taf ផ្សេងទៀតដែលប្រើ %1$s រក្សាការចូលប្រើរបស់ខ្លួន។ ប្រសិនបើគ្មាន taf ផ្សេងទៀតប្រើគណនីដូចគ្នានៅទីនោះទេ ការចូលត្រូវបានដកហូតនៅ %1$s; បើមិនដូច្នោះទេ នៅពេលចុងក្រោយត្រូវបានដកចេញ។ ការប្រើ %1$s ម្តងទៀតសុំអ្នកអនុម័ត និងចូលម្តងទៀត។</string>
+    <string name="connect_disconnect_rest_deleted">taf ផ្សេងទៀតដែលប្រើ %1$s រក្សាការចូលប្រើរបស់ខ្លួន។ ប្រសិនបើគ្មាន taf ផ្សេងទៀតប្រើគណនីដូចគ្នានៅទីនោះទេ ការចូលត្រូវបានលុបចេញពី tafs; បើមិនដូច្នោះទេ នៅពេលចុងក្រោយត្រូវបានដកចេញ។ ការប្រើ %1$s ម្តងទៀតសុំអ្នកអនុម័ត និងចូលម្តងទៀត។</string>
     <string name="connect_disconnect_rest_key">taf ផ្សេងទៀតដែលប្រើ %1$s រក្សាការចូលប្រើរបស់ខ្លួន។ កូនសោត្រូវបានលុបពី tafs នៅពេលគ្មាន taf ណាប្រើវា។ ការប្រើ %1$s ម្តងទៀតសុំអ្នកអនុម័ត និងបិទភ្ជាប់កូនសោម្តងទៀត។</string>
     <string name="connect_disconnect_title">ដកការចូលប្រើ %1$s ឬ?</string>
     <string name="connect_disconnect_title_from">ដកការចូលប្រើ %1$s សម្រាប់ %2$s ឬ?</string>

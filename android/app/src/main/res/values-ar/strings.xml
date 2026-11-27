@@ -1123,8 +1123,11 @@
         <item quantity="many">%2$s تتوقف أيضًا.</item>
         <item quantity="other">%2$s تتوقف أيضًا.</item>
     </plurals>
+    <string name="connect_disconnect_key_not_revoked">يظل المفتاح يعمل لدى %1$s إلى أن تحذفه هناك.</string>
     <string name="connect_disconnect_no_taf_uses">لا يستخدم أي taf %1$s الآن.</string>
+    <string name="connect_disconnect_not_revoked">لا يتيح لنا %1$s أي طريقة لإلغاء تسجيل الدخول، لذا أزل وصول tafs في %1$s لإنهائه هناك أيضًا.</string>
     <string name="connect_disconnect_rest">تحتفظ بقية tafs التي تستخدم %1$s بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُلغى تسجيل الدخول لدى %1$s؛ وإلا فعند إزالة آخرها. يطلب منك استخدام %1$s مرة أخرى الموافقة وتسجيل الدخول مجددًا.</string>
+    <string name="connect_disconnect_rest_deleted">تحتفظ بقية tafs التي تستخدم %1$s بوصولها. وإن لم يستخدم أي taf آخر الحساب نفسه هناك، يُحذف تسجيل الدخول من tafs؛ وإلا فعند إزالة آخرها. يطلب منك استخدام %1$s مرة أخرى الموافقة وتسجيل الدخول مجددًا.</string>
     <string name="connect_disconnect_rest_key">تحتفظ بقية tafs التي تستخدم %1$s بوصولها. يُحذف المفتاح من tafs متى لم يعد أي taf يستخدمه. يطلب منك استخدام %1$s مرة أخرى الموافقة ولصق مفتاح مجددًا.</string>
     <string name="connect_disconnect_title">إزالة الوصول إلى %1$s؟</string>
     <string name="connect_disconnect_title_from">إزالة الوصول إلى %1$s لـ %2$s؟</string>
