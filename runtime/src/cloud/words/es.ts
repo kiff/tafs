@@ -203,6 +203,7 @@ export const es: Words = {
   apps_not_connected: "Sin conectar",
   apps_needs_setup: "Hay que configurarla",
   apps_used_by: (names: string) => `La usa ${names}`,
+  apps_used_by_none: "No la usa ningún taf",
   apps_whose_yours: "Tuya",
   apps_whose_company: "Empresa",
   approval_confirm_first: "Tu inicio de sesión se completó, pero aún no está confirmado. Aprueba de nuevo para confirmarlo.",

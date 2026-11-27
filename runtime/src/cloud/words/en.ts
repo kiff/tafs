@@ -215,6 +215,8 @@ export const en = {
   apps_not_connected: "Not connected",
   apps_needs_setup: "Needs setting up",
   apps_used_by: (names: string) => `Used by ${names}`,
+  /** An app of the account's that no taf uses: a sign-in Coach made whose actions are still to choose, or one left behind. */
+  apps_used_by_none: "Not used by any taf",
   apps_whose_yours: "Yours",
   apps_whose_company: "Company",
   approval_confirm_first: "Your sign-in went through, but it isn't confirmed yet. Approve again to confirm it.",

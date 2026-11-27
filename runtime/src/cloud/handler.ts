@@ -37,7 +37,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, answeredAgent, chatLeftAgents, requestedAgents, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, browserLine, chromeLine, tafPageSites } from "./connections.js";
+import { type AccountConnection, type AppGuide, accountConnections, answeredAgent, chatLeftAgents, otherForm, requestedAgents, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, browserLine, chromeLine, tafPageSites } from "./connections.js";
 import { maskedPath, normalHost, onSites, pageSiteRefused } from "./page-sites.js";
 import { maskedCodes } from "./page-codes.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
@@ -11732,30 +11732,43 @@ async function catalogApp(fetchFn: Fetch, base: string, tenant: string, token: s
 interface AppUser { taf: string; name: string }
 
 /**
- * Which of the tafs this person may see use each of the account's connections, by catalog entry and by vendor
- * (folded), from planque's connections read with their own session. Undefined when it can't be read: the rows
- * then carry no `used_by`, never an empty one that would say no taf uses an app.
+ * The account's connections as Connect apps names their use: `seen`, which of the tafs this person may see use each,
+ * by catalog entry and by vendor (folded); and `any`, the keys any live taf uses, seen or not, so an app a taf this
+ * person can't see uses never reads "Not used by any taf". From planque's connections read with their own session.
+ * Undefined when it can't be read: the rows then carry no `used_by`, never an empty one that would say no taf uses an
+ * app.
  */
-async function connectionUses(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<Map<string, AppUser[]> | undefined> {
+interface ConnectionUses { seen: Map<string, AppUser[]>; any: Set<string> }
+
+async function connectionUses(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<ConnectionUses | undefined> {
   if (!deps.planqueBase) return undefined;
   try {
     const token = bearer(event);
     const [conns, records, access] = await Promise.all([
       accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token), deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase),
     ]);
-    const tafs = new Map(records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent)).map((t) => [t.kiffAgent, t]));
-    const out = new Map<string, AppUser[]>();
+    const live = records.filter((t) => !t.removing && t.job !== SETUP_JOB);
+    const tafs = new Map(live.filter((t) => listable(access, t.kiffAgent)).map((t) => [t.kiffAgent, t]));
+    const agents = new Set(live.map((t) => t.kiffAgent).filter(Boolean));
+    const seen = new Map<string, AppUser[]>();
+    const any = new Set<string>();
+    // A taf's connection may sit under the other form of its agent's name (with or without the generated suffix,
+    // otherForm): it counts as that taf's, so an app a taf runs on never reads "Not used by any taf". Named under a
+    // taf the person sees only when that form is no other live taf's own.
+    const ownerOf = (agent: string) => [...agents].find((k) => otherForm(agent, k));
     for (const c of conns) {
-      const taf = tafs.get(c.agent);
+      const keys = [c.entry, foldVendor(c.vendor)].filter((k): k is string => !!k);
+      const owner = agents.has(c.agent) ? c.agent : ownerOf(c.agent);
+      if (owner !== undefined) for (const key of keys) any.add(key);
+      const taf = owner === undefined ? undefined : tafs.get(owner);
       if (!taf) continue;
-      for (const key of [c.entry, foldVendor(c.vendor)]) {
-        if (!key) continue;
-        const list = out.get(key) ?? [];
+      for (const key of keys) {
+        const list = seen.get(key) ?? [];
         if (!list.some((u) => u.taf === taf.id)) list.push({ taf: taf.id, name: taf.name });
-        out.set(key, list);
+        seen.set(key, list);
       }
     }
-    return out;
+    return { seen, any };
   } catch (err) {
     console.warn(`connect apps: connections unread for ${me.tenantID} (${err instanceof Error ? err.message : String(err)})`);
     return undefined;
@@ -11772,13 +11785,20 @@ function foldVendor(name: string): string {
  * are the person's), which tafs use it, and `line`, the row's second line in the person's language ("Sign in ·
  * Connected · Used by Refunds"; an app to connect, its method alone: "Sign in").
  */
-function appRow(app: { entry: string; vendor: string; title: string; how: "oauth" | "key"; state: string }, me: KIFFIdentity, uses: Map<string, AppUser[]> | undefined, lang: Lang) {
+function appRow(app: { entry: string; vendor: string; title: string; how: "oauth" | "key"; state: string }, me: KIFFIdentity, uses: ConnectionUses | undefined, lang: Lang) {
   const w = wordsIn(lang);
-  const own = app.state === "connected" || app.state === "needs_reconnect";
-  const used = own && uses ? [...new Map([...(uses.get(app.entry) ?? []), ...(uses.get(foldVendor(app.vendor)) ?? []), ...(uses.get(foldVendor(app.title)) ?? [])].map((u) => [u.taf, u])).values()] : undefined;
+  // The account's own: connected, to sign in again, or a sign-in no taf's actions use yet (`signed_in`), so every
+  // sign-in the account holds is listed under Yours with its Disconnect.
+  const own = app.state === "connected" || app.state === "needs_reconnect" || app.state === "signed_in";
+  const keys = [app.entry, foldVendor(app.vendor), foldVendor(app.title)];
+  const used = own && uses ? [...new Map(keys.flatMap((k) => uses.seen.get(k) ?? []).map((u) => [u.taf, u])).values()] : undefined;
+  // Said only when no live taf uses it, seen or not; unknown, nothing is said.
+  const unused = own && uses !== undefined && !keys.some((k) => uses.any.has(k));
   // An app to connect says no status: under Discover, "Not connected" on every row says nothing.
-  const status = app.state === "connected" ? w.apps_connected : app.state === "needs_reconnect" ? w.apps_reconnect : app.state === "needs_setup" ? w.apps_needs_setup : undefined;
-  const line = [app.how === "key" ? w.apps_method_key : w.apps_method_sign_in, ...(status ? [status] : []), ...(used?.length ? [w.apps_used_by(used.map((u) => u.name).join(", "))] : [])].join(" · ");
+  const status = app.state === "connected" ? w.apps_connected : app.state === "needs_reconnect" ? w.apps_reconnect
+    : app.state === "signed_in" ? w.setup_status_signed_in : app.state === "needs_setup" ? w.apps_needs_setup : undefined;
+  const line = [app.how === "key" ? w.apps_method_key : w.apps_method_sign_in, ...(status ? [status] : []),
+    ...(used?.length ? [w.apps_used_by(used.map((u) => u.name).join(", "))] : unused ? [w.apps_used_by_none] : [])].join(" · ");
   return {
     connected: app.state === "connected",
     method: app.how === "key" ? "key" as const : "sign_in" as const,

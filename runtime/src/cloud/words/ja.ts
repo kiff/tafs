@@ -204,6 +204,7 @@ export const ja: Words = {
   apps_not_connected: "未接続",
   apps_needs_setup: "設定が必要",
   apps_used_by: (names: string) => `使用中：${names}`,
+  apps_used_by_none: "どの taf も使用していません",
   apps_whose_yours: "あなた",
   apps_whose_company: "会社",
   approval_confirm_first: "サインインは完了しましたが、まだ確認されていません。確認するにはもう一度承認してください。",

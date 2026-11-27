@@ -203,6 +203,7 @@ export const nl: Words = {
   apps_not_connected: "Niet gekoppeld",
   apps_needs_setup: "Moet eerst worden ingesteld",
   apps_used_by: (names: string) => `Gebruikt door ${names}`,
+  apps_used_by_none: "Door geen enkele taf gebruikt",
   apps_whose_yours: "Van jou",
   apps_whose_company: "Bedrijf",
   approval_confirm_first: "Je aanmelding is gelukt, maar nog niet bevestigd. Tik opnieuw op Goedkeuren om haar te bevestigen.",

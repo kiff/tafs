@@ -197,6 +197,7 @@ export const lt: Words = {
   apps_not_connected: "Neprijungta",
   apps_needs_setup: "Reikia nustatyti",
   apps_used_by: (names: string) => `Naudoja: ${names}`,
+  apps_used_by_none: "Nenaudoja nė vienas taf",
   apps_whose_yours: "Jūsų",
   apps_whose_company: "Įmonės",
   approval_confirm_first: "Jūsų prisijungimas pavyko, bet dar nepatvirtintas. Patvirtinkite dar kartą, kad jį patvirtintumėte.",

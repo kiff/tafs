@@ -203,6 +203,7 @@ export const fr: Words = {
   apps_not_connected: "Non connectée",
   apps_needs_setup: "À configurer d'abord",
   apps_used_by: (names: string) => `Utilisée par ${names}`,
+  apps_used_by_none: "Utilisée par aucun taf",
   apps_whose_yours: "À vous",
   apps_whose_company: "Entreprise",
   approval_confirm_first: "Votre connexion a abouti, mais elle n'est pas encore confirmée. Approuvez à nouveau pour la confirmer.",

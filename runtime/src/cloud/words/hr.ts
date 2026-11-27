@@ -197,6 +197,7 @@ export const hr: Words = {
   apps_not_connected: "Nije povezano",
   apps_needs_setup: "Treba postavljanje",
   apps_used_by: (names: string) => `Koristi: ${names}`,
+  apps_used_by_none: "Ne koristi je nijedan taf",
   apps_whose_yours: "Vaše",
   apps_whose_company: "Tvrtke",
   approval_confirm_first: "Vaša prijava je prošla, ali još nije potvrđena. Odobrite ponovno da je potvrdite.",

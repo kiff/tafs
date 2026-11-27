@@ -197,6 +197,7 @@ export const cs: Words = {
   apps_not_connected: "Nepřipojeno",
   apps_needs_setup: "Potřebuje nastavení",
   apps_used_by: (names: string) => `Používá: ${names}`,
+  apps_used_by_none: "Nepoužívá ji žádný taf",
   apps_whose_yours: "Tvoje",
   apps_whose_company: "Firemní",
   approval_confirm_first: "Vaše přihlášení proběhlo, ale ještě není potvrzeno. Schvalte znovu, abyste ho potvrdili.",

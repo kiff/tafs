@@ -197,6 +197,7 @@ export const ro: Words = {
   apps_not_connected: "Neconectat",
   apps_needs_setup: "Necesită configurare",
   apps_used_by: (names: string) => `Folosit de: ${names}`,
+  apps_used_by_none: "Nefolosit de niciun taf",
   apps_whose_yours: "Al dvs.",
   apps_whose_company: "Al companiei",
   approval_confirm_first: "Conectarea dvs. a reușit, dar nu este încă confirmată. Aprobați din nou pentru a o confirma.",

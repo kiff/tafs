@@ -197,6 +197,7 @@ export const sk: Words = {
   apps_not_connected: "Nepripojené",
   apps_needs_setup: "Potrebuje nastavenie",
   apps_used_by: (names: string) => `Používa: ${names}`,
+  apps_used_by_none: "Nepoužíva ju žiadny taf",
   apps_whose_yours: "Tvoje",
   apps_whose_company: "Firemné",
   approval_confirm_first: "Vaše prihlásenie prebehlo, ale ešte nie je potvrdené. Schváľte znova, aby ste ho potvrdili.",

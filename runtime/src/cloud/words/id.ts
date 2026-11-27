@@ -197,6 +197,7 @@ export const id: Words = {
   apps_not_connected: "Tidak terhubung",
   apps_needs_setup: "Perlu disiapkan",
   apps_used_by: (names: string) => `Digunakan oleh: ${names}`,
+  apps_used_by_none: "Tidak digunakan oleh taf mana pun",
   apps_whose_yours: "Milik Anda",
   apps_whose_company: "Milik perusahaan",
   approval_confirm_first: "Proses masuk Anda berhasil, tetapi belum dikonfirmasi. Setujui lagi untuk mengonfirmasinya.",

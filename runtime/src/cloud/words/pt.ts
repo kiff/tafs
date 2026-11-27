@@ -203,6 +203,7 @@ export const pt: Words = {
   apps_not_connected: "Não ligada",
   apps_needs_setup: "Tem de ser configurada primeiro",
   apps_used_by: (names: string) => `Usada por ${names}`,
+  apps_used_by_none: "Não usada por nenhum taf",
   apps_whose_yours: "Sua",
   apps_whose_company: "Empresa",
   approval_confirm_first: "O seu início de sessão foi concluído, mas ainda não está confirmado. Aprove novamente para o confirmar.",

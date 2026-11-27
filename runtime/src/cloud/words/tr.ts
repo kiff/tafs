@@ -197,6 +197,7 @@ export const tr: Words = {
   apps_not_connected: "Bağlı değil",
   apps_needs_setup: "Kurulum gerekiyor",
   apps_used_by: (names: string) => `Kullananlar: ${names}`,
+  apps_used_by_none: "Hiçbir taf kullanmıyor",
   apps_whose_yours: "Sizin",
   apps_whose_company: "Şirketin",
   approval_confirm_first: "Oturum açmanız tamamlandı, ama henüz onaylanmadı. Onaylamak için tekrar onaylayın.",
