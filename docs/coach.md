@@ -999,7 +999,15 @@ tool's answer, which stays as the tool wrote it; it is marked loaded only once k
 way, only when the start's `[tafs connections]` has a Chrome line ("- Chrome: paired: Work Mac", or
 "offered, none paired yet"). tafs cloud writes that line only while planque lists the account's
 paired Chromes (`chromes` in its connections answer, while the owner's own Chrome is offered), so
-Coach never offers a taf in Chrome while it's off. A request from the watch
+Coach never offers a taf in Chrome while it's off. Likewise a Hosted browser line, while planque's hosted
+browser is offered to the account (`browser: {pay}` in its connections answer): "- Hosted browser: offered;
+paying off: it never pays (no browse_pay)", or "it pays, each pay held for the
+owner"; anything but `pay: true` reads as paying off. `a-browser-taf@8` reads it: a taf on websites runs
+there, never in the owner's Chrome; with paying off, no browse_pay, no browse_checkout asked (it reads the
+page with browse_read), no currency, and rules with no payment line, that rule coming before the one for a
+browser that pays; the owner signs in to a site in "this browser's" live view in the app, never "your
+Chrome", and no other step is handed over (planque refuses a hand-over off the owner's Chrome); and the
+paired Chrome is picked only for a taf in the owner's Chrome (kiff/tafs#2238). A request from the watch
 opens a conversation of its own with one skill, `ask-a-taf`, named-only: only tafs cloud's signed
 watch route loads it, never a message's text, Coach's map doesn't list it, and that conversation reads
 no other skill and is offered only `tafs_state`, `taf_task` and `read_skill` ([watch-ask.md](watch-ask.md)).

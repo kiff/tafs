@@ -62,17 +62,31 @@ export async function accountConnections(fetchFn: Fetch, base: string, tenant: s
   return (await accountConnectionsAndChromes(fetchFn, base, tenant, bearer)).connections;
 }
 
-/** The account's connections and, while planque offers a taf in the owner's Chrome, its paired Chromes. */
-export async function accountConnectionsAndChromes(fetchFn: Fetch, base: string, tenant: string, bearer: string): Promise<{ connections: AccountConnection[]; chromes?: AccountChromes }> {
+/**
+ * planque's hosted browser, while it is offered to the account: whether it pays (kiff/tafs#2238). With `pay` false it
+ * offers no browse_pay and refuses any click that would pay, so a browser taf's rules carry no payment line. The line
+ * says only what planque states.
+ */
+export interface AccountBrowser { pay: boolean }
+
+/**
+ * The account's connections and, while planque offers a taf in the owner's Chrome, its paired Chromes; while it offers
+ * its hosted browser, whether that pays.
+ */
+export async function accountConnectionsAndChromes(fetchFn: Fetch, base: string, tenant: string, bearer: string): Promise<{ connections: AccountConnection[]; chromes?: AccountChromes; browser?: AccountBrowser }> {
   const res = await fetchFn(`${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/connections`, {
     headers: { authorization: `Bearer ${bearer}`, accept: "application/json" },
   });
   if (!res.ok) throw new Error(`planque answered ${res.status}`);
-  const got = await res.json() as { connections?: unknown; chromes?: unknown };
+  const got = await res.json() as { connections?: unknown; chromes?: unknown; browser?: unknown };
   const chromes = Array.isArray(got.chromes)
     ? { names: (got.chromes as Record<string, unknown>[]).map((c) => line(c && c.name, 40)).filter((n) => n).slice(0, MAX_CHROMES) }
     : undefined;
-  return { connections: parseConnections(got.connections), ...(chromes ? { chromes } : {}) };
+  // Only a pay planque states: anything else reads as a browser that doesn't pay, so no payment rule is ever drafted on a guess.
+  const browser = got.browser && typeof got.browser === "object" && !Array.isArray(got.browser)
+    ? { pay: (got.browser as { pay?: unknown }).pay === true }
+    : undefined;
+  return { connections: parseConnections(got.connections), ...(chromes ? { chromes } : {}), ...(browser ? { browser } : {}) };
 }
 
 function parseConnections(list: unknown): AccountConnection[] {
@@ -154,6 +168,17 @@ export function chromeLine(chromes: AccountChromes | undefined): string[] {
   return [chromes.names.length > 0
     ? `- Chrome: paired: ${chromes.names.join(", ")}`
     : "- Chrome: offered, none paired yet"];
+}
+
+/**
+ * The line about planque's hosted browser, while it is offered to the account (kiff/tafs#2238): a browser taf there
+ * runs in it, not in the owner's Chrome, and whether it pays. None while it isn't offered (a-browser-taf reads it).
+ */
+export function browserLine(browser: AccountBrowser | undefined): string[] {
+  if (!browser) return [];
+  return [browser.pay
+    ? "- Hosted browser: offered; it pays, each pay held for the owner"
+    : "- Hosted browser: offered; paying off: it never pays (no browse_pay)"];
 }
 
 /** Opens the guides to the apps the account already holds, after its connections. */
