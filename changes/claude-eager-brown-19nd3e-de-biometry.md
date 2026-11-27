@@ -1,0 +1,1 @@
+- **German: the approval button and prompts read correctly.** "Mit deinem Fingerabdruck genehmigen", where the app said "Mit deinen Fingerabdruck" (Android and iPhone; every German line that names the fingerprint or screen lock).

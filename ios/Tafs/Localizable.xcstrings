@@ -18296,7 +18296,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "deinen Fingerabdruck"
+            "value": "deinem Fingerabdruck"
           }
         },
         "en": {
@@ -18559,7 +18559,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "deine Displaysperre"
+            "value": "deiner Displaysperre"
           }
         },
         "en": {
@@ -24345,7 +24345,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine %1$@ hat sich geändert oder wurde nicht erkannt, daher kann dieses Gerät erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst."
+            "value": "Etwas an %1$@ hat sich geändert oder wurde nicht erkannt, daher kann dieses Gerät erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst."
           }
         },
         "en": {
@@ -27501,7 +27501,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versuch es erneut oder melde dich erneut an, falls sich deine %1$@ geändert hat."
+            "value": "Versuch es erneut oder melde dich erneut an, falls sich an %1$@ etwas geändert hat."
           }
         },
         "en": {
@@ -172223,7 +172223,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zum Genehmigen wird %1$@ abgefragt."
+            "value": "Zum Genehmigen fragt die App nach %1$@."
           }
         },
         "en": {
@@ -209306,7 +209306,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zum Starten wird einmal %1$@ abgefragt."
+            "value": "Zum Starten fragt die App einmal nach %1$@."
           }
         },
         "en": {
@@ -388073,7 +388073,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Als Nächstes fragt iOS, dann %1$@."
+            "value": "Als Nächstes fragt iOS, dann folgt die Bestätigung mit %1$@."
           }
         },
         "en": {
@@ -389456,7 +389456,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "„Nein“ gibt seiner Card den Spielraum zurück. Zum Antworten wird %1$@ abgefragt."
+            "value": "„Nein“ gibt seiner Card den Spielraum zurück. Zum Antworten fragt die App nach %1$@."
           }
         },
         "en": {
@@ -409444,7 +409444,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Er bleibt auf diesem %1$@, geschützt durch %2$@. Damit genehmigt dieser %1$@ die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN."
+            "value": "Er bleibt auf diesem %1$@, geschützt mit %2$@. Damit genehmigt dieser %1$@ die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN."
           }
         },
         "en": {
