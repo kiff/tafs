@@ -180,6 +180,21 @@ class MappingTest {
 
   // Red-team, 27 Nov: a held browser call's steps showed as "steps: …", so the owner signed steps they never saw; a step the
   // line hid could have clicked Submit while the taf's words said only "fill". Every step is written out, in order, indented.
+  /**
+   * A number past 100 written digits is written as sent, at once: a taf's 1e999999999 would be a billion zeros (case 7, as
+   * KIFF writes `details`). The edge counts the 0 before a point and no trailing zero.
+   */
+  @Test fun aHugeNumberIsWrittenAsSentNeverPadded() {
+    fun text(n: String) = KiffMapping.argumentText(kotlinx.serialization.json.Json.parseToJsonElement(n))
+    assertEquals("1" + "0".repeat(99), text("1e99"))
+    assertEquals("0." + "0".repeat(98) + "1", text("1e-99"))
+    for (n in listOf("1e100", "1e-100", "1e400", "1e-400", "-1E+400", "1e999999999", "-2.5E+999999999", "1e2147483648", "1e99999999999999999999", "1000e2147483647", "-1000E+2147483647")) {
+      assertEquals(n, text(n))
+    }
+    assertEquals("15" + "0".repeat(97), text("1.50e98"))
+    assertEquals("0", text("-0.0e5"))
+  }
+
   @Test fun aHeldBrowserCallsStepsAreWrittenOutInFullNeverFolded() {
     val e = exceptions(
       """{"exceptions":[{"id":"ce_6b","subject":"a","action":"browse_act","entity_id":"e","created_at":"2026-11-27T16:35:00Z",
