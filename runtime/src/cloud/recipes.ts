@@ -110,6 +110,19 @@ export function welcomeVideo(setting: string | undefined = process.env.TAFS_WELC
 export interface Home {
   shown: boolean;
   words: string;
+  /**
+   * A first taf to try, for the apps' empty Home (first run v2): the first job listed whose proof run passed and which
+   * is written in the person's language, so no app shows a job in another language under its own words. `line` is the
+   * job's one line (its `headline`), and `say` what Set it up with Coach puts in Coach's box. Sent only to a person who
+   * manages the account's tafs, while the list is shown (no live taf): absent otherwise, and the apps draw no card.
+   */
+  first_taf?: FirstTaf;
+}
+
+export interface FirstTaf {
+  title: string;
+  line: string;
+  say: string;
 }
 
 export interface Labels {
@@ -223,6 +236,8 @@ export function connectsToday(r: { connections: ReadonlyArray<ReadonlyArray<stri
  */
 export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefined, lang: Lang = "en", manages = true, connects: ReadonlySet<string> | null = CONNECTS_TODAY): RecipesView {
   const have = new Set(apps?.flatMap(vendorOf) ?? []);
+  // The jobs written in lang itself, not read in English for want of a translation: only those can be a first taf.
+  const written = new Set<string>();
   const listed = RECIPES
     .filter((r) => connects === null || connectsToday(r, connects))
     // For each connection, the catalog lists an app that would do and, under rule 13, one that connects today:
@@ -231,6 +246,7 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
     .map((r): Recipe => {
       // A language the recipes aren't written in yet (Korean) reads them in English, as the job's say does.
       const base = baseLanguage(lang);
+      if (base === "en" || base in r.languages) written.add(r.id);
       const w = base === "en" || !(base in r.languages) ? r : r.languages[base as keyof typeof r.languages];
       // One line says what the job does, in the Card's terms: no problem headline over it, and no line on what waiting
       // costs today (the app-words cut, screen 2). The apps draw no empty line.
@@ -244,6 +260,8 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
   // Home leads with the recipes only when there's one to lead with: a catalog that connects none of them
   // leaves Home its empty line.
   const home = manages && listed.length > 0;
+  // A first taf to try: the first job listed with a proof, written in lang (the apps' empty Home, first run v2).
+  const first = manages ? listed.find((r) => r.proved && written.has(r.id)) : undefined;
   return {
     categories: categoriesIn(lang).filter((c) => listed.some((r) => r.category === c.id)),
     recipes: listed,
@@ -252,7 +270,8 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
     suggestions: { show: true, reason: "on", words: suggestionWords(lang).on },
     // Home is the gallery now (the first run's item 4): "Say it in your own words" leads the list, then every job.
     home: { shown: home, words: home ? wordsIn(lang).recipes_home_lead : emptyLine(lang, manages),
-      ...(manages ? { own_words: { title: wordsIn(lang).gallery_own_words, line: wordsIn(lang).gallery_own_words_line } } : {}) },
+      ...(manages ? { own_words: { title: wordsIn(lang).gallery_own_words, line: wordsIn(lang).gallery_own_words_line } } : {}),
+      ...(first ? { first_taf: { title: first.title, line: first.headline, say: first.say } } : {}) },
     labels: labelsIn(lang),
   };
 }
