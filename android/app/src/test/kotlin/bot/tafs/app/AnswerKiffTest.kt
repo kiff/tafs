@@ -231,7 +231,7 @@ class AnswerKiffTest {
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
     transport.answer(
       "GET /v1/me/activity", 200,
-      """{"calls":[{"proposal_id":"prop_ce_1","action_name":"create_refund","title":"Refund a payment","actor_id":"a-1","outcome":"allowed","held":true,"answer":{"decision":"approved","you":true},"tool_outcome":{"status":"done"},"created_at":"$t0"}]}""",
+      """{"calls":[{"proposal_id":"prop_ce_1","action_name":"create_refund","title":"Refund a payment","actor_id":"a-1","outcome":"allowed","held":true,"answer":{"decision":"approved_once","you":true},"tool_outcome":{"status":"done"},"created_at":"$t0"}]}""",
     )
     m.refresh()
     val line = m.state.value.record.single()

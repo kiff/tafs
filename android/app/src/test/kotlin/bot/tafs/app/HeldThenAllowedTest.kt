@@ -23,7 +23,7 @@ class HeldThenAllowedTest {
   }
 
   @Test fun heldThenAllowedWithTheOwnersApprovalIsApprovedOnce() {
-    val e = entry("""{"decision":"approved","you":true}""")
+    val e = entry("""{"decision":"approved_once","you":true}""")
     assertEquals(RecordEntry.Kind.approved, e.kind)
     assertEquals(true, e.ownerApproved)
   }
