@@ -8292,3 +8292,51 @@ describe("a result whose hand-over failed on a field Coach wrote, as the apps re
     expect(JSON.stringify([made, waiting, lapsed])).not.toContain("check.items");
   });
 });
+
+describe("Your turn in the hosted browser", () => {
+  const AT = new Date("2026-11-28T05:30:00Z");
+  const before = process.env.TAFS_HOSTED_HANDS;
+  afterEach(() => { if (before === undefined) delete process.env.TAFS_HOSTED_HANDS; else process.env.TAFS_HOSTED_HANDS = before; });
+  const withHands = (w: World, asked: string[], status = 200) => {
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    return { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (!url.startsWith("https://planque.test/")) return depsOf(w).fetch!(url, init);
+      asked.push(new URL(url).pathname);
+      if (!url.endsWith("/hands")) return new Response(JSON.stringify({ connections: [] }), { status: 200 });
+      return new Response(JSON.stringify({ hands: [
+        { grant: "g_web", agent: rae.kiffAgent, hand: "hd_1", site: "shop.example.com", words: "Accept the cookie wall", since: "2026-11-28T05:28:00Z", expires: "2026-11-28T05:38:00Z" },
+        { grant: "g_x", agent: "someone_else", hand: "hd_2", site: "x.example.com", words: "Not ours", since: "2026-11-28T05:28:00Z", expires: "2026-11-28T05:38:00Z" },
+      ] }), { status });
+    }) as Deps["fetch"] };
+  };
+  const home = async (deps: Deps) => {
+    const r = await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
+    return JSON.parse(r.body);
+  };
+
+  it("lists the person's own waiting hand-overs on Home, counted in Needs you, while planque offers them", async () => {
+    process.env.TAFS_HOSTED_HANDS = "on";
+    const w = world();
+    w.now = AT;
+    const asked: string[] = [];
+    const body = await home(withHands(w, asked));
+    expect(asked).toContain("/v1/accounts/t_acme/hands");
+    expect(body.your_turns).toEqual([expect.objectContaining({
+      grant: "g_web", hand: "hd_1", site: "shop.example.com", ask: "Accept the cookie wall", taf: { id: RAE, name: "Rae" },
+      words: { title: "Your turn on shop.example.com", ask: "“Accept the cookie wall”", until: expect.stringMatching(/^Open until \d\d:\d\d$/), open: "Open", not_now: "Not now" } })]);
+    expect(body.needs_you.count).toBeGreaterThanOrEqual(1);
+    expect(body.tafs.find((t: { id: string }) => t.id === RAE)).toMatchObject({ relevant_now: true });
+  });
+
+  it("asks planque nothing while switched off, and shows none when planque can't answer", async () => {
+    const w = world();
+    w.now = AT;
+    const asked: string[] = [];
+    expect((await home(withHands(w, asked))).your_turns).toBeUndefined();
+    expect(asked).not.toContain("/v1/accounts/t_acme/hands");
+    process.env.TAFS_HOSTED_HANDS = "on";
+    const failed = await home(withHands(w, [], 500));
+    expect(failed.your_turns).toBeUndefined();
+    expect(failed.tafs).toBeDefined();
+  });
+});

@@ -26,6 +26,11 @@ export const ja: Words = {
   your_step_open: (vendor: string) => `${vendor}で開く`,
   your_step_reminder: (what: string) => `あなたの手順がまだ待っています：${what}`,
   your_step_line: (what: string) => `あなたの手順：${what}`,
+  your_turn_title: (site: string) => `${site}であなたの番です`,
+  your_turn_ask: (words: string) => `「${words}」`,
+  your_turn_until: (hm: string) => `${hm}まで開いています`,
+  your_turn_open: "開く",
+  your_turn_not_now: "今はしない",
   // KIFF's spending windows: `each` ends a limit ("€300 a day"), `now` names its use so far ("€40 used today").
   window_words: {
     calendar_day: { each: "1日", now: "今日" },

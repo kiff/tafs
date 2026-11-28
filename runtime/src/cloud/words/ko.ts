@@ -23,6 +23,11 @@ export const ko: Words = {
   your_step_open: (vendor: string) => `${vendor}에서 열기`,
   your_step_reminder: (what: string) => `내 단계가 아직 기다리고 있습니다: ${what}`,
   your_step_line: (what: string) => `내 단계: ${what}`,
+  your_turn_title: (site: string) => `${site}에서 직접 하실 차례예요`,
+  your_turn_ask: (words: string) => `“${words}”`,
+  your_turn_until: (hm: string) => `${hm}까지 열려 있어요`,
+  your_turn_open: "열기",
+  your_turn_not_now: "나중에",
   // KIFF's spending windows: `each` ends a limit ("€300 a day"), `now` names its use so far ("€40 used today").
   window_words: {
     calendar_day: { each: "하루", now: "오늘" },

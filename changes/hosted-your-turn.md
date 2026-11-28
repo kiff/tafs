@@ -1,0 +1,1 @@
+- **Needs you lists "Your turn" in the hosted browser** (`your_turns` on Home): a step a taf handed its owner in planque's hosted browser, read from planque's list of waiting hand-overs, with "Your turn on {site}", the taf's words quoted, and "Open until {HH:MM}" in every language. Off until planque offers it (`TAFS_HOSTED_HANDS=on`).
