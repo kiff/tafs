@@ -56,13 +56,16 @@ private struct BuyCreditsContent: View {
                         .accessibilityElement(children: .combine)
                         .accessibilityAddTraits(.isButton)
                         .confirming()
-                        .disabled(price == nil || purchases.buying != nil)
+                        .disabled(price == nil || purchases.busy)
                     }
-                    if let message = model.planMessage {
+                    if purchases.confirming {
+                        ConfirmingPurchaseLine()
+                    } else if let message = model.planMessage {
                         Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                     }
                     Button(Words.Usage.restorePurchases) { Task { await model.restorePurchases() } }
                         .scaledFont(14).foregroundColor(Theme.soft)
+                        .disabled(purchases.busy)
                 }
                 .padding(16)
             }
@@ -227,7 +230,7 @@ private struct SoloContent: View {
                     Button(SoloView.action(product)) { Task { if await model.subscribeSolo() { dismiss() } } }
                         .buttonStyle(PrimaryButtonStyle())
                         .confirming()
-                        .disabled(purchases.buying != nil)
+                        .disabled(purchases.busy)
                     Text(SoloView.terms(product)).scaledFont(13).foregroundColor(Theme.dim)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 16) {
@@ -239,11 +242,14 @@ private struct SoloContent: View {
                 } else {
                     Panel { Text(Words.Billing.soloNotAvailableAppStore).scaledFont(15).foregroundColor(Theme.soft) }
                 }
-                if let message = model.planMessage {
+                if purchases.confirming {
+                    ConfirmingPurchaseLine()
+                } else if let message = model.planMessage {
                     Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 }
                 Button(Words.Usage.restorePurchases) { Task { await model.restorePurchases() } }
                     .scaledFont(14).foregroundColor(Theme.soft)
+                    .disabled(purchases.busy)
             }
             .padding(16)
         }
@@ -279,5 +285,19 @@ extension SoloView {
         lines.append(Words.Billing.soloSubscriptionOneChargedYour(period: "\(period)", price: "\(p.displayPrice)", period2: "\(period)"))
         lines.append(Words.Billing.cancelAnyTimeLeastDay)
         return lines.joined(separator: " ")
+    }
+}
+
+/// "Confirming the purchase…", from the App Store's confirmation until KIFF has it (kiff/tafs#2189): a spinner and the
+/// shared words, in place of the plan's message, while every purchase control waits.
+struct ConfirmingPurchaseLine: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+            Text(Words.Billing.confirmingPurchase).scaledFont(14).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("confirming-purchase")
     }
 }
