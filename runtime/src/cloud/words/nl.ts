@@ -521,6 +521,7 @@ export const nl: Words = {
   door_reply_changed: "Dit antwoord is veranderd sinds je het las. Lees het opnieuw voordat je het verstuurt.",
   door_cant_do: (taf: string, who: string) => `${taf} kan niet doen wat ${who} vroeg: de app die nodig is, is niet gekoppeld. Het bericht wacht hier en er is nog niet geantwoord.`,
   door_cant_finish: (taf: string, who: string) => `${taf} kon niet afmaken wat ${who} vroeg. Het bericht wacht hier en er is nog niet geantwoord.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} kan niet doen wat ${who} vroeg. Het bericht wacht hier en er is nog niet geantwoord.`,
   door_cant_do_action: "Een app koppelen",
   door_cant_do_reply: "Zelf antwoorden",
   door_cant_do_ignore: "Negeren",

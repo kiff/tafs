@@ -288,7 +288,7 @@ describe("the email door", () => {
     const input = w.agents.events.get(run.session)![0]!.body as { text: string };
     expect(input.text).toContain("[door email · from Ben <ben@partner.example> · your answer goes back by email to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for");
     // The sender is outside: no error, code, tool or id goes back to them.
-    expect(input.text).toContain("answer with the one line TAFS_CANT_DO and nothing else, and tafs asks the owner while they get nothing]");
+    expect(input.text).toContain("answer with the one line TAFS_CANT_DO followed by why, no_app (the app it needs isn't connected), no_tool or failed, and nothing else, and tafs asks the owner while they get nothing]");
     expect(input.text).toContain("Please refund order 4471");
     expect(input.text).toContain("only its text was read");
 
@@ -849,7 +849,7 @@ describe("the email door", () => {
     await emailHook(w, mail(w, {}));
     await finish(w, w.agents.runs[0]!, "", "ERROR");
     expect(w.outbox).toHaveLength(0);
-    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.replies[0]).toMatchObject({ cant_do: "unfinished" });
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.unanswered[0]).toMatchObject({ cant_do: "unfinished" });
   });
 });
 
@@ -2602,7 +2602,7 @@ describe("a door's taf that can't do what was asked", () => {
 
   it("is told to say so with one line, never to write the writer a failure", () => {
     const text = doorMessage(APPS.find((a) => a.id === "email")!, { route: "r", from: "ben@partner.example", id: "m1", at: "", text: "hi", attachments: 0, thread: {} } as never, "hi", []);
-    expect(text).toContain(`answer with the one line ${CANT_DO} and nothing else`);
+    expect(text).toContain(`answer with the one line ${CANT_DO} followed by why, no_app (the app it needs isn't connected), no_tool or failed, and nothing else`);
     expect(text).not.toContain("the owner will follow up");
   });
 
@@ -2614,9 +2614,12 @@ describe("a door's taf that can't do what was asked", () => {
       await pairBen(w);
       await emailHook(w, mail(w, { from: BEN }));
       const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
-      await finish(w, run, CANT_DO);
+      await finish(w, run, `${CANT_DO} no_app`);
       expect(w.outbox).toHaveLength(0);
-      const held = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.replies;
+      const list = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body;
+      // Apart from the replies, whose every item has a text to send.
+      expect(list.replies).toEqual([]);
+      const held = list.unanswered;
       expect(held).toHaveLength(1);
       expect(held[0]).toMatchObject({ run: run.id, to: "Ben", cant_do: "no_app" });
       expect(held[0].text).toBeUndefined();
@@ -2624,10 +2627,10 @@ describe("a door's taf that can't do what was asked", () => {
         line: "Refunds can't do what Ben asked: the app it needs isn't connected. Their message waits here, and they haven't been answered.",
         connect: "Connect an app", reply: "Answer them yourself", ignore: "Ignore", prompt: "Send this reply to Ben",
         changed: "This reply changed since you read it. Read it again before sending." });
-      // Needs you lists it on the taf's door with that line, and the owner's phones heard it.
-      const home = await send(w, "GET", "/v1/home", { token: "ana" });
-      expect(JSON.stringify(home.body)).toContain('"reply_line":"Refunds can\'t do what Ben asked: the app it needs isn\'t connected.');
+      // The owner's phones heard it; Needs you doesn't count it until the apps draw it, so its count and list agree.
       expect(JSON.stringify(w.pushed)).toContain("the app it needs isn't connected");
+      const home = await send(w, "GET", "/v1/home", { token: "ana" });
+      expect(JSON.stringify(home.body)).not.toContain("reply_line");
     });
   }
 
@@ -2637,10 +2640,15 @@ describe("a door's taf that can't do what was asked", () => {
     await pairBen(w);
     await emailHook(w, mail(w, { from: BEN }));
     const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
-    await finish(w, run, `${CANT_DO}\nI have no tool to file receipts.`);
+    await finish(w, run, `I tried.\n${CANT_DO} no_tool`);
     const path = `/v1/tafs/${REFUNDS}/doors/replies/${run.id}`;
     const call = signing(w);
-    const own = "Thanks Ben, I'll file it myself today.";
+    // Hashed and sent as the owner typed it, a trailing newline included.
+    const own = "Thanks Ben, I'll file it myself today.\n";
+    const list = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body;
+    // A marker after a sentence still holds it; a reason other than no_app is said plainly, with no Connect an app.
+    expect(list.unanswered[0]).toMatchObject({ cant_do: "other", words: { line: "Refunds can't do what Ben asked. Their message waits here, and they haven't been answered." } });
+    expect(list.unanswered[0].words.connect).toBeUndefined();
     const sig = { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=sig" };
     expect((await call("POST", path, { action: "send", text_sha256: createHash("sha256").update("").digest("hex") }, sig)).status).toBe(400);
     expect((await call("POST", path, { action: "send", text: own, text_sha256: "0".repeat(64) }, sig)).status).toBe(409);
@@ -2660,7 +2668,7 @@ describe("a door's taf that can't do what was asked", () => {
     const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
     await finish(w, run, "", "ERROR");
     expect(w.outbox).toHaveLength(0);
-    const held = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.replies;
+    const held = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.unanswered;
     expect(held[0]).toMatchObject({ cant_do: "unfinished" });
     expect(held[0].words.connect).toBeUndefined();
     expect(held[0].words.line).toBe("Refunds couldn't finish what Ben asked. Their message waits here, and they haven't been answered.");

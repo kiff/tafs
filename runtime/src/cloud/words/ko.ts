@@ -519,6 +519,7 @@ export const ko: Words = {
   door_reply_changed: "읽은 후 이 답장이 바뀌었습니다. 보내기 전에 다시 읽어 주세요.",
   door_cant_do: (taf: string, who: string) => `${taf}이(가) ${who}의 요청을 처리할 수 없어요: 필요한 앱이 연결되어 있지 않아요. 메시지는 여기서 기다리고 있으며 아직 답장하지 않았어요.`,
   door_cant_finish: (taf: string, who: string) => `${taf}이(가) ${who}의 요청을 끝내지 못했어요. 메시지는 여기서 기다리고 있으며 아직 답장하지 않았어요.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf}이(가) ${who}의 요청을 처리할 수 없어요. 메시지는 여기서 기다리고 있으며 아직 답장하지 않았어요.`,
   door_cant_do_action: "앱 연결",
   door_cant_do_reply: "직접 답장",
   door_cant_do_ignore: "무시",

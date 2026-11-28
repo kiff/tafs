@@ -562,6 +562,7 @@ export const en = {
   // A door's writer the taf couldn't answer: held for the owner with nothing drafted (doors.ts cantDoOf).
   door_cant_do: (taf: string, who: string) => `${taf} can't do what ${who} asked: the app it needs isn't connected. Their message waits here, and they haven't been answered.`,
   door_cant_finish: (taf: string, who: string) => `${taf} couldn't finish what ${who} asked. Their message waits here, and they haven't been answered.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} can't do what ${who} asked. Their message waits here, and they haven't been answered.`,
   door_cant_do_action: "Connect an app",
   door_cant_do_reply: "Answer them yourself",
   door_cant_do_ignore: "Ignore",

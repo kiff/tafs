@@ -521,6 +521,7 @@ export const it: Words = {
   door_reply_changed: "Questa risposta è cambiata da quando l'hai letta. Rileggila prima di inviarla.",
   door_cant_do: (taf: string, who: string) => `${taf} non può fare ciò che ha chiesto ${who}: l'app necessaria non è collegata. Il messaggio aspetta qui e non è stata ancora data risposta.`,
   door_cant_finish: (taf: string, who: string) => `${taf} non è riuscito a completare ciò che ha chiesto ${who}. Il messaggio aspetta qui e non è stata ancora data risposta.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} non può fare ciò che ha chiesto ${who}. Il messaggio aspetta qui e non è stata ancora data risposta.`,
   door_cant_do_action: "Collega un'app",
   door_cant_do_reply: "Rispondi tu",
   door_cant_do_ignore: "Ignora",

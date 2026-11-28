@@ -515,6 +515,7 @@ export const hu: Words = {
   door_reply_changed: "Ez a válasz megváltozott, mióta elolvasta. Küldés előtt olvassa el újra.",
   door_cant_do: (taf: string, who: string) => `${taf} nem tudja elvégezni, amit ${who} kért: a szükséges alkalmazás nincs csatlakoztatva. Az üzenet itt vár, és még nem kapott választ.`,
   door_cant_finish: (taf: string, who: string) => `${taf} nem tudta befejezni, amit ${who} kért. Az üzenet itt vár, és még nem kapott választ.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} nem tudja elvégezni, amit ${who} kért. Az üzenet itt vár, és még nem kapott választ.`,
   door_cant_do_action: "Alkalmazás csatlakoztatása",
   door_cant_do_reply: "Válaszoljon maga",
   door_cant_do_ignore: "Figyelmen kívül hagyás",

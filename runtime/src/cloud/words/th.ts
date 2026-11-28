@@ -515,6 +515,7 @@ export const th: Words = {
   door_reply_changed: "คำตอบนี้เปลี่ยนไปหลังจากที่คุณอ่าน โปรดอ่านอีกครั้งก่อนส่ง",
   door_cant_do: (taf: string, who: string) => `${taf} ทำสิ่งที่ ${who} ขอไม่ได้: ยังไม่ได้เชื่อมต่อแอปที่จำเป็น ข้อความรออยู่ที่นี่และยังไม่ได้ตอบกลับ`,
   door_cant_finish: (taf: string, who: string) => `${taf} ทำสิ่งที่ ${who} ขอไม่เสร็จ ข้อความรออยู่ที่นี่และยังไม่ได้ตอบกลับ`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} ทำสิ่งที่ ${who} ขอไม่ได้ ข้อความรออยู่ที่นี่และยังไม่ได้ตอบกลับ`,
   door_cant_do_action: "เชื่อมต่อแอป",
   door_cant_do_reply: "ตอบเอง",
   door_cant_do_ignore: "ไม่สนใจ",

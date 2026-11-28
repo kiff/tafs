@@ -515,6 +515,7 @@ export const tr: Words = {
   door_reply_changed: "Bu yanıt, okuduğunuzdan beri değişti. Göndermeden önce yeniden okuyun.",
   door_cant_do: (taf: string, who: string) => `${taf}, ${who} adlı kişinin istediğini yapamıyor: gereken uygulama bağlı değil. Mesaj burada bekliyor ve henüz yanıt verilmedi.`,
   door_cant_finish: (taf: string, who: string) => `${taf}, ${who} adlı kişinin istediğini tamamlayamadı. Mesaj burada bekliyor ve henüz yanıt verilmedi.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf}, ${who} adlı kişinin istediğini yapamıyor. Mesaj burada bekliyor ve henüz yanıt verilmedi.`,
   door_cant_do_action: "Uygulama bağla",
   door_cant_do_reply: "Kendiniz yanıtlayın",
   door_cant_do_ignore: "Yok say",

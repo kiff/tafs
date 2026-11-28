@@ -515,6 +515,7 @@ export const sk: Words = {
   door_reply_changed: "Táto odpoveď sa od prečítania zmenila. Pred odoslaním si ju prečítajte znova.",
   door_cant_do: (taf: string, who: string) => `${taf} nemôže urobiť, o čo ${who} žiada: potrebná aplikácia nie je pripojená. Správa čaká tu a zatiaľ nikto neodpovedal.`,
   door_cant_finish: (taf: string, who: string) => `${taf} nedokončil, o čo ${who} žiada. Správa čaká tu a zatiaľ nikto neodpovedal.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} nemôže urobiť, o čo ${who} žiada. Správa čaká tu a zatiaľ nikto neodpovedal.`,
   door_cant_do_action: "Pripojiť aplikáciu",
   door_cant_do_reply: "Odpovedať sami",
   door_cant_do_ignore: "Ignorovať",

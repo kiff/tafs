@@ -515,6 +515,7 @@ export const lt: Words = {
   door_reply_changed: "Šis atsakymas pasikeitė, kai jį perskaitėte. Prieš siųsdami perskaitykite jį dar kartą.",
   door_cant_do: (taf: string, who: string) => `${taf} negali atlikti to, ko paprašė ${who}: reikiama programa neprijungta. Žinutė laukia čia, ir dar neatsakyta.`,
   door_cant_finish: (taf: string, who: string) => `${taf} nepavyko užbaigti to, ko paprašė ${who}. Žinutė laukia čia, ir dar neatsakyta.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} negali atlikti to, ko paprašė ${who}. Žinutė laukia čia, ir dar neatsakyta.`,
   door_cant_do_action: "Prijungti programą",
   door_cant_do_reply: "Atsakyti patiems",
   door_cant_do_ignore: "Nepaisyti",

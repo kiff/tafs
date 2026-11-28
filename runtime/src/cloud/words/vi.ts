@@ -515,6 +515,7 @@ export const vi: Words = {
   door_reply_changed: "Thư trả lời này đã thay đổi kể từ khi bạn đọc. Hãy đọc lại trước khi gửi.",
   door_cant_do: (taf: string, who: string) => `${taf} không thể làm điều ${who} yêu cầu: ứng dụng cần thiết chưa được kết nối. Tin nhắn đang chờ ở đây và chưa được trả lời.`,
   door_cant_finish: (taf: string, who: string) => `${taf} không thể hoàn tất điều ${who} yêu cầu. Tin nhắn đang chờ ở đây và chưa được trả lời.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} không thể làm điều ${who} yêu cầu. Tin nhắn đang chờ ở đây và chưa được trả lời.`,
   door_cant_do_action: "Kết nối ứng dụng",
   door_cant_do_reply: "Tự trả lời",
   door_cant_do_ignore: "Bỏ qua",

@@ -515,6 +515,7 @@ export const et: Words = {
   door_reply_changed: "See vastus on pärast lugemist muutunud. Loe see enne saatmist uuesti läbi.",
   door_cant_do: (taf: string, who: string) => `${taf} ei saa teha seda, mida ${who} palus: vajalik rakendus pole ühendatud. Sõnum ootab siin ja neile pole veel vastatud.`,
   door_cant_finish: (taf: string, who: string) => `${taf} ei saanud lõpetada seda, mida ${who} palus. Sõnum ootab siin ja neile pole veel vastatud.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} ei saa teha seda, mida ${who} palus. Sõnum ootab siin ja neile pole veel vastatud.`,
   door_cant_do_action: "Ühenda rakendus",
   door_cant_do_reply: "Vasta ise",
   door_cant_do_ignore: "Eira",

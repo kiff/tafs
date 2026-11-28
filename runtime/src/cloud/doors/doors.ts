@@ -130,7 +130,12 @@ export const CANT_DO = "TAFS_CANT_DO";
  */
 export function cantDoOf(r: Pick<Run, "status" | "stop" | "output">): HeldReply["cant_do"] {
   if (r.status === "COMPLETED" && (!r.stop || r.stop === "answered")) {
-    return (r.output ?? "").trim().startsWith(CANT_DO) ? "no_app" : undefined;
+    // Anywhere in the answer: a sentence before the marker never sends the marker to someone outside.
+    const out = r.output ?? "";
+    const at = out.indexOf(CANT_DO);
+    if (at < 0) return undefined;
+    // Only the reason the taf names says an app is missing; no tool, a failure or none is said plainly.
+    return /^\s*no_app\b/.test(out.slice(at + CANT_DO.length)) ? "no_app" : "other";
   }
   return "unfinished";
 }
@@ -147,7 +152,7 @@ export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: strin
   // message is a knock, never a run). So the taf does what they ask within its job, reads included, and
   // answers with what they asked for. What went wrong is only "not now", never an error, a tool, an id or how anything
   // is connected.
-  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; say what you can do for them in terms of the job (orders, invoices, delivery dates), never the apps, folders, sheets, files, mailboxes, Card, limits or other people behind it, unless they need one to act (a link they were given); tafs puts the line saying an AI agent wrote it above your answer, so never write it yourself; if you can't do what they ask (the app it needs isn't connected, you have no tool for it, or something failed), don't answer them: answer with the one line ${CANT_DO} and nothing else, and tafs asks the owner while they get nothing`;
+  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; say what you can do for them in terms of the job (orders, invoices, delivery dates), never the apps, folders, sheets, files, mailboxes, Card, limits or other people behind it, unless they need one to act (a link they were given); tafs puts the line saying an AI agent wrote it above your answer, so never write it yourself; if you can't do what they ask (the app it needs isn't connected, you have no tool for it, or something failed), don't answer them: answer with the one line ${CANT_DO} followed by why, no_app (the app it needs isn't connected), no_tool or failed, and nothing else, and tafs asks the owner while they get nothing`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}${botReply(a)}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
@@ -646,7 +651,7 @@ export function heldReplyWords(w: Words, taf: string, who: string) {
 
 /** The line Needs you says for a writer a taf couldn't answer. */
 export function cantDoLine(w: Words, why: NonNullable<HeldReply["cant_do"]>, taf: string, who: string): string {
-  return why === "no_app" ? w.door_cant_do(taf, who) : w.door_cant_finish(taf, who);
+  return why === "no_app" ? w.door_cant_do(taf, who) : why === "other" ? w.door_cant_do_other(taf, who) : w.door_cant_finish(taf, who);
 }
 
 /**
@@ -689,8 +694,9 @@ export async function answerHeldReply(ctx: DoorsContext, owner: Owner, taf: Taf,
   // writer the taf couldn't answer has no held text: Send takes the owner's own words, bound the same way.
   let text = held.text;
   if (action === "send" && held.cant_do) {
-    const own = typeof body.text === "string" ? body.text.trim() : "";
-    if (!own || own.length > MAX_OWN_REPLY) throw new DoorError(400, `text is your own answer, at most ${MAX_OWN_REPLY} characters`);
+    // The text as the owner typed it, hashed and sent as is.
+    const own = typeof body.text === "string" ? body.text : "";
+    if (!own.trim() || own.length > MAX_OWN_REPLY) throw new DoorError(400, `text is your own answer, at most ${MAX_OWN_REPLY} characters`);
     if (body.text_sha256 !== textSHA256(own)) throw new DoorError(409, wordsIn(ctx.lang ?? "en").door_reply_changed, "reply_changed");
     text = own;
   } else if (action === "send" && body.text_sha256 !== textSHA256(held.text)) {
@@ -1009,22 +1015,27 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
   const knocks = (await knocksOf(store, owner.tenant, taf.id)).filter((k) => k.state === "open");
   // The replies waiting for the owner to send them, each with the exact text that would go.
   const w = wordsIn(ctx.lang ?? "en");
-  const replies = (await heldRepliesOf(store, owner.tenant, taf.id)).map((h) => h.cant_do ? {
-    // Nothing drafted: the owner connects an app, answers in their own words (Send signs their text's hash), or ignores it.
-    run: h.reply.run, door: h.reply.door, to: h.reply.name || h.reply.to, ...(h.reply.subject ? { subject: h.reply.subject } : {}), at: h.at,
-    cant_do: h.cant_do, words: cantDoWords(w, h.cant_do, taf.name, h.reply.name || h.reply.to),
-  } : {
+  const held = await heldRepliesOf(store, owner.tenant, taf.id);
+  const replies = held.filter((h) => !h.cant_do).map((h) => ({
     run: h.reply.run, door: h.reply.door, to: h.reply.name || h.reply.to, ...(h.reply.subject ? { subject: h.reply.subject } : {}), text: h.text, at: h.at,
     text_sha256: textSHA256(h.text),
     // Every line the apps draw for it, in the person's language, the notification's own among them.
     words: heldReplyWords(w, taf.name, h.reply.name || h.reply.to),
     ...(h.concerns?.length ? { concerns: h.concerns } : {}),
-  });
+  }));
+  // The writers the taf couldn't answer, apart from the replies (whose every item has a text to send): nothing
+  // drafted, so the owner answers in their own words (Send signs their text's hash) or ignores it, and connects an
+  // app when one is missing. Not counted in Needs you until the apps draw them.
+  const unanswered = held.filter((h) => h.cant_do).map((h) => ({
+    run: h.reply.run, door: h.reply.door, to: h.reply.name || h.reply.to, ...(h.reply.subject ? { subject: h.reply.subject } : {}), at: h.at,
+    cant_do: h.cant_do!, words: cantDoWords(w, h.cant_do!, taf.name, h.reply.name || h.reply.to),
+  }));
   return {
     doors: doors.map((d, i) => doorView(d, appOf(cfg, d.app), counts[i], ctx.lang)),
     apps: offered(cfg, ctx.lang),
     knocks,
     replies,
+    unanswered,
   };
 }
 
@@ -1280,7 +1291,7 @@ export async function keepBound(doors: DoorsDeps, tenant: string, ai: AIBound | 
  * The taf's doors as its avatar's rim shows them, for the home list: each
  * door's app, whether it's open or resting today, and whether a knock waits.
  */
-export async function doorLights(store: DoorStore, tenant: string, taf: string, now: Date, replyLine?: (who: string, h: HeldReply) => string) {
+export async function doorLights(store: DoorStore, tenant: string, taf: string, now: Date, replyLine?: (who: string) => string) {
   const doors = await doorsOf(store, tenant, taf);
   if (!doors.length) return [];
   const [counts, knocks, held] = await Promise.all([
@@ -1292,10 +1303,11 @@ export async function doorLights(store: DoorStore, tenant: string, taf: string, 
     app: d.app, label: APPS.find((x) => x.id === d.app)?.label ?? d.app, open: d.open, resting: counts[i]!.keys >= DOOR.keysPerDay,
     knocks: knocks.filter((k) => k.door === d.id && k.state === "open" && !k.rest).length,
     // The replies waiting for the owner to send them, so Needs you can list what it counts.
-    replies: held.filter((h) => h.reply.door === d.id).length,
+    // (A writer the taf couldn't answer isn't a reply: not counted here until the apps draw it.)
+    replies: held.filter((h) => h.reply.door === d.id && !h.cant_do).length,
     // The newest held reply's line, as its notification said it, for Needs you's row.
-    ...(replyLine && held.some((h) => h.reply.door === d.id)
-      ? { reply_line: (() => { const h = held.filter((x) => x.reply.door === d.id).at(-1)!; return replyLine(h.reply.name || h.reply.to, h); })() } : {}),
+    ...(replyLine && held.some((h) => h.reply.door === d.id && !h.cant_do)
+      ? { reply_line: (() => { const h = held.filter((x) => x.reply.door === d.id && !x.cant_do).at(-1)!; return replyLine(h.reply.name || h.reply.to); })() } : {}),
   }));
 }
 

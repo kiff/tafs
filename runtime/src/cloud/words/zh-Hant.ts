@@ -515,6 +515,7 @@ export const zhHant: Words = {
   door_reply_changed: "此回覆在您閱讀後已變更。請先重新閱讀再傳送。",
   door_cant_do: (taf: string, who: string) => `${taf} 無法完成 ${who} 的要求：所需的 App 尚未連接。訊息在此等候，尚未回覆。`,
   door_cant_finish: (taf: string, who: string) => `${taf} 未能完成 ${who} 的要求。訊息在此等候，尚未回覆。`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} 無法完成 ${who} 的要求。訊息在此等候，尚未回覆。`,
   door_cant_do_action: "連接 App",
   door_cant_do_reply: "自行回覆",
   door_cant_do_ignore: "忽略",

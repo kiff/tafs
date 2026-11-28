@@ -515,6 +515,7 @@ export const ro: Words = {
   door_reply_changed: "Acest răspuns s-a schimbat de când l-ați citit. Citiți-l din nou înainte de a-l trimite.",
   door_cant_do: (taf: string, who: string) => `${taf} nu poate face ce a cerut ${who}: aplicația necesară nu este conectată. Mesajul așteaptă aici și nu s-a răspuns încă.`,
   door_cant_finish: (taf: string, who: string) => `${taf} nu a putut termina ce a cerut ${who}. Mesajul așteaptă aici și nu s-a răspuns încă.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} nu poate face ce a cerut ${who}. Mesajul așteaptă aici și nu s-a răspuns încă.`,
   door_cant_do_action: "Conectați o aplicație",
   door_cant_do_reply: "Răspundeți dumneavoastră",
   door_cant_do_ignore: "Ignorați",

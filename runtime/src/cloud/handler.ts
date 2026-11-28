@@ -47,7 +47,7 @@ import { AI_CONSENT_CODE, type AIConsent, type AIConsentView, aiConsentOf, aiCon
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
-import { addAPIDoor, addDoor, answerHeldReply, cantDoLine, answerKnock, heldRepliesOf, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addAPIDoor, addDoor, answerHeldReply, answerKnock, heldRepliesOf, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext, apiDoorsOn } from "./doors/api.js";
 import { type APIDraft, doorKeys } from "./doors/model.js";
@@ -8501,11 +8501,12 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const dead = await Promise.all(tafs.map((t) => deadOf(deps, me.tenantID, t.id, now)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
   const lights = await Promise.all(tafs.map((t) => deps.doors
-    ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date(), (who, h) => h.cant_do ? cantDoLine(wordsIn(langOf(event)), h.cant_do, t.name, who) : wordsIn(langOf(event)).door_reply_waiting(who, t.name)).catch(() => [])
+    ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date(), (who) => wordsIn(langOf(event)).door_reply_waiting(who, t.name)).catch(() => [])
     : []));
   // A door reply waiting for the owner to send it: one line in Needs you each. Each taf's door light carries its
   // newest reply's line, in the person's language, so Needs you shows it as the notification says it.
-  const heldReplies = (await Promise.all(tafs.map((t) => deps.doors ? heldRepliesOf(deps.doors.store, me.tenantID, t.id).catch(() => []) : []))).flat();
+  // Held replies the apps can send (a writer the taf couldn't answer isn't counted until the apps draw it).
+  const heldReplies = (await Promise.all(tafs.map((t) => deps.doors ? heldRepliesOf(deps.doors.store, me.tenantID, t.id).catch(() => []) : []))).flat().filter((h) => !h.cant_do);
   // Each taf's versions, kept a minute: the Cards its live version was approved with show as one Card, and its last change.
   const versionsOf = await Promise.all(tafs.map((t) => keptVersions(deps, me.tenantID, t.id, now)));
   // Labels (labels.ts): each taf's that the account still has. One that can't be read leaves the filter row out, never the list.

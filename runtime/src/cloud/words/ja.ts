@@ -522,6 +522,7 @@ export const ja: Words = {
   door_reply_changed: "読んだ後にこの返信が変わりました。送信する前にもう一度お読みください。",
   door_cant_do: (taf: string, who: string) => `${taf}は${who}の依頼に対応できません：必要なアプリが接続されていません。メッセージはここで待っていて、まだ返信していません。`,
   door_cant_finish: (taf: string, who: string) => `${taf}は${who}の依頼を完了できませんでした。メッセージはここで待っていて、まだ返信していません。`,
+  door_cant_do_other: (taf: string, who: string) => `${taf}は${who}の依頼に対応できません。メッセージはここで待っていて、まだ返信していません。`,
   door_cant_do_action: "アプリを接続",
   door_cant_do_reply: "自分で返信",
   door_cant_do_ignore: "無視",

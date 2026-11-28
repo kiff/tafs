@@ -515,6 +515,7 @@ export const cs: Words = {
   door_reply_changed: "Tato odpověď se od přečtení změnila. Před odesláním si ji přečtěte znovu.",
   door_cant_do: (taf: string, who: string) => `${taf} nemůže udělat, o co ${who} žádá: potřebná aplikace není připojená. Zpráva čeká tady a zatím nikdo neodpověděl.`,
   door_cant_finish: (taf: string, who: string) => `${taf} nedokončil, o co ${who} žádá. Zpráva čeká tady a zatím nikdo neodpověděl.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} nemůže udělat, o co ${who} žádá. Zpráva čeká tady a zatím nikdo neodpověděl.`,
   door_cant_do_action: "Připojit aplikaci",
   door_cant_do_reply: "Odpovědět sami",
   door_cant_do_ignore: "Ignorovat",
