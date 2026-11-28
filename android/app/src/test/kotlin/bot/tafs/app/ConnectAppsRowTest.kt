@@ -32,6 +32,9 @@ class ConnectAppsRowTest {
     assertEquals("Not used by any taf", ConnectAppsWords.secondLine(unused, emptyList()))
     val used = app("""{"entry":"stripe@3","title":"Stripe","state":"connected","line":"Sign in · Connected · Used by Rae","used_by_words":"Used by Rae"}""")
     assertEquals("Used by Rae", ConnectAppsWords.secondLine(used, listOf("Rae")))
+    // Known, but only a taf this person can't see uses it: how it connects and whose it is, never the status twice.
+    val unseen = app("""{"entry":"stripe@3","title":"Stripe","state":"connected","method":"sign_in","whose":"Company","line":"Sign in · Connected","used_by_words":"","used_by":[]}""")
+    assertEquals(listOf(Words.Connect.How.signIn, "Company").joinToString(" · "), ConnectAppsWords.secondLine(unseen, emptyList()))
     // Unknown: the line as sent.
     val unknown = app("""{"entry":"stripe@3","title":"Stripe","state":"connected","line":"Sign in · Connected"}""")
     assertEquals("Sign in · Connected", ConnectAppsWords.secondLine(unknown, emptyList()))

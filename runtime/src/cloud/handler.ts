@@ -11744,7 +11744,7 @@ interface AppUser { taf: string; name: string }
  * Undefined when it can't be read: the rows then carry no `used_by`, never an empty one that would say no taf uses an
  * app.
  */
-interface ConnectionUses { seen: Map<string, AppUser[]>; any: Set<string> }
+export interface ConnectionUses { seen: Map<string, AppUser[]>; any: Set<string> }
 
 async function connectionUses(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<ConnectionUses | undefined> {
   if (!deps.planqueBase) return undefined;
@@ -11791,7 +11791,7 @@ function foldVendor(name: string): string {
  * are the person's), which tafs use it, and `line`, the row's second line in the person's language ("Sign in ·
  * Connected · Used by Refunds"; an app to connect, its method alone: "Sign in").
  */
-function appRow(app: { entry: string; vendor: string; title: string; how: "oauth" | "key"; state: string }, me: KIFFIdentity, uses: ConnectionUses | undefined, lang: Lang) {
+export function appRow(app: { entry: string; vendor: string; title: string; how: "oauth" | "key"; state: string }, me: KIFFIdentity, uses: ConnectionUses | undefined, lang: Lang) {
   const w = wordsIn(lang);
   // The account's own: connected, to sign in again, or a sign-in no taf's actions use yet (`signed_in`), so every
   // sign-in the account holds is listed under Yours with its Disconnect.
@@ -11804,7 +11804,10 @@ function appRow(app: { entry: string; vendor: string; title: string; how: "oauth
   const status = app.state === "connected" ? w.apps_connected : app.state === "needs_reconnect" ? w.apps_reconnect
     : app.state === "signed_in" ? w.setup_status_signed_in : app.state === "needs_setup" ? w.apps_needs_setup : undefined;
   // Who uses it, on its own ("Used by Rae", "Not used by any taf"): only for the account's own, and only when it's known.
-  const usedByWords = used?.length ? w.apps_used_by(used.map((u) => u.name).join(", ")) : unused ? w.apps_used_by_none : undefined;
+  // Known but nothing to say to this person (only a taf they can't see uses it) is "", so an app draws no usage, never the
+  // status twice; unknown is left out.
+  const usedByWords = used?.length ? w.apps_used_by(used.map((u) => u.name).join(", ")) : unused ? w.apps_used_by_none
+    : own && uses !== undefined ? "" : undefined;
   // The whole line as before, for builds that draw it: how it connects, its status and who uses it.
   const line = [app.how === "key" ? w.apps_method_key : w.apps_method_sign_in, ...(status ? [status] : []),
     ...(usedByWords ? [usedByWords] : [])].join(" · ");
@@ -11814,7 +11817,7 @@ function appRow(app: { entry: string; vendor: string; title: string; how: "oauth
     // In the person's language, drawn as sent: the person's own, or the company account's, shared by its people.
     ...(own && me.accountKind ? { whose: me.accountKind === "personal" ? w.apps_whose_yours : w.apps_whose_company } : {}),
     ...(used ? { used_by: used } : {}),
-    ...(usedByWords ? { used_by_words: usedByWords } : {}),
+    ...(usedByWords !== undefined ? { used_by_words: usedByWords } : {}),
     line,
   };
 }
