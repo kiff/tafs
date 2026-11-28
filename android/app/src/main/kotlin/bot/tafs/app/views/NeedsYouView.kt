@@ -194,7 +194,10 @@ fun NeedsYouView(
   onSetAside: ((String?) -> Unit)? = null,
   /** Opens a taf on Activity, where its doors' knocks are answered. Null where there are no doors (sample mode): no knock rows. */
   onOpenKnocks: ((String) -> Unit)? = null,
+  /** A step handed over in the hosted browser: Open (true) or Not now (false). Null in the sample: no such rows. */
+  onYourTurn: ((bot.tafs.app.kiff.YourTurn, Boolean) -> Unit)? = null,
 ) {
+  val turns = if (onYourTurn == null) emptyList() else state.yourTurns
   // A knock at a taf's door waits for the owner too, as tafs cloud counts it in Needs you (as iOS lists it).
   val knocked = if (onOpenKnocks == null) emptyList() else state.tafs.filter { it.knocks > 0 }
   // A reply a taf wrote to someone outside, held for the owner to send: tafs cloud counts it, so it's listed, in its own line.
@@ -249,7 +252,7 @@ fun NeedsYouView(
     items(state.coachWaitingShown, key = { "cw|" + it.session }) { waiting -> CoachWaitingPanel(waiting, onOpenCoach, onSetAside?.takeIf { waiting.words.setAside.isNotBlank() }) }
     // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
     items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
-    if (state.held.isEmpty() && knocked.isEmpty() && replying.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty() && state.coachWaiting.isEmpty()) {
+    if (state.held.isEmpty() && knocked.isEmpty() && turns.isEmpty() && replying.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty() && state.coachWaiting.isEmpty()) {
       // Nothing waiting: the owner's board 6, above the screen's own line.
       item { bot.tafs.app.design.Illustrated(Modifier.padding(bottom = 12.dp)) { bot.tafs.app.design.NeedsYouClearArt(it) } }
       item {
@@ -263,6 +266,8 @@ fun NeedsYouView(
       }
     } else {
       items(state.held, key = { it.id }) { call -> HeldCallCard(call, state, onAnswer) }
+      // A step a taf handed its owner in the hosted browser, in tafs cloud's words: Open asks planque for its live view.
+      if (onYourTurn != null) items(turns, key = { "yt|" + it.hand }) { turn -> YourTurnPanel(turn, busy = state.answeringTurn != null, answer = onYourTurn) }
       // Its knocks are answered on Activity (Do it, Pair them, Ignore), so the row opens the taf there, not on Chat.
       if (onOpenKnocks != null) items(knocked, key = { "kn|" + it.id }) { taf -> KnockedRow(taf) { onOpenKnocks(taf.id) } }
       // Its held replies are sent or not on Activity, where the exact text shows: the row opens the taf there.
@@ -501,6 +506,24 @@ private fun KnockedRow(
         Text(line, style = scaled(14, color = Theme.soft))
       }
       Text("›", style = scaled(15, FontWeight.SemiBold, Theme.dim))
+    }
+  }
+}
+
+/**
+ * "Your turn on {site}": the taf's ask in quotes, when it's open until, then Open and Not now, every word tafs cloud's. The step
+ * itself is done in planque's live view, which Open asks for, signed, each time.
+ */
+@Composable
+private fun YourTurnPanel(turn: bot.tafs.app.kiff.YourTurn, busy: Boolean, answer: (bot.tafs.app.kiff.YourTurn, Boolean) -> Unit) {
+  val w = turn.words
+  Panel(stroke = Theme.amber.copy(alpha = 0.4f), modifier = Modifier.testTag("your-turn-" + turn.hand)) {
+    Text(bot.tafs.app.kiff.KiffMapping.visible(w.title), style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    if (w.ask.isNotBlank()) Text(bot.tafs.app.kiff.KiffMapping.visible(w.ask), style = scaled(14, color = Theme.ink))
+    if (w.until.isNotBlank()) Text(bot.tafs.app.kiff.KiffMapping.visible(w.until), style = scaled(13, color = Theme.amberText))
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      PrimaryButton(w.open, { answer(turn, true) }, Modifier.weight(1f), enabled = !busy)
+      OutlineButton(w.notNow, { answer(turn, false) }, Modifier.weight(1f), enabled = !busy)
     }
   }
 }

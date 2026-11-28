@@ -543,6 +543,18 @@ class PlanqueClient(
   suspend fun siteSignIn(grantId: String, signedBy: ((ByteArray) -> String)? = null): SiteSignInView =
     decode(raw("POST", "grants/${escaped(grantId)}/sign-in", "{}".toByteArray(), signedBy))
 
+  /**
+   * A step a taf handed its owner in the hosted browser: its live view, asked for with this device's signature, fresh on each open
+   * (a one-time URL, ten minutes). 410 when the step no longer waits.
+   */
+  suspend fun handView(grantId: String, hand: String, signedBy: ((ByteArray) -> String)? = null): SiteSignInView =
+    decode(raw("POST", "grants/${escaped(grantId)}/hands/${escaped(hand)}/view", "{}".toByteArray(), signedBy))
+
+  /** Not now on a handed step, signed: the view ends, nothing is kept, and the taf reads that it was put off. */
+  suspend fun handDecline(grantId: String, hand: String, signedBy: ((ByteArray) -> String)? = null) {
+    raw("POST", "grants/${escaped(grantId)}/hands/${escaped(hand)}/decline", "{}".toByteArray(), signedBy)
+  }
+
   suspend fun slackChannels(grantId: String, signedBy: ((ByteArray) -> String)? = null): List<SlackChannel> {
     val data = raw("GET", "grants/${escaped(grantId)}/channels", null, signedBy)
     // A list, or an object holding one.
