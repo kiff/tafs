@@ -212,6 +212,8 @@ export interface HeldReply {
   reply: Reply;
   text: string;
   at: string;
+  /** What the content check found, for the owner (guard.ts): why it couldn't go on its own. */
+  concerns?: string[];
 }
 
 /**

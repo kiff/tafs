@@ -2571,3 +2571,20 @@ describe("a door's reply held for the owner", () => {
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/replies/${run.id}`, { token: "ana", body: { action: "later" } })).status).toBe(404);
   });
 });
+
+describe("a door set to reply on its own", () => {
+  // The content check holds a reply that describes the owner's setup, even on a door that replies on its own.
+  it("still holds a reply the content check flags, with why", async () => {
+    const w = world();
+    await emailDoor(w, "auto");
+    await pairBen(w);
+    await emailHook(w, mail(w, { from: BEN }));
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    await finish(w, run, "I filed your receipt in the P2-GD folder of Google Drive and noted it in the orders sheet.");
+    expect(w.outbox).toHaveLength(0);
+    const held = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.replies;
+    expect(held).toHaveLength(1);
+    expect(held[0].concerns).toEqual(["it names google drive"]);
+    // (A reply about the job goes on its own on such a door: the email door's tests above, set to auto.)
+  });
+});

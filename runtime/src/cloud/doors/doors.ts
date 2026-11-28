@@ -11,6 +11,7 @@ import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
 import { apsFor, levelOf } from "../levels.js";
 import { eventLog, logEvent } from "../events.js";
+import { replyConcerns } from "./guard.js";
 import { DISCLOSURE_LINE, disclosureLine, disclosureLineFor, disclosureLines } from "../../jobs.js";
 import { anyHeld, hold, replayHeld, waitsForCredits, waitsToStart } from "./hold.js";
 
@@ -525,8 +526,10 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
       if (!taf || !door || !app) { await stamp({ ...base, status: "not_sent", why: "the door was removed" }); done.add(place); continue; }
       // A reply to someone outside waits for the owner, as the door's replies say (ask, the default): kept with
       // the exact text, said in the chat and to the owner's phones, and nothing else goes until they send it.
-      if (holdsReply(door, reply)) {
-        await holdReply(ctx, tenant, taf, { ref, reply: { ...reply, run: runID }, text, at: ctx.now.toISOString() });
+      // A door set to reply on its own still holds a reply the content check flags (guard.ts).
+      const concerns = replyConcerns(text, { to: reply.to, others: door.keys.map((k) => k.id) });
+      if (holdsReply(door, reply) || concerns.length > 0) {
+        await holdReply(ctx, tenant, taf, { ref, reply: { ...reply, run: runID }, text, at: ctx.now.toISOString(), ...(concerns.length ? { concerns } : {}) });
         await stamp({ ...base, status: "held" });
         await tellOwner(ctx, tenant, taf, (w) => w.door_reply_waiting(reply.name || reply.to, taf.name), `reply-${ref}`, "knock");
         for (const p of placesOf(taf)) done.add(p);
@@ -937,6 +940,7 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
   // The replies waiting for the owner to send them, each with the exact text that would go.
   const replies = (await heldRepliesOf(store, owner.tenant, taf.id)).map((h) => ({
     run: h.reply.run, door: h.reply.door, to: h.reply.name || h.reply.to, ...(h.reply.subject ? { subject: h.reply.subject } : {}), text: h.text, at: h.at,
+    ...(h.concerns?.length ? { concerns: h.concerns } : {}),
   }));
   return {
     doors: doors.map((d, i) => doorView(d, appOf(cfg, d.app), counts[i], ctx.lang)),
