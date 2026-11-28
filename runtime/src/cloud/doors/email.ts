@@ -37,6 +37,12 @@ export interface OutgoingEmail {
   references?: string;
   /** The provider sends one email per key, however often tafs cloud asks. */
   idempotencyKey: string;
+  /**
+   * tafs cloud's own mail that answers no message (the owner's copy of a door's answer, an answer report): asked for by
+   * name of a self-hosted provider, which sends a reply only to its writer otherwise (chutchut's `notice`). Resend takes any
+   * send, so nothing is added there.
+   */
+  notice?: boolean;
 }
 
 export interface EmailProvider {
@@ -89,6 +95,7 @@ export function emailProvider(apiKey: string, doFetch: Fetch = fetch, base = API
         body: JSON.stringify({
           from: e.from, to: [e.to], subject: e.subject, text: e.text,
           ...(e.inReplyTo ? { headers: { "In-Reply-To": e.inReplyTo, References: e.references || e.inReplyTo } } : {}),
+          ...(e.notice && base !== API ? { notice: true } : {}),
         }),
       });
       if (!res.ok) throw new EmailError(res.status, `the email provider answered ${res.status}`);

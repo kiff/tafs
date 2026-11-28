@@ -244,6 +244,20 @@ describe("the email door", () => {
     expect(asked).toEqual(["GET https://mail.example.test/api/emails/receiving/m-1 Bearer k_test", "POST https://mail.example.test/api/emails Bearer k_test"]);
   });
 
+  // tafs cloud's own mail that answers no message asks a self-hosted provider for a notice by name; Resend gets no new field.
+  it("asks a self-hosted provider for a notice by name, and adds nothing for Resend", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    const fetchFn = (async (_url: string, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body ?? "{}")));
+      return new Response(JSON.stringify({ id: "m-1" }));
+    }) as never;
+    const own = { from: "Refunds <refunds@tafs.example>", to: "ana@acme.example", subject: "Refunds: answered Ben", text: "…", idempotencyKey: "door-owner-1", notice: true };
+    await emailProvider("k", fetchFn, emailAPIBase("https://mail.example.test")!).send(own);
+    await emailProvider("k", fetchFn, emailAPIBase(undefined)!).send(own);
+    await emailProvider("k", fetchFn, emailAPIBase("https://mail.example.test")!).send({ ...own, notice: undefined });
+    expect(bodies.map((b) => b.notice)).toEqual([true, undefined, undefined]);
+  });
+
   it("gets an address made from the taf's name, with the owner's own email paired", async () => {
     const w = world();
     const door = await emailDoor(w);

@@ -545,7 +545,7 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
         await cfg.email.send({
           from: `${taf.name.replace(/[<>"\n]/g, "")} <${from}>`, to: owner, subject: `${taf.name}: answered ${reply.name || reply.to}`,
           text: `${taf.name} answered ${reply.name || reply.to}${reply.subject ? ` about "${reply.subject}"` : ""}:\n\n${text}`,
-          idempotencyKey: hash("door-owner", ref),
+          idempotencyKey: hash("door-owner", ref), notice: true,
         });
         done.add(place);
       } catch (err) {

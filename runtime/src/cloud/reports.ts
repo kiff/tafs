@@ -82,7 +82,7 @@ export async function fileReport(deps: ReportsDeps, r: Omit<Report, "id" | "text
     if (!mail?.send || !mail.domain) {
       console.error(`report ${report.id}: not emailed: email isn't set up`);
     } else {
-      await mail.send({ from: `tafs reports <reports@${mail.domain}>`, to: REPORTS.to, ...reportEmail(report), idempotencyKey: `report-${report.id}` });
+      await mail.send({ from: `tafs reports <reports@${mail.domain}>`, to: REPORTS.to, ...reportEmail(report), idempotencyKey: `report-${report.id}`, notice: true });
     }
   } catch (err) {
     console.error(`report ${report.id}: not emailed: ${err instanceof Error ? err.message : "error"}`);
