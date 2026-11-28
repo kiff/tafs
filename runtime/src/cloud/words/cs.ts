@@ -279,6 +279,7 @@ export const cs: Words = {
   work_skipped_late: (t: When) => `Přeskočeno spuštění ${at(t)}: přišlo příliš pozdě na spuštění`,
   work_skipped_too_large: (t: When) => `Přeskočeno spuštění ${at(t)}: jeho práce byla na jedno spuštění příliš velká`,
   work_skipped_credits: (t: When) => `Přeskočeno spuštění ${at(t)}: tafy vašeho účtu čekají na kredity`,
+  work_skipped_sign_in: (t: When) => `Pozdržené spuštění ${at(t)}: uložené přihlášení na webu přestalo fungovat`,
   work_skipped_switching: (t: When) => `Přeskočeno spuštění ${at(t)}: jeho taf přepínal verze`,
   work_check_failed: (t: When, app?: string) => `Kontrola ${at(t)} nemohla přečíst aplikaci${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `Kontrola ${at(t)} selhala`,

@@ -279,6 +279,7 @@ export const sk: Words = {
   work_skipped_late: (t: When) => `Preskočené spustenie ${at(t)}: prišlo príliš neskoro na spustenie`,
   work_skipped_too_large: (t: When) => `Preskočené spustenie ${at(t)}: jeho práca bola na jedno spustenie príliš veľká`,
   work_skipped_credits: (t: When) => `Preskočené spustenie ${at(t)}: tafy vášho účtu čakajú na kredity`,
+  work_skipped_sign_in: (t: When) => `Pozdržané spustenie ${at(t)}: uložené prihlásenie na stránke prestalo fungovať`,
   work_skipped_switching: (t: When) => `Preskočené spustenie ${at(t)}: jeho taf prepínal verzie`,
   work_check_failed: (t: When, app?: string) => `Kontrola ${at(t)} nemohla prečítať aplikáciu${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `Kontrola ${at(t)} zlyhala`,

@@ -283,6 +283,7 @@ export const ko: Words = {
   work_skipped_late: (t: When) => `${bare(t)} 실행 건너뜀: 실행하기에 너무 늦게 도착했습니다`,
   work_skipped_too_large: (t: When) => `${bare(t)} 실행 건너뜀: 한 번 실행하기에 작업이 너무 컸습니다`,
   work_skipped_credits: (t: When) => `${bare(t)} 실행 건너뜀: 내 계정의 tafs가 크레딧을 기다리는 중입니다`,
+  work_skipped_sign_in: (t: When) => `${bare(t)} 실행 보류: 사이트에 저장된 로그인이 작동하지 않습니다`,
   work_skipped_switching: (t: When) => `${bare(t)} 실행 건너뜀: taf가 버전을 전환하는 중이었습니다`,
   work_check_failed: (t: When, app?: string) => `${bare(t)} 확인에서 ${app ?? "앱"}을(를) 읽지 못했습니다`,
   work_check_stuck: (t: When) => `${bare(t)} 확인이 실패했습니다`,

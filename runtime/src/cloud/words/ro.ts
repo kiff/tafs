@@ -279,6 +279,7 @@ export const ro: Words = {
   work_skipped_late: (t: When) => `Rularea ${at(t)} a fost sărită: a venit prea târziu ca să ruleze`,
   work_skipped_too_large: (t: When) => `Rularea ${at(t)} a fost sărită: lucrul ei era prea mare pentru o singură rulare`,
   work_skipped_credits: (t: When) => `Rularea ${at(t)} a fost sărită: tafurile contului dvs. așteaptă credite`,
+  work_skipped_sign_in: (t: When) => `Rularea ${at(t)} a fost reținută: autentificarea salvată pe un site nu mai funcționează`,
   work_skipped_switching: (t: When) => `Rularea ${at(t)} a fost sărită: taful ei schimba versiunile`,
   work_check_failed: (t: When, app?: string) => `Verificarea ${at(t)} nu a putut citi aplicația${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `Verificarea ${at(t)} a eșuat`,

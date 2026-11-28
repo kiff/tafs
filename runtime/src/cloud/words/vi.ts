@@ -279,6 +279,7 @@ export const vi: Words = {
   work_skipped_late: (t: When) => `Đã bỏ qua lượt chạy lúc ${at(t)}: đến quá muộn để chạy`,
   work_skipped_too_large: (t: When) => `Đã bỏ qua lượt chạy lúc ${at(t)}: công việc của nó quá lớn cho một lượt chạy`,
   work_skipped_credits: (t: When) => `Đã bỏ qua lượt chạy lúc ${at(t)}: các taf của tài khoản bạn đang chờ tín dụng`,
+  work_skipped_sign_in: (t: When) => `Đã giữ lượt chạy lúc ${at(t)}: đăng nhập đã lưu tại một trang web đã ngừng hoạt động`,
   work_skipped_switching: (t: When) => `Đã bỏ qua lượt chạy lúc ${at(t)}: taf của nó đang chuyển phiên bản`,
   work_check_failed: (t: When, app?: string) => `Lần kiểm tra lúc ${at(t)} không đọc được ${app ?? "ứng dụng"}`,
   work_check_stuck: (t: When) => `Lần kiểm tra lúc ${at(t)} không thành công`,

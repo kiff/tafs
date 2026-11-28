@@ -279,6 +279,7 @@ export const sl: Words = {
   work_skipped_late: (t: When) => `Preskočen zagon ${at(t)}: prišel je prepozno za zagon`,
   work_skipped_too_large: (t: When) => `Preskočen zagon ${at(t)}: njegovo delo je bilo za en zagon preveliko`,
   work_skipped_credits: (t: When) => `Preskočen zagon ${at(t)}: tafi vašega računa čakajo na kredite`,
+  work_skipped_sign_in: (t: When) => `Zadržan zagon ${at(t)}: shranjena prijava na spletnem mestu je prenehala delovati`,
   work_skipped_switching: (t: When) => `Preskočen zagon ${at(t)}: njegov taf je menjaval različice`,
   work_check_failed: (t: When, app?: string) => `Preverjanje ${at(t)} ni moglo prebrati aplikacije${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `Preverjanje ${at(t)} ni uspelo`,

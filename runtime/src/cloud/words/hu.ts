@@ -279,6 +279,7 @@ export const hu: Words = {
   work_skipped_late: (t: When) => `Kihagyott futás: ${at(t)}, túl későn érkezett a futtatáshoz`,
   work_skipped_too_large: (t: When) => `Kihagyott futás: ${at(t)}, a munkája túl nagy volt egy futáshoz`,
   work_skipped_credits: (t: When) => `Kihagyott futás: ${at(t)}, a fiókod tafjai kreditre várnak`,
+  work_skipped_sign_in: (t: When) => `Visszatartott futás: ${at(t)}, egy webhely mentett bejelentkezése nem működik`,
   work_skipped_switching: (t: When) => `Kihagyott futás: ${at(t)}, a taf verziót váltott`,
   work_check_failed: (t: When, app?: string) => `Az ellenőrzés (${at(t)}) nem tudta beolvasni az alkalmazást${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `Az ellenőrzés (${at(t)}) nem sikerült`,

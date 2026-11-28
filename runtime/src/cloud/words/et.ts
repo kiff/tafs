@@ -279,6 +279,7 @@ export const et: Words = {
   work_skipped_late: (t: When) => `Jäeti vahele käivitus ${at(t)}: see tuli liiga hilja, et käivituda`,
   work_skipped_too_large: (t: When) => `Jäeti vahele käivitus ${at(t)}: selle töö oli ühe käivituse jaoks liiga suur`,
   work_skipped_credits: (t: When) => `Jäeti vahele käivitus ${at(t)}: sinu konto tafid ootavad krediite`,
+  work_skipped_sign_in: (t: When) => `Peatatud käivitus ${at(t)}: salvestatud sisselogimine saidil lakkas töötamast`,
   work_skipped_switching: (t: When) => `Jäeti vahele käivitus ${at(t)}: selle taf vahetas versiooni`,
   work_check_failed: (t: When, app?: string) => `Kontroll ${at(t)} ei saanud lugeda rakendust${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `Kontroll ${at(t)} ebaõnnestus`,

@@ -286,6 +286,7 @@ export const ja: Words = {
   work_skipped_late: (t: When) => `${bare(t)}の実行をスキップ：実行するには遅すぎました`,
   work_skipped_too_large: (t: When) => `${bare(t)}の実行をスキップ：作業が1回の実行には大きすぎました`,
   work_skipped_credits: (t: When) => `${bare(t)}の実行をスキップ：アカウントのtafsがクレジットを待っています`,
+  work_skipped_sign_in: (t: When) => `${bare(t)}の実行を保留：サイトの保存済みサインインが機能しなくなりました`,
   work_skipped_switching: (t: When) => `${bare(t)}の実行をスキップ：tafがバージョンを切り替え中でした`,
   work_check_failed: (t: When, app?: string) => `${bare(t)}のチェックで${app ?? "アプリ"}を読み込めませんでした`,
   work_check_stuck: (t: When) => `${bare(t)}のチェックが失敗しました`,

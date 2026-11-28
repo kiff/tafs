@@ -279,6 +279,7 @@ export const lt: Words = {
   work_skipped_late: (t: When) => `Praleistas vykdymas ${at(t)}: jis atėjo per vėlai, kad būtų vykdomas`,
   work_skipped_too_large: (t: When) => `Praleistas vykdymas ${at(t)}: jo darbas buvo per didelis vienam vykdymui`,
   work_skipped_credits: (t: When) => `Praleistas vykdymas ${at(t)}: jūsų paskyros taf laukia kreditų`,
+  work_skipped_sign_in: (t: When) => `Sulaikytas vykdymas ${at(t)}: išsaugotas prisijungimas prie svetainės nebeveikia`,
   work_skipped_switching: (t: When) => `Praleistas vykdymas ${at(t)}: jo taf keitė versiją`,
   work_check_failed: (t: When, app?: string) => `Patikra ${at(t)} nepavyko perskaityti programėlės${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `Patikra ${at(t)} nepavyko`,

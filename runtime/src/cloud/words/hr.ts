@@ -279,6 +279,7 @@ export const hr: Words = {
   work_skipped_late: (t: When) => `Preskočeno izvođenje ${at(t)}: stiglo je prekasno za izvođenje`,
   work_skipped_too_large: (t: When) => `Preskočeno izvođenje ${at(t)}: njegov posao bio je prevelik za jedno izvođenje`,
   work_skipped_credits: (t: When) => `Preskočeno izvođenje ${at(t)}: tafovi vašeg računa čekaju kredite`,
+  work_skipped_sign_in: (t: When) => `Zadržano izvođenje ${at(t)}: spremljena prijava na stranici prestala je raditi`,
   work_skipped_switching: (t: When) => `Preskočeno izvođenje ${at(t)}: njegov taf je mijenjao verzije`,
   work_check_failed: (t: When, app?: string) => `Provjera ${at(t)} nije mogla pročitati aplikaciju${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `Provjera ${at(t)} nije uspjela`,

@@ -772,6 +772,15 @@ describe("tafs cloud", () => {
     ]);
   });
 
+  // Browser batch 2: a run a stopped sign-in held before it started is listed in words, not counted as failing.
+  it("lists a run a stopped sign-in held, in words", async () => {
+    const w = world();
+    w.agents.firings.set(`t_acme|${RAE}`, [{ due: "2026-10-29T09:45:00.000Z", at: "2026-10-29T09:45:00.000Z", outcome: "held_sign_in", grant: "grt_cloud", site: "shop.example" }]);
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(r.body.skipped).toEqual([{ due: "2026-10-29T09:45:00.000Z", why: "sign_in", words: "Held the 09:45 run: its saved sign-in at a site stopped working" }]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana", headers: { "accept-language": "ko" } })).body.skipped[0].words).toBe("09:45 실행 보류: 사이트에 저장된 로그인이 작동하지 않습니다");
+  });
+
   it("shows the firings that didn't end in finished work, each in words", async () => {
     const w = world();
     const at = (iso: string) => ({ due: iso, at: iso });

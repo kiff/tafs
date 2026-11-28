@@ -285,6 +285,7 @@ export const it: Words = {
   work_skipped_late: (t) => `Esecuzione prevista ${at(t)} saltata: è arrivata troppo tardi`,
   work_skipped_too_large: (t) => `Esecuzione prevista ${at(t)} saltata: il suo lavoro era troppo grande per un'esecuzione`,
   work_skipped_credits: (t) => `Esecuzione prevista ${at(t)} saltata: i tafs del tuo account aspettano crediti`,
+  work_skipped_sign_in: (t) => `Held the ${at(t)} run: its saved sign-in at a site stopped working`,
   work_skipped_switching: (t) => `Esecuzione prevista ${at(t)} saltata: il taf stava cambiando versione`,
   work_check_failed: (t, app) => `Il controllo previsto ${at(t)} non è riuscito a leggere ${app ?? "l'app"}`,
   work_check_stuck: (t) => `Il controllo previsto ${at(t)} non è riuscito`,

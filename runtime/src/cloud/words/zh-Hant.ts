@@ -279,6 +279,7 @@ export const zhHant: Words = {
   work_skipped_late: (t: When) => `已略過 ${at(t)} 的執行：它來得太晚而無法執行`,
   work_skipped_too_large: (t: When) => `已略過 ${at(t)} 的執行：它的工作量對單次執行而言太大`,
   work_skipped_credits: (t: When) => `已略過 ${at(t)} 的執行：您帳號的 taf 正在等待點數`,
+  work_skipped_sign_in: (t: When) => `已暫停 ${at(t)} 的執行：網站上儲存的登入已失效`,
   work_skipped_switching: (t: When) => `已略過 ${at(t)} 的執行：它的 taf 正在切換版本`,
   work_check_failed: (t: When, app?: string) => `${at(t)} 的檢查無法讀取${app ?? "應用程式"}`,
   work_check_stuck: (t: When) => `${at(t)} 的檢查失敗`,

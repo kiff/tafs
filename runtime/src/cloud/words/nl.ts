@@ -285,6 +285,7 @@ export const nl: Words = {
   work_skipped_late: (t) => `Run ${at(t)} overgeslagen: die kwam te laat`,
   work_skipped_too_large: (t) => `Run ${at(t)} overgeslagen: het werk was te groot voor één run`,
   work_skipped_credits: (t) => `Run ${at(t)} overgeslagen: de tafs van je account wachten op credits`,
+  work_skipped_sign_in: (t) => `Held the ${at(t)} run: its saved sign-in at a site stopped working`,
   work_skipped_switching: (t) => `Run ${at(t)} overgeslagen: het taf wisselde van versie`,
   work_check_failed: (t, app) => `De controle ${at(t)} kon ${app ?? "de app"} niet lezen`,
   work_check_stuck: (t) => `De controle ${at(t)} is mislukt`,

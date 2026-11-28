@@ -279,6 +279,7 @@ export const th: Words = {
   work_skipped_late: (t: When) => `ข้ามการรัน${at(t)}: มาถึงช้าเกินกว่าจะรัน`,
   work_skipped_too_large: (t: When) => `ข้ามการรัน${at(t)}: งานของมันใหญ่เกินไปสำหรับการรันหนึ่งครั้ง`,
   work_skipped_credits: (t: When) => `ข้ามการรัน${at(t)}: taf ของบัญชีคุณกำลังรอเครดิต`,
+  work_skipped_sign_in: (t: When) => `พักการรัน${at(t)}: การลงชื่อเข้าใช้ที่บันทึกไว้ของเว็บไซต์ใช้ไม่ได้แล้ว`,
   work_skipped_switching: (t: When) => `ข้ามการรัน${at(t)}: taf ของมันกำลังสลับเวอร์ชัน`,
   work_check_failed: (t: When, app?: string) => `การตรวจสอบ${at(t)}อ่าน ${app ?? "แอป"} ไม่ได้`,
   work_check_stuck: (t: When) => `การตรวจสอบ${at(t)}ล้มเหลว`,

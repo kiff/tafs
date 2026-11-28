@@ -279,6 +279,7 @@ export const bg: Words = {
   work_skipped_late: (t: When) => `Пропуснато изпълнение ${at(t)}: дойде твърде късно, за да се изпълни`,
   work_skipped_too_large: (t: When) => `Пропуснато изпълнение ${at(t)}: работата му беше твърде голяма за едно изпълнение`,
   work_skipped_credits: (t: When) => `Пропуснато изпълнение ${at(t)}: tafs на вашия акаунт чакат кредити`,
+  work_skipped_sign_in: (t: When) => `Задържано изпълнение ${at(t)}: запазеното влизане в сайт спря да работи`,
   work_skipped_switching: (t: When) => `Пропуснато изпълнение ${at(t)}: неговият taf сменяше версии`,
   work_check_failed: (t: When, app?: string) => `Проверката ${at(t)} не можа да прочете приложението${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `Проверката ${at(t)} се провали`,

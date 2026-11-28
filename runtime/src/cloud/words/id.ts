@@ -279,6 +279,7 @@ export const id: Words = {
   work_skipped_late: (t: When) => `Proses ${at(t)} dilewati: datang terlalu terlambat untuk dijalankan`,
   work_skipped_too_large: (t: When) => `Proses ${at(t)} dilewati: pekerjaannya terlalu besar untuk satu proses`,
   work_skipped_credits: (t: When) => `Proses ${at(t)} dilewati: taf di akun Anda menunggu kredit`,
+  work_skipped_sign_in: (t: When) => `Proses ${at(t)} ditahan: login tersimpan di sebuah situs berhenti berfungsi`,
   work_skipped_switching: (t: When) => `Proses ${at(t)} dilewati: taf-nya sedang berganti versi`,
   work_check_failed: (t: When, app?: string) => `Pemeriksaan ${at(t)} tidak bisa membaca ${app ?? "aplikasi"}`,
   work_check_stuck: (t: When) => `Pemeriksaan ${at(t)} gagal`,

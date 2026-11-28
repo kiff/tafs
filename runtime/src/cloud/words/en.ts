@@ -303,6 +303,7 @@ export const en = {
   work_skipped_late: (t: When) => `Skipped the ${bare(t)} run: it came too late to run`,
   work_skipped_too_large: (t: When) => `Skipped the ${bare(t)} run: its work was too big for one run`,
   work_skipped_credits: (t: When) => `Skipped the ${bare(t)} run: your account's tafs wait for credits`,
+  work_skipped_sign_in: (t: When) => `Held the ${bare(t)} run: its saved sign-in at a site stopped working`,
   work_skipped_switching: (t: When) => `Skipped the ${bare(t)} run: its taf was switching versions`,
   work_check_failed: (t: When, app?: string) => `The ${bare(t)} check couldn't read ${app ?? "the app"}`,
   work_check_stuck: (t: When) => `The ${bare(t)} check failed`,

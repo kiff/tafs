@@ -279,6 +279,7 @@ export const tr: Words = {
   work_skipped_late: (t: When) => `${at(t)} çalıştırması atlandı: çalıştırmak için çok geç geldi`,
   work_skipped_too_large: (t: When) => `${at(t)} çalıştırması atlandı: işi tek bir çalıştırma için çok büyüktü`,
   work_skipped_credits: (t: When) => `${at(t)} çalıştırması atlandı: hesabınızın taf'ları kredi bekliyor`,
+  work_skipped_sign_in: (t: When) => `${at(t)} çalıştırması bekletildi: bir sitedeki kayıtlı oturum çalışmayı durdurdu`,
   work_skipped_switching: (t: When) => `${at(t)} çalıştırması atlandı: taf'ı sürüm değiştiriyordu`,
   work_check_failed: (t: When, app?: string) => `${at(t)} kontrolü uygulamayı okuyamadı${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `${at(t)} kontrolü başarısız oldu`,

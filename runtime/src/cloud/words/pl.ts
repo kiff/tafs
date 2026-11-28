@@ -285,6 +285,7 @@ export const pl: Words = {
   work_skipped_late: (t) => `Pominięto uruchomienie ${at(t)}: przyszło za późno`,
   work_skipped_too_large: (t) => `Pominięto uruchomienie ${at(t)}: praca była zbyt duża na jedno uruchomienie`,
   work_skipped_credits: (t) => `Pominięto uruchomienie ${at(t)}: tafs na Twoim koncie czekają na kredyty`,
+  work_skipped_sign_in: (t) => `Held the ${at(t)} run: its saved sign-in at a site stopped working`,
   work_skipped_switching: (t) => `Pominięto uruchomienie ${at(t)}: taf zmieniał wersję`,
   work_check_failed: (t, app) => `Sprawdzenie ${at(t)} nie mogło odczytać aplikacji${app ? ` ${app}` : ""}`,
   work_check_stuck: (t) => `Sprawdzenie ${at(t)} nie powiodło się`,

@@ -285,6 +285,7 @@ export const de: Words = {
   work_skipped_late: (t) => `Lauf ${at(t)} übersprungen: er kam zu spät`,
   work_skipped_too_large: (t) => `Lauf ${at(t)} übersprungen: die Arbeit war zu groß für einen Lauf`,
   work_skipped_credits: (t) => `Lauf ${at(t)} übersprungen: die tafs deines Kontos warten auf Credits`,
+  work_skipped_sign_in: (t) => `Held the ${at(t)} run: its saved sign-in at a site stopped working`,
   work_skipped_switching: (t) => `Lauf ${at(t)} übersprungen: der taf wechselte gerade die Version`,
   work_check_failed: (t, app) => `Die Prüfung ${at(t)} konnte ${app ?? "die App"} nicht lesen`,
   work_check_stuck: (t) => `Die Prüfung ${at(t)} ist fehlgeschlagen`,

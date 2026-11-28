@@ -509,10 +509,12 @@ makes no click and no write. Only the verdict is kept.
     check reads `stopped` again.
   - **A held run waits at most until the taf's next scheduled run.** Then it's dropped, and the item's line says so:
     "{taf}'s {time} run was dropped: your sign-in at {site} still needs you. The next run waits for it too."
-- **The Record** lists each check as tafs's own call, before the run: "07:00 tafs checked your sign-in at
-  supplier-portal.example: read one page, no clicks. It ends on 2 Dec." It's counted like any call. The privacy text says
-  how often: about once a day, an hour before the taf's first scheduled run, and again after the owner signs in again while
-  a run waits.
+- **Where a held run shows:** kiff/agents' scheduler makes the check before each firing of a schedule that names the
+  connection (`sign_in {grant}`, kiff/agents#712), so tafs cloud sees only the firings it held. Each one is on the taf's
+  work page with the other runs that didn't start (`skipped[]`, `why: "sign_in"`): "Held the 07:00 run: its saved sign-in
+  at a site stopped working". It isn't counted as failing. The Record stays KIFF's calls alone, and a check is no call.
+  The privacy text says when it runs: before each scheduled run of a taf in the hosted browser, at most once a day per
+  site at planque.
 
 ### Words
 

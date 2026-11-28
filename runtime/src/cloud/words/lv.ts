@@ -279,6 +279,7 @@ export const lv: Words = {
   work_skipped_late: (t: When) => `Izlaista izpilde ${at(t)}: tā ienāca par vēlu, lai tiktu izpildīta`,
   work_skipped_too_large: (t: When) => `Izlaista izpilde ${at(t)}: tās darbs bija par lielu vienai izpildei`,
   work_skipped_credits: (t: When) => `Izlaista izpilde ${at(t)}: tava konta taf gaida kredītus`,
+  work_skipped_sign_in: (t: When) => `Aizturēta izpilde ${at(t)}: saglabātā pierakstīšanās vietnē pārstāja darboties`,
   work_skipped_switching: (t: When) => `Izlaista izpilde ${at(t)}: tās taf mainīja versiju`,
   work_check_failed: (t: When, app?: string) => `Pārbaude ${at(t)} nevarēja nolasīt lietotni${app ? ` (${app})` : ""}`,
   work_check_stuck: (t: When) => `Pārbaude ${at(t)} neizdevās`,
