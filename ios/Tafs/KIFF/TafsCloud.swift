@@ -1178,11 +1178,16 @@ final class TafsCloud {
             var error = false
             /// Refused back unmade, an act sent beside a read: not a failure.
             var notMade = false
-            init(tool: String, error: Bool = false, notMade: Bool = false) { self.tool = tool; self.error = error; self.notMade = notMade }
-            enum CodingKeys: String, CodingKey { case tool, error, notMade = "not_made" }
+            /// tafs cloud's words for the step, as the live one's; nil from a tafs cloud that doesn't send them.
+            var words: String? = nil
+            init(tool: String, error: Bool = false, notMade: Bool = false, words: String? = nil) {
+                self.tool = tool; self.error = error; self.notMade = notMade; self.words = words
+            }
+            enum CodingKeys: String, CodingKey { case tool, error, notMade = "not_made", words }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 tool = try c.decode(String.self, forKey: .tool)
+                words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? nil
                 error = (try? c.decodeIfPresent(Bool.self, forKey: .error)) ?? false
                 notMade = (try? c.decodeIfPresent(Bool.self, forKey: .notMade)) ?? false
             }
