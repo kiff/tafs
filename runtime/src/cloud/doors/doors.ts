@@ -600,6 +600,11 @@ export function holdsReply(door: Door, reply: Pick<Reply, "to">): boolean {
   return !door.keys.some((k) => k.auto && k.id === reply.to);
 }
 
+/**
+ * Keeps a reply for the owner, by its run. A run holds at most one reply: a door's run answers through the one door
+ * its message came by, and settle stops at the first hold. A run that could reply through two doors would need the
+ * door in this key.
+ */
 async function holdReply(ctx: DoorsContext, tenant: string, taf: Taf, held: HeldReply): Promise<void> {
   const { store } = ctx.doors;
   await store.put(doorKeys.heldReply(tenant, taf.id, held.reply.run), held, addDays(ctx.now, DOOR.replyDays));
