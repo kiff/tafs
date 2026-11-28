@@ -1328,6 +1328,82 @@ describe("tafs cloud", () => {
     expect((await home()).sign_ins).toBeUndefined();
   });
 
+  // Later and Skip need managing the taf (needTaf), so Home lists sign-in items only for the tafs the person manages; Later
+  // checks every taf before it writes any, and each write is over a fresh read, so neither half-applies nor drops another write.
+  const signInWorld = () => {
+    const w = world();
+    w.now = new Date("2026-11-28T10:00:00Z");
+    const BOOKS = "taf-bbbb0000000000000000";
+    w.tafs.held.set(`t_acme#${BOOKS}`, { id: BOOKS, name: "Books", job: "refunds", kiffAgent: "books", nameClaim: `claim-${BOOKS}`, created: "2026-10-15T09:00:00Z" });
+    for (const id of [RAE, BOOKS]) w.agents.schedules.set(`t_acme|${id}`, { tenant: "t_acme", id, agent: id, cron: "0 7 * * *", input: "Go", enabled: true, sign_in: { grant: "grt_cloud" } });
+    w.agents.firings.set(`t_acme|${RAE}`, [{ due: "2026-11-28T06:00:00.000Z", at: "2026-11-28T06:00:01.000Z", outcome: "held_sign_in", grant: "grt_cloud", site: "shop.example" }]);
+    const deps = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/grants/grt_cloud/health")) return new Response(JSON.stringify({ sites: [
+        { site: "portal.example", verdict: "signed_in", checked_at: "2026-11-28T06:00:00Z", expires_at: "2026-11-30T06:00:00Z" },
+        { site: "shop.example", verdict: "signed_out", checked_at: "2026-11-28T05:59:00Z" },
+      ] }), { status: 200 });
+      if (url.startsWith("https://planque.test/")) return new Response("{}", { status: 500 });
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] } as Deps;
+    const req = async (method: string, path: string, token = "ana") => {
+      const r = await handle({ rawPath: path, requestContext: { http: { method } }, headers: { Authorization: `Bearer ${token}` } }, deps);
+      return { status: r.statusCode, body: JSON.parse(r.body) as { sign_ins?: Array<{ kind: string; taf: { id: string } }>; needs_you?: { count: number } } };
+    };
+    return { w, BOOKS, req };
+  };
+
+  it("lists sign-in items on Home only for the tafs the person manages, and counts none for the others", async () => {
+    const { w, BOOKS, req } = signInWorld();
+    // Ana manages both: Rae's held run, and the "soon" item once, under the first taf that uses the connection.
+    expect((await req("GET", "/v1/home")).body.sign_ins?.map((i) => [i.kind, i.taf.id])).toEqual([["sign_in_stopped", RAE], ["sign_in_soon", BOOKS]]);
+    // A viewer sees the tafs but can act on neither: no item, and none in their Needs you.
+    const viewer = (await req("GET", "/v1/home", "viewer")).body;
+    expect(viewer.sign_ins).toBeUndefined();
+    // Ana manages Books only: Rae's held run isn't hers to skip, and the "soon" item comes under Books, which she manages.
+    w.account.access = { rae: { use: true, oversee: true, manage: false }, books: { use: true, oversee: true, manage: true } };
+    expect((await req("GET", "/v1/home")).body.sign_ins?.map((i) => [i.kind, i.taf.id])).toEqual([["sign_in_soon", BOOKS]]);
+    // She manages neither: nothing to act on, nothing counted.
+    w.account.access = { rae: { use: true, oversee: true, manage: false }, books: { use: true, oversee: true, manage: false } };
+    const none = (await req("GET", "/v1/home")).body;
+    expect(none.sign_ins).toBeUndefined();
+    expect(none.needs_you?.count ?? 0).toBe(0);
+  });
+
+  it("refuses Later before writing any taf when the person doesn't manage every taf that uses the connection", async () => {
+    const { w, BOOKS, req } = signInWorld();
+    w.account.access = { rae: { use: true, oversee: true, manage: true }, books: { use: true, oversee: true, manage: false } };
+    expect((await req("POST", "/v1/needs-you/sign-in/grt_cloud/portal.example/later")).status).toBe(403);
+    // Neither taf changed: Later isn't half-applied.
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.signInLater).toBeUndefined();
+    expect(w.tafs.held.get(`t_acme#${BOOKS}`)?.signInLater).toBeUndefined();
+    w.account.access = { rae: { use: true, oversee: true, manage: true }, books: { use: true, oversee: true, manage: true } };
+    expect((await req("POST", "/v1/needs-you/sign-in/grt_cloud/portal.example/later")).status).toBe(200);
+    for (const id of [RAE, BOOKS]) expect(w.tafs.held.get(`t_acme#${id}`)?.signInLater).toEqual({ "grt_cloud|portal.example": "2026-11-28T06:00:00.000Z" });
+  });
+
+  it("keeps a re-point's draft that lands while Later or Skip writes the taf", async () => {
+    const { w, req } = signInWorld();
+    // A re-point lands between the read and the write, once for each.
+    const get = w.tafs.get.bind(w.tafs);
+    let land: string | undefined;
+    w.tafs.get = async (t: string, id: string) => {
+      const read = await get(t, id);
+      if (land && id === RAE && read) {
+        w.tafs.held.set(`t_acme#${RAE}`, { ...read, draftBy: { ...read.draftBy, [land]: `drf_${land}` } });
+        land = undefined;
+      }
+      return read;
+    };
+    land = "2";
+    expect((await req("POST", "/v1/needs-you/sign-in/grt_cloud/portal.example/later")).status).toBe(200);
+    land = "3";
+    expect((await req("POST", `/v1/tafs/${RAE}/held-sign-in/skip`)).status).toBe(200);
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(rae.draftBy).toEqual({ "2": "drf_2", "3": "drf_3" });
+    expect(rae.signInLater).toEqual({ "grt_cloud|portal.example": "2026-11-28T06:00:00.000Z" });
+    expect(rae.signInSkipped).toBe("2026-11-28T06:00:00.000Z");
+  });
+
   // After a fresh sign-in the owner sees which account it went to and which tafs use it now, as planque names them, so a
   // sign-in to the wrong mailbox shows at once. Without the account's name, nothing: the app keeps the done words.
   it("says which account a fresh sign-in went to, and which tafs use it now, when asked after it", async () => {

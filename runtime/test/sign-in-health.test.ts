@@ -10,6 +10,9 @@ describe("a saved sign-in's health", () => {
     expect(healthOf({ site: "books.example", verdict: "signed_in", checked_at: "2026-11-28T06:00:00Z", expires_at: "2027-01-10T00:00:00Z" }, now, PARIS))
       .toEqual({ state: "signed_in", checked_at: "2026-11-28T06:00:00.000Z", words: { line: "Signed in · checked today 07:00" } });
     expect(healthOf({ site: "books.example", verdict: "signed_in", checked_at: "2026-11-27T06:00:00Z" }, now, PARIS).words.line).toBe("Signed in · checked 27 Nov");
+    // "Today" is the account's own date: 00:30 on 1 Jan in Paris is still 31 Dec in UTC, and a year back is never today.
+    expect(healthOf({ site: "books.example", verdict: "signed_in", checked_at: "2025-12-31T23:30:00Z" }, new Date("2026-01-01T10:00:00Z"), PARIS).words.line).toBe("Signed in · checked today 00:30");
+    expect(healthOf({ site: "books.example", verdict: "signed_in", checked_at: "2025-11-28T06:00:00Z" }, now, PARIS).words.line).toBe("Signed in · checked 28 Nov");
   });
 
   it("needs the owner soon when the site set it to end within 3 days, by that day, with why it's known", () => {

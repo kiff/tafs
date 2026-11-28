@@ -1218,7 +1218,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     await needTaf(event, me, taf, deps);
     const held = heldSignIn(await deps.agents.scheduleFirings(me.tenantID, taf.id, HEALTH_FIRINGS).catch(() => [] as Fired[]), taf);
     if (!held) throw new HTTPError(409, "no run of this taf waits for a sign-in");
-    await deps.tafs.put(me.tenantID, { ...taf, signInSkipped: held.due });
+    await changeTaf(me.tenantID, taf.id, (cur) => ({ ...cur, signInSkipped: held.due }), deps);
     await tellChange(me.tenantID, "taf", taf.id, deps);
     return { skipped: held.due };
   }
@@ -8941,7 +8941,10 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     ? handsOf(await accountHands(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => []), tafs, langOf(event), me.timeZone ?? "UTC", now)
     : [];
   // A hosted-browser connection's saved sign-in that needs the owner soon, or stopped and held a run (browser batch 2).
-  const signIns = await homeSignIns(event, me, tafs, fired, deps, now);
+  // Only for the tafs this person manages: Later and Skip need that (needTaf), so a viewer gets no item they can't act on,
+  // and none counts in their Needs you.
+  const managed = (t: Taf) => me.capabilities.includes("cards.manage") && (t.kiffAgent ? access.get(t.kiffAgent)?.manage === true : true);
+  const signIns = await homeSignIns(event, me, tafs.filter(managed), fired.filter((_, i) => managed(tafs[i]!)), deps, now);
   // What Needs you lists, counted once here so Home, the tab badge and the lock screen agree with it
   // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a
   // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
@@ -9644,12 +9647,28 @@ async function signInLater(grant: string, site: string, event: HTTPEvent, me: KI
   const at = new Date(verdict.checked_at);
   if (Number.isNaN(at.getTime())) throw new HTTPError(502, "planque's check has no readable time");
   const checked = at.toISOString();
+  // Every taf is checked before any is written, so a person who manages one but not another changes none.
+  for (const t of tafs) await needTaf(event, me, t, deps);
   for (const t of tafs) {
-    await needTaf(event, me, t, deps);
-    await deps.tafs.put(me.tenantID, { ...t, signInLater: { ...t.signInLater, [key]: checked } });
+    await changeTaf(me.tenantID, t.id, (cur) => ({ ...cur, signInLater: { ...cur.signInLater, [key]: checked } }), deps);
     await tellChange(me.tenantID, "taf", t.id, deps);
   }
   return { later: { grant, site: verdict.site, until_check_after: checked } };
+}
+
+/**
+ * Writes one change to a taf on a fresh read, only over the record it read (putIf), read again and tried again when
+ * something else wrote it meanwhile (a re-point's draft, a version going live), so neither write drops the other's.
+ * 404 when the taf is gone; 503 when it kept changing.
+ */
+async function changeTaf(tenant: string, id: string, change: (cur: Taf) => Taf, deps: Deps): Promise<Taf> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const cur = await deps.tafs.get(tenant, id);
+    if (!cur) throw new HTTPError(404, "not found");
+    const next = change(cur);
+    if (await deps.tafs.putIf(tenant, next, cur)) return next;
+  }
+  throw new HTTPError(503, "the taf kept changing: try again");
 }
 
 /** How long a read waits for planque's kept sign-in checks before it's drawn without them. */

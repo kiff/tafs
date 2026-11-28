@@ -26,7 +26,9 @@ export function healthOf(v: SiteVerdict, now: Date, timeZone: string, lang: Lang
   const time = (d: Date) => new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone }).format(d);
   const day = (d: Date) => new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone }).format(d);
   const weekday = (d: Date) => new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short", timeZone }).format(d);
-  const sameDay = (a: Date, b: Date) => day(a) === day(b) && a.getUTCFullYear() === b.getUTCFullYear();
+  // The whole date in the account's zone, so a check near midnight on 31 Dec isn't "today" a year on.
+  const ymd = (d: Date) => new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone }).format(d);
+  const sameDay = (a: Date, b: Date) => ymd(a) === ymd(b);
   if (v.verdict === "signed_out" && checked) {
     return { state: "stopped", checked_at: checked.toISOString(), needs_you_by: checked.toISOString(),
       words: { line: w.browse_health_stopped(time(checked)), why: w.browse_health_why_stopped(time(checked)) } };

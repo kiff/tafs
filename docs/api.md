@@ -488,12 +488,14 @@ makes no click and no write. Only the verdict is kept.
 ### Needs you, and the run that waits
 
 - **Both items are on Home** (`GET /v1/home`) as `sign_ins: [...]`, beside `your_turns` and `your_steps`, and each counts
-  once in `needs_you.count`.
+  once in `needs_you.count`. They're listed only for the tafs the person manages (Cards, and KIFF says they manage that
+  taf), since Later and Skip need that: someone who only sees a taf gets no item and no count for it.
 - **`needs_you_soon`** adds a Needs you item `{kind: "sign_in_soon", grant, site, needs_you_by, taf: {id, name}, words:
   {title, line, sign_in, later, why}}`, from what planque keeps of the connection the taf's schedule names. It counts once
   in `needs_you.count`.
   - **Later** is a request: `POST /v1/needs-you/sign-in/{grant}/{site}/later` (the person's session). It hides the item for
-    everyone on the account until planque's next check of that site, and `count` follows on every device.
+    everyone on the account until planque's next check of that site, and `count` follows on every device. Every taf that
+    uses the connection is checked first: a person who doesn't manage one of them gets a 403, and no taf is changed.
 - **A `stopped` sign-in holds a scheduled run before it starts, and it never runs and fails:**
   - kiff/agents starts no run for that firing and keeps it as `held_sign_in`, with `grant` and `site`. It's not counted as
     failing. A check that fails (planque down, a timeout) runs the firing as before: an outage never holds every taf.
