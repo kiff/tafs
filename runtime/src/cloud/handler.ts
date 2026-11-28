@@ -48,7 +48,7 @@ import { AI_CONSENT_CODE, type AIConsent, type AIConsentView, aiConsentOf, aiCon
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
-import { addAPIDoor, addDoor, answerHeldReply, answerKnock, heldRepliesOf, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addAPIDoor, addDoor, CANT_DO, cantDo, cantDoLine, answerHeldReply, answerKnock, heldRepliesOf, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext, apiDoorsOn } from "./doors/api.js";
 import { type APIDraft, doorKeys } from "./doors/model.js";
@@ -3130,8 +3130,8 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   // Words written while a card waited, by where they were recorded: unless Coach showed that card again, they answered it.
   const wroteWhile: Array<{ run: string; seq: number; type: unknown; message: ThreadMessage }> = [];
   const held: ThreadHeld[] = [];
-  /** Runs a door's message started, by run: their answers go back through it. */
-  const doorRuns = new Map<string, string>();
+  /** Runs a door's message started, by run: their answers go back through it, to the writer named. */
+  const doorRuns = new Map<string, { app: string; from: string }>();
   const sent = new Map((deps.doors ? await sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : []).map((x) => [x.run, x]));
   const usage: ThreadUsage | undefined = taf.job === SETUP_JOB ? { turns: 0, tokens_in: 0, cache_read_tokens: 0, cost_micro_usd: 0 } : undefined;
   /** Each chat's rules agreement, from the events read here: an approval over a Card waits on it (rulesFirst). */
@@ -3245,7 +3245,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         seenRun.add(e.run);
         // A message that came through a door is shown as written, marked with its door and sender.
         const door = parseDoorMessage(text);
-        if (door) doorRuns.set(e.run, door.app);
+        if (door) doorRuns.set(e.run, { app: door.app, from: door.from });
         // Words written while a card waited are already the card's answer, at the same time: one message.
         // It keeps the run's id, the one its send answered, so the app matches its send to it.
         const said = ownerWords(text);
@@ -3263,10 +3263,15 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
           ...(attached.length ? { attachments: attached } : {}),
         });
       } else {
-        const app = doorRuns.get(e.run);
+        const doorRun = doorRuns.get(e.run);
+        const app = doorRun?.app;
         const reply = app ? sent.get(e.run) : undefined;
+        // A door run's can't-do answer is a marker for tafs, never words for the owner: the chat shows the line Needs
+        // you shows for it, in the owner's language, never "TAFS_CANT_DO …".
+        const cant = doorRun && text.includes(CANT_DO) ? cantDo({ status: "COMPLETED", output: text }) : undefined;
+        const shown = cant?.why ? cantDoLine(wordsIn(lang), cant.why, taf.name, writerName(doorRun!.from), cant.needs) : text;
         const said: ThreadMessage = {
-          id: `${e.run}.${e.seq}`, at: iso(e.time), from: "taf", kind: "message", text, session: r.session.id,
+          id: `${e.run}.${e.seq}`, at: iso(e.time), from: "taf", kind: "message", text: shown, session: r.session.id,
           ...(app ? { door: { app, reply: reply?.status ?? "pending", ...(reply?.why ? { why: reply.why } : {}) } } : {}),
         };
         messages.push(said);
@@ -12636,4 +12641,10 @@ async function watchTaskEnded(tenant: string, setup: Taf | undefined, task: Task
   const own = checkedLine(said);
   Object.assign(ask, { state: next, ...(own ? { line: own } : {}) });
   await watchChanged(tenant, ask, deps);
+}
+
+/** A door's writer as Needs you names them: the display name of "Name <address>", else the address as written. */
+function writerName(from: string): string {
+  const m = /^\s*"?([^"<]*?)"?\s*<[^>]+>\s*$/.exec(from);
+  return m && m[1]!.trim() ? m[1]!.trim() : from.trim();
 }

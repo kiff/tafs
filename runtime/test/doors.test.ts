@@ -2674,6 +2674,11 @@ describe("a door's taf that can't do what was asked", () => {
     expect(held[0].words.line).toBe("Refunds needs something from you before it can do what Ben asked: a spreadsheet and a folder. Their message waits here, and they haven't been answered.");
     expect(held[0].words.connect).toBeUndefined();
     expect(JSON.stringify(held[0])).not.toMatch(/P2-GD|drive\.example/);
+    // The taf's chat shows the same line, never the marker or the taf's own words after it.
+    const chat = await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "ana" });
+    const answer = (chat.body.messages as Array<{ from: string; text: string }>).filter((m) => m.from === "taf").at(-1)!;
+    expect(answer.text).toBe(held[0].words.line);
+    expect(JSON.stringify(chat.body.messages)).not.toMatch(/TAFS_CANT_DO|P2-GD|drive\.example/);
   });
 
   it("says it needs something, and nothing more, when the taf names nothing it knows", async () => {
