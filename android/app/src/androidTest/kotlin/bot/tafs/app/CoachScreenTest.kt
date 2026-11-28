@@ -248,7 +248,8 @@ class CoachScreenTest {
 
   @Test fun theLiveLineThinking() {
     show(LiveAnswer(started = Instant.now(), state = LiveState("thinking")))
-    rule.onNodeWithText("Thinking…").assertIsDisplayed()
+    // With the device's animations off (as on CI), the line ends with the time it has worked: " · 3 s".
+    rule.onNodeWithText("Thinking…", substring = true).assertIsDisplayed()
     hold()
   }
 
@@ -305,7 +306,7 @@ class CoachScreenTest {
 
   @Test fun theLiveLineIsTafsCloudsAndNoThinkingTextShows() {
     show(LiveAnswer(started = Instant.now(), thinking = "The owner wants refunds capped, I should", state = LiveState("working", "Drafting the Card")))
-    rule.onNodeWithText("Drafting the Card…").assertIsDisplayed()
+    rule.onNodeWithText("Drafting the Card…", substring = true).assertIsDisplayed()
     rule.onNodeWithText("The owner wants refunds capped, I should").assertDoesNotExist()
     hold()
   }

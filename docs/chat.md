@@ -799,6 +799,11 @@ While a taf works, the stream sends one line for the app to show (`event: state`
 `done`. It's sent only when it changes, and a line holds at least a second (`STATE_HOLD_MS`), so it
 doesn't flicker. Waiting for the person and the end go at once.
 
+On Android, a small spinner sits beside the line while the taf works. With the phone's animations turned off (the
+animator scale at 0), a spinner stands still and reads as stuck, so there's none: the line counts the time instead, a
+second at a time ("Thinking · 12 s", `Chat.elapsed`), which is a change of words, not an animation. The typing dots before
+the line begins do the same.
+
 `working`'s `words` are the step's, or the model's own short progress note before a tool call.
 On Claude Opus 5.5 a line Coach writes before a tool call comes back as such a note, not as text
 (kiff/agents' `update`, with the definition's `thinking: "updates"`). tafs cloud puts it on the
