@@ -293,7 +293,10 @@ struct HomeSplitView: View {
         // Only the owner's taps write through this binding, so each one is a choice, a tap on
         // the taf already open too: the list settling later doesn't take them away from it.
         // A new item chosen ticks (Haptics).
-        List(selection: Binding(get: { selection }, set: { chosen = true; Haptics.select(selection, $0); selection = $0 })) {
+        // The List sets its selection twice on one tap of a screen's item, the item then nil (kiff/tafs#2191, seen on
+        // iPadOS 26), so Plan & usage took a second tap: nil is never the owner's choice here, since tapping an item can't
+        // clear the sidebar, so it's ignored.
+        List(selection: Binding(get: { selection }, set: { guard let picked = $0 else { return }; chosen = true; Haptics.select(selection, picked); selection = picked })) {
             // The app's own mark at the top, as its header (the owner's layout).
             // As one sidebar for the whole app, the mascot and "tafs" is the way to the tafs list (the owner's
             // layout): every taf is there; beside it, only those relevant now.
