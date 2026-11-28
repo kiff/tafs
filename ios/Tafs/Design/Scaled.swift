@@ -67,6 +67,8 @@ enum Haptics {
     /// The person changed a selection with no button under it (a segmented control, a list's
     /// row): a selection tick, only when it truly changed. Call it before setting the new value.
     static func select<Value: Equatable>(_ from: Value, _ to: Value) {
+        // DIAGNOSIS ONLY (kiff/tafs#2191): the iPad sidebar's List setter calls this with each value it sets.
+        if let to = to as? HomeSelection? { MainActor.assumeIsolated { SidebarProbe.note("set \(String(describing: to))") } }
         if from != to { step() }
     }
 

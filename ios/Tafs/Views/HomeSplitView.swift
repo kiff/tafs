@@ -68,6 +68,26 @@ enum HomeSelection: Hashable {
     }
 }
 
+/// DIAGNOSIS ONLY (kiff/tafs#2191, not for merge): every value the iPad sidebar's selection takes, and from where, in
+/// sample mode only, shown as one hidden accessibility element (`sidebar.probe`) for the UI test to read.
+@MainActor
+final class SidebarProbe: ObservableObject {
+    static let shared = SidebarProbe()
+    @Published private(set) var text = ""
+    static func note(_ line: String) {
+        guard Screenshots.enabled else { return }
+        shared.text += (shared.text.isEmpty ? "" : " | ") + line
+    }
+}
+
+private struct SidebarProbeView: View {
+    @ObservedObject private var probe = SidebarProbe.shared
+    var body: some View {
+        Text(probe.text.isEmpty ? "empty" : probe.text).font(.system(size: 2)).opacity(0.02)
+            .accessibilityIdentifier("sidebar.probe").accessibilityLabel(probe.text.isEmpty ? "empty" : probe.text)
+    }
+}
+
 /// The sidebar (Theme.raised): the overview, the calls waiting for the owner, and the tafs with a line on each. The selected one opens beside it.
 struct HomeSplitView: View {
     @EnvironmentObject private var model: AppModel
@@ -181,19 +201,22 @@ struct HomeSplitView: View {
                                    close: { showingGallery = nil })
             }
         }
-        .onAppear { model.sidebarShown = true; take(model.requestedTafPage); takeCalendar() }
+        .onAppear { SidebarProbe.note("appear sel=\(String(describing: selection))"); model.sidebarShown = true; take(model.requestedTafPage); takeCalendar() }
+        .overlay(alignment: .bottomLeading) { if Screenshots.enabled { SidebarProbeView() } }
         .onDisappear { model.sidebarShown = false }
         // A taf's page asked for by name: its row is selected, unless it's on screen already; the
         // taf's page opens on the part asked for and clears the request.
         .onChange(of: model.requestedTafPage) { take($0) }
         .onChange(of: model.calendarRequested) { _ in takeCalendar() }
         .onChange(of: selection) { s in
+            SidebarProbe.note("now \(String(describing: s))")
             if s != opened { chosen = true }
             // The app's tab follows: a taf is the Tafs tab, each screen its own.
             if let tab, let s, tab.wrappedValue != s.tab { tab.wrappedValue = s.tab }
         }
         // A tab opened from elsewhere (a notification, a drive) opens its screen here.
         .onChange(of: tab?.wrappedValue) { t in
+            SidebarProbe.note("tab \(String(describing: t))")
             guard let t else { return }
             // The tafs (⌘1) from a screen: back to the taf the app opened on. From a taf, nothing moves.
             if t == .tafs {
@@ -237,6 +260,7 @@ struct HomeSplitView: View {
             // A tab asked for before the sidebar drew (an alert that opened the app on Needs you, a route, a
             // screenshot's `-tab`) opens its screen: the tafs list only when none was.
             selection = tab.flatMap { HomeSelection.of($0.wrappedValue) } ?? opened
+            SidebarProbe.note("task \(String(describing: selection)) chosen=\(chosen)")
             // `-screen new-taf`: + New's job gallery over the sample, as the reference set shows it.
             if Screenshots.enabled, Screenshots.screen == "new-taf", showingGallery == nil {
                 await model.loadGallery()

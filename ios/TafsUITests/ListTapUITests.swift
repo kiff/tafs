@@ -51,6 +51,26 @@ final class ListTapUITests: TafsUITestCase {
         XCTAssertEqual(openName(app), pick, "the taf picked by a tap stays open when the list settles")
     }
 
+    /// DIAGNOSIS ONLY (kiff/tafs#2191, not for merge): one tap on Plan & usage in the iPad's sidebar, then every value
+    /// the sidebar's selection took and from where (`sidebar.probe`), written to the log whatever happens.
+    @MainActor
+    func testDiagnoseOneTapOnPlanAndUsage() throws {
+        guard iPad else { throw XCTSkip("the sidebar is the iPad's") }
+        let app = launchList(["-signedIn", "YES"])
+        let item = app.collectionViews.firstMatch.descendants(matching: .any)["sidebar.Plan & usage"]
+        XCTAssertTrue(item.waitForExistence(timeout: 60), "Plan & usage in the sidebar")
+        let probe = app.descendants(matching: .any)["sidebar.probe"]
+        let before = probe.exists ? probe.label : "no probe"
+        item.tap()
+        RunLoop.current.run(until: Date().addingTimeInterval(4))
+        let after = probe.exists ? probe.label : "no probe"
+        let placeholder = app.staticTexts["Choose a taf."].exists
+        print("DIAGNOSIS 2191 before: \(before)")
+        print("DIAGNOSIS 2191 after: \(after)")
+        print("DIAGNOSIS 2191 placeholder shown: \(placeholder)")
+        XCTFail("DIAGNOSIS 2191 (not a real failure) · before: \(before) · after: \(after) · placeholder: \(placeholder)")
+    }
+
     // MARK: Helpers
 
     @MainActor
