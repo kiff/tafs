@@ -48,6 +48,31 @@ const locale = (lang: Lang) => (lang === "en" ? "en-GB" : lang);
 const CURRENCY = /^[A-Z]{3}$/;
 
 /**
+ * A currency's minor unit, the exponent a Card's figure is in, from the same lists as planque's major amounts
+ * (internal/planque/amounts.go): Stripe's zero- and three-decimal currencies, ISO 4217's two-decimal ones, and none for
+ * the currencies Stripe treats as special cases (ISK, HUF, TWD, UGX) or any other, so a figure is never said at a guessed
+ * scale. Never Intl's display precision, which is CLDR's (0 for HUF, IDR and COP) and would say 100 times the figure.
+ */
+const ZERO = new Set(["BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "VND", "VUV", "XAF", "XOF", "XPF"]);
+const THREE = new Set(["BHD", "JOD", "KWD", "OMR", "TND"]);
+const SPECIAL = new Set(["ISK", "HUF", "TWD", "UGX"]);
+const HUNDREDTHS = new Set(`AED AFN ALL AMD ANG AOA ARS AUD AWG AZN BAM BBD BDT BGN BMD BND BOB BOV BRL
+BSD BTN BWP BYN BZD CAD CDF CHE CHF CHW CNY COP COU CRC CUP CVE CZK DKK DOP DZD EGP ERN ETB EUR FJD FKP GBP
+GEL GHS GIP GMD GTQ GYD HKD HNL HTG HUF IDR ILS INR IRR JMD KES KGS KHR KPW KYD KZT LAK LBP LKR LRD LSL MAD
+MDL MKD MMK MNT MOP MRU MUR MVR MWK MXN MXV MYR MZN NAD NGN NIO NOK NPR NZD PAB PEN PGK PHP PKR PLN QAR
+RON RSD RUB SAR SBD SCR SDG SEK SGD SHP SLE SOS SRD SSP STN SVC SYP SZL THB TJS TMT TOP TRY TTD TWD TZS UAH
+USD USN UYU UZS VES WST XCD YER ZAR ZMW ZWG`.split(/\s+/));
+
+/** The currency's minor unit, or undefined when it isn't one a figure can be said in exactly. */
+export function minorUnit(code: string): number | undefined {
+  if (SPECIAL.has(code)) return undefined;
+  if (ZERO.has(code)) return 0;
+  if (THREE.has(code)) return 3;
+  if (HUNDREDTHS.has(code)) return 2;
+  return undefined;
+}
+
+/**
  * One figure's line ("Refunds: up to €50.00 each time; past that, it asks you"), or undefined when it can't be said
  * exactly: a language without its words, no title, a `sum` with no valid currency, a per-item figure with no per label,
  * or a window a line doesn't name. `over` is the figure's own, else its rule's.
@@ -68,10 +93,14 @@ export function limitLine(l: AgreedLimit, ruleOver: "ask" | "refuse", names: Lin
     amount = new Intl.NumberFormat(locale(lang)).format(l.limit);
   } else {
     if (!names.currency || !CURRENCY.test(names.currency)) return undefined;
+    // The Card's figure is in the currency's minor units, by its ISO exponent: 5000 in EUR is €50.00, in JPY ¥5,000, in
+    // KWD 5.000; written at exactly that many decimals, so what's said is the figure, never rounded.
+    const digits = minorUnit(names.currency);
+    if (digits === undefined) return undefined;
     let fmt: Intl.NumberFormat;
-    try { fmt = new Intl.NumberFormat(locale(lang), { style: "currency", currency: names.currency }); } catch { return undefined; }
-    // The Card's figure is in the currency's minor units, by its own decimals: 5000 in EUR is €50.00, in JPY ¥5,000.
-    const digits = fmt.resolvedOptions().maximumFractionDigits ?? 2;
+    try {
+      fmt = new Intl.NumberFormat(locale(lang), { style: "currency", currency: names.currency, minimumFractionDigits: digits, maximumFractionDigits: digits });
+    } catch { return undefined; }
     amount = fmt.format(l.limit / 10 ** digits);
   }
   return `${w.upTo(title, amount, l.window as Window, per)}; ${w.past(over)}`;

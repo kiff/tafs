@@ -9,6 +9,15 @@ describe("limit lines from the agreed figures", () => {
       .toBe("Refunds: up to €200.00 a day; past that, it's refused");
     expect(limitLine({ quantity: "sum(amount)", window: "call", limit: 5000 }, "ask", { title: "Refunds", currency: "JPY" }, "en")).toBe("Refunds: up to JP¥5,000 each time; past that, it asks you");
   });
+  it("reads a figure at the currency's ISO exponent, never at Intl's display precision", () => {
+    // Intl shows IDR and COP with no decimals; ISO and Stripe count them in hundredths.
+    const plain = (s?: string) => s?.replace(/\u00a0/g, " ");
+    expect(plain(limitLine({ quantity: "sum(amount)", window: "call", limit: 500000 }, "ask", { title: "Refunds", currency: "IDR" }, "en"))).toBe("Refunds: up to IDR 5,000.00 each time; past that, it asks you");
+    expect(plain(limitLine({ quantity: "sum(amount)", window: "call", limit: 5000 }, "ask", { title: "Refunds", currency: "KWD" }, "en"))).toBe("Refunds: up to KWD 5.000 each time; past that, it asks you");
+    // A currency Stripe treats as a special case, or one in no list, gets no line rather than a guessed scale.
+    expect(limitLine({ quantity: "sum(amount)", window: "call", limit: 500000 }, "ask", { title: "Refunds", currency: "HUF" }, "en")).toBeUndefined();
+    expect(limitLine({ quantity: "sum(amount)", window: "call", limit: 5000 }, "ask", { title: "Refunds", currency: "XYZ" }, "en")).toBeUndefined();
+  });
   it("says a count, a per-item figure and a limit of 0", () => {
     expect(limitLine({ quantity: "count", window: "calendar_day", limit: 1000 }, "ask", { title: "replies to customers" }, "en"))
       .toBe("Replies to customers: up to 1,000 a day; past that, it asks you");
