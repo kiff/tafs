@@ -766,6 +766,9 @@ final class KIFFClient {
         /// and the total are KIFF's own `taf_reason` and amount, as for any hold.
         var browserBlock: BrowserBlock? = nil
         var browser: BrowserStep? { browserBlock?.step }
+        /// A held purchase (Thune, contracts/purchase.json): the case and KIFF's words for it, read without ever failing
+        /// the hold. Its case is signed into every answer (`answerMessage`'s purchase line).
+        var purchaseBlock: PurchaseBlock? = nil
         /// The held step is a sign-in fill (`browser.sealed_fill`, or a plain `browser.fill`): allowing it takes a
         /// release from this phone's approval key (docs/chrome.md, "never an allowing answer without its release"),
         /// which iPhone and iPad can't make yet. Read apart from the step card, so a fill is known even when its card
@@ -840,6 +843,7 @@ final class KIFFClient {
             case proposalID = "proposal_id", canApproveOnce = "can_approve_once", reasonText = "reason_text"
             case tafAboutText = "taf_about", tafReasonText = "taf_reason"
             case browserBlock = "browser"
+            case purchaseBlock = "purchase"
             case id, subject, action, title, arguments, status, breaches, parameters, reason, kind, count
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"
@@ -1211,12 +1215,15 @@ final class KIFFClient {
 
     /// What the phone signs to answer a held call: KIFF's signed answer message,
     /// `kiff.answer.v1`, one field per line.
+    /// A held purchase's answer ends with its case's line (`purchase:<case_id>:<version>:<digest>`, contracts/purchase.json),
+    /// so it counts only for the case the owner saw; any other hold's answer is as before.
     static func answerMessage(tenant: String, exceptionID: String, answer: String, nextStep: String?,
-                              note: String? = nil, accountingVersion: Int, signedAt: String) -> Data {
+                              note: String? = nil, accountingVersion: Int, signedAt: String, purchase: Purchase.Binding? = nil) -> Data {
         let noteHash = note.flatMap { $0.isEmpty ? nil : $0 }
             .map { SHA256.hash(data: Data($0.utf8)).map { String(format: "%02x", $0) }.joined() } ?? ""
-        let lines = ["kiff.answer.v1", tenant, exceptionID, answer, nextStep ?? "", noteHash,
+        var lines = ["kiff.answer.v1", tenant, exceptionID, answer, nextStep ?? "", noteHash,
                      String(accountingVersion), signedAt]
+        if let purchase { lines.append(purchase.signedLine) }
         return Data(lines.joined(separator: "\n").utf8)
     }
 
