@@ -148,6 +148,7 @@ export const en = {
   approval_rules_unsaid: "The rules you agreed didn't say every limit this Card holds. Nothing was approved. Coach shows the rules again with each limit in them, for you to agree first.",
   approval_rules_unagreed: "Coach drafted this before you agreed to the rules it showed. Nothing was approved. Agree to the rules first, and Coach drafts it again.",
   approval_rules_required: "Coach drafted this without showing you the rules to agree to. Nothing was approved. Coach shows you the rules first.",
+  approval_rules_first: "Rules first: agree to them, then Coach shows the approval.",
   setup_every_call_asks: "Needs your approval for every call",
   setup_not_allowed: "Not allowed by this Card",
   setup_per_action: (amount: string) => `${amount} per action`,

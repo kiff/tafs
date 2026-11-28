@@ -864,7 +864,7 @@ account's signed-in connections (`listed` or `connected`, with the day they were
 the other form of a live taf's name, as `- Qonto, for no taf yet (asked 2026-11-27): vendor_sign_in, …; listed`
 (`connectionLines` with every live taf, the ones the person can't see included). Coach offers that sign-in first, by its
 vendor ("Qonto, signed in earlier, not used by any taf yet"), and when the owner takes it, goes on with that same grant
-as if made in this conversation, its agent the new taf's, with no new sign-in (`connect-an-app@38`; Qonto re-test 3,
+as if made in this conversation, its agent the new taf's, with no new sign-in (`connect-an-app@39`; Qonto re-test 3,
 27 Nov: a new conversation asked to sign in again over a `listed` Qonto sign-in left by a conversation the owner had
 deleted). planque's `reuse` takes only a `connected` grant, so a `listed` one is gone on with, never reused. Deleting a
 conversation ends the connections it asked for that no taf uses ([api.md](api.md), `DELETE /v1/tafs/{id}/chats/{session}`),

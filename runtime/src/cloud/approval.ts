@@ -106,6 +106,16 @@ type CardsChecked = Decision | { waitsFor: string } | { draft: NonNullable<Await
 export const REFUSAL_CLOSED = "Refused by tafs cloud's check, not by the owner: this approval is closed and nothing waits for them.";
 export const DRAW_AGAIN = "Draft it again now and show a new approval.";
 export const AGREE_FIRST = "Show the rules for the owner to agree first, then draft it again and show a new approval.";
+
+/**
+ * Whether an approval's answer is Coach's own re-ask for the rules (rules_required, rules_unagreed, rules_unsaid): the
+ * approval was checked before the owner agreed to the rules, and nothing was approved or refused by them. It's a step of
+ * the setup, never a failure: the owner reads "Rules first" (approval_rules_first), never "it didn't go through" (28 Nov,
+ * the owner on a Qonto read: "it just reads as if something didn't work out"). Their one approval comes after they agree.
+ */
+export function rulesFirstAnswer(answer: string): boolean {
+  return answer.startsWith("failed: ") && answer.includes(AGREE_FIRST);
+}
 /**
  * What a held per-action limit's Card carries instead, said with a refusal that took its total away (count_on_amount on
  * that Card, day_total_twice): KIFF refuses a Card with no total, so its one total is KIFF's own count (kiffsOwnCount),

@@ -139,6 +139,7 @@ export const de: Words = {
   approval_rules_unsaid: "Die Regeln, denen du zugestimmt hast, nannten nicht jedes Limit dieser Card. Es wurde nichts genehmigt. Coach zeigt die Regeln noch einmal mit jedem Limit, damit du zuerst zustimmst.",
   approval_rules_unagreed: "Coach hat das entworfen, bevor du den gezeigten Regeln zugestimmt hast. Es wurde nichts genehmigt. Stimme zuerst den Regeln zu, dann entwirft Coach es neu.",
   approval_rules_required: "Coach hat das entworfen, ohne dir die Regeln zur Zustimmung zu zeigen. Es wurde nichts genehmigt. Coach zeigt dir zuerst die Regeln.",
+  approval_rules_first: "Zuerst die Regeln: stimm ihnen zu, dann zeigt Coach die Genehmigung.",
   setup_every_call_asks: "Jeder Aufruf braucht deine Freigabe",
   setup_not_allowed: "Von dieser Card nicht erlaubt",
   setup_per_action: (amount) => `${amount} pro Aktion`,

@@ -133,6 +133,7 @@ export const hu: Words = {
   approval_rules_unsaid: "A szabályok, amelyeket elfogadtál, nem mondták ki a Card minden limitjét. Semmi sem lett jóváhagyva. A Coach újra megmutatja a szabályokat az összes limittel, hogy előbb elfogadhasd őket.",
   approval_rules_unagreed: "A Coach ezt azelőtt fogalmazta meg, hogy elfogadtad volna az általa mutatott szabályokat. Semmi sem lett jóváhagyva. Fogadd el előbb a szabályokat, és a Coach újra megfogalmazza.",
   approval_rules_required: "A Coach ezt anélkül fogalmazta meg, hogy megmutatta volna az elfogadandó szabályokat. Semmi sem lett jóváhagyva. A Coach előbb megmutatja a szabályokat.",
+  approval_rules_first: "Előbb a szabályok: ha elfogadja őket, a Coach megmutatja a jóváhagyást.",
   setup_every_call_asks: "Minden hívás a jóváhagyásodat kéri",
   setup_not_allowed: "Ez a Card nem engedi",
   setup_per_action: (amount: string) => `${amount} műveletenként`,

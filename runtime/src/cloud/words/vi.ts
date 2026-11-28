@@ -133,6 +133,7 @@ export const vi: Words = {
   approval_rules_unsaid: "Các quy tắc bạn đã đồng ý không nêu mọi giới hạn mà Card này có. Chưa có gì được phê duyệt. Coach hiển thị lại các quy tắc kèm từng giới hạn, để bạn đồng ý trước.",
   approval_rules_unagreed: "Coach soạn mục này trước khi bạn đồng ý với các quy tắc nó đã hiển thị. Chưa có gì được phê duyệt. Hãy đồng ý với các quy tắc trước, rồi Coach soạn lại.",
   approval_rules_required: "Coach soạn mục này mà không hiển thị các quy tắc để bạn đồng ý. Chưa có gì được phê duyệt. Coach sẽ hiển thị các quy tắc cho bạn trước.",
+  approval_rules_first: "Quy tắc trước: hãy đồng ý, rồi Coach sẽ hiển thị phần phê duyệt.",
   setup_every_call_asks: "Mỗi lượt gọi cần bạn phê duyệt",
   setup_not_allowed: "Card này không cho phép",
   setup_per_action: (amount: string) => `${amount} mỗi hành động`,

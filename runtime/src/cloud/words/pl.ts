@@ -139,6 +139,7 @@ export const pl: Words = {
   approval_rules_unsaid: "Zaakceptowane zasady nie podawały każdego limitu tej Card. Nic nie zostało zatwierdzone. Coach pokaże zasady ponownie z każdym limitem, aby najpierw je zaakceptować.",
   approval_rules_unagreed: "Coach przygotował to, zanim zaakceptowałeś pokazane zasady. Nic nie zostało zatwierdzone. Najpierw zaakceptuj zasady, a Coach przygotuje to ponownie.",
   approval_rules_required: "Coach przygotował to, nie pokazując ci zasad do zaakceptowania. Nic nie zostało zatwierdzone. Coach najpierw pokaże ci zasady.",
+  approval_rules_first: "Najpierw zasady: zaakceptuj je, a Coach pokaże ci zatwierdzenie.",
   setup_every_call_asks: "Każde wywołanie wymaga Twojego zatwierdzenia",
   setup_not_allowed: "Niedozwolone przez tę Card",
   setup_per_action: (amount) => `${amount} na akcję`,

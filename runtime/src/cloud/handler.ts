@@ -68,7 +68,7 @@ import { tafPurpose } from "./taf-purpose.js";
 import { inboxMarks, inboxState, markInbox } from "./watch-inbox.js";
 import { type Ask, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, askDay, askOfSession, type AskState, checkedLine, CLIENT_ID, dayTurns, fullAnswer, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, ROUTING_MS, shownAsk, SINCE_DEFAULT_MS, tafLine, WATCH_TOOLS, watchCoachLine, watchDaysOf, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, unagreedRefusal, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
+import { CARD_NEXT, ApprovalError, rulesFirstAnswer, type ApprovalGrant, REDRAFT_CODES, unagreedRefusal, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
@@ -2988,7 +2988,7 @@ export interface CardAnswer {
   outcome?: ResultOutcome & { plan_needed?: { words: string } };
   /**
    * An approval card's answer, settled and free of any language (settledApprovalAnswer): `approved`, `already approved`,
-   * `connected` (a connect step that worked, its Card next), `declined` or `failed: <why>`. The apps draw "approved" only
+   * `connected` (a connect step that worked, its Card next), `rules first` (Coach asked for the rules before any approval: nothing approved, nothing failed), `declined` or `failed: <why>`. The apps draw "approved" only
    * for the first three, and anything else, or none, as not approved.
    */
   answer?: string;
@@ -3525,7 +3525,8 @@ function inputID(run: string): string {
 /**
  * An approval card's stored answer, settled for the apps so none repeats tafs cloud's rules: `approved`, `already approved`
  * (any "already approved: …"), `connected` (a connect step that worked by design, its Card next, stored as
- * "failed: <vendor> is connected; <CARD_NEXT>"), `declined`, or `failed: <why>` as stored. Undefined for anything else,
+ * "failed: <vendor> is connected; <CARD_NEXT>"), `rules first` (Coach's re-ask for the rules, rulesFirstAnswer), `declined`, or
+ * `failed: <why>` as stored. Undefined for anything else,
  * which the apps read as not approved (the owner's Reject read "Approved" on Windows, 17 Nov).
  */
 export function settledApprovalAnswer(answer: unknown): string | undefined {
@@ -3535,7 +3536,9 @@ export function settledApprovalAnswer(answer: unknown): string | undefined {
   if (answer.startsWith("failed: ")) {
     const why = answer.slice("failed: ".length);
     const next = why.endsWith(`; ${CARD_NEXT}`) && / is connected$/.test(why.slice(0, -`; ${CARD_NEXT}`.length));
-    return next ? "connected" : answer;
+    if (next) return "connected";
+    // Coach's re-ask for the rules: nothing approved, nothing failed. The apps draw it as not approved, never as a failure.
+    return rulesFirstAnswer(answer) ? "rules first" : answer;
   }
   return undefined;
 }
@@ -3550,6 +3553,8 @@ export function approvalAnswerWords(b: { type?: unknown; answer?: unknown; note?
     // A connect step that worked by design, its Card next: never "it didn't go through".
     const next = why.endsWith(`; ${CARD_NEXT}`) ? / is connected$/.exec(why.slice(0, -`; ${CARD_NEXT}`.length)) : null;
     if (next) return w.approval_connected_card_next(why.slice(0, next.index));
+    // Coach's re-ask for the rules, before the owner agreed to them: a step, never "it didn't go through".
+    if (rulesFirstAnswer(b.answer)) return w.approval_rules_first;
     // The reason after "failed: " is written for Coach (what to draft again, what never to say), never for the owner
     // (21 Nov, the owner on the emulator: a refused Card's line carried "Show the rules again as a new notice…"). The
     // owner reads the line alone, or the owner's own note where tafs cloud kept one (the precheck's).

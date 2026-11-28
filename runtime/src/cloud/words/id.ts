@@ -133,6 +133,7 @@ export const id: Words = {
   approval_rules_unsaid: "Aturan yang Anda setujui tidak menyebut setiap batas yang dimuat Card ini. Tidak ada yang disetujui. Coach menampilkan aturannya lagi dengan setiap batas di dalamnya, agar Anda menyetujuinya dulu.",
   approval_rules_unagreed: "Coach menyusun ini sebelum Anda menyetujui aturan yang ditampilkannya. Tidak ada yang disetujui. Setujui aturannya dulu, lalu Coach menyusunnya lagi.",
   approval_rules_required: "Coach menyusun ini tanpa menampilkan aturan untuk Anda setujui. Tidak ada yang disetujui. Coach menampilkan aturannya dulu kepada Anda.",
+  approval_rules_first: "Aturan dulu: setujui, lalu Coach menampilkan persetujuannya kepada Anda.",
   setup_every_call_asks: "Setiap panggilan butuh persetujuan Anda",
   setup_not_allowed: "Tidak diizinkan oleh Card ini",
   setup_per_action: (amount: string) => `${amount} per tindakan`,

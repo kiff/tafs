@@ -133,6 +133,7 @@ export const lv: Words = {
   approval_rules_unsaid: "Noteikumos, par kuriem vienojies, nebija minēti visi šīs Card limiti. Nekas netika apstiprināts. Coach vēlreiz parāda noteikumus ar katru limitu tajos, lai tu vispirms tiem piekristu.",
   approval_rules_unagreed: "Coach to sagatavoja, pirms tu piekriti noteikumiem, ko tas parādīja. Nekas netika apstiprināts. Vispirms piekrīti noteikumiem, un Coach sagatavos to no jauna.",
   approval_rules_required: "Coach to sagatavoja, neparādot tev noteikumus, kam piekrist. Nekas netika apstiprināts. Coach vispirms parādīs tev noteikumus.",
+  approval_rules_first: "Vispirms noteikumi: piekrīti tiem, un Coach parādīs tev apstiprinājumu.",
   setup_every_call_asks: "Katram izsaukumam vajag tavu apstiprinājumu",
   setup_not_allowed: "Šī Card neatļauj",
   setup_per_action: (amount: string) => `${amount} par darbību`,

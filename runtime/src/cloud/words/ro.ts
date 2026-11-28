@@ -133,6 +133,7 @@ export const ro: Words = {
   approval_rules_unsaid: "Regulile asupra cărora ați convenit nu au precizat fiecare limită pe care o conține acest Card. Nu s-a aprobat nimic. Coach arată din nou regulile cu fiecare limită în ele, ca să le acceptați mai întâi.",
   approval_rules_unagreed: "Coach l-a redactat înainte să fiți de acord cu regulile pe care le-a arătat. Nu s-a aprobat nimic. Acceptați mai întâi regulile, iar Coach îl redactează din nou.",
   approval_rules_required: "Coach l-a redactat fără să vă arate regulile pe care să le acceptați. Nu s-a aprobat nimic. Coach vă arată mai întâi regulile.",
+  approval_rules_first: "Mai întâi regulile: acceptați-le, apoi Coach vă arată aprobarea.",
   setup_every_call_asks: "Fiecare apel are nevoie de aprobarea dvs.",
   setup_not_allowed: "Nepermis de acest Card",
   setup_per_action: (amount: string) => `${amount} pe acțiune`,

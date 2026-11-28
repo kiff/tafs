@@ -133,6 +133,7 @@ export const hr: Words = {
   approval_rules_unsaid: "Pravila s kojima ste se složili nisu navela svako ograničenje koje ovaj Card sadrži. Ništa nije odobreno. Coach ponovno prikazuje pravila sa svakim ograničenjem u njima, da im se prvo složite.",
   approval_rules_unagreed: "Coach je ovo sastavio prije nego što ste se složili s pravilima koja je prikazao. Ništa nije odobreno. Prvo se složite s pravilima, a Coach će ga ponovno sastaviti.",
   approval_rules_required: "Coach je ovo sastavio a da vam nije prikazao pravila s kojima se trebate složiti. Ništa nije odobreno. Coach vam prvo prikazuje pravila.",
+  approval_rules_first: "Prvo pravila: prihvatite ih i Coach vam prikazuje odobrenje.",
   setup_every_call_asks: "Svaki poziv traži vaše odobrenje",
   setup_not_allowed: "Ovaj Card to ne dopušta",
   setup_per_action: (amount: string) => `${amount} po radnji`,

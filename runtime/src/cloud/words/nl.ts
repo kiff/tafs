@@ -139,6 +139,7 @@ export const nl: Words = {
   approval_rules_unsaid: "De regels waarmee je akkoord ging, noemden niet elke limiet van deze Card. Er is niets goedgekeurd. Coach laat de regels opnieuw zien met elke limiet erin, zodat je eerst akkoord gaat.",
   approval_rules_unagreed: "Coach stelde dit op voordat je akkoord ging met de regels die hij liet zien. Er is niets goedgekeurd. Ga eerst akkoord met de regels, dan stelt Coach het opnieuw op.",
   approval_rules_required: "Coach stelde dit op zonder je de regels te laten zien om mee akkoord te gaan. Er is niets goedgekeurd. Coach laat je eerst de regels zien.",
+  approval_rules_first: "Eerst de regels: ga ermee akkoord, dan laat Coach je de goedkeuring zien.",
   setup_every_call_asks: "Elke aanroep heeft je goedkeuring nodig",
   setup_not_allowed: "Niet toegestaan door deze Card",
   setup_per_action: (amount) => `${amount} per actie`,

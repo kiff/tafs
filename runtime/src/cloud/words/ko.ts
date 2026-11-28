@@ -137,6 +137,7 @@ export const ko: Words = {
   approval_rules_unsaid: "내가 합의한 규칙에 이 Card의 모든 한도가 나와 있지 않았습니다. 승인된 것은 없습니다. Coach가 각 한도를 담은 규칙을 다시 보여 주니, 먼저 합의하세요.",
   approval_rules_unagreed: "Coach가 보여 준 규칙에 내가 합의하기 전에 이 초안을 작성했습니다. 승인된 것은 없습니다. 먼저 규칙에 합의하면 Coach가 다시 초안을 작성합니다.",
   approval_rules_required: "Coach가 합의할 규칙을 보여 주지 않고 이 초안을 작성했습니다. 승인된 것은 없습니다. Coach가 먼저 규칙을 보여 줍니다.",
+  approval_rules_first: "규칙이 먼저입니다. 규칙에 동의하면 Coach가 승인을 보여 드립니다.",
   setup_every_call_asks: "호출할 때마다 내 승인 필요",
   setup_not_allowed: "이 Card에서 허용하지 않음",
   setup_per_action: (amount: string) => `행동당 ${amount}`,

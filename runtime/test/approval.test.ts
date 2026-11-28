@@ -2768,6 +2768,21 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     process.env.TAFS_RULES_REQUIRED = "on";
     expect(await check(none.w, { conversation: [] })).toMatchObject({ outcome: "answered", code: "rules_required", redraft: true });
     expect(await check(none.w)).toMatchObject({ outcome: "ok", rules_unchecked: true });
+    // Coach's re-asks for the rules are a step, never a failure (28 Nov, a Qonto read: two "it didn't go through" before the
+    // one approval): the owner reads "Rules first", in their language, and the apps get "rules first", not approved.
+    // Any other refusal still reads as one.
+    const reasks = [
+      await check(none.w, { conversation: [] }),
+      await check(unagreed.w, { conversation: events(unagreed.w) }),
+      await check(unsaid.w, { conversation: events(unsaid.w) }),
+    ];
+    for (const r of reasks) {
+      expect(approvalAnswerWords({ type: "approval", answer: r.answer, note: r.note }, "en"), String(r.code)).toBe(wordsIn("en").approval_rules_first);
+      expect(approvalAnswerWords({ type: "approval", answer: r.answer, note: r.note }, "de")).toBe(wordsIn("de").approval_rules_first);
+      expect(settledApprovalAnswer(r.answer)).toBe("rules first");
+    }
+    expect(approvalAnswerWords({ type: "approval", answer: ruled.answer, note: ruled.note }, "en")).toMatch(/^Approve · it didn't go through/);
+    expect(settledApprovalAnswer(ruled.answer)).toBe(ruled.answer);
     // Not a list of events, or too long: refused.
     for (const conversation of ["rules-1", [1, 2], [[]], Array.from({ length: 2001 }, () => ({}))]) {
       expect((await none.w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3", conversation })).status).toBe(400);
@@ -2796,15 +2811,16 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       (r.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string; words: string } }>).find((c) => c.component.id === "a1");
     expect(card(read)?.answer?.state).toBe("answered");
     expect(card(read)?.component.signs).toBeUndefined();
-    // The person reads why, in their words; Coach hears Approve's own refusal, and shows the rules' confirm now.
-    expect(card(read)?.answer?.words).toBe(`Approve · it didn't go through: ${WORDS.rulesUnagreed}`);
+    // The person reads "Rules first", never a failure (28 Nov); Coach hears Approve's own refusal, and shows the rules' confirm now.
+    expect(card(read)?.answer?.words).toBe(wordsIn("en").approval_rules_first);
+    expect((card(read)?.answer as { answer?: string } | undefined)?.answer).toBe("rules first");
     expect(String(w.told()?.answer)).toMatch(/^failed: the rules notice "rules-1" isn't agreed yet/);
     expect(String(w.told()?.answer)).toContain(`${AGREE_FIRST} ${SHOW_NOW}`);
     // Once, across reads: the next read draws it answered and tells Coach nothing more, with the draft back too.
     s.drafts.drf_1 = drafts;
     const told = w.told();
     const again = await w.call("GET", CHAT, undefined);
-    expect(card(again)?.answer?.words).toBe(`Approve · it didn't go through: ${WORDS.rulesUnagreed}`);
+    expect(card(again)?.answer?.words).toBe(wordsIn("en").approval_rules_first);
     expect(w.told()).toEqual(told);
     expect(s.checks).toEqual([]);
   });
