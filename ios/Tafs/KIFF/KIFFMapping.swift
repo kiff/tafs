@@ -318,7 +318,11 @@ enum KIFFMapping {
         call.proposalID = e.proposalID
         // A sign-in fill is never allowed without its release, which this app can't make yet: Refuse only.
         call.needsRelease = e.needsRelease ? true : nil
-        call.approvableOnce = (e.canApproveOnce ?? true) && !e.needsRelease
+        // A purchase is approved only with every word it signs read; one that doesn't read is refused for its case, never approved.
+        call.purchase = e.purchaseBlock?.purchase
+        call.purchaseBinding = e.purchaseBlock?.binding
+        call.purchaseUnreadable = e.purchaseBlock != nil && e.purchaseBlock?.purchase == nil ? true : nil
+        call.approvableOnce = (e.canApproveOnce ?? true) && !e.needsRelease && call.purchaseUnreadable != true
         call.accountingVersion = e.accountingVersion
         call.nextSteps = e.nextSteps ?? []
         call.details = details(of: e)

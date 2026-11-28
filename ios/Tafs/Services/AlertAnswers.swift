@@ -21,8 +21,11 @@ enum AlertAnswers {
         let refuse = UNNotificationAction(identifier: refuse, title: Words.NeedsYou.refuse, options: [.authenticationRequired, .destructive])
         let hold = UNNotificationCategory(identifier: holdCategory, actions: [approve, refuse], intentIdentifiers: [],
                                           hiddenPreviewsBodyPlaceholder: Words.Alert.needsYou, options: [])
+        // A held purchase: Refuse only (HoldNotification.refuseOnlyCategory); it's approved from its own card.
+        let refuseOnly = UNNotificationCategory(identifier: HoldNotification.refuseOnlyCategory, actions: [refuse], intentIdentifiers: [],
+                                                hiddenPreviewsBodyPlaceholder: Words.Alert.needsYou, options: [])
         let halt = UNNotificationCategory(identifier: haltCategory, actions: [], intentIdentifiers: [], options: [])
-        return [hold, halt, WatchSignInAsk.category()]
+        return [hold, refuseOnly, halt, WatchSignInAsk.category()]
     }
 
     /// Where a hold's notification opens: that hold, with the answer chosen on it if any.
@@ -65,8 +68,12 @@ enum NotificationRefuse {
         }
         // KIFF's message, as the app signs it: this hold, refused, the version shown, now.
         let signedAt = ISO8601DateFormatter().string(from: now)
+        // A held purchase's refusal binds its case too; one whose case can't be signed as sent is answered in the app.
+        if call.purchaseBlock != nil, call.purchaseBlock?.binding == nil {
+            return .needsApp(Words.Alert.openTafsAnswerKiffDid)
+        }
         let message = KIFFClient.answerMessage(tenant: tenant, exceptionID: hold, answer: "reject", nextStep: nil,
-                                               accountingVersion: version, signedAt: signedAt)
+                                               accountingVersion: version, signedAt: signedAt, purchase: call.purchaseBlock?.binding)
         do {
             let value = try signer.signConfirmed(message)
             try await kiff.reject(hold, signature: KIFFClient.AnswerSignature(signedAt: signedAt, value: value))
