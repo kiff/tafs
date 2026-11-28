@@ -154,7 +154,7 @@ export interface AgentDefinition {
   /** A run that would end on its tool results with no text gets one more turn, once, for its closing message. */
   close_in_text?: boolean;
   /** What the agent's cards may not say (kiff/agents' show.Wording); needs show. */
-  wording?: Array<{ patterns: string[]; unless_next?: string[]; fix: string }>;
+  wording?: Array<{ patterns: string[]; unless_next?: string[]; unless_done?: string[]; instead?: string; fix: string }>;
   /** The endings show writes after each line of a rules notice, by language then where it's kept (kiff/agents' show.KeptWords); needs show. */
   kept_words?: Record<string, Record<string, string>>;
 }
