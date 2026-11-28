@@ -198,13 +198,17 @@ it beside the words, read once on Send ([chrome.md](chrome.md), "Coach reads the
 
 ## The answer as it comes
 
-On Android, the block under the owner's message is one line (`LiveWork`, `Chat.liveLine`): the
-stream's `state` once tafs cloud sends it (`event: state {state, words?}`), "Working…" lines in
-the step's words or Coach's own progress note ("Miro las últimas ejecuciones de Reembolsos…"),
-"Waiting for you", and nothing at `done`, where it folds into the message's "Worked … · N
-steps". Before tafs cloud sends `state`, the step at work stands in, else "Thinking…". The
-model's thinking text and a list of steps are never drawn. iOS draws the same line on top of
-its work block (`LiveWork.line`), and no thinking text either.
+On Android, the block under the owner's message is a line and the steps done under it (`LiveWork`,
+`Chat.liveLine`, `Chat.liveSteps`). The line is the stream's `state` once tafs cloud sends it
+(`event: state {state, words?}`): "Working…" lines in the step's words or Coach's own progress note
+("Miro las últimas ejecuciones de Reembolsos…"), "Waiting for you", and nothing at `done`, where the
+block folds into the message's "Worked … · N steps". Before tafs cloud sends `state`, the step at
+work stands in, else "Thinking…". Under it, each step that ended (`step {call_id, status}`), in
+order, as the folded list shows it: tafs cloud's words without the live "…", a failed one in the
+failure colour, one refused unmade marked so. The step at work and one held for the owner aren't
+listed (the line says them), nor a step tafs cloud has no words for. The model's thinking text is
+never drawn. iOS draws the same line on top of its work block (`LiveWork.line`), and no thinking
+text either.
 
 tafs cloud trims kiff/agents' stream to what the phone shows. Tool inputs and results
 never reach the phone.

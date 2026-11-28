@@ -437,6 +437,18 @@ object Chat {
   }
 
   /**
+   * The steps an answer streaming now has finished, in order, as [steps] lists a finished run's (docs/chat.md, "The work block"):
+   * tafs cloud's words for each, without the "…" its live step carries, so the list reads the same once the run folds into
+   * "Worked … · N steps". A step still running or held for the owner isn't done yet, and the live line says it; a step tafs cloud
+   * has no words for is left out, never shown by its tool.
+   */
+  fun liveSteps(live: LiveAnswer): List<StepLine> = live.steps.mapNotNull { step ->
+    if (step.status == LiveStep.Status.running || step.status == LiveStep.Status.held) return@mapNotNull null
+    val words = step.words.trim().trimEnd('…').trimEnd().ifEmpty { return@mapNotNull null }
+    StepLine(words, failed = step.status == LiveStep.Status.error, notMade = step.status == LiveStep.Status.notMade)
+  }
+
+  /**
    * When a message being sent is stamped: now, but never before the thread's latest, so a phone
    * clock a little behind doesn't place it above the answer it follows.
    */

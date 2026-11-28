@@ -1,0 +1,1 @@
+- **Android: the steps a taf has done show while it works.** Under the working line, each step that ended, in tafs cloud's words, as the folded "Worked … · N steps" lists them ([chat.md](docs/chat.md)).
