@@ -12,10 +12,12 @@ enum WorkLog {
     }
 
     /// The steps as rows. Tries of the same step after a failed or unmade one are one row,
-    /// with the last try's outcome: trying again until it works is normal. A failed step is
-    /// left out once something worked, or while the answer is still being worked on: what
-    /// shows is what got done. When nothing worked, the failures say why. A step not made
-    /// and not tried again stays: it isn't a failure, and it wasn't done.
+    /// with the last try's outcome: trying again until it works is normal. While the run works,
+    /// every step that ended shows, a failed one in the failure colour: tafs cloud holds back a
+    /// failure the taf goes on to fix, so one that reaches the app is one it chose to show (as on
+    /// Android and the Mac). Once the run ends, a failed step is left out once something worked;
+    /// when nothing worked, the failures say why. A step not made and not tried again stays: it
+    /// isn't a failure, and it wasn't done.
     static func rows(_ steps: [(words: String, status: AppModel.LiveStep.Status)], running: Bool) -> [Row] {
         var groups: [[(words: String, status: AppModel.LiveStep.Status)]] = []
         for s in steps {
@@ -26,7 +28,7 @@ enum WorkLog {
             }
         }
         let rows = groups.map { g in Row(words: g[0].words, status: g[g.count - 1].status, tries: g.count) }
-        return running || rows.contains { $0.status == .done } ? rows.filter { $0.status != .error } : rows
+        return !running && rows.contains { $0.status == .done } ? rows.filter { $0.status != .error } : rows
     }
 
     /// A step's words as the list shows them: tafs cloud's, without the live "…", so the live list reads the same once it

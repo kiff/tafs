@@ -207,8 +207,8 @@ work stands in, else "Thinking…". Under it, each step that ended (`step {call_
 order, as the folded list shows it: tafs cloud's words without the live "…", a failed one in the
 failure colour, one refused unmade marked so. The step at work and one held for the owner aren't
 listed (the line says them), nor a step tafs cloud has no words for. The model's thinking text is
-never drawn. iOS draws the same line on top of its work block (`LiveWork.line`), and no thinking
-text either.
+never drawn. iOS draws the same line on top of its work block (`LiveWork.line`), and the same steps under it
+(`WorkLog.rows`, `WorkLog.shown`): a failed one in the failure colour, none without words, and no thinking text either.
 
 tafs cloud trims kiff/agents' stream to what the phone shows. Tool inputs and results
 never reach the phone.

@@ -16,9 +16,11 @@ final class WorkLogTests: XCTestCase {
         // Nothing worked: the failures say why.
         let failed: [(words: String, status: S)] = [("Reading the order", .error), ("Refunding", .error)]
         XCTAssertEqual(WorkLog.rows(failed, running: false).map(\.status), [.error, .error])
-        // Still at work: what got done shows, not the stumbles.
-        XCTAssertEqual(WorkLog.rows(failed + [("Checking", .done)], running: true).map(\.words), ["Checking"])
-        XCTAssertEqual(WorkLog.rows(failed, running: true), [])
+        // Still at work: every step that ended shows, a failed one too (in the failure colour), as tafs cloud sent it.
+        XCTAssertEqual(WorkLog.rows(failed + [("Checking", .done)], running: true).map(\.status), [.error, .error, .done])
+        XCTAssertEqual(WorkLog.rows(failed, running: true).map(\.status), [.error, .error])
+        // Once it ends, a failure the run got past folds away.
+        XCTAssertEqual(WorkLog.rows(failed + [("Checking", .done)], running: false).map(\.words), ["Checking"])
         // The same step after one that worked is a new row.
         XCTAssertEqual(WorkLog.rows([("Reading", .done), ("Reading", .done)], running: false).map(\.tries), [1, 1])
     }
