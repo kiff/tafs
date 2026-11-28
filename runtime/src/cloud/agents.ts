@@ -603,6 +603,12 @@ export interface Schedule {
    * skipped_credits): its due time and KIFF's why. Unset once one of its runs starts.
    */
   waited?: { due: string; why: string };
+  /**
+   * The taf's hosted-browser connection (browser batch 2, kiff/agents#712): before a firing starts a run, kiff/agents asks
+   * planque whether its saved sign-in still works, and a site that stopped holds the firing as `held_sign_in`. Set by tafs
+   * cloud from the taf's connection, never by the taf.
+   */
+  sign_in?: { grant: string };
 }
 
 /** The ids kiff/agents takes: 1 to 128 letters, digits, '-', '_' or '.', never "." or "..". */
@@ -1260,6 +1266,7 @@ function writable(s: Schedule): Omit<Schedule, "next" | "tenant"> {
     id: s.id, agent: s.agent, cron: s.cron, ...(s.time_zone ? { time_zone: s.time_zone } : {}), input: s.input, enabled: s.enabled,
     ...(s.kind && s.kind !== "cron" ? { kind: s.kind } : {}), ...(s.at ? { at: s.at } : {}), ...(s.busy ? { busy: s.busy } : {}),
     ...(s.skip?.length ? { skip: s.skip } : {}), ...(s.check ? { check: checkFor(s.check) } : {}),
+    ...(s.sign_in ? { sign_in: { grant: s.sign_in.grant } } : {}),
   };
 }
 

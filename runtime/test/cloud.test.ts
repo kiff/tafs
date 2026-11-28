@@ -1205,6 +1205,7 @@ describe("tafs cloud", () => {
   it("puts each site's saved sign-in health on the setup and Connect apps, and none for the owner's Chrome or when planque can't say", async () => {
     const w = world();
     w.now = new Date("2026-11-28T10:00:00Z");
+    w.agents.schedules.set(`t_acme|${RAE}`, { tenant: "t_acme", id: RAE, agent: RAE, cron: "0 7 * * *", time_zone: "Europe/Paris", input: "Go", enabled: true });
     const healthAsked: Array<{ url: string; auth: string }> = [];
     let healthStatus = 200;
     const browser = (id: string, extra: Record<string, unknown> = {}) => ({ id, status: "connected", provider: "browser", vendor: "Browser", used_by: ["Rae"],
@@ -1234,6 +1235,8 @@ describe("tafs cloud", () => {
     // The person's own session, a GET: it runs no check.
     expect(healthAsked[0].auth).toBe("Bearer ana");
     expect(JSON.stringify(setup)).not.toContain("never kept");
+    // Its schedule now names the connection, so kiff/agents checks the sign-in before a firing starts a run.
+    expect(w.agents.schedules.get(`t_acme|${RAE}`)?.sign_in).toEqual({ grant: "grt_cloud" });
     const apps = await get("/v1/connect/apps") as { saved_sign_ins?: Array<{ grant: string; site: string; used_by: string[]; health?: { state: string }; sign_in: { title: string } }> };
     expect(apps.saved_sign_ins?.map((r) => [r.grant, r.site, r.used_by, r.health?.state])).toEqual([
       ["grt_cloud", "portal.example", ["Rae"], "needs_you_soon"], ["grt_cloud", "shop.example", ["Rae"], "stopped"]]);
@@ -1244,6 +1247,38 @@ describe("tafs cloud", () => {
     expect(unread.saved_sign_ins?.length).toBe(2);
     expect(unread.saved_sign_ins?.every((r) => r.health === undefined)).toBe(true);
     expect((await get(`/v1/tafs/${RAE}/setup`) as typeof setup).connections.find((c) => c.id === "grt_cloud")!.sites?.every((x) => x.health === undefined)).toBe(true);
+  });
+
+  it("keeps a scheduled taf's sign_in in step with its one hosted-browser connection, and names none for two or none", async () => {
+    const w = world();
+    w.agents.schedules.set(`t_acme|${RAE}`, { tenant: "t_acme", id: RAE, agent: RAE, cron: "0 7 * * *", input: "Go", enabled: true, sign_in: { grant: "grt_old" } });
+    let grants: unknown[] = [];
+    const browser = (id: string, extra: Record<string, unknown> = {}) => ({ id, status: "connected", provider: "browser", vendor: "Browser",
+      request: { agent: "rae", browser: { sites: ["portal.example"], ...extra } } });
+    const deps = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/health")) return new Response(JSON.stringify({ sites: [] }), { status: 200 });
+      if (url.endsWith("/grants")) return new Response(JSON.stringify({ grants }), { status: 200 });
+      if (url.startsWith("https://planque.test/")) return new Response("{}", { status: 500 });
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] } as Deps;
+    const read = () => handle({ rawPath: `/v1/tafs/${RAE}/setup`, requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev" } }, deps);
+    const signIn = () => w.agents.schedules.get(`t_acme|${RAE}`)?.sign_in;
+    grants = [browser("grt_new")];
+    await read();
+    expect(signIn()).toEqual({ grant: "grt_new" });
+    // Two hosted-browser connections: no guess, so none.
+    grants = [browser("grt_new"), browser("grt_two")];
+    await read();
+    expect(signIn()).toBeUndefined();
+    // The owner's Chrome keeps no sign-in at tafs: none.
+    grants = [browser("grt_chrome", { driver: "extension" })];
+    await read();
+    expect(signIn()).toBeUndefined();
+    // Read again with nothing to change: no write.
+    const writes = w.agents.calls.filter((c) => c.startsWith(`updateSchedule ${RAE} `)).length;
+    await read();
+    expect(w.agents.calls.filter((c) => c.startsWith(`updateSchedule ${RAE} `)).length).toBe(writes);
   });
 
   // After a fresh sign-in the owner sees which account it went to and which tafs use it now, as planque names them, so a

@@ -5960,6 +5960,7 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   const seen = again && againAccount && againTafs.length ? await Promise.all([deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase)])
     .then(([records, access]) => new Set(records.filter((t) => !t.removing && listable(access, t.kiffAgent)).map((t) => t.name)), () => new Set<string>()) : new Set<string>();
   const shownTafs = againTafs.filter((n) => seen.has(n));
+  await syncSignIn(me, [taf], grants.grants, deps);
   // Each site of a connected hosted-browser connection says how its saved sign-in held at planque's last check.
   const health = await cloudHealth(event, me, grants.grants.filter((g) => g.request.agent === taf.kiffAgent), deps);
   const connections = health.size ? setup.connections.map((c) => {
@@ -6249,7 +6250,9 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   const ids = planned.map((_, i) => (i === 0 ? taf.id : `${taf.id}-t${i + 1}`));
   for (const [i, p] of planned.entries()) {
     const s: Schedule = { id: ids[i]!, agent: taf.id, cron: p.cron ?? "", time_zone: zone, input, enabled, ...(p.kind !== "cron" ? { kind: p.kind } : {}),
-      ...(p.at ? { at: instantIn(p.at, zone) } : {}), busy: p.busy, ...(p.skip ? { skip: p.skip } : {}), ...(p.check ? { check: p.check } : {}) };
+      ...(p.at ? { at: instantIn(p.at, zone) } : {}), busy: p.busy, ...(p.skip ? { skip: p.skip } : {}), ...(p.check ? { check: p.check } : {}),
+      // Every timetable of a browsing taf keeps its sign-in check (syncSignIn): a dial written anew never drops it.
+      ...(own?.sign_in ? { sign_in: own.sign_in } : {}) };
     const exists = i === 0 ? own : await deps.agents.getSchedule(me.tenantID, s.id).catch(() => undefined);
     await agentsCall(() => (exists ? deps.agents.updateSchedule(me.tenantID, s) : deps.agents.createSchedule(me.tenantID, s)));
   }
@@ -9473,6 +9476,28 @@ const PLAN_KEPT_MS = 2 * 24 * 3600_000;
 const planKey = (tenant: string) => `${tenant}#plan`;
 
 /** What `work` gives within `ms`, or undefined: a read that's late is left out, never waited for. */
+/**
+ * Each scheduled taf's schedules name its hosted-browser connection (`sign_in {grant}`), so kiff/agents checks the saved
+ * sign-in before a firing starts a run (kiff/agents#712). Only tafs cloud knows the grant, from planque's grants read with
+ * the phone's proof, so it's kept in step whenever that read happens (the taf's setup, Connect apps): set when the taf has
+ * one connected hosted-browser connection, removed when it has none. Two such connections name none: no guess. A write that
+ * fails is logged and tried on the next read; it never fails the read. Only for someone who manages Cards.
+ */
+async function syncSignIn(me: KIFFIdentity, tafs: ReadonlyArray<Taf>, grants: ReadonlyArray<GrantView>, deps: Deps): Promise<void> {
+  if (!me.capabilities.includes("cards.manage")) return;
+  await Promise.all(tafs.filter((t) => !t.removing && t.job !== SETUP_JOB).map(async (taf) => {
+    const cloud = grants.filter((g) => g.request.agent === taf.kiffAgent && wayOf(g) === "cloud" && g.status === "connected");
+    const grant = cloud.length === 1 ? cloud[0]!.id : undefined;
+    const schedules = await deps.agents.listSchedules(me.tenantID, taf.id).catch(() => [] as Schedule[]);
+    for (const s of schedules) {
+      if (s.follow_up || s.sign_in?.grant === grant) continue;
+      const { sign_in: _old, ...rest } = s;
+      await deps.agents.updateSchedule(me.tenantID, grant ? { ...rest, sign_in: { grant } } : rest).catch((err: unknown) =>
+        console.warn(JSON.stringify({ msg: "sign_in not kept on schedule", taf: taf.id, schedule: s.id, why: (err as Error).message })));
+    }
+  }));
+}
+
 /** How long a read waits for planque's kept sign-in checks before it's drawn without them. */
 const SIGN_IN_HEALTH_MS = 2500;
 
@@ -11936,6 +11961,8 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       // The two ways a taf browses, at the account level, with or without a browser connection (browse.ts).
       const ways = waysView((await reads())?.grants, langOf(event));
       const saved = await savedSignIns(event, me, (await reads())?.grants ?? [], deps);
+      const granted = (await reads())?.grants;
+      if (granted && me.capabilities.includes("cards.manage")) await syncSignIn(me, await deps.tafs.list(me.tenantID).catch(() => []), granted, deps);
       return { ...listed, apps, ways, ...(saved.length ? { saved_sign_ins: saved } : {}), removed_tafs: removed };
     }
     if (parts.length === 4 && method === "POST") {
