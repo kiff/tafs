@@ -104,10 +104,12 @@ data class PurchaseReceipt(
     /**
      * KIFF's receipt keys, pinned in this build (raw 32-byte Ed25519 public keys by `kid`), as [ReceiptCheck.KIFF_SIGNER] is for the
      * Record's receipts: a receipt checks only against a key the app already holds, never one fetched with it. KIFF's published key
-     * set is for others; a new key ships here before KIFF signs with it, and a revoked one leaves in a release. Empty until KIFF's
-     * first receipt key exists: until then no purchase receipt reads as checked.
+     * set is for others; a new key ships here before KIFF signs with it, and a revoked one leaves in a release.
+     * `kiff-receipts-1`: KIFF's first purchase receipt key (28 Nov 2026), its public `x` as KIFF publishes it.
      */
-    val PINNED: Map<String, ByteArray> = emptyMap()
+    val PINNED: Map<String, ByteArray> = mapOf(
+      "kiff-receipts-1" to decode("_6t9hrjlcGOCqoGUrOf95mAk6oW9Z8zEj1_rtj2c4Pg")!!,
+    )
 
     /** Base64url or standard base64, padded or not. */
     internal fun decode(s: String): ByteArray? = runCatching {
