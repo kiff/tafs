@@ -8704,8 +8704,16 @@ class AppModel(
     val cloudId = _state.value.taf(tafId)?.cloudId
     if (_state.value.mode != Mode.kiff || cloudId == null || !_state.value.manages(tafId)) return false
     val words = reply.words?.takeIf { it.prompt.isNotBlank() } ?: return false
+    // The fingerprint binds the text this phone drew: its own hash of it, which must be the one tafs cloud gave. If they differ,
+    // what would go isn't what's shown, so nothing is asked or sent, and the reply is read again.
+    val shown = bot.tafs.app.kiff.PlanqueClient.sha256Hex(reply.text.toByteArray(Charsets.UTF_8))
+    if (shown != reply.textSha256) {
+      loadDoors(tafId)
+      updateDoors(tafId) { it.copy(error = words.changed.ifBlank { null }) }
+      return false
+    }
     val path = cloud.heldReplyPath(cloudId, reply.run)
-    val body = cloud.sendReplyBody(reply.textSha256)
+    val body = cloud.sendReplyBody(shown)
     val signature = signDoor(tafId, "POST", path, body, words.prompt) ?: return false
     val generation = accountGeneration
     updateDoors(tafId) { it.copy(busy = true) }

@@ -123,6 +123,23 @@ class HeldReplyTest {
     assertEquals(doorReads + 1, transport.requestsTo(doors).size)
   }
 
+  @Test fun aHashThatIsntTheTextShownAsksNoFingerprintAndSendsNothing() = runTest {
+    reads()
+    // tafs cloud's hash names other text than the card draws: what would go isn't what's shown.
+    val other = replyJson().replace(sha, "b".repeat(64))
+    transport.answer(doors, 200, """{"doors":[],"apps":[],"knocks":[],"replies":[$other]}""")
+    val m = model()
+    m.loadDoors("refunds-1")
+    auth.asked.clear()
+    val doorReads = transport.requestsTo(doors).size
+    assertFalse(m.sendHeldReply("refunds-1", m.state.value.doors.getValue("refunds-1").replies.single()))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(reply).isEmpty())
+    // Read again, and said why, in tafs cloud's words.
+    assertEquals(doorReads + 1, transport.requestsTo(doors).size)
+    assertEquals("This reply changed since you read it. Read it again before sending.", m.state.value.doors.getValue("refunds-1").error)
+  }
+
   @Test fun dontSendSignsNothing() = runTest {
     reads()
     transport.answer(reply, 200, """{"run":"run_7","state":"not_sent"}""")
