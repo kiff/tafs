@@ -330,6 +330,10 @@ data class AppState(
   val cardUnitExceptions: List<bot.tafs.app.kiff.CardUnitException> = emptyList(),
   /** Steps handed to the owner in the hosted browser ("Your turn"), as Home lists them, with tafs cloud's words. */
   val yourTurns: List<bot.tafs.app.kiff.YourTurn> = emptyList(),
+  /** Cloud browser sign-ins that need the owner, or hold a run, as tafs cloud lists them on Home (docs/api.md). */
+  val signIns: List<bot.tafs.app.kiff.SignInItem> = emptyList(),
+  /** The sign-in item being answered (Later or Skip this run), so its buttons hold while it goes. */
+  val answeringSignIn: String? = null,
   /** The hand being opened or put off now: its row waits, so a second tap sends nothing. */
   val answeringTurn: String? = null,
   /** The ones whose Dismiss is on its way to KIFF. */
@@ -836,7 +840,7 @@ data class AppState(
   /** Coach's waiting rows as Needs you draws them: one being set aside isn't drawn while tafs cloud is asked. */
   val coachWaitingShown: List<bot.tafs.app.kiff.CoachWaiting> get() = coachWaiting.filterNot { it.session in settingAside }
 
-  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size + coachWaiting.size + yourTurns.size)
+  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size + coachWaiting.size + yourTurns.size + signIns.size)
 
   /**
    * The tab's badge: Needs you's count, less a Coach chat waiting on its person while that very chat is on screen, where the
@@ -1776,6 +1780,7 @@ class AppModel(
         yourTurns = read.home.yourTurns.orEmpty().filter { t ->
           t.grant.isNotBlank() && t.hand.isNotBlank() && t.words.title.isNotBlank() && t.words.open.isNotBlank() && t.words.notNow.isNotBlank()
         },
+        signIns = read.home.signIns.orEmpty(),
         yourSteps = read.home.yourSteps.orEmpty().filterNot { it.handoff in s.answeredSteps },
         coachWaiting = read.home.coachWaiting.orEmpty().filter { it.session.isNotBlank() && it.words.line.isNotBlank() && it.session !in s.settingAside },
         coachWaitingClear = read.home.coachWaitingClear?.takeIf { it.words.button.isNotBlank() },
@@ -4918,6 +4923,36 @@ class AppModel(
   }
 
   fun closeSiteSignIn() = _state.update { it.copy(siteSignIn = null) }
+
+  /** A sign-in item's key: its connection and site. */
+  /** Later on a sign-in that needs the owner soon: tafs cloud hides it for the whole account until the next check. */
+  suspend fun signInLater(item: bot.tafs.app.kiff.SignInItem): Boolean = answerSignIn(item) { cloud.signInLater(item.grant, item.site) }
+
+  /** Skip this run, held for a sign-in that stopped: tafs cloud drops that run; the item stays until the sign-in works again. */
+  suspend fun skipHeldRun(item: bot.tafs.app.kiff.SignInItem): Boolean {
+    val id = item.taf?.id?.takeIf { it.isNotBlank() } ?: return false
+    return answerSignIn(item) { cloud.skipHeldRun(id) }
+  }
+
+  private suspend fun answerSignIn(item: bot.tafs.app.kiff.SignInItem, call: suspend () -> Unit): Boolean {
+    if (_state.value.mode != Mode.kiff || _state.value.answeringSignIn != null) return false
+    val generation = accountGeneration
+    _state.update { it.copy(answeringSignIn = item.key) }
+    try {
+      call()
+      if (generation != accountGeneration) return false
+      // Later hides it; Skip keeps it until the sign-in works, so the list is read again rather than guessed.
+      refresh()
+      return true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(lastError = ErrorWords.of(e)) }
+      return false
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(answeringSignIn = null) }
+    }
+  }
 
   /**
    * Opens a step a taf handed its owner in the hosted browser ("Your turn"): planque's live view, asked for with this device's

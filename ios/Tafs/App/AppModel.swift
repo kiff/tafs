@@ -3945,7 +3945,9 @@ final class AppModel: ObservableObject {
     /// change can lift, from KIFF, once the service says the feature is live. Decided from
     /// the held call and the account's capabilities, with no request.
     func offersAllow(_ call: HeldCall) -> Bool {
+        // A held purchase is answered once, never allowed from now on (Thune).
         mode == .kiff && Self.allowIsLive(kiffAccount?.capabilities) && canManageCards && cloudTaf(for: call.tafID) != nil && HoldAllow.allowable(call)
+            && call.purchase == nil && call.purchaseUnreadable != true
     }
 
     /// Whether "Allow this from now on" is live: the account's capabilities name `holds.allow`.
@@ -4067,6 +4069,12 @@ final class AppModel: ObservableObject {
     }
 
     /// The answer as KIFF's signed answer message, kiff.answer.v1, names it.
+    /// Whether a held purchase changed between the card the owner read and the hold as it is now: its case, version,
+    /// digest or any of its words. Approve once is signed only when they're the same.
+    nonisolated static func purchaseChanged(drawn: HeldCall, held: HeldCall) -> Bool {
+        drawn.purchase == nil || drawn.purchase != held.purchase || drawn.purchaseBinding != held.purchaseBinding
+    }
+
     nonisolated static func kiffAnswer(_ answer: Answer) -> String {
         switch answer {
         case .approveOnce: return "approve-once"
@@ -4141,6 +4149,27 @@ final class AppModel: ObservableObject {
             lastError = Words.Chrome.releaseUnreadable
             return
         }
+        // A held purchase (Thune): only Approve once and Refuse, never Extra room, a next step or Allow. Approve only when
+        // every word it signs was read, and nothing at all when its case can't be signed as sent.
+        let shown = held.first(where: { same($0, call) }) ?? call
+        if shown.purchase != nil || shown.purchaseUnreadable == true {
+            let allowed: Bool
+            switch answer {
+            case .refuse: allowed = shown.purchaseBinding != nil
+            case .approveOnce: allowed = shown.purchase != nil && shown.purchaseBinding != nil
+            default: allowed = false
+            }
+            guard allowed else {
+                lastError = Words.NeedsYou.answerInKiff
+                return
+            }
+            // Approve signs the purchase the card drew, never a newer case read since (other lines, another address):
+            // when they differ, nothing is signed and the card is drawn again with what's held now.
+            if answer == .approveOnce, AppModel.purchaseChanged(drawn: call, held: shown) {
+                lastError = Words.Error.changed
+                return
+            }
+        }
         // Approving Coach's install is installing it (kiff/tafs#206): the switch and its
         // Card come first, then this answer, so tafs never hears of a half-done install.
         if call.install != nil, answer == .approveOnce, !confirmed, !installed {
@@ -4165,8 +4194,10 @@ final class AppModel: ObservableObject {
             lastError = approvalKeyLostWords
             return
         }
-        let reason = PromptReason.pick(Words.NeedsYou.Prompt.answer(summary: call.proposed.summary),
-                                       mac: Words.NeedsYou.Prompt.answerMac(summary: call.proposed.summary))
+        // A purchase's prompt is KIFF's own, naming the shop and the total ("Buy from Papeterie Lumen · €84.20").
+        let reason = shown.purchase?.words.prompt
+            ?? PromptReason.pick(Words.NeedsYou.Prompt.answer(summary: call.proposed.summary),
+                                 mac: Words.NeedsYou.Prompt.answerMac(summary: call.proposed.summary))
         let signature: String
         var signed: KIFFClient.AnswerSignature?
         do {
@@ -4177,7 +4208,8 @@ final class AppModel: ObservableObject {
                 if case .nextStep(let step) = answer { nextStep = step }
                 let message = KIFFClient.answerMessage(tenant: tenant, exceptionID: kiffID,
                                                        answer: Self.kiffAnswer(answer),
-                                                       nextStep: nextStep, accountingVersion: version, signedAt: signedAt)
+                                                       nextStep: nextStep, accountingVersion: version, signedAt: signedAt,
+                                                       purchase: shown.purchaseBinding)
                 // Approving, or raising a Card, grants authority: the approval key signs it,
                 // under the Face ID it checks itself, once KIFF holds it (kiff/tafs#233).
                 let grants = sessionHasApprovalKey && (answer == .approveOnce || answer == .extraRoom)
