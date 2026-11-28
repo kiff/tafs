@@ -736,6 +736,9 @@ class KiffClient(
   /** KIFF's receipt for a call, as KIFF wrote it: its bytes are what [ReceiptCheck] checks, never decoded and written again. */
   suspend fun receipt(traceId: String): ByteArray = send("GET", "/v1/receipts/${escaped(traceId)}")
 
+  /** KIFF's signed receipt for a purchase case, once the case has ended (404 before): `contracts/purchase.json`, `receipt.value`. */
+  suspend fun purchaseReceipt(caseId: String): ByteArray = send("GET", "/v1/me/purchases/${escaped(caseId)}/receipt")
+
   /**
    * KIFF's words for a connection's [profile] (KIFF's profile contract, `kiff.words.v1`), with this person's session: the words the owner reads before
    * approving, checked against their digests here ([ProfileWords.checked]).

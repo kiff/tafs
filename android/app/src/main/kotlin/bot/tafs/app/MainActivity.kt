@@ -400,6 +400,7 @@ fun RootView(model: AppModel) {
         ),
         // KIFF's receipt for a Record line, signed in: the sample has none.
         LocalReceipt provides (if (state.mode == Mode.kiff) model::receipt else null),
+        bot.tafs.app.views.LocalPurchaseReceipt provides (if (state.mode == Mode.kiff) model::purchaseReceipt else null),
         LocalReportPayment provides (if (state.mode == Mode.kiff) model::reportPayment else null),
         // The pictures kept before a Record line's Chrome steps, signed in: the sample has none.
         bot.tafs.app.views.LocalChromeShots provides remember(model, state.mode) {
