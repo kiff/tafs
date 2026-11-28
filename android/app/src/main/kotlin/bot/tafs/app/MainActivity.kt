@@ -746,7 +746,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
         answer = model::answerCoach,
         approve = model::startApproval,
         openKeySheet = model::openCardKeySheet,
-        cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
+        cancelSignIn = { model.cancelConnecting() },
         reopenSignIn = { model.reopenSignIn() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,
