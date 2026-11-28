@@ -59,6 +59,22 @@ class WatchCoachTest {
     assertTrue(transport.requests.drop(before).none { it.method == "POST" })
   }
 
+  /**
+   * The phone held the AI consent as given, and tafs cloud refuses Coach's turn for it (`ai_consent_required`: the consent asked
+   * again, e.g. for new words): the watch says so in its consent line, never a bare "Open on phone".
+   */
+  @Test fun coachRefusedForTheAIConsentSaysSoOnTheWatch() = runTest {
+    reads(given = true)
+    transport.answer("GET /v1/setup", 200, """{"setup":{"id":"setup_1","name":"Coach"}}""")
+    val m = model()
+    m.loadCoach()
+    assertEquals("setup_1", m.state.value.coachCloudId)
+    val refused = """{"given":false,"version":"2","words":{"title":"Your data and the AI","lines":["tafs uses AI."],"allow":"Allow","not_now":"Not now","withdraw":"Withdraw","given":"AI use: allowed"}}"""
+    transport.answer("POST /v1/tafs/setup_1/messages", 403, """{"error":"Allow AI use first","code":"ai_consent_required","consent":$refused}""")
+    val reply = WatchRelay(model = { m }, now = { now }).ask(WatchRequest.Coach(now, "Pause refunds until Monday"))
+    assertEquals(WatchReply.Failed("Before you talk to Coach, allow AI use in tafs on your phone."), reply)
+  }
+
   @Test fun aCoachNotStartedOnThePhoneIsStartedThereNeverFromTheWrist() = runTest {
     reads(given = true)
     val m = model()

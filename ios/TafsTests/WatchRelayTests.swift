@@ -692,6 +692,19 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertTrue(sent("POST", "/v1/tafs/taf-setup/messages").isEmpty)
     }
 
+    /// A watch request refused for the AI consent (403 `ai_consent_required`, as when the consent is asked again): the watch
+    /// says so in the ask's own line, as on Wear OS, never "a reply wasn't sent"; Coach's chat isn't written to. The same for a
+    /// taf's chat.
+    func testARequestRefusedForTheAIConsentSaysSoOnTheWatch() async {
+        let reading = kept(CurrentKeyOnly())
+        StubProtocol.responses["POST /v1/watch/asks"] = (403, #"{"error":"Allow AI use first.","code":"ai_consent_required","consent":{"given":false}}"#)
+        let asked = await reading.coachSend(text: "What needs me today?", messageID: UUID(), after: nil)
+        XCTAssertEqual(asked, WatchReply(.failed, line: Words.Watch.askNeedsConsent))
+        let toTaf = await reading.tafSend(taf: "taf-0a1b2c3d4e5f60718293", text: "Pause refunds", messageID: UUID(), after: nil)
+        XCTAssertEqual(toTaf, WatchReply(.failed, line: Words.Watch.askNeedsConsent))
+        XCTAssertTrue(sent("POST", "/v1/tafs/taf-setup/messages").isEmpty)
+    }
+
     /// Where tafs cloud's switch for watch requests is off (404 `watch_off`), the words go to Coach's chat, as before.
     func testASendWithTheSwitchOffGoesToCoachsChat() async {
         let reading = coachReading()

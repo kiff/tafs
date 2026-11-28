@@ -144,7 +144,7 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   stops when its screen goes, and a speech that fails leaves the words on screen. `WatchHearTests`. **To verify on a
   watch:** the speaker with no headphones, silent mode and Low Power Mode.
 - **At most 2,000 characters,** as on Wear OS: longer is refused before anything is sent.
-- **Refused:** without the AI-use consent, "allow AI use in tafs on your phone"; past the
+- **Refused:** without the AI-use consent, "allow AI use in tafs on your phone": Coach's chat in Coach's line, a request or a taf's message in the ask's, as on Wear OS (`watch.ask_needs_consent`); past the
   credits, the app's own words; anything else, "Not sent" and why.
 
 ## Your brief (behind a switch)

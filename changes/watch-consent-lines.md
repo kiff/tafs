@@ -1,0 +1,1 @@
+- **Watches: a message refused because AI use needs your yes says so on the watch.** On Wear OS, Coach refused for it now shows "allow AI use in tafs on your phone" instead of a bare Open on phone; on the Apple Watch, a request or a taf's message shows the ask's own line, as on Wear OS ([docs/watch-wear.md](../docs/watch-wear.md), [docs/watch-app.md](../docs/watch-app.md)).
