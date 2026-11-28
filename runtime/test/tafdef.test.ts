@@ -215,6 +215,9 @@ describe("a section of the kiff skill", () => {
     expect(CALL_INSTRUCTIONS).toContain("Never split it into smaller calls to stay under a\n  limit");
     expect(CALL_INSTRUCTIONS).toContain("put who it's for in a field the customer doesn't see");
     expect(CALL_INSTRUCTIONS).toContain("never an internal id or why");
+    // tafs#2226 (27 Nov, a test account): a taf read its Card's "each call asks you first" (a total of 0 a day that asks) as
+    // a total already spent, and told its owner the calls would be refused. A held tool is allowed, and its calls wait.
+    expect(CALL_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A tool your Card holds on every call (a total of 0 a day that asks the owner: \"each call asks you first\") is allowed. Make the call when the work needs it, and say the owner will be asked. Its total is never \"spent\" or \"used up\", and never a reason to skip the call or say it can't run.");
     expect(CALL_INSTRUCTIONS).toContain('A held call isn\'t done: it "waits for your approval", never "submitted",\n  "sent" or "done"');
     expect(CALL_INSTRUCTIONS).toContain("Name a date or a day only when you\n  read it");
   });
