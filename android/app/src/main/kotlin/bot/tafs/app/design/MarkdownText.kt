@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -138,6 +139,9 @@ fun isTableRule(line: String): Boolean {
   return cells.size >= 2 && cells.all { c -> c.isNotEmpty() && c.contains("-") && c.all { it == '-' || it == ':' } }
 }
 
+/** A currency code in a table's cell ("20.00 USD"), compiled once rather than for every column drawn. */
+private val currencyCodeRe = Regex("""\b[A-Z]{3}\b""")
+
 /** A column whose cells below the header are all amounts or numbers. */
 fun isNumericColumn(column: Int, rows: List<List<String>>): Boolean {
   val body = rows.drop(1).mapNotNull { it.getOrNull(column) }.filter { it.isNotEmpty() }
@@ -145,7 +149,7 @@ fun isNumericColumn(column: Int, rows: List<List<String>>): Boolean {
   val allowed = "0123456789.,-+%$€£¥ "
   return body.all { cell ->
     // An amount may carry a currency code ("20.00 USD"); any other letter makes it text.
-    val bare = cell.replace(Regex("""\b[A-Z]{3}\b"""), "")
+    val bare = cell.replace(currencyCodeRe, "")
     bare.any(Char::isDigit) && bare.all { it in allowed }
   }
 }
@@ -230,7 +234,9 @@ private fun closesItalic(text: String, from: Int): Int {
 /** A message's Markdown, drawn as text: no Markdown symbol shows as written. */
 @Composable
 fun MarkdownText(text: String, size: Int = 15, color: Color = Theme.ink, modifier: Modifier = Modifier, onLink: ((String) -> Unit)? = null) {
-  val blocks = parseMarkdown(text)
+  // Parsed once per text, not on every recomposition: a long chat recomposes its messages each time its state changes,
+  // and an answer streaming in changes it often.
+  val blocks = remember(text) { parseMarkdown(text) }
   // Lines about 1.4 times the text's size apart: the font's own 1.2, and a fifth more.
   val style = scaled(size, color = color).copy(lineHeight = (size * 1.4f).sp)
   Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
