@@ -184,6 +184,8 @@ data class TafDoors(
   val knocks: List<Knock> = emptyList(),
   /** Replies waiting for the owner to send them, with the exact text (docs/doors.md). */
   val replies: List<bot.tafs.app.kiff.HeldReply> = emptyList(),
+  /** Writers the taf couldn't answer, held for the owner with nothing drafted (docs/doors.md). */
+  val unanswered: List<bot.tafs.app.kiff.Unanswered> = emptyList(),
   val loaded: Boolean = false,
   val busy: Boolean = false,
   val error: String? = null,
@@ -8566,7 +8568,7 @@ class AppModel(
       try {
         val read = cloud.doors(cloudId)
         if (generation != accountGeneration) return
-        updateDoors(tafId) { it.copy(doors = read.doors, apps = read.apps, knocks = read.knocks, replies = read.replies, loaded = true, error = null) }
+        updateDoors(tafId) { it.copy(doors = read.doors, apps = read.apps, knocks = read.knocks, replies = read.replies, unanswered = read.unanswered, loaded = true, error = null) }
         return
       } catch (e: CancellationException) {
         throw e
@@ -8834,6 +8836,60 @@ class AppModel(
       cloud.discardHeldReply(cloudId, reply.run)
       if (generation != accountGeneration) return false
       updateDoors(tafId) { d -> d.copy(replies = d.replies.filterNot { it.run == reply.run }, error = null) }
+      refresh()
+      return true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = ErrorWords.of(e)) }
+      return false
+    } finally {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
+  /**
+   * Answers a writer the taf couldn't answer in the owner's own words (docs/doors.md): the approval key, behind the fingerprint,
+   * signs `POST` with [text] exactly as typed and this phone's hash of it, and tafs cloud sends only that text, to that writer
+   * only. False when nothing went.
+   */
+  suspend fun answerUnanswered(tafId: String, writer: bot.tafs.app.kiff.Unanswered, text: String): Boolean {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || !_state.value.manages(tafId)) return false
+    val words = writer.words?.takeIf { it.prompt.isNotBlank() } ?: return false
+    if (text.isBlank()) return false
+    val path = cloud.heldReplyPath(cloudId, writer.run)
+    val body = cloud.ownReplyBody(text, bot.tafs.app.kiff.PlanqueClient.sha256Hex(text.toByteArray(Charsets.UTF_8)))
+    val signature = signDoor(tafId, "POST", path, body, words.prompt) ?: return false
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true) }
+    try {
+      cloud.sendHeldReply(cloudId, writer.run, body, signature)
+      if (generation != accountGeneration) return false
+      updateDoors(tafId) { d -> d.copy(unanswered = d.unanswered.filterNot { it.run == writer.run }, error = null) }
+      refresh()
+      return true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // tafs cloud's own words for why nothing went (an answer too long, say), or the app's when it sends none.
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = ErrorWords.of(e)) }
+      return false
+    } finally {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
+  /** Ignores a writer the taf couldn't answer: nothing goes to them, so nothing is signed. */
+  suspend fun ignoreUnanswered(tafId: String, writer: bot.tafs.app.kiff.Unanswered): Boolean {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || !_state.value.manages(tafId)) return false
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true) }
+    try {
+      cloud.discardHeldReply(cloudId, writer.run)
+      if (generation != accountGeneration) return false
+      updateDoors(tafId) { d -> d.copy(unanswered = d.unanswered.filterNot { it.run == writer.run }, error = null) }
       refresh()
       return true
     } catch (e: CancellationException) {

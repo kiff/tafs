@@ -640,6 +640,10 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
       answer = { taf, knock, action, say -> model.answerKnock(taf, knock, action, say) },
       sendReply = model::sendHeldReply,
       discardReply = model::discardHeldReply,
+      answerUnanswered = model::answerUnanswered,
+      ignoreUnanswered = model::ignoreUnanswered,
+      // Connect an app, for a writer the taf couldn't answer because an app isn't connected: the account's Connect apps.
+      connectApp = { showingConnectApps = true },
       dismissError = model::dismissDoorsError,
       loadKnob = model::loadKnob,
       runNow = { taf -> model.runNow(taf); model.loadKnob(taf) },
