@@ -12,7 +12,9 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
     const lines = disclosureLines(acme);
     expect(lines).toMatchObject({
       es: "Escrito por un agente de IA en nombre de Acme.",
-      fr: "Rédigé par un agent d'IA au nom de Acme.",
+      fr: "Rédigé par un agent d'IA au nom d'Acme.",
+      ca: "Escrit per un agent d'IA en nom d'Acme.",
+      el: "Γράφτηκε από πράκτορα ΤΝ για λογαριασμό της επιχείρησης Acme.",
       de: "Von einem KI-Agenten im Auftrag von Acme geschrieben.",
       pt: "Escrito por um agente de IA em nome de Acme.",
       it: "Scritto da un agente di IA per conto di Acme.",
@@ -124,7 +126,7 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
 
   it("leaves out a language whose line wouldn't fit in what kiff/agents takes, and caps a new name so every line fits", () => {
     expect(DISCLOSURE_MAX_BYTES).toBe(300);
-    // Greek's line carries the most besides the name (105 bytes: "Γράφτηκε από πράκτορα τεχνητής νοημοσύνης εκ μέρους του …", two bytes a letter), so a new name may be 195 bytes.
+    // Greek's line carries the most besides the name (105 bytes: "Γράφτηκε από πράκτορα ΤΝ για λογαριασμό της επιχείρησης …", two bytes a letter; "ΤΝ" as the AI Act's Greek text writes it), so a new name may be 195 bytes.
     expect(WRITES_FOR_MAX_BYTES).toBe(195);
     const bytes = (s: string) => Buffer.byteLength(s);
     const overhead = (lang: string) => bytes(disclosureLines({ writesFor: "x" })[lang]!) - 1;
@@ -396,5 +398,16 @@ describe("KIFF's skill", () => {
     expect(KIFF_SKILL.content).toBe(onDisk);
     expect(KIFF_SKILL.commit).toMatch(/^[0-9a-f]{40}$/);
     expect(KIFF_SKILL.content).toMatch(/^---\nname: kiff\n/);
+  });
+});
+
+describe("the disclosure line names the business in each language's own grammar", () => {
+  it("elides French and Catalan \"de\" before a vowel or a mute h, and names a business in Greek whatever its name's gender", () => {
+    expect(disclosureLines({ writesFor: "Acme" }).fr).toBe("Rédigé par un agent d'IA au nom d'Acme.");
+    expect(disclosureLines({ writesFor: "Hôtel Lumière" }).fr).toBe("Rédigé par un agent d'IA au nom d'Hôtel Lumière.");
+    expect(disclosureLines({ writesFor: "Papeterie Lumière" }).fr).toBe("Rédigé par un agent d'IA au nom de Papeterie Lumière.");
+    expect(disclosureLines({ writesFor: "Acme" }).ca).toBe("Escrit per un agent d'IA en nom d'Acme.");
+    expect(disclosureLines({ writesFor: "Barcelona Tools" }).ca).toBe("Escrit per un agent d'IA en nom de Barcelona Tools.");
+    expect(disclosureLines({ writesFor: "Acme" }).el).toBe("Γράφτηκε από πράκτορα ΤΝ για λογαριασμό της επιχείρησης Acme.");
   });
 });
