@@ -362,7 +362,7 @@
     ]
   },
   "approval": {
-    "about": "What the apps draw on a held purchase, every line in KIFF's words. Show more is closed each time and opens every line; the signature covers the version, so approving with the lines closed approves exactly those lines. Never offers extra room. `lines` and `charges` together add up to `total`; `delivery` is drawn under the total.",
+    "about": "What the apps draw on a held purchase, every line in KIFF's words. Show more is closed each time and opens every line, and the toggle then says `show_less`; the signature covers the version, so approving with the lines closed approves exactly those lines. Never offers extra room. `lines` and `charges` together add up to `total`; `delivery` is drawn under the total.",
     "value": {
       "case_id": "pc_01JD8Q7M2K4T9V6X3B5N8R1Y0Z",
       "version": 1,
@@ -374,6 +374,7 @@
         "total_note": "With shipping and VAT, as the checkout shows it",
         "delivery": "Acme SAS, 12 rue des Lilas, 69003 Lyon, France",
         "show_more": "Show more",
+        "show_less": "Show less",
         "lines": [
           {
             "name": "A4 paper, 80 g, 5 reams",
