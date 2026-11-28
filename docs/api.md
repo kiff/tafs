@@ -408,7 +408,7 @@ A browser connection works one of two ways, named by what the owner gets, never 
     there." and "Banks and password managers stay blocked unless your phone allows each one." for `chrome`.
   - `status` is the way's state on this account: "2 sign-ins saved", or "Paired with {Chrome's name}". It's absent when
     there's nothing to say.
-- **On each browser connection** (Connect apps, `GET /v1/tafs/{id}/setup` `grants[]`): `way` and `way_words: {title,
+- **On each browser connection** (Connect apps, `GET /v1/tafs/{id}/setup` `connections[]`): `way` and `way_words: {title,
   line}`. A `chrome` connection also has `chrome_name`, its paired Chrome's name as planque keeps it. `way` comes from
   planque's grant, and nothing else sets it.
 - **On the Card's line for a browser tool:** the same `way` and `way_words.line`, after the sites: "Uses
@@ -459,7 +459,7 @@ makes no click and no write. Only the verdict is kept.
 - **Where it's read:**
   - Connect apps' read has `saved_sign_ins: [{grant, site, used_by: [taf names], health, sign_in}]`, one per `cloud`
     connection and site, beside `ways`. `sign_in` is the `site_sign_in` action.
-  - The taf's setup has the same `health` on each site of a `cloud` connection: `grants[].sites[]: {site, health}`.
+  - The taf's setup has the same `health` on each site of a `cloud` connection: `connections[].sites[]: {site, health}`.
 - **What each site carries:** `health: {state, checked_at?, needs_you_by?, words: {line, why}}`. tafs cloud decides `state` from planque's answer:
 
   | `state` | When | `needs_you_by` | `words.line` |
