@@ -184,7 +184,7 @@ export const lv: Words = {
   browse_switch_ask_cloud: (taf, site) => `Mainīt ${taf}, lai vietnē ${site} tas izmantotu mākoņa pārlūku.`,
   browse_reason_schedule: (taf, time) => `Coach izvēlējās mākoņa pārlūku, jo ${taf} darbojas plkst. ${time}, kad tu, iespējams, neesi klāt.`,
   browse_reason_door: (taf) => `Coach izvēlējās mākoņa pārlūku, jo ${taf} apstrādā ziņas, tiklīdz tās pienāk, arī tad, kad tu neesi klāt.`,
-  browse_reason_signed_in: (taf) => `Coach izvēlējās tavu Chrome, jo ${taf} vajag pierakstīšanās, kas jau ir tajā.`,
+  browse_reason_signed_in: (taf) => `Coach izvēlējās tavu Chrome, jo ${taf} izmanto pierakstīšanās, kas jau ir tajā.`,
   browse_reason_occasional: (taf) => `Coach izvēlējās tavu Chrome, jo ${taf} darbojas tikai tad, kad tu palūdz.`,
   setup_connected_app: "Pievienotā lietotne",
   setup_connections_unread: "Pievienotās lietotnes nevarēja nolasīt; mēģini vēlreiz",
