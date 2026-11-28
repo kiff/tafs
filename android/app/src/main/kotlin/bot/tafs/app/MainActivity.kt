@@ -747,7 +747,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
         answer = model::answerCoach,
         approve = model::startApproval,
         openKeySheet = model::openCardKeySheet,
-        cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
+        cancelSignIn = { model.cancelConnecting() },
         reopenSignIn = { model.reopenSignIn() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,
@@ -1050,7 +1050,9 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
         }
         // "Your brief" in Needs you's place once tafs cloud sends one (Missions design v2.1); Needs you, as today, otherwise.
         Tab.NeedsYou -> BriefTab(state, briefActions, onAnswerHold = { call, answer -> model.answer(call, answer) }) {
-          NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null)
+          NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null,
+            // A taf with knocks opens on Activity, where they're answered, as a knock's alert opens it.
+            onOpenKnocks = if (state.mode == Mode.kiff) ({ id -> tab = Tab.Tafs; showingSettings = false; coachOpen = false; openTaf = id; openOnActivity = id }) else null)
         }
         Tab.Record -> RecordView(
           state,

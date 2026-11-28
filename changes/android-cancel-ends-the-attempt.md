@@ -1,0 +1,1 @@
+- **Android: Cancel on a sign-in that hasn't reached the app's page yet ends it.** The card goes back to its sign-in, ready to start again, rather than staying on "Opening the sign-in…".

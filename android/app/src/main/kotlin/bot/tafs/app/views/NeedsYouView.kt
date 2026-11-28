@@ -198,7 +198,11 @@ fun NeedsYouView(
   onOpenCoach: ((bot.tafs.app.kiff.CoachWaiting) -> Unit)? = null,
   /** Sets a Coach chat aside, or all with null: tafs cloud's "not now". Null where it can't be done (sample mode). */
   onSetAside: ((String?) -> Unit)? = null,
+  /** Opens a taf on Activity, where its doors' knocks are answered. Null where there are no doors (sample mode): no knock rows. */
+  onOpenKnocks: ((String) -> Unit)? = null,
 ) {
+  // A knock at a taf's door waits for the owner too, as tafs cloud counts it in Needs you (as iOS lists it).
+  val knocked = if (onOpenKnocks == null) emptyList() else state.tafs.filter { it.knocks > 0 }
   var confirmingClear by remember { mutableStateOf(false) }
   val clearAsk = state.coachWaitingClear?.takeIf { confirmingClear }
   if (clearAsk != null) {
@@ -249,7 +253,7 @@ fun NeedsYouView(
     items(state.coachWaitingShown, key = { "cw|" + it.session }) { waiting -> CoachWaitingPanel(waiting, onOpenCoach, onSetAside?.takeIf { waiting.words.setAside.isNotBlank() }) }
     // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
     items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
-    if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty() && state.coachWaiting.isEmpty()) {
+    if (state.held.isEmpty() && knocked.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty() && state.coachWaiting.isEmpty()) {
       // Nothing waiting: the owner's board 6, above the screen's own line.
       item { bot.tafs.app.design.Illustrated(Modifier.padding(bottom = 12.dp)) { bot.tafs.app.design.NeedsYouClearArt(it) } }
       item {
@@ -263,6 +267,8 @@ fun NeedsYouView(
       }
     } else {
       items(state.held, key = { it.id }) { call -> HeldCallCard(call, state, onAnswer) }
+      // Its knocks are answered on Activity (Do it, Pair them, Ignore), so the row opens the taf there, not on Chat.
+      if (onOpenKnocks != null) items(knocked, key = { "kn|" + it.id }) { taf -> KnockedRow(taf) { onOpenKnocks(taf.id) } }
     }
     // Money calls KIFF can't prove: Did this happen?, answered by someone who answers held calls.
     items(state.unsure, key = { "u|" + it.proposal }) { call ->
@@ -559,6 +565,21 @@ internal fun PurchaseFace(p: bot.tafs.app.model.PurchaseApproval) {
       }
     }
     listOfNotNull(w.priceRule, w.grant, w.buysNow).forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+  }
+}
+
+/** A taf with knocks waiting at its doors: its name and how many, one tap to its Activity, where they're answered. */
+@Composable
+private fun KnockedRow(taf: bot.tafs.app.model.Taf, open: () -> Unit) {
+  Panel(stroke = Theme.amber.copy(alpha = 0.4f), modifier = Modifier.testTag("knocked-" + taf.id).tapping(onClickLabel = Words.NeedsYou.opensWhereYouAnswer(taf = taf.name)) { open() }) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+      TafAvatar(taf, 32.dp)
+      Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(taf.name, style = scaled(14, FontWeight.SemiBold, Theme.ink))
+        Text(Words.NeedsYou.knocks(count = taf.knocks), style = scaled(14, color = Theme.soft))
+      }
+      Text("›", style = scaled(15, FontWeight.SemiBold, Theme.dim))
+    }
   }
 }
 

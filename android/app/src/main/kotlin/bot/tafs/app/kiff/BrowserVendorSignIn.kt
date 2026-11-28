@@ -94,7 +94,7 @@ class BrowserVendorSignIn(
   fun deliver(link: String) = wait.deliver(link)
 
   /** The owner gave up waiting. */
-  fun cancel() = wait.cancel()
+  override fun cancel() = wait.cancel()
 
   /** The app left the screen: the vendor's tab took it, or anything else did. */
   fun paused() = wait.paused()

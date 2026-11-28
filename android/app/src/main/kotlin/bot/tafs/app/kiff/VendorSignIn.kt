@@ -31,6 +31,9 @@ interface VendorSignIn {
 
   /** Ends the wait on a sign-in [left] with [VendorSignInReplaced], so its approval runs again for planque's answer. */
   fun replace() {}
+
+  /** The owner gave up waiting: the sign-in ends as closed ([VendorSignInCancelled]). */
+  fun cancel() {}
 }
 
 private val NeverLeft: StateFlow<Boolean> = MutableStateFlow(false)
