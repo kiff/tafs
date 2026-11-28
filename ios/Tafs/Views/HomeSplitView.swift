@@ -189,6 +189,10 @@ struct HomeSplitView: View {
         .onChange(of: model.calendarRequested) { _ in takeCalendar() }
         .onChange(of: selection) { s in
             if s != opened { chosen = true }
+            // The kept pick follows every move, a notification's or a drive's too, so it never pulls the person back
+            // to a screen they've left (kiff/tafs#2191).
+            let kept: HomeSelection? = s?.isScreen == true && s != .overview ? s : nil
+            if model.sidebarPick != kept { model.sidebarPick = kept }
             // The app's tab follows: a taf is the Tafs tab, each screen its own.
             if let tab, let s, tab.wrappedValue != s.tab { tab.wrappedValue = s.tab }
         }
@@ -219,6 +223,14 @@ struct HomeSplitView: View {
         // While the list settles at launch it follows its first taf, until the owner chooses
         // (the 859 test: the app opened Refunds while Refunds 4 led the list).
         .task(id: model.tafs.map(\.id) + [model.listedTafs.first?.id].compactMap { $0 }) {
+            // A screen the person picked (Plan & usage, Connect apps…) is never replaced by the list settling, even
+            // when this view was drawn again since and lost its own state: the first tap on Plan & usage put the
+            // tafs list back (kiff/tafs#2191).
+            if let pick = model.sidebarPick, pick.isScreen {
+                chosen = true
+                if selection != pick { selection = pick }
+                return
+            }
             if chosen, let selected = selection {
                 switch selected {
                 case .taf(let id), .held(_, let id): if model.taf(id) != nil { return }
@@ -293,7 +305,11 @@ struct HomeSplitView: View {
         // Only the owner's taps write through this binding, so each one is a choice, a tap on
         // the taf already open too: the list settling later doesn't take them away from it.
         // A new item chosen ticks (Haptics).
-        List(selection: Binding(get: { selection }, set: { chosen = true; Haptics.select(selection, $0); selection = $0 })) {
+        List(selection: Binding(get: { selection }, set: {
+            chosen = true; Haptics.select(selection, $0); selection = $0
+            // A screen picked is kept on the model too, so a rebuild of this view doesn't lose it (kiff/tafs#2191).
+            model.sidebarPick = $0?.isScreen == true && $0 != .overview ? $0 : nil
+        })) {
             // The app's own mark at the top, as its header (the owner's layout).
             // As one sidebar for the whole app, the mascot and "tafs" is the way to the tafs list (the owner's
             // layout): every taf is there; beside it, only those relevant now.
