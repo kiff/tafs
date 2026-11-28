@@ -1221,11 +1221,17 @@ export function earlierConnectionAnswer(answer: unknown): boolean {
 /**
  * The earlier-connection refusal for an approval card, read before the card is drawn (the chat's read): the same check
  * decide makes after Approve, so a grant asked in another conversation or for another taf is answered before the owner
- * spends a fingerprint on it. Undefined when it would be resumed, or when it can't be told yet (read again).
+ * spends a fingerprint on it. A conversation whose start can't be read comes back `read_again` (session_unread). Undefined
+ * when it would be resumed.
  */
 export async function earlierConnectionOnRead(ask: ApprovalAsk, grant: ApprovalGrant, ctx: DecideContext): Promise<Decision | undefined> {
   const d = await resumedRefusal(ask, grant, vendorOf(grant), ctx);
-  return d && d.outcome === "answered" && earlierConnectionAnswer(d.answer) ? d : undefined;
+  // By its code, never its sentence: a refusal of the resumed rule (resumed_*), or a conversation whose start can't be
+  // read (session_unread), which is read again, never offered with Approve.
+  if (!d) return undefined;
+  if (d.outcome === "answered" && d.code?.startsWith("resumed_")) return d;
+  if (d.outcome === "read_again" && d.code === "session_unread") return d;
+  return undefined;
 }
 
 /** The steps a phone signs for an approval card. */
