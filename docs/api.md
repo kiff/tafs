@@ -455,15 +455,15 @@ A `chrome` connection keeps no sign-in at tafs, so it has no health. A `cloud` c
 planque's check (planque#514). planque opens one reviewed fixed page with the saved sign-in, runs none of its script, and
 makes no click and no write. Only the verdict is kept.
 
-- **When tafs cloud asks** (`POST /v1/accounts/{tenant}/grants/{id}/health`, the account's key):
-  - **once a day,** an hour before the first scheduled run of the day of a taf on that connection, in the taf's time zone;
-  - **after the owner signs in again,** while a Needs you item for that site holds a run (below): every 5 minutes, only
-    for the held items' sites, until it reads `signed_in` or the hold ends.
+- **Who asks, and when:** kiff/agents' scheduler, before each firing of a schedule that names the connection (`sign_in
+  {grant}`, kiff/agents#712), with the taf's own KIFF key (`POST /v1/accounts/{tenant}/grants/{id}/health`). tafs cloud
+  keeps `sign_in` on each of a scheduled taf's schedules in step with its one connected `cloud` connection, whenever it
+  reads planque's grants with the phone's proof (the taf's setup, Connect apps). Two such connections, or none, name none.
   - planque checks a site at most once a day, whatever the verdict, and not again within 6 hours of an `unknown`. A new
     saved sign-in for that site makes it due again at once (planque#514: a verdict remembers which sign-in it read). A
-    call that isn't due answers what's kept.
-  - No other check runs: never in a sweep of every connection, never for a taf with no schedule. A taf that only runs from
-    a door uses what's kept (`GET …/health`), which runs nothing.
+    call that isn't due answers what's kept, so most firings cost no check.
+  - tafs cloud itself only reads what's kept (`GET …/health`, the person's own session), which runs nothing. No check
+    runs in a sweep of every connection, or for a taf with no schedule.
 - **Where it's read:**
   - Connect apps' read has `saved_sign_ins: [{grant, site, used_by: [taf names], health, sign_in}]`, one per `cloud`
     connection and site, beside `ways`. `sign_in` is the `site_sign_in` action.
@@ -490,25 +490,22 @@ makes no click and no write. Only the verdict is kept.
 - **Both items are on Home** (`GET /v1/home`) as `sign_ins: [...]`, beside `your_turns` and `your_steps`, and each counts
   once in `needs_you.count`.
 - **`needs_you_soon`** adds a Needs you item `{kind: "sign_in_soon", grant, site, needs_you_by, taf: {id, name}, words:
-  {title, line, sign_in, later, why}}`, with one push on the ordinary channel the day it starts. It counts once in
-  `needs_you.count`.
+  {title, line, sign_in, later, why}}`, from what planque keeps of the connection the taf's schedule names. It counts once
+  in `needs_you.count`.
   - **Later** is a request: `POST /v1/needs-you/sign-in/{grant}/{site}/later` (the person's session). It hides the item for
-    everyone on the account until the next day's check, and `count` follows on every device.
-- **A `stopped` sign-in holds the run before it starts, and never runs and fails** (a scheduled run, and a door's message to
-  a taf on that connection alike):
-  - tafs cloud doesn't start it. The taf carries `held_for_sign_in: {grant, site, run_at}`, and a door's message waits as
-    a door hold already does.
-  - It adds the item `{kind: "sign_in_stopped", grant, site, checked_at, run_at, taf, words: {title, line, sign_in, skip,
-    why}}`, with the line "{taf}'s {time} run waits for you. It won't run with a broken sign-in, and it's skipped only if
-    you skip it."
-  - Its push goes on the ordinary channel unless the item says `urgent: true`. tafs cloud's `kind` decides, as for briefs.
-  - **Sign in again:** once a check reads `signed_in` (every 5 minutes while it holds, above), the held run starts, and
-    the schedules come back.
-  - **Skip this run** (`POST /v1/tafs/{id}/held-sign-in/skip`, the person's session): that run is dropped, and the
-    schedules come back from the next one. The item stays until the sign-in works, but holds no more runs until the next
-    check reads `stopped` again.
-  - **A held run waits at most until the taf's next scheduled run.** Then it's dropped, and the item's line says so:
-    "{taf}'s {time} run was dropped: your sign-in at {site} still needs you. The next run waits for it too."
+    everyone on the account until planque's next check of that site, and `count` follows on every device.
+- **A `stopped` sign-in holds a scheduled run before it starts, and it never runs and fails:**
+  - kiff/agents starts no run for that firing and keeps it as `held_sign_in`, with `grant` and `site`. It's not counted as
+    failing. A check that fails (planque down, a timeout) runs the firing as before: an outage never holds every taf.
+  - Home adds the item `{kind: "sign_in_stopped", grant, site, run_at, taf, words: {title, line, sign_in, skip}}`, with the
+    line "{taf}'s {time} run waits for you. It won't run with a broken sign-in, and it's skipped only if you skip it."
+  - **Sign in again:** the owner signs in in planque's live view, which makes the site due again at once. The next firing
+    is checked afresh and runs, and the item goes once a later run starts. To run it sooner, the taf's own Run works as
+    always.
+  - **Skip this run** (`POST /v1/tafs/{id}/held-sign-in/skip`, the person's session): that held run's item goes. A later
+    firing held again shows again.
+  - **Not in this batch:** holding a door's message on a stopped sign-in (doors start runs, not firings, so kiff/agents
+    doesn't check them), the push for either item, and `urgent`. Each is its own batch if wanted.
 - **Where a held run shows:** kiff/agents' scheduler makes the check before each firing of a schedule that names the
   connection (`sign_in {grant}`, kiff/agents#712), so tafs cloud sees only the firings it held. Each one is on the taf's
   work page with the other runs that didn't start (`skipped[]`, `why: "sign_in"`): "Held the 07:00 run: its saved sign-in
