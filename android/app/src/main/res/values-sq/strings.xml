@@ -196,6 +196,7 @@
     <string name="billing_by_google_play">Faturohet nga Google Play</string>
     <string name="billing_by_kiff">Faturohet nga KIFF</string>
     <string name="billing_cancel_any_time_least_day">Anuloni në çdo kohë, të paktën një ditë para se të rinovohet, te Abonimet e llogarisë suaj Apple.</string>
+    <string name="billing_confirming_purchase">Po konfirmohet blerja…</string>
     <string name="billing_contact_support">KIFF nuk mund ta shtojë këtë blerje në këtë llogari. Ju e keni paguar, ndaj kontaktoni mbështetjen te support@kiff.dev dhe do ta zgjidhim.</string>
     <string name="billing_conversation_goes_plan_tools_being">Gjatë bisedës, plani, aplikacionet që po lidhen dhe Card-i i taf-it shfaqen këtu.</string>
     <string name="billing_credits_buy">Kreditet paguajnë ekzekutimet e tafs-ve tuaja; një kontroll i qetë, kur nuk ka asgjë të re, nuk përdor asnjë. Solo përfshin Coach për të konfiguruar rreth 4 punë të reja në muaj.</string>

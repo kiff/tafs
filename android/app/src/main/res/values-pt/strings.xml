@@ -196,6 +196,7 @@
     <string name="billing_by_google_play">Faturado pelo Google Play</string>
     <string name="billing_by_kiff">Faturado pelo KIFF</string>
     <string name="billing_cancel_any_time_least_day">Cancele quando quiser, pelo menos um dia antes da renovação, nas Subscrições da sua conta Apple.</string>
+    <string name="billing_confirming_purchase">A confirmar a compra…</string>
     <string name="billing_contact_support">O KIFF não consegue adicionar esta compra a esta conta. Pagou por ela, por isso contacte o suporte em support@kiff.dev e resolveremos o assunto.</string>
     <string name="billing_conversation_goes_plan_tools_being">À medida que a conversa avança, o plano, as apps a ligar e o Card do taf aparecem aqui.</string>
     <string name="billing_credits_buy">Os créditos pagam as execuções dos seus tafs; uma verificação calma, quando não há nada de novo, não usa nenhum. O Solo inclui o Coach para configurar cerca de 4 novos trabalhos por mês.</string>

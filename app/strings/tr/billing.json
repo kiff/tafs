@@ -21,6 +21,7 @@
   "billing.by_google_play": "Google Play tarafından faturalanır",
   "billing.by_kiff": "KIFF tarafından faturalanır",
   "billing.cancel_any_time_least_day": "Yenilenmesinden en az bir gün önce, Apple hesabınızın Abonelikler bölümünden istediğiniz zaman iptal edin.",
+  "billing.confirming_purchase": "Satın alma onaylanıyor…",
   "billing.contact_support": "KIFF bu satın almayı bu hesaba ekleyemiyor. Ödemeyi yaptınız, bu yüzden support@kiff.dev adresinden destekle iletişime geçin, çözelim.",
   "billing.conversation_goes_plan_tools_being": "Sohbet ilerledikçe plan, bağlanan uygulamalar ve taf'ın Card'ı burada görünür.",
   "billing.credits_buy": "Krediler taf'larınızın çalıştırmalarını öder; yeni bir şey olmadığında yapılan sessiz bir kontrol hiç kullanmaz. Solo, ayda yaklaşık 4 yeni işi kurmak için Coach'u içerir.",

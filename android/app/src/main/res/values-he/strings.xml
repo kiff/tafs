@@ -199,6 +199,7 @@
     <string name="billing_by_google_play">החיוב דרך Google Play</string>
     <string name="billing_by_kiff">החיוב דרך KIFF</string>
     <string name="billing_cancel_any_time_least_day">אפשר לבטל בכל עת, לפחות יום לפני החידוש, במנויים של חשבון Apple שלך.</string>
+    <string name="billing_confirming_purchase">מאשרים את הרכישה…</string>
     <string name="billing_contact_support">KIFF לא יכול להוסיף את הרכישה הזו לחשבון הזה. שילמת עליה, ולכן יש לפנות לתמיכה ב-support@kiff.dev ונסדר את זה.</string>
     <string name="billing_conversation_goes_plan_tools_being">ככל שהשיחה מתקדמת, התוכנית, האפליקציות שמתחברות וה-Card של ה-taf מוצגים כאן.</string>
     <string name="billing_credits_buy">הקרדיטים משלמים על הריצות של ה-tafs שלך; בדיקה שקטה, כשאין שום דבר חדש, לא משתמשת באף אחד. Solo כולל את Coach כדי להגדיר כ-4 משימות חדשות בחודש.</string>

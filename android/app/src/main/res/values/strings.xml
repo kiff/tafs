@@ -196,6 +196,7 @@
     <string name="billing_by_google_play">Billed by Google Play</string>
     <string name="billing_by_kiff">Billed by KIFF</string>
     <string name="billing_cancel_any_time_least_day">Cancel any time, at least a day before it renews, in your Apple account\'s Subscriptions.</string>
+    <string name="billing_confirming_purchase">Confirming the purchase…</string>
     <string name="billing_contact_support">KIFF can\'t add this purchase to this account. You paid for it, so contact support at support@kiff.dev and we\'ll sort it out.</string>
     <string name="billing_conversation_goes_plan_tools_being">As the conversation goes, the plan, the apps being connected and the taf\'s Card show here.</string>
     <string name="billing_credits_buy">Credits pay for your tafs\' runs; a quiet check, when nothing is new, uses none. Solo includes Coach to set up about 4 new jobs a month.</string>

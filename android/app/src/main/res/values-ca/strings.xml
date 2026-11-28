@@ -196,6 +196,7 @@
     <string name="billing_by_google_play">Factura Google Play</string>
     <string name="billing_by_kiff">Factura KIFF</string>
     <string name="billing_cancel_any_time_least_day">Cancel·la quan vulguis, almenys un dia abans de la renovació, a les Subscripcions del teu compte d\'Apple.</string>
+    <string name="billing_confirming_purchase">S\'està confirmant la compra…</string>
     <string name="billing_contact_support">KIFF no pot afegir aquesta compra a aquest compte. L\'has pagada, així que contacta amb el suport a support@kiff.dev i ho resoldrem.</string>
     <string name="billing_conversation_goes_plan_tools_being">A mesura que avança la conversa, aquí es mostren el pla, les aplicacions que es connecten i el Card del taf.</string>
     <string name="billing_credits_buy">Els crèdits paguen les execucions dels teus tafs; una comprovació tranquil·la, quan no hi ha res de nou, no en fa servir cap. Solo inclou Coach per configurar unes 4 feines noves al mes.</string>

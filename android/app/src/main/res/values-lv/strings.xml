@@ -199,6 +199,7 @@
     <string name="billing_by_google_play">Rēķinu izraksta Google Play</string>
     <string name="billing_by_kiff">Rēķinu izraksta KIFF</string>
     <string name="billing_cancel_any_time_least_day">Atcel jebkurā laikā, vismaz dienu pirms atjaunošanas, sava Apple konta sadaļā Abonementi.</string>
+    <string name="billing_confirming_purchase">Pirkums tiek apstiprināts…</string>
     <string name="billing_contact_support">KIFF nevar pievienot šo pirkumu šim kontam. Tu par to samaksāji, tāpēc sazinies ar atbalstu: support@kiff.dev, un mēs to atrisināsim.</string>
     <string name="billing_conversation_goes_plan_tools_being">Sarunas gaitā šeit parādās plāns, pievienojamās lietotnes un taf Card.</string>
     <string name="billing_credits_buy">Kredīti apmaksā tavu tafu palaišanas; mierīga pārbaude, kad nekā jauna nav, neizmanto nevienu. Solo ietver Coach, lai iestatītu aptuveni 4 jaunus darbus mēnesī.</string>

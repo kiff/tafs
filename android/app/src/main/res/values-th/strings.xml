@@ -193,6 +193,7 @@
     <string name="billing_by_google_play">เรียกเก็บโดย Google Play</string>
     <string name="billing_by_kiff">เรียกเก็บโดย KIFF</string>
     <string name="billing_cancel_any_time_least_day">ยกเลิกได้ทุกเมื่ออย่างน้อยหนึ่งวันก่อนต่ออายุ ในการสมัครใช้งานของบัญชี Apple ของคุณ</string>
+    <string name="billing_confirming_purchase">กำลังยืนยันการซื้อ…</string>
     <string name="billing_contact_support">KIFF เพิ่มการซื้อนี้ในบัญชีนี้ไม่ได้ คุณชำระเงินแล้ว โปรดติดต่อฝ่ายสนับสนุนที่ support@kiff.dev แล้วเราจะแก้ไขให้</string>
     <string name="billing_conversation_goes_plan_tools_being">เมื่อการสนทนาดำเนินไป แพ็กเกจ แอปที่กำลังเชื่อมต่อ และ Card ของ taf จะแสดงที่นี่</string>
     <string name="billing_credits_buy">เครดิตใช้จ่ายสำหรับการทำงานของ taf ของคุณ การตรวจสอบเงียบ ๆ เมื่อไม่มีอะไรใหม่ไม่ใช้เครดิตเลย Solo รวม Coach สำหรับตั้งค่างานใหม่ประมาณ 4 งานต่อเดือน</string>

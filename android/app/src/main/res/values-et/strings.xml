@@ -196,6 +196,7 @@
     <string name="billing_by_google_play">Arveldab Google Play</string>
     <string name="billing_by_kiff">Arveldab KIFF</string>
     <string name="billing_cancel_any_time_least_day">Tühista igal ajal, vähemalt päev enne uuenemist, oma Apple\'i konto tellimustes (Subscriptions).</string>
+    <string name="billing_confirming_purchase">Ostu kinnitatakse…</string>
     <string name="billing_contact_support">KIFF ei saa seda ostu sellele kontole lisada. Sa maksid selle eest, seega kirjuta toele aadressil support@kiff.dev ja me lahendame selle.</string>
     <string name="billing_conversation_goes_plan_tools_being">Vestluse käigus kuvatakse siin plaan, ühendatavad rakendused ja tafi Card.</string>
     <string name="billing_credits_buy">Krediidid maksavad sinu tafide käivituste eest; vaikne kontroll, kui midagi uut pole, ei kasuta ühtegi. Solo sisaldab Coachi, et seadistada umbes 4 uut tööd kuus.</string>

@@ -196,6 +196,7 @@
     <string name="billing_by_google_play">Abgerechnet über Google Play</string>
     <string name="billing_by_kiff">Abgerechnet über KIFF</string>
     <string name="billing_cancel_any_time_least_day">Jederzeit kündbar, spätestens einen Tag vor der Verlängerung, unter „Abonnements“ in deinem Apple-Account.</string>
+    <string name="billing_confirming_purchase">Der Kauf wird bestätigt…</string>
     <string name="billing_contact_support">KIFF kann diesen Kauf diesem Konto nicht hinzufügen. Du hast dafür bezahlt, also wende dich an support@kiff.dev, und wir klären das.</string>
     <string name="billing_conversation_goes_plan_tools_being">Während des Gesprächs erscheinen hier der Plan, die Apps, die verbunden werden, und die Card des tafs.</string>
     <string name="billing_credits_buy">Credits bezahlen die Läufe deiner tafs; eine ruhige Prüfung, wenn nichts neu ist, braucht keine. Solo enthält Coach, um etwa 4 neue Aufgaben im Monat einzurichten.</string>

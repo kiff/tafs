@@ -196,6 +196,7 @@
     <string name="billing_by_google_play">Gefactureerd door Google Play</string>
     <string name="billing_by_kiff">Gefactureerd door KIFF</string>
     <string name="billing_cancel_any_time_least_day">Je kunt altijd opzeggen, minstens een dag voor de verlenging, in Abonnementen van je Apple-account.</string>
+    <string name="billing_confirming_purchase">De aankoop wordt bevestigd…</string>
     <string name="billing_contact_support">KIFF kan deze aankoop niet aan dit account toevoegen. Je hebt ervoor betaald, dus neem contact op met support via support@kiff.dev en we lossen het op.</string>
     <string name="billing_conversation_goes_plan_tools_being">Naarmate het gesprek vordert, verschijnen hier het plan, de apps die worden gekoppeld en de Card van het taf.</string>
     <string name="billing_credits_buy">Credits betalen de runs van je tafs; een rustige check, als er niets nieuws is, gebruikt er geen. Solo bevat Coach om zo\'n 4 nieuwe taken per maand in te stellen.</string>

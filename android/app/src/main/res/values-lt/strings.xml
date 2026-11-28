@@ -199,6 +199,7 @@
     <string name="billing_by_google_play">Apmokestina Google Play</string>
     <string name="billing_by_kiff">Apmokestina KIFF</string>
     <string name="billing_cancel_any_time_least_day">Atšaukite bet kada, ne vėliau kaip likus dienai iki atnaujinimo, savo Apple paskyros prenumeratose.</string>
+    <string name="billing_confirming_purchase">Patvirtinamas pirkimas…</string>
     <string name="billing_contact_support">KIFF negali pridėti šio pirkinio prie šios paskyros. Už jį sumokėjote, todėl parašykite pagalbai adresu support@kiff.dev ir mes tai sutvarkysime.</string>
     <string name="billing_conversation_goes_plan_tools_being">Pokalbiui vykstant, čia rodomas planas, jungiamos programėlės ir taf Card.</string>
     <string name="billing_credits_buy">Kreditais mokama už jūsų tafų paleidimus; rami patikra, kai nėra nieko naujo, nenaudoja nė vieno. Solo apima Coach, kad nustatytumėte maždaug 4 naujus darbus per mėnesį.</string>

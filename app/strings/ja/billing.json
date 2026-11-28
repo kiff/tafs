@@ -21,6 +21,7 @@
   "billing.by_google_play": "Google Playが請求",
   "billing.by_kiff": "KIFFが請求",
   "billing.cancel_any_time_least_day": "更新の1日前までなら、Apple IDのサブスクリプションでいつでも解約できます。",
+  "billing.confirming_purchase": "購入を確認しています…",
   "billing.contact_support": "KIFFはこの購入をこのアカウントに追加できません。お支払い済みですので、support@kiff.devまでお問い合わせください。対応いたします。",
   "billing.conversation_goes_plan_tools_being": "会話が進むにつれて、プラン、接続中のアプリ、tafのCardがここに表示されます。",
   "billing.credits_buy": "クレジットはtafの実行に使われます。新しいことがないときの静かな確認では使われません。Soloには、毎月約4件の新しい仕事をセットアップできるCoachが含まれます。",

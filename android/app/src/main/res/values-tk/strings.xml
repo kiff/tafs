@@ -196,6 +196,7 @@
     <string name="billing_by_google_play">Google Play tarapyndan hasaba goýulýar</string>
     <string name="billing_by_kiff">KIFF tarapyndan hasaba goýulýar</string>
     <string name="billing_cancel_any_time_least_day">Islendik wagt, täzelenmeden azyndan bir gün öň, Apple hasabyňyzyň Abunalarynda ýatyryň.</string>
+    <string name="billing_confirming_purchase">Satyn alyş tassyklanýar…</string>
     <string name="billing_contact_support">KIFF bu satyn almany bu hasaba goşup bilmeýär. Siz ony tölediňiz, şonuň üçin support@kiff.dev salgysynda goldaw bilen habarlaşyň, biz ony çözeris.</string>
     <string name="billing_conversation_goes_plan_tools_being">Gürrüň dowam edende, meýilnama, birikdirilýän programmalar we taf-yň Card-y bu ýerde görünýär.</string>
     <string name="billing_credits_buy">Kredit tafs-laryňyzyň işlemelerini tölemek üçin; täze zat ýok mahaly asuda barlag hiç birini ulanmaýar. Solo aýda takmynan 4 täze işi sazlamak üçin Coach-y öz içine alýar.</string>

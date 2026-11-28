@@ -196,6 +196,7 @@
     <string name="billing_by_google_play">Google Play کی طرف سے بل</string>
     <string name="billing_by_kiff">KIFF کی طرف سے بل</string>
     <string name="billing_cancel_any_time_least_day">کسی بھی وقت، تجدید سے کم از کم ایک دن پہلے، اپنے Apple اکاؤنٹ کی سبسکرپشنز میں منسوخ کریں۔</string>
+    <string name="billing_confirming_purchase">خریداری کی تصدیق ہو رہی ہے…</string>
     <string name="billing_contact_support">KIFF اس خریداری کو اس اکاؤنٹ میں شامل نہیں کر سکتا۔ آپ نے اس کی ادائیگی کی ہے، اس لیے support@kiff.dev پر سپورٹ سے رابطہ کریں اور ہم اسے حل کریں گے۔</string>
     <string name="billing_conversation_goes_plan_tools_being">بات چیت کے ساتھ، پلان، جوڑی جانے والی ایپس اور taf کا Card یہاں دکھائی دیتے ہیں۔</string>
     <string name="billing_credits_buy">کریڈٹس سے آپ کے tafs کے رنز کی ادائیگی ہوتی ہے؛ جب کچھ نیا نہ ہو تو خاموش جانچ میں کوئی کریڈٹ نہیں لگتا۔ Solo میں Coach شامل ہے تاکہ ہر ماہ تقریباً 4 نئے کام سیٹ کیے جا سکیں۔</string>
