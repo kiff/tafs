@@ -163,6 +163,35 @@ data class DoorsRead(
   @Serializable(with = EachDoor::class) val doors: List<Door> = emptyList(),
   @Serializable(with = EachDoorApp::class) val apps: List<DoorApp> = emptyList(),
   @Serializable(with = EachKnock::class) val knocks: List<Knock> = emptyList(),
+  /** Replies the taf wrote to someone outside, waiting for the owner to send them (docs/doors.md). */
+  @Serializable(with = EachHeldReply::class) val replies: List<HeldReply> = emptyList(),
+)
+
+/**
+ * A reply a door's taf wrote to someone outside, held until the owner sends it: who it goes to, its subject, the exact [text]
+ * that would go, and [textSha256], tafs cloud's hash of that text, which Send names so only the text read goes.
+ */
+@Serializable
+data class HeldReply(
+  val run: String,
+  val door: String,
+  val to: String,
+  val subject: String? = null,
+  val text: String,
+  @Serializable(with = InstantAsString::class) val at: Instant,
+  @SerialName("text_sha256") val textSha256: String,
+  /** tafs cloud's words for it, in the person's language; absent from a tafs cloud before them. */
+  val words: HeldReplyWords? = null,
+)
+
+/** tafs cloud's words for a held reply: its line, the two buttons, the fingerprint's prompt, and what a changed reply says. */
+@Serializable
+data class HeldReplyWords(
+  val line: String = "",
+  val send: String = "",
+  val discard: String = "",
+  val prompt: String = "",
+  val changed: String = "",
 )
 
 /** A JSON list read one item at a time: an item that can't be read is left out, never the list. */
@@ -182,6 +211,7 @@ open class EachReadable<T>(private val item: KSerializer<T>) : KSerializer<List<
 internal object EachDoor : EachReadable<Door>(Door.serializer())
 internal object EachDoorApp : EachReadable<DoorApp>(DoorApp.serializer())
 internal object EachKnock : EachReadable<Knock>(Knock.serializer())
+internal object EachHeldReply : EachReadable<HeldReply>(HeldReply.serializer())
 
 @Serializable
 internal data class DoorResponse(val door: Door)
