@@ -1,0 +1,1 @@
+- **Connect apps says who uses each of your apps on its own.** tafs cloud sends `used_by_words` ("Used by Rae", "Not used by any taf") for the account's own apps, and Android shows it as the row's second line beside the status, so a row no longer says "Sign in" twice.

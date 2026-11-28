@@ -19,6 +19,7 @@
             "name": "Rae"
           }
         ],
+        "used_by_words": "Used by Rae",
         "line": "Sign in · Sign in again · Used by Rae",
         "needed_by": [],
         "misplaced": []
@@ -41,6 +42,7 @@
             "name": "Rae"
           }
         ],
+        "used_by_words": "Used by Rae",
         "line": "Sign in · Connected · Used by Rae",
         "needed_by": [],
         "misplaced": []
@@ -57,6 +59,7 @@
         "method": "sign_in",
         "whose": "Company",
         "used_by": [],
+        "used_by_words": "Not used by any taf",
         "line": "Sign in · Signed in · Not used by any taf",
         "needed_by": [],
         "misplaced": []

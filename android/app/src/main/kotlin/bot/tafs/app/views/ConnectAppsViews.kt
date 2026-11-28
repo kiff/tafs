@@ -83,11 +83,18 @@ object ConnectAppsWords {
   val TITLE get() = Words.Connect.Apps.title
 
   /**
-   * An app's second line: tafs cloud's `line` as sent. Without it, the same words put together here: how it connects, whose it
-   * is when tafs cloud says, and which tafs use it ([usedBy]).
+   * An app's second line. For one of the account's own, who uses it, in tafs cloud's words (`used_by_words`): its status and
+   * action are already beside it, so the line says only that ("Not used by any taf"). Sent empty (only a taf this person can't
+   * see uses it), the line says how it connects and whose it is, never its status again. Not sent (unknown, or a tafs cloud
+   * before it): tafs cloud's `line` as sent. Without either, the same words put together here: how it connects, whose it is when
+   * tafs cloud says, and which tafs use it ([usedBy]).
    */
-  fun secondLine(app: ConnectApps.App, usedBy: List<String>): String =
-    app.line?.takeIf { it.isNotBlank() } ?: listOfNotNull(
+  fun secondLine(app: ConnectApps.App, usedBy: List<String>): String {
+    val words = app.usedByWords?.takeIf { app.yours }
+    if (words != null) {
+      return words.ifBlank { listOfNotNull(if (app.byKey) Words.Connect.How.key else Words.Connect.How.signIn, app.whose?.takeIf { it.isNotBlank() }).joinToString(" · ") }
+    }
+    return app.line?.takeIf { it.isNotBlank() } ?: listOfNotNull(
       if (app.byKey) Words.Connect.How.key else Words.Connect.How.signIn,
       app.whose?.takeIf { it.isNotBlank() },
       // Where it stands, as on iPhone and iPad: connected, or to sign in again.
@@ -95,6 +102,7 @@ object ConnectAppsWords {
       // Only an app that's yours is used by a taf.
       usedBy.takeIf { app.yours && it.isNotEmpty() }?.let { Words.Connect.Apps.usedBy(tafs = bot.tafs.app.model.Res.list(it)) },
     ).joinToString(" · ")
+  }
   val SEARCH get() = Words.Connect.Apps.search
   val CONNECTED get() = Words.Connect.Apps.connected
   val CONNECT get() = Words.Connect.Apps.connect
