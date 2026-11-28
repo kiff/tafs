@@ -401,8 +401,8 @@ A browser connection works one of two ways, named by what the owner gets, never 
 | `cloud` | `browser.driver` empty: the hosted browser | Works while the owner's computer is off. A fresh browser each run, only on the sites they allow. They sign in once, in a live view; their password is never kept. |
 | `chrome` | `browser.driver: "extension"`, with its paired Chrome | Works in the owner's Chrome, where they're signed in, only while that computer is on. It uses the sign-ins already in their Chrome; their passwords stay there. |
 
-- **Connect apps' read carries both ways at the account level**, with or without a browser connection:
-  `ways: [{way, words: {title, line, facts: [string], status?}}]`.
+- **Connect apps' read (`GET /v1/connect/apps`) carries both ways at the account level**, with or without a browser
+  connection: `ways: [{way, words: {title, line, facts: [string], status?}}]`, beside `apps`.
   - `facts` are two short lines, such as "A fresh browser for each run, only on the sites you allow." and "You sign in once,
     in a live view. Your password is never kept." for `cloud`, or "Uses the sign-ins already in your Chrome. Your passwords stay
     there." and "Banks and password managers stay blocked unless your phone allows each one." for `chrome`.
@@ -456,8 +456,11 @@ makes no click and no write. Only the verdict is kept.
     call that isn't due answers what's kept.
   - No other check runs: never in a sweep of every connection, never for a taf with no schedule. A taf that only runs from
     a door uses what's kept (`GET …/health`), which runs nothing.
-- **What each site carries** (`sites[]` on the connection, in setup and Connect apps): `health: {state, checked_at?,
-  needs_you_by?, words: {line, why}}`. tafs cloud decides `state` from planque's answer:
+- **Where it's read:**
+  - Connect apps' read has `saved_sign_ins: [{grant, site, used_by: [taf names], health, sign_in}]`, one per `cloud`
+    connection and site, beside `ways`. `sign_in` is the `site_sign_in` action.
+  - The taf's setup has the same `health` on each site of a `cloud` connection: `grants[].sites[]: {site, health}`.
+- **What each site carries:** `health: {state, checked_at?, needs_you_by?, words: {line, why}}`. tafs cloud decides `state` from planque's answer:
 
   | `state` | When | `needs_you_by` | `words.line` |
   |---|---|---|---|
@@ -476,6 +479,8 @@ makes no click and no write. Only the verdict is kept.
 
 ### Needs you, and the run that waits
 
+- **Both items are on Home** (`GET /v1/home`) as `sign_ins: [...]`, beside `your_turns` and `your_steps`, and each counts
+  once in `needs_you.count`.
 - **`needs_you_soon`** adds a Needs you item `{kind: "sign_in_soon", grant, site, needs_you_by, taf: {id, name}, words:
   {title, line, sign_in, later, why}}`, with one push on the ordinary channel the day it starts. It counts once in
   `needs_you.count`.
