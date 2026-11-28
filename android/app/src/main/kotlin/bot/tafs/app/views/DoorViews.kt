@@ -111,6 +111,10 @@ class DoorActions(
   /** A held reply: Send (signed over the text's hash, behind the fingerprint) and Don't send (taf, reply). */
   val sendReply: suspend (String, bot.tafs.app.kiff.HeldReply) -> Boolean = { _, _ -> false },
   val discardReply: suspend (String, bot.tafs.app.kiff.HeldReply) -> Boolean = { _, _ -> false },
+  /** A writer the taf couldn't answer: the owner's own answer (signed over its hash), Ignore, and Connect an app. */
+  val answerUnanswered: suspend (String, bot.tafs.app.kiff.Unanswered, String) -> Boolean = { _, _, _ -> false },
+  val ignoreUnanswered: suspend (String, bot.tafs.app.kiff.Unanswered) -> Boolean = { _, _ -> false },
+  val connectApp: () -> Unit = {},
 )
 
 /**
@@ -221,6 +225,16 @@ fun KnocksPanel(taf: Taf, state: AppState, actions: DoorActions) {
   // Replies the taf wrote to someone outside, held for the owner: the exact text that would go, then Send or Don't send, in
   // tafs cloud's words. One from a tafs cloud that sends no words isn't drawn: the app has none of its own for it.
   doors.replies.filter { it.words != null }.forEach { reply -> HeldReplyCard(reply, doors.busy, { actions.sendReply(taf.id, reply) }, { actions.discardReply(taf.id, reply) }) }
+  // Writers the taf couldn't answer: nothing was drafted, so the owner answers in their own words, ignores it, or connects the
+  // app it needs. One from a tafs cloud that sends no words isn't drawn.
+  doors.unanswered.filter { it.words != null }.forEach { writer ->
+    UnansweredCard(
+      writer, doors.busy,
+      answer = { text -> actions.answerUnanswered(taf.id, writer, text) },
+      ignore = { actions.ignoreUnanswered(taf.id, writer) },
+      connect = actions.connectApp,
+    )
+  }
   if (waiting.isNotEmpty()) {
     Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
       Eyebrow(Words.Door.knocksWaiting, Theme.amber)
@@ -252,6 +266,40 @@ internal fun HeldReplyCard(reply: bot.tafs.app.kiff.HeldReply, busy: Boolean, se
         ApprovalGate { PrimaryButton(words.send, { scope.launch { send() } }, Modifier.fillMaxWidth().confirms(), enabled = !busy) }
       }
       OutlineButton(words.discard, { scope.launch { discard() } }, Modifier.weight(1f).confirms(), enabled = !busy)
+    }
+  }
+}
+
+/**
+ * A writer the taf couldn't answer, in tafs cloud's words: its line and subject, Connect an app (only when tafs cloud offers it),
+ * Answer them yourself, which opens a field for the owner's own words and Send (behind the fingerprint, signed over exactly what
+ * was typed), and Ignore.
+ */
+@Composable
+internal fun UnansweredCard(writer: bot.tafs.app.kiff.Unanswered, busy: Boolean, answer: suspend (String) -> Boolean, ignore: suspend () -> Boolean, connect: () -> Unit) {
+  val words = writer.words ?: return
+  val scope = rememberCoroutineScope()
+  var answering by rememberSaveable(writer.run) { mutableStateOf(false) }
+  var text by rememberSaveable(writer.run) { mutableStateOf("") }
+  Panel(stroke = Theme.amber.copy(alpha = 0.45f), modifier = Modifier.testTag("unanswered-" + writer.run)) {
+    Text(words.line, style = scaled(14, FontWeight.SemiBold, Theme.ink))
+    writer.subject?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, FontWeight.Medium, Theme.soft)) }
+    words.connect?.takeIf { it.isNotBlank() }?.let { PrimaryButton(it, connect, Modifier.fillMaxWidth(), enabled = !busy) }
+    if (answering) {
+      // The owner's words exactly as typed: what Send signs the hash of, and all that goes.
+      Box(Modifier.testTag("unanswered-text")) { Field(text, { text = it }, hint = "", minHeight = 80) }
+      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.weight(1f)) {
+          // tafs cloud sends no word for this button yet; the app's own "Send" stands in.
+          ApprovalGate { PrimaryButton(Words.Common.send, { scope.launch { if (answer(text)) answering = false } }, Modifier.fillMaxWidth().confirms(), enabled = !busy && text.isNotBlank()) }
+        }
+        OutlineButton(Words.Common.cancel, { answering = false }, Modifier.weight(1f), enabled = !busy)
+      }
+    } else {
+      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlineButton(words.reply, { answering = true }, Modifier.weight(1f), enabled = !busy)
+        OutlineButton(words.ignore, { scope.launch { ignore() } }, Modifier.weight(1f).confirms(), enabled = !busy)
+      }
     }
   }
 }
