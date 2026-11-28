@@ -104,8 +104,15 @@ class PurchaseReceiptTest {
     assertEquals("Order PL-2026-118204 confirmed by the shop.", PurchaseReceipt.read(value)!!.words.order)
   }
 
-  @Test fun withNoKeyPinnedYetNothingReadsAsChecked() {
-    // KIFF's first receipt key isn't pinned in this build yet: a receipt is drawn, never shown as checked.
-    assertEquals(PurchaseReceipt.Check.UnknownKey, PurchaseReceipt.read(signed())!!.check(case))
+  @Test fun kiffsFirstReceiptKeyIsPinnedAsKiffPublishesIt() {
+    // `kiff-receipts-1`'s public x, base64url without padding: a raw 32-byte Ed25519 key, the only one this build holds.
+    assertEquals(setOf("kiff-receipts-1"), PurchaseReceipt.PINNED.keys)
+    val x = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(PurchaseReceipt.PINNED.getValue("kiff-receipts-1"))
+    assertEquals("_6t9hrjlcGOCqoGUrOf95mAk6oW9Z8zEj1_rtj2c4Pg", x)
+  }
+
+  @Test fun aReceiptNamingKiffsKeyButSignedByAnotherNeverChecks() {
+    // Signed by a test key under KIFF's kid: against the pinned key it doesn't check out, and it's never shown as checked.
+    assertEquals(PurchaseReceipt.Check.Changed, PurchaseReceipt.read(signed())!!.check(case))
   }
 }
