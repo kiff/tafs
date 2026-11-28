@@ -139,6 +139,22 @@ class UnansweredTest {
     assertTrue(m.state.value.doors.getValue("refunds-1").unanswered.isEmpty())
   }
 
+  @Test fun aTafThatNeedsSomethingFromTheOwnerReadsInTafsCloudsWordsWithNoConnect() = runTest {
+    // tafs cloud's real English lines for `needs_setup` (doors.ts cantDoWords), with and without the kinds it named: the app
+    // reads `cant_do` as data and ignores `needs`, so the row is tafs cloud's line, with Answer them yourself and Ignore only.
+    val needs = "Refunds needs something from you before it can do what Ben asked: a spreadsheet and a folder. Their message waits here, and they haven't been answered."
+    val bare = "Refunds needs something from you before it can do what Ben asked. Their message waits here, and they haven't been answered."
+    fun setup(run: String, said: String, kinds: String) =
+      """{"run":"$run","door":"door_1","to":"Ben","at":"2026-11-28T08:59:00Z","cant_do":"needs_setup"$kinds,
+        "words":{"line":"$said","reply":"Answer them yourself","ignore":"Ignore","prompt":"Send this reply to Ben","changed":"It changed."}}"""
+    reads("[${setup("run_9", needs, ""","needs":["sheet","folder"]""")},${setup("run_10", bare, "")}]")
+    val u = model().state.value.doors.getValue("refunds-1").unanswered
+    assertEquals(listOf("run_9", "run_10"), u.map { it.run })
+    assertEquals(listOf("needs_setup", "needs_setup"), u.map { it.cantDo })
+    assertEquals(listOf(needs, bare), u.map { it.words!!.line })
+    assertTrue(u.all { it.words!!.connect == null })
+  }
+
   @Test fun aWriterWithoutTafsCloudsWordsIsntAnsweredFromHere() = runTest {
     reads("[${writer(words = false)}]")
     val m = model()
