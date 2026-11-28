@@ -438,10 +438,13 @@ away, gets `cloud`. A taf that needs the sign-ins already in the owner's Chrome,
   | `occasional` | `chrome` | "Coach chose your Chrome because {taf} runs only when you ask." |
 
 - **Matching the grant:**
-  - Coach's result is checked against the browser grant's way once planque's account connections say a browser grant's
-    `driver`.
-  - Until then, the setup shows the reason only while it's for the way the grant has. The setup reads the grant with the
-    phone's proof, so a pick that doesn't match is never shown, and nothing is refused on a guess.
+  - Coach's result is handed over from kiff/agents' run, with no person's session, so tafs cloud doesn't read planque's
+    connections there to refuse a pick for the other way.
+  - Coach sees each browser connection's way when its conversation starts. A connection in the owner's Chrome says "in the
+    owner's Chrome (browse way chrome)" on its `[tafs connections]` line (planque's `driver: "extension"`,
+    kiff/planque#515). A connection with no `driver` is never read as the hosted browser.
+  - The taf's setup reads the grant with the phone's proof and shows the reason only while it's for that grant's way. A pick
+    that doesn't match is never shown.
 - **The taf's setup** (`GET /v1/tafs/{id}/setup`) shows `browsing: {sites, way, way_words, reason, why, chosen_by:
   "coach", switch}`. `why` is the reason's words. The reason belongs to the version: a new version without `browse` keeps
   it, and one with `browse` replaces it.
