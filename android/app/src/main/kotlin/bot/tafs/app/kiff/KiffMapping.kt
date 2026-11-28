@@ -271,6 +271,7 @@ object KiffMapping {
         readOnly = c.readOnly, amountText = c.amount?.let(::amountText), amountValue = c.amount?.value, amountUnit = c.amount?.unit,
         moneyMoved = if (c.payment == true && (kind == RecordEntry.Kind.done || kind == RecordEntry.Kind.approved)) true else null,
         entityId = c.entityId?.let(::visible), action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt,
+        purchaseCase = c.caseId?.takeIf { it.isNotBlank() },
         why = c.reasons?.map(::visible), madeAt = c.madeAt, reason = c.reason?.let(::visible),
         refusedByTool = if (refusedByTool) true else null,
         refusedBy = if (byConnection) Words.Record.theConnection else if (refusedByTool) vendors[c.actionName] else null,

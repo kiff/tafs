@@ -64,6 +64,27 @@ calls:
   line.
 - **No block, or `null`:** any other held call, drawn as before.
 
+## The receipt in the Record
+
+KIFF signs a receipt for each purchase once its case has ended (bought, not bought, or not known yet):
+`GET /v1/me/purchases/{case_id}/receipt`, the contract's `receipt.value`. The Record's line for a purchase carries `case_id`,
+and its sheet reads the receipt from there (`PurchaseReceipt`, `AppModel.purchaseReceipt`).
+
+- **Every word is KIFF's:**
+  - `words.state` ("Bought", "Not known yet", "Not bought"), then `line`;
+  - then what was allowed, the card, the order and refunds, as sent.
+
+  `unknown` is said as unknown, never as bought.
+- **Checked on the phone:** Ed25519 over the canonical JSON (RFC 8785) of `value` without `sig`, checked against KIFF's receipt
+  keys **pinned in the app** (`PurchaseReceipt.PINNED`), as the Record's own receipt signer is pinned (`ReceiptCheck.KIFF_SIGNER`).
+  - **Never against a key fetched with the receipt.** KIFF's published key set is for others; a new key ships in the app before
+    KIFF signs with it, and a revoked one leaves in a release.
+  - **Checked:** "KIFF's receipt · checked on this phone".
+  - **Changed, or another case's:** "KIFF's receipt doesn't check out".
+  - **A key this app doesn't hold:** "It's signed in a way this app doesn't know". It's never shown as checked, and that includes
+    every receipt until KIFF's first key is pinned.
+- **Bouncy Castle** does the Ed25519 check (Android 11 has none of its own). `proguard-rules.pro` keeps it whole for release.
+
 ## Tests
 
 - `PurchaseHoldTest`:
@@ -77,3 +98,14 @@ calls:
 - `PurchaseCardTest` (Robolectric): the card draws the contract's words with the items closed until
   Show more, offers Approve once and Refuse only, sends the case it drew, and offers Refuse only
   for unreadable words.
+- `PurchaseReceiptTest`:
+  - the contract's receipt is read, plain and wrapped as `value`;
+  - signed by a held key, it checks;
+  - a changed word, state or amount doesn't;
+  - an unheld, revoked or other kid is never checked;
+  - another case's receipt isn't this line's;
+  - `unknown` reads as unknown;
+  - other schemas aren't read;
+  - with nothing pinned, nothing reads as checked.
+- `PurchaseReceiptCardTest` (Robolectric): a purchase's Record line names its case. Its sheet draws KIFF's words, and says
+  "checked" only when the check held.

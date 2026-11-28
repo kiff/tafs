@@ -716,6 +716,8 @@ data class RecordEntry(
   /** The owner's answer to a held call, and its KIFF receipt. */
   val answer: RecordAnswer? = null,
   val receipt: RecordReceipt? = null,
+  /** A purchase's line: the case KIFF's signed purchase receipt is read by (docs/purchases.md). */
+  val purchaseCase: String? = null,
   /** KIFF's reasons for its decision ("over the €100.00 limit for one refund"). */
   val why: List<String>? = null,
   /** When the call was made (KIFF's first decision), and why it wasn't sent, in KIFF's words. */

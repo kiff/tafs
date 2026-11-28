@@ -2917,6 +2917,16 @@ class AppModel(
   suspend fun receipt(traceId: String): ByteArray = kiff.receipt(traceId)
 
   /**
+   * KIFF's purchase receipt for [caseId], read and checked on this phone against the keys pinned in the app
+   * ([bot.tafs.app.kiff.PurchaseReceipt.PINNED]), never a key fetched with it. Null when KIFF's answer isn't a purchase receipt.
+   */
+  suspend fun purchaseReceipt(caseId: String): Pair<bot.tafs.app.kiff.PurchaseReceipt, bot.tafs.app.kiff.PurchaseReceipt.Check>? {
+    val raw = kiff.purchaseReceipt(caseId)
+    val r = bot.tafs.app.kiff.PurchaseReceipt.read(KiffClient.json.parseToJsonElement(String(raw, Charsets.UTF_8))) ?: return null
+    return r to r.check(caseId)
+  }
+
+  /**
    * Finishes removals tafs cloud lists as begun. They were confirmed, signed, when they began; finishing only deletes what's left of a
    * taf already stopped, which tafs cloud takes unsigned only for a taf it lists as `removing`.
    */

@@ -67,6 +67,10 @@ import kotlinx.coroutines.launch
 /** Reads KIFF's receipt for a Record line, by its trace id, as KIFF wrote it; null signed out and in the sample. */
 val LocalReceipt = staticCompositionLocalOf<(suspend (String) -> ByteArray)?> { null }
 
+/** Reads and checks KIFF's receipt for a purchase, by its case (docs/purchases.md); null signed out and in the sample. */
+val LocalPurchaseReceipt =
+  staticCompositionLocalOf<(suspend (String) -> Pair<bot.tafs.app.kiff.PurchaseReceipt, bot.tafs.app.kiff.PurchaseReceipt.Check>?)?> { null }
+
 /**
  * The pictures kept before a Record line's Chrome steps (docs/android-app.md, "The picture before a step"): [list] reads an
  * operation's (its `proposalId`), [load] one step's picture. null signed out and in the sample.
@@ -79,6 +83,59 @@ const val RECEIPT_SHOT_OPEN = "receipt-shot-open"
 
 /** Reports a payment (taf id, receipt's trace id): true when tafs cloud took it; null signed out and in the sample. */
 val LocalReportPayment = staticCompositionLocalOf<(suspend (String, String) -> Boolean)?> { null }
+
+/**
+ * A purchase's receipt, every word KIFF's: its state ("Bought", "Not known yet"), its line, then what was allowed, the card, the
+ * order and refunds; under them, the phone's check of KIFF's signature against the keys pinned in the app. A receipt that doesn't
+ * check is never shown as checked; one this app can't read says so.
+ */
+@Composable
+private fun PurchaseReceiptPanel(case: String, state: AppState) {
+  val load = LocalPurchaseReceipt.current
+  var read by remember(case) { mutableStateOf<Pair<bot.tafs.app.kiff.PurchaseReceipt, bot.tafs.app.kiff.PurchaseReceipt.Check>?>(null) }
+  var problem by remember(case) { mutableStateOf<String?>(null) }
+  var loaded by remember(case) { mutableStateOf(false) }
+  LaunchedEffect(case) {
+    if (load == null || state.mode != Mode.kiff) return@LaunchedEffect
+    try {
+      read = load(case)
+      if (read == null) problem = Words.Receipt.Check.unreadable
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      problem = Words.Receipt.notLoaded(ErrorWords.of(e))
+    } finally {
+      loaded = true
+    }
+  }
+  val r = read
+  if (r == null) {
+    if (load != null && state.mode == Mode.kiff) {
+      Panel(modifier = Modifier.testTag("purchase-receipt")) {
+        Text(problem ?: Words.Receipt.checkingOnDevice(bot.tafs.app.model.ThisDevice.word), style = scaled(13, color = Theme.soft))
+      }
+    }
+    return
+  }
+  val (receipt, check) = r
+  val ok = check == bot.tafs.app.kiff.PurchaseReceipt.Check.Verified
+  Panel(stroke = if (ok) Theme.ok.copy(alpha = 0.4f) else Theme.line, modifier = Modifier.testTag("purchase-receipt")) {
+    Text(receipt.words.state, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    Text(receipt.words.line, style = scaled(14, color = Theme.ink))
+    receipt.words.lines.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
+    when (check) {
+      bot.tafs.app.kiff.PurchaseReceipt.Check.Verified -> {
+        Text(Words.Receipt.checkedOnDevice(bot.tafs.app.model.ThisDevice.word), style = scaled(13, FontWeight.SemiBold, Theme.ok))
+        Text(Words.Receipt.checkedWhy, style = scaled(12, color = Theme.soft))
+      }
+      bot.tafs.app.kiff.PurchaseReceipt.Check.UnknownKey -> Text(Words.Receipt.Check.unknownSignature, style = scaled(13, color = Theme.soft))
+      bot.tafs.app.kiff.PurchaseReceipt.Check.Changed, bot.tafs.app.kiff.PurchaseReceipt.Check.OtherCase -> {
+        Text(Words.Receipt.doesntCheckOut, style = scaled(13, FontWeight.SemiBold, Theme.no))
+        Text(Words.Receipt.changed, style = scaled(12, color = Theme.soft))
+      }
+    }
+  }
+}
 
 private fun seconds(at: Instant): String = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.getDefault()).format(at.atZone(zone))
 
@@ -141,6 +198,7 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
         Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 10.dp))
       }
       Text(entry.titleWithAmount, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+      entry.purchaseCase?.let { case -> PurchaseReceiptPanel(case, state) }
       ReportPayment(entry, state)
       Panel {
         Fact(Words.Receipt.Fact.taf, state.taf(entry.tafId)?.name ?: "–")

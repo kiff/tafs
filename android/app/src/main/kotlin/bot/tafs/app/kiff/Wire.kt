@@ -742,6 +742,8 @@ data class ActivityCall(
   val detail: String? = null,
   /** KIFF: the call's tool moves money (by its owner-approved profile) and the call was sent. Only then did money move. */
   val payment: Boolean? = null,
+  /** A purchase's line: the case its signed receipt is read by (`GET /v1/me/purchases/{case_id}/receipt`). */
+  @SerialName("case_id") val caseId: String? = null,
 )
 
 @Serializable

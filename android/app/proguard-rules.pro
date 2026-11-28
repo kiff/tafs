@@ -8,6 +8,9 @@
 -keep class org.bouncycastle.crypto.digests.KeccakDigest { *; }
 -keep class org.bouncycastle.math.ec.ECAlgorithms { *; }
 -keep class org.bouncycastle.asn1.x9.X9IntegerConverter { *; }
+# A purchase receipt's Ed25519 check (kiff/PurchaseReceipt.kt): its math, kept whole so a release build checks as debug does.
+-keep class org.bouncycastle.math.ec.rfc8032.** { *; }
+-keep class org.bouncycastle.crypto.signers.Ed25519Signer { *; }
 -dontwarn org.bouncycastle.**
 
 # The app's @Serializable types: kept with their generated serializers, so each class
