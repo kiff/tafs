@@ -134,7 +134,8 @@ export function cantDoOf(r: Pick<Run, "status" | "stop" | "output">): HeldReply[
 
 /**
  * Why, and for `needs_setup` what the taf needs from the owner: only the kinds of NEEDS it names after it, in their
- * order, once each (none: the line says it needs something). The taf's own words after the marker never reach the
+ * order, once each, never one that only repeats another (a link beside what it links to, a file beside a sheet); none:
+ * the line says it needs something. The taf's own words after the marker never reach the
  * owner's row.
  */
 export function cantDo(r: Pick<Run, "status" | "stop" | "output">): { why: HeldReply["cant_do"]; needs?: Need[] } {
@@ -150,7 +151,11 @@ export function cantDo(r: Pick<Run, "status" | "stop" | "output">): { why: HeldR
     if (setup) {
       // A plural reads as its kind ("folders" is folder).
       const said = setup[1]!.toLowerCase().split(/[^a-z_]+/).map((w) => w.replace(/s$/, ""));
-      const known = NEEDS.filter((n) => said.includes(n)).sort((a, b) => said.indexOf(a) - said.indexOf(b));
+      let known = NEEDS.filter((n) => said.includes(n)).sort((a, b) => said.indexOf(a) - said.indexOf(b));
+      // A link is how a folder, sheet or file is given, and a spreadsheet is the file: named beside them, they'd
+      // say the same thing twice ("a folder, a link, a spreadsheet, and a file" for a folder's and a sheet's links).
+      if (known.some((n) => n === "folder" || n === "sheet" || n === "file")) known = known.filter((n) => n !== "link");
+      if (known.includes("sheet")) known = known.filter((n) => n !== "file");
       return { why: "needs_setup", ...(known.length ? { needs: known } : {}) };
     }
     return { why: "other" };

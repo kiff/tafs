@@ -2681,6 +2681,33 @@ describe("a door's taf that can't do what was asked", () => {
     expect(JSON.stringify(chat.body.messages)).not.toMatch(/TAFS_CANT_DO|P2-GD|drive\.example/);
   });
 
+  // A phone run's taf named "folder, link, sheet, file" for a folder's and a sheet's links: the row read "a folder, a
+  // link, a spreadsheet, and a file", the same things twice.
+  it("never names a need that only repeats another: a link beside what it links to, a file beside a spreadsheet", async () => {
+    const w = world();
+    await emailDoor(w, "auto");
+    await pairBen(w);
+    await emailHook(w, mail(w, { from: BEN }));
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    await finish(w, run, `${CANT_DO} needs_setup: folder, link, sheet, file`);
+    const held = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.unanswered;
+    expect(held[0]).toMatchObject({ cant_do: "needs_setup", needs: ["folder", "sheet"] });
+    expect(held[0].words.line).toBe("Refunds needs something from you before it can do what Ben asked: a folder and a spreadsheet. Their message waits here, and they haven't been answered.");
+  });
+
+  it("keeps a link or a file the taf names alone", async () => {
+    for (const [said, want] of [["link", ["link"]], ["file, info", ["file", "info"]], ["link, info", ["link", "info"]]] as const) {
+      const w = world();
+      await emailDoor(w, "auto");
+      await pairBen(w);
+      await emailHook(w, mail(w, { from: BEN }));
+      const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+      await finish(w, run, `${CANT_DO} needs_setup: ${said}`);
+      const held = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.unanswered;
+      expect(held[0].needs, said).toEqual(want);
+    }
+  });
+
   it("says it needs something, and nothing more, when the taf names nothing it knows", async () => {
     const w = world();
     await emailDoor(w, "auto");
