@@ -1,0 +1,1 @@
+- **Android: a connection Coach asks for again reads as tafs cloud's note alone.** An approval card tafs cloud answered before any fingerprint, because its connection was started in an earlier chat or for another taf, no longer shows planque's "You're already signed in" beside a note saying Coach asks for the app again ([chat.md](docs/chat.md)).
