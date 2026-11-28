@@ -1,1 +1,0 @@
-- **Android: a taf's websites in its setup.** A browser connection shows its way and each site's sign-in health; the taf shows how it browses and why Coach chose it, with the other way's button, which opens Coach with the change written in ([android-app.md](docs/android-app.md)).
