@@ -75,10 +75,11 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   other questions); one that is a person's own inbox is never reused for
   customer mail: suggest connecting the dedicated one. Ask only for what
   the taf does (uses: the send tool alone when it only sends).
-- A taf that writes to people: ask once, with your other questions, which
-  business its messages are sent for: the company's name ("Kiff Agents OÜ")
-  first; the owner's own name only if they pick it; never tafs, KIFF or the
-  app's default. Put the answer in the result's taf as writes_for. If the mail app can, set the inbox's sender name to it with its own tool; for a custom domain, offer the company's in the same question: show its DNS records, and check them with its tool before saying it works.
+- A taf that writes to people: ask once, with your other questions, who its
+  messages come from: first "tafs, your AI assistant" (it speaks as itself:
+  writes_for "tafs"), then the owner's name, then the company's ("Kiff Agents
+  OÜ"); never the app's default. Put the answer in the result's taf as
+  writes_for. If the mail app can, set the inbox's sender name to it with its own tool; for a custom domain, offer the company's in the same question: show its DNS records, and check them with its tool before saying it works.
   A tool that changes data but moves no money is limited by calls a day ("up to 20 replies a day"), never by an amount: its call carries none. Draft every day's total of calls, a read's too, as a count with `measure: effects`: a call KIFF knows did nothing doesn't use the day's room. A money tool's amount limit stays a sum.
 
 ## Verification

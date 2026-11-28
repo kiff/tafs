@@ -7,6 +7,7 @@ import { coachTool, type Deps, handle, type HTTPEvent, sweepHeld, sweepReplies, 
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
 import { changeDoors, localPart, parseDoorMessage, replyText } from "../src/cloud/doors/doors.js";
+import { disclosureLines } from "../src/jobs.js";
 import { emailAPIBase, type EmailProvider, emailArrival, emailProvider, type OutgoingEmail, parseReceived, type ReceivedEmail } from "../src/cloud/doors/email.js";
 import { doorKeys, type DoorSecrets, type DoorStore } from "../src/cloud/doors/model.js";
 import { signedWebhook, whatsappSigned } from "../src/cloud/doors/sign.js";
@@ -2503,7 +2504,8 @@ describe("the door reply's disclosure line", () => {
     const line = "Written by an AI agent on behalf of Acme.";
     expect(withoutDisclosure(`${line}\n\nYour order ships Monday.\n\n${line}`, "Acme")).toBe("Your order ships Monday.");
     expect(withoutDisclosure("Written by an AI agent on behalf of tafs.\nYour order ships Monday.", "tafs")).toBe("Your order ships Monday.");
-    expect(withoutDisclosure("Rédigé par un agent d'IA au nom d'Acme.\n\nVotre commande part lundi.", "Acme")).toBe("Votre commande part lundi.");
+    const fr = disclosureLines({ writesFor: "Acme" }).fr!;
+    expect(withoutDisclosure(`${fr}\n\nVotre commande part lundi.`, "Acme")).toBe("Votre commande part lundi.");
     // Its own words stay, even ones that mention an AI agent mid-text.
     expect(withoutDisclosure("An AI agent wrote this summary for you.\nYour order ships Monday.", "Acme")).toBe("An AI agent wrote this summary for you.\nYour order ships Monday.");
   });

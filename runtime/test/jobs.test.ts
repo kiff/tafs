@@ -12,7 +12,7 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
     const lines = disclosureLines(acme);
     expect(lines).toMatchObject({
       es: "Escrito por un agente de IA en nombre de Acme.",
-      fr: "Rédigé par un agent d'IA au nom d'Acme.",
+      fr: "Rédigé par un agent d'IA au nom de Acme.",
       de: "Von einem KI-Agenten im Auftrag von Acme geschrieben.",
       pt: "Escrito por um agente de IA em nome de Acme.",
       it: "Scritto da un agente di IA per conto di Acme.",
@@ -124,21 +124,20 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
 
   it("leaves out a language whose line wouldn't fit in what kiff/agents takes, and caps a new name so every line fits", () => {
     expect(DISCLOSURE_MAX_BYTES).toBe(300);
-    // A new name may be 195 bytes, as before. Greek's line names the business with its article ("για λογαριασμό
-    // της επιχείρησης …", 138 bytes besides the name), so it doesn't set the cap: a long name's Greek line is left out.
+    // Greek's line carries the most besides the name (105 bytes: "Γράφτηκε από πράκτορα τεχνητής νοημοσύνης εκ μέρους του …", two bytes a letter), so a new name may be 195 bytes.
     expect(WRITES_FOR_MAX_BYTES).toBe(195);
     const bytes = (s: string) => Buffer.byteLength(s);
     const overhead = (lang: string) => bytes(disclosureLines({ writesFor: "x" })[lang]!) - 1;
-    expect(Math.max(...APP_LANGUAGES.filter((l) => l !== "el").map(overhead))).toBeLessThanOrEqual(DISCLOSURE_MAX_BYTES - WRITES_FOR_MAX_BYTES);
-    expect(overhead("el")).toBe(138);
-    // A new name at the cap (51 characters, 195 bytes): its line fits in every language but Greek.
+    expect(Math.max(...APP_LANGUAGES.map(overhead))).toBe(DISCLOSURE_MAX_BYTES - WRITES_FOR_MAX_BYTES);
+    expect(overhead("el")).toBe(DISCLOSURE_MAX_BYTES - WRITES_FOR_MAX_BYTES);
+    // A new name at the cap (51 characters, 195 bytes): its line fits in every language, Greek's to the byte.
     const atCap = "😀".repeat(48) + "aaa";
     expect(bytes(atCap)).toBe(195);
     expect(writesForOf(atCap)).toBe(atCap);
     expect(() => writesForOf(atCap + "a")).toThrow("writes_for");
     const all = disclosureLines({ writesFor: atCap });
-    expect(Object.keys(all).sort()).toEqual(APP_LANGUAGES.filter((l) => l !== "el"));
-    expect(disclosureLines({ writesFor: "Acme" }).el).toBe("Γράφτηκε από πράκτορα τεχνητής νοημοσύνης για λογαριασμό της επιχείρησης Acme.");
+    expect(Object.keys(all).sort()).toEqual(APP_LANGUAGES);
+    expect(bytes(all.el!)).toBe(300);
     for (const l of [disclosureLine({ writesFor: atCap }), ...Object.values(all)]) expect(bytes(l)).toBeLessThanOrEqual(300);
     // A name stored before the cap, or a company's name from KIFF, up to 272 bytes: English fits to the byte, in
     // the shorter "for" it had before "on behalf of", and heads its messages in every language, none other fitting.
@@ -157,7 +156,7 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
     const stuffed = systemPrompt({ ...jobById("refunds"), writesFor: stored });
     expect(stuffed).not.toContain('es "');
     expect(stuffed).toContain(`Your disclosure line: "${disclosureLine({ writesFor: stored })}"`);
-    // In between (220 bytes, a name stored before the cap): the languages whose line fits stay; Greek's (138 besides the name),
+    // In between (220 bytes, a name stored before the cap): the languages whose line fits stay; Greek's (105 besides the name),
     // Hindi's (85) and Khmer's (83) don't.
     const between = "😀".repeat(55);
     expect(bytes(between)).toBe(220);
