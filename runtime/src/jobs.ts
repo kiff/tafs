@@ -44,12 +44,22 @@ export interface Job {
 export const DISCLOSURE_LINE = "Written by an AI agent.";
 
 /**
+ * Who the line names: the business a taf writes for. "tafs", stored before draft-the-card@56 when Coach offered
+ * it first, names the product, not the business that answers for the mail, so it names no one, and the line is
+ * the plain one until the owner gives the company's name.
+ */
+function writesForNamed(job: Pick<Job, "writesFor">): string | undefined {
+  const who = job.writesFor?.replace(/\s+/g, " ").trim();
+  return who && who.toLowerCase() !== "tafs" ? who : undefined;
+}
+
+/**
  * A job's disclosure line: the one the shared rule asks for, and the one kiff/agents puts in its outbound
  * calls (Job.disclose), so it's never left to the model (Eval 42193895936: a dispute's evidence reached the
  * card network without it). It names who the messages come from, when the owner said.
  */
 export function disclosureLine(job: Pick<Job, "writesFor">): string {
-  const who = job.writesFor?.replace(/\s+/g, " ").trim();
+  const who = writesForNamed(job);
   if (!who) return DISCLOSURE_LINE;
   // A name stored before "on behalf of", at the old cap, keeps the shorter "for" so the line still fits.
   for (const line of [lineFor(who), `Written by an AI agent for ${who}.`]) if (Buffer.byteLength(line) <= DISCLOSURE_MAX_BYTES) return line;
@@ -168,7 +178,7 @@ const LINES_NAMING_NO_ONE: Readonly<Record<string, string>> = {
  * No message carries a credit line any more ("Built with tafs."): the owner's call, 7 Nov.
  */
 export function disclosureLines(job: Pick<Job, "writesFor">): Record<string, string> {
-  const who = job.writesFor?.replace(/\s+/g, " ").trim();
+  const who = writesForNamed(job);
   if (!who) return { ...LINES_NAMING_NO_ONE };
   // A language whose line wouldn't fit in what kiff/agents takes is left out, and English heads the taf's
   // messages in it: a name stored before new names were capped at WRITES_FOR_MAX_BYTES (#587).

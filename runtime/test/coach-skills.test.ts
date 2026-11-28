@@ -8,7 +8,7 @@ import { COACH_SKILLS } from "../src/coach-skills.js";
 import { COACH_WORDING } from "../src/cloud/coach-wording.js";
 import { allSkillRefs, NAMED_ONLY, approxTokens, entryOf, loadedKey, skillFiles, skillRef, startSkills, toolSkills } from "../src/cloud/coach-skills.js";
 import { DELIVERY_WORDS } from "../src/cloud/delivery.js";
-import { disclosureLine } from "../src/jobs.js";
+import { disclosureLine, disclosureLines } from "../src/jobs.js";
 import { improveContext } from "../src/cloud/improve.js";
 import { CORE_RULES, SETUP_CORE, SETUP_INSTRUCTIONS, setupDefinition, SKILLS_MAP } from "../src/cloud/setupdef.js";
 import { RECIPES } from "../src/recipes.js";
@@ -502,7 +502,9 @@ describe("Coach's core", () => {
     expect(card).not.toContain("tafs, your AI assistant");
     expect(card).not.toContain("or another name?");
     expect(card).toContain("Never promise an approval the Card can't give.");
-    expect(disclosureLine({ writesFor: "tafs" })).toBe("Written by an AI agent on behalf of tafs.");
+    // A taf whose writes_for was stored as "tafs" before @56 names no one: the plain line, never "on behalf of tafs".
+    expect(disclosureLine({ writesFor: "tafs" })).toBe("Written by an AI agent.");
+    expect(disclosureLines({ writesFor: " Tafs " }).fr).toBe(disclosureLines({}).fr);
   });
 
   // Go-to-market job 3 (owner's phone, 13 Nov): "each time we ship" was set up as one post. Coach went straight to the
