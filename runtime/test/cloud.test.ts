@@ -3660,6 +3660,20 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.live)?.n).toBe(1);
   });
 
+  // A version 2 trial read through the old Qonto connection while its own new one was never called: its Card named both.
+  it("refuses a version whose Card names tools of two connections to one app, and lets one connection per app go live", async () => {
+    const w = twoVersions();
+    const relay = (name: string, grant: string) => ({ name, url: "https://planque.example/v1/relay", app: "qonto", audience: `https://planque.example/mcp/t_acme/${grant}` });
+    w.account.connections = [relay("list_client_invoices_yhbp", "grt_old"), relay("list_client_invoices_bhtn", "grt_new"), relay("create_client_invoice_bhtn", "grt_new")];
+    w.account.drafts = { drf_v2: { status: "confirmed", agent_id: "rae", cards: [{ grants: [{ action: "list_client_invoices_yhbp" }, { action: "create_client_invoice_bhtn" }] }] } };
+    const mixed = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" });
+    expect(mixed.status).toBe(409);
+    expect(String(mixed.body.error)).toContain("two Qonto connections");
+    expect(w.agents.calls).not.toContain(`switchVersion ${RAE} 2`);
+    w.account.drafts = { drf_v2: { status: "confirmed", agent_id: "rae", cards: [{ grants: [{ action: "list_client_invoices_bhtn" }, { action: "create_client_invoice_bhtn" }] }] } };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).body).toEqual({ live: 2 });
+  });
+
   // A version that kept a Gmail read after its taf moved to Calendar went live, and every firing failed with no_tool
   // (Nov 2026). kiff/agents is asked first, with the check the version will apply, so the fixing version still goes live.
   it("asks kiff/agents for the version's check before it goes live, and refuses a read the taf no longer has", async () => {

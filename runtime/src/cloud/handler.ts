@@ -5488,6 +5488,11 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
       const d = await draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))());
       if (d?.agent && d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
       if (!d || !issued(d.status)) throw new HTTPError(409, "confirm this version's Card first");
+      // A version uses one connection per app: a Card naming tools of two connections to the same app (an older one beside
+      // the version's new sign-in) would keep its runs on the older one (a version 2 trial read through the old Qonto
+      // connection, its own never called). Refused, naming the app, so Coach drafts it again on the new connection alone.
+      const mixed = mixedConnections(d.cards ?? [], await gatewayConnections(bearer(event), deps.fetch, deps.kiffGateway).catch(() => undefined));
+      if (mixed) throw new HTTPError(409, `this version's Card names tools of two ${mixed} connections: draft it again with the new connection's tools only`);
     }
     // Going back without a switch: a version that ran under other Card revisions
     // goes live only once a switch has restored them, never under the Cards in
@@ -5499,6 +5504,37 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     return { live: n };
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * The app a draft's Cards reach through two connections, or undefined: each tool a Card names, by KIFF's name, is matched
+ * to the account's gateway connection of that name, and the connections are told apart by their relay audience (one per
+ * planque grant) and grouped by their app (the connection's `app`, else its server's host). A tool the list doesn't name,
+ * or a connection with no audience (one connected straight to KIFF), says nothing. No list (KIFF's gateway didn't answer):
+ * nothing is refused on a guess.
+ */
+export function mixedConnections(cards: readonly unknown[], conns: ReadonlyArray<{ name: string; url?: string; app?: unknown; audience?: unknown }> | undefined): string | undefined {
+  if (!conns) return undefined;
+  const fold = (x: unknown) => (typeof x === "string" ? x.trim().toLowerCase() : "");
+  const byName = new Map(conns.map((c) => [fold(c.name), c]));
+  const seen = new Map<string, Set<string>>(); // app → the audiences its named tools go through
+  for (const card of cards) {
+    const grants = (card as { grants?: unknown })?.grants;
+    if (!Array.isArray(grants)) continue;
+    for (const g of grants) {
+      const c = byName.get(fold((g as { action?: unknown })?.action));
+      const audience = typeof c?.audience === "string" ? c.audience.trim() : "";
+      if (!c || !audience) continue;
+      let app = typeof c.app === "string" && c.app.trim() ? c.app.trim() : "";
+      if (!app) { try { app = new URL(c.url ?? "").host; } catch { app = ""; } }
+      if (!app) continue;
+      const set = seen.get(app) ?? new Set<string>();
+      set.add(audience);
+      seen.set(app, set);
+    }
+  }
+  for (const [app, audiences] of seen) if (audiences.size > 1) return app.charAt(0).toUpperCase() + app.slice(1);
+  return undefined;
 }
 
 /**
