@@ -131,19 +131,17 @@ export function parseReceived(raw: unknown): ReceivedEmail {
 }
 
 /**
- * Whether the email is the sender's own: DMARC passed, or DKIM passed and
- * DMARC didn't fail. DKIM's "pass" is aligned: the provider's reference for a
- * received email gives "gray" when a message "is not signed, or the signing
- * domain does not match the From domain", so "pass" means it is signed by the
- * From domain. These results come from the receiving server, not the message.
- * SPF alone isn't proof: it checks the envelope sender, not From. No result is
- * no proof.
+ * Whether the email is the sender's own: DMARC passed, and nothing less. DMARC is the one check that ties the
+ * signature or the envelope to the From domain. A DKIM "pass" alone isn't: a provider's DKIM verdict passes any
+ * valid signature, from any domain, so on a From domain with no DMARC record a forger signing with their own
+ * domain would pass it. SPF alone checks the envelope sender, not From. These results come from the receiving
+ * server, not the message. No result is no proof.
  */
 export function provenSender(auth: ReceivedEmail["auth"]): { proven: boolean; spoofed: boolean } {
   if (!auth) return { proven: false, spoofed: false };
   // A failed DMARC is never outweighed: whatever else passed, it wasn't for the From domain.
   if (auth.dmarc === "fail") return { proven: false, spoofed: true };
-  return { proven: auth.dmarc === "pass" || auth.dkim === "pass", spoofed: false };
+  return { proven: auth.dmarc === "pass", spoofed: false };
 }
 
 /**

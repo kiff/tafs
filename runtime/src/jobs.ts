@@ -44,12 +44,22 @@ export interface Job {
 export const DISCLOSURE_LINE = "Written by an AI agent.";
 
 /**
+ * Who the line names: the business a taf writes for. "tafs", stored before draft-the-card@56 when Coach offered
+ * it first, names the product, not the business that answers for the mail, so it names no one, and the line is
+ * the plain one until the owner gives the company's name.
+ */
+function writesForNamed(job: Pick<Job, "writesFor">): string | undefined {
+  const who = job.writesFor?.replace(/\s+/g, " ").trim();
+  return who && who.toLowerCase() !== "tafs" ? who : undefined;
+}
+
+/**
  * A job's disclosure line: the one the shared rule asks for, and the one kiff/agents puts in its outbound
  * calls (Job.disclose), so it's never left to the model (Eval 42193895936: a dispute's evidence reached the
  * card network without it). It names who the messages come from, when the owner said.
  */
 export function disclosureLine(job: Pick<Job, "writesFor">): string {
-  const who = job.writesFor?.replace(/\s+/g, " ").trim();
+  const who = writesForNamed(job);
   if (!who) return DISCLOSURE_LINE;
   // A name stored before "on behalf of", at the old cap, keeps the shorter "for" so the line still fits.
   for (const line of [lineFor(who), `Written by an AI agent for ${who}.`]) if (Buffer.byteLength(line) <= DISCLOSURE_MAX_BYTES) return line;
@@ -63,10 +73,18 @@ const lineFor = (who: string) => `Written by an AI agent on behalf of ${who}.`;
 /** The most bytes a disclosure line may have: kiff/agents refuses a definition with a longer one (agent.MaxDisclosureLine). */
 export const DISCLOSURE_MAX_BYTES = 300;
 
+/**
+ * "de" before a name, elided to "d'" as each language writes it: French before a vowel only ("au nom d'Acme"), since
+ * a name's h may be aspirated ("au nom de Hachette") and a name doesn't say which; Catalan before a vowel or an h,
+ * which is always mute there ("en nom d'Hostalric").
+ */
+const deFr = (who: string): string => (/^[aeiouyàâäéèêëîïôöùûü]/i.test(who) ? "d'" : "de ") + who;
+const deCa = (who: string): string => (/^[aeiouàèéíïòóúüh]/i.test(who) ? "d'" : "de ") + who;
+
 /** The line in other languages, by ISO 639-1 code, naming who the messages come from. */
 const LINES_FOR: Readonly<Record<string, (who: string) => string>> = {
   es: (who) => `Escrito por un agente de IA en nombre de ${who}.`,
-  fr: (who) => `Rédigé par un agent d'IA au nom de ${who}.`,
+  fr: (who) => `Rédigé par un agent d'IA au nom ${deFr(who)}.`,
   de: (who) => `Von einem KI-Agenten im Auftrag von ${who} geschrieben.`,
   pt: (who) => `Escrito por um agente de IA em nome de ${who}.`,
   it: (who) => `Scritto da un agente di IA per conto di ${who}.`,
@@ -97,7 +115,7 @@ const LINES_FOR: Readonly<Record<string, (who: string) => string>> = {
   az: (who) => `${who} adından AI agenti tərəfindən yazılıb.`,
   bn: (who) => `${who}-এর পক্ষ থেকে AI এজেন্ট লিখেছে।`,
   he: (who) => `נכתב על ידי סוכן בינה מלאכותית מטעם ${who}.`,
-  ca: (who) => `Escrit per un agent d'IA en nom de ${who}.`,
+  ca: (who) => `Escrit per un agent d'IA en nom ${deCa(who)}.`,
   mk: (who) => `Напишано од AI агент во име на ${who}.`,
   mn: (who) => `${who}-ийн нэрийн өмнөөс AI агент бичсэн.`,
   ne: (who) => `${who}को तर्फबाट AI एजेन्टले लेखेको।`,
@@ -106,7 +124,7 @@ const LINES_FOR: Readonly<Record<string, (who: string) => string>> = {
   tk: (who) => `${who} adyndan AI agenti tarapyndan ýazyldy.`,
   hi: (who) => `${who} की ओर से AI एजेंट द्वारा लिखा गया।`,
   ur: (who) => `${who} کی جانب سے AI ایجنٹ نے لکھا۔`,
-  el: (who) => `Γράφτηκε από πράκτορα τεχνητής νοημοσύνης εκ μέρους του ${who}.`,
+  el: (who) => `Γράφτηκε από πράκτορα ΤΝ για λογαριασμό της επιχείρησης ${who}.`,
 };
 
 /** The line in other languages, naming no one. */
@@ -162,7 +180,7 @@ const LINES_NAMING_NO_ONE: Readonly<Record<string, string>> = {
  * No message carries a credit line any more ("Built with tafs."): the owner's call, 7 Nov.
  */
 export function disclosureLines(job: Pick<Job, "writesFor">): Record<string, string> {
-  const who = job.writesFor?.replace(/\s+/g, " ").trim();
+  const who = writesForNamed(job);
   if (!who) return { ...LINES_NAMING_NO_ONE };
   // A language whose line wouldn't fit in what kiff/agents takes is left out, and English heads the taf's
   // messages in it: a name stored before new names were capped at WRITES_FOR_MAX_BYTES (#587).

@@ -23,6 +23,11 @@ export const de: Words = {
   your_step_open: (vendor: string) => `In ${vendor} öffnen`,
   your_step_reminder: (what: string) => `Dein Schritt wartet noch: ${what}`,
   your_step_line: (what: string) => `Dein Schritt: ${what}`,
+  your_turn_title: (site: string) => `Sie sind dran auf ${site}`,
+  your_turn_ask: (words: string) => `„${words}“`,
+  your_turn_until: (hm: string) => `Offen bis ${hm}`,
+  your_turn_open: "Öffnen",
+  your_turn_not_now: "Nicht jetzt",
   // KIFF's spending windows: `each` ends a limit ("€300 a day"), `now` names its use so far ("€40 used today").
   window_words: {
     calendar_day: { each: "pro Tag", now: "heute" },
@@ -514,6 +519,11 @@ export const de: Words = {
   door_handled: (who, place, taf) => `Die Nachricht von ${who} in ${place} wurde bearbeitet; ${taf} postet seine Antwort dort selbst.`,
   door_answered: (who, door) => `${who} hat über die ${door}-Tür eine Antwort erhalten.`,
   door_reply_not_sent: (who, taf) => `Deine Antwort an ${who} wurde nicht gesendet. Du kannst sie in ${taf} erneut senden.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} hat eine Antwort an ${who} geschrieben. Sie wartet darauf, dass du sie sendest.`,
+  door_reply_send: "Senden",
+  door_reply_discard: "Nicht senden",
+  door_reply_prompt: (who: string) => `Diese Antwort an ${who} senden`,
+  door_reply_changed: "Diese Antwort hat sich geändert, seit du sie gelesen hast. Lies sie noch einmal, bevor du sie sendest.",
   unanswered_dial: (n, form, event) => `${n} ${event ? (form === "one" ? "Ereignis" : "Ereignisse") : form === "one" ? "Nachricht" : "Nachrichten"} ${form === "one" ? "blieb" : "blieben"} unbeantwortet, während deine tafs auf Credits warteten`,
   unanswered_door: (who, door) => `Eine Nachricht von ${who} per ${door} blieb unbeantwortet: deine tafs warteten auf Credits.`,
   unanswered_event: (name) => `Ein Ereignis von ${name} blieb unbeantwortet: deine tafs warteten auf Credits.`,

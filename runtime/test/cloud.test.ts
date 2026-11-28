@@ -6647,7 +6647,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@38,draft-the-card@55,name-the-tools@23,set-up-a-taf@16,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@38,draft-the-card@56,name-the-tools@23,set-up-a-taf@16,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -6655,23 +6655,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@38,draft-the-card@55,name-the-tools@23,set-up-a-taf@16,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@38,draft-the-card@56,name-the-tools@23,set-up-a-taf@16,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@38,draft-the-card@55,halting@1,name-the-tools@23,set-up-a-taf@16,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@38,draft-the-card@56,halting@1,name-the-tools@23,set-up-a-taf@16,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@38,draft-the-card@55,halting@1,name-the-tools@23,set-up-a-taf@16,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@38,draft-the-card@56,halting@1,name-the-tools@23,set-up-a-taf@16,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@38,draft-the-card@55,halting@1,improve-a-taf@4,name-the-tools@23`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@38,draft-the-card@56,halting@1,improve-a-taf@4,name-the-tools@23`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -6689,7 +6689,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@38,draft-the-card@55,halting@1,name-the-tools@23,set-up-a-taf@2,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@38,draft-the-card@56,halting@1,name-the-tools@23,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
@@ -8290,5 +8290,53 @@ describe("a result whose hand-over failed on a field Coach wrote, as the apps re
     retriedResults(lapsed, new Date("2026-11-26T02:45:00Z"), "de");
     expect(lapsed[0]!.answer!.outcome).toEqual({ failed: "die Übergabe von Coach wurde nicht abgeschlossen" });
     expect(JSON.stringify([made, waiting, lapsed])).not.toContain("check.items");
+  });
+});
+
+describe("Your turn in the hosted browser", () => {
+  const AT = new Date("2026-11-28T05:30:00Z");
+  const before = process.env.TAFS_HOSTED_HANDS;
+  afterEach(() => { if (before === undefined) delete process.env.TAFS_HOSTED_HANDS; else process.env.TAFS_HOSTED_HANDS = before; });
+  const withHands = (w: World, asked: string[], status = 200) => {
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    return { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (!url.startsWith("https://planque.test/")) return depsOf(w).fetch!(url, init);
+      asked.push(new URL(url).pathname);
+      if (!url.endsWith("/hands")) return new Response(JSON.stringify({ connections: [] }), { status: 200 });
+      return new Response(JSON.stringify({ hands: [
+        { grant: "g_web", agent: rae.kiffAgent, hand: "hd_1", site: "shop.example.com", words: "Accept the cookie wall", since: "2026-11-28T05:28:00Z", expires: "2026-11-28T05:38:00Z" },
+        { grant: "g_x", agent: "someone_else", hand: "hd_2", site: "x.example.com", words: "Not ours", since: "2026-11-28T05:28:00Z", expires: "2026-11-28T05:38:00Z" },
+      ] }), { status });
+    }) as Deps["fetch"] };
+  };
+  const home = async (deps: Deps) => {
+    const r = await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
+    return JSON.parse(r.body);
+  };
+
+  it("lists the person's own waiting hand-overs on Home, counted in Needs you, while planque offers them", async () => {
+    process.env.TAFS_HOSTED_HANDS = "on";
+    const w = world();
+    w.now = AT;
+    const asked: string[] = [];
+    const body = await home(withHands(w, asked));
+    expect(asked).toContain("/v1/accounts/t_acme/hands");
+    expect(body.your_turns).toEqual([expect.objectContaining({
+      grant: "g_web", hand: "hd_1", site: "shop.example.com", ask: "Accept the cookie wall", taf: { id: RAE, name: "Rae" },
+      words: { title: "Your turn on shop.example.com", ask: "“Accept the cookie wall”", until: expect.stringMatching(/^Open until \d\d:\d\d$/), open: "Open", not_now: "Not now" } })]);
+    expect(body.needs_you.count).toBeGreaterThanOrEqual(1);
+    expect(body.tafs.find((t: { id: string }) => t.id === RAE)).toMatchObject({ relevant_now: true });
+  });
+
+  it("asks planque nothing while switched off, and shows none when planque can't answer", async () => {
+    const w = world();
+    w.now = AT;
+    const asked: string[] = [];
+    expect((await home(withHands(w, asked))).your_turns).toBeUndefined();
+    expect(asked).not.toContain("/v1/accounts/t_acme/hands");
+    process.env.TAFS_HOSTED_HANDS = "on";
+    const failed = await home(withHands(w, [], 500));
+    expect(failed.your_turns).toBeUndefined();
+    expect(failed.tafs).toBeDefined();
   });
 });

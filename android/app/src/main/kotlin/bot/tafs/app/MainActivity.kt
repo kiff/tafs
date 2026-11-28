@@ -637,6 +637,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
       pair = { taf, door, sender, name -> model.pairDoor(taf, door, sender, name) },
       unpair = { taf, door, key -> model.unpairDoor(taf, door, key) },
       answer = { taf, knock, action, say -> model.answerKnock(taf, knock, action, say) },
+      sendReply = model::sendHeldReply,
+      discardReply = model::discardHeldReply,
       dismissError = model::dismissDoorsError,
       loadKnob = model::loadKnob,
       runNow = { taf -> model.runNow(taf); model.loadKnob(taf) },

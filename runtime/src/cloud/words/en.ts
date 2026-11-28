@@ -25,6 +25,12 @@ export const en = {
   your_step_open: (vendor: string) => `Open in ${vendor}`,
   your_step_reminder: (what: string) => `Your step is still waiting: ${what}`,
   your_step_line: (what: string) => `Your step: ${what}`,
+  // "Your turn" in the hosted browser: a step its taf handed to the owner, done in the live view (hands.ts).
+  your_turn_title: (site: string) => `Your turn on ${site}`,
+  your_turn_ask: (words: string) => `“${words}”`,
+  your_turn_until: (hm: string) => `Open until ${hm}`,
+  your_turn_open: "Open",
+  your_turn_not_now: "Not now",
   // KIFF's spending windows: `each` ends a limit ("€300 a day"), `now` names its use so far ("€40 used today").
   window_words: {
     calendar_day: { each: "a day", now: "today" },
@@ -554,6 +560,11 @@ export const en = {
   door_handled: (who: string, place: string, taf: string) => `Handled ${who}'s message in ${place}; ${taf} posts its answer there itself.`,
   door_answered: (who: string, door: string) => `Answered ${who} through its ${door} door.`,
   door_reply_not_sent: (who: string, taf: string) => `Your reply to ${who} wasn't sent. You can send it again from ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} wrote a reply to ${who}. It waits for you to send it.`,
+  door_reply_send: "Send",
+  door_reply_discard: "Don't send",
+  door_reply_prompt: (who: string) => `Send this reply to ${who}`,
+  door_reply_changed: "This reply changed since you read it. Read it again before sending.",
   unanswered_dial: (n: number, form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? "event" : "message"}${form === "one" ? "" : "s"} went unanswered while your tafs waited for credits`,
   unanswered_door: (who: string, door: string) => `A message by ${door} from ${who} went unanswered: your tafs waited for credits.`,
   unanswered_event: (name: string) => `An event from ${name} went unanswered: your tafs waited for credits.`,

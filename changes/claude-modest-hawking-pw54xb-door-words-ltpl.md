@@ -1,0 +1,1 @@
+- When a held door reply changed after the owner read it, the warning now says "since you read it" in Lithuanian, and in Polish no longer assumes the reader is a man (tafs cloud; [Doors](../docs/doors.md)).

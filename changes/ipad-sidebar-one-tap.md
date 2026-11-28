@@ -1,0 +1,1 @@
+- **iPad: one tap on Plan & usage in the sidebar opens it.** One tap set the sidebar's selection to the item and then to nothing, so the pane beside it said "Choose a taf." until a second tap. The sidebar now ignores being set to nothing, which a tap on an item never means (kiff/tafs#2191).
