@@ -332,7 +332,9 @@ describe("jobs", () => {
       // An API's amount is in its smallest unit, by the currency's own decimals, and a record's major form is said as
       // given: a taf told the owner "a €700 refund" for 700 cents (Eval 44055541451, Setup run 1, answer 8).
       expect(flat).toContain("an amount the tool or record says is in its currency's smallest unit (as Stripe's are: an integer in cents) is said in the currency's own unit, by that currency's decimals: 700 in eur is €7.00, 700 in jpy is ¥700, 700 in kwd is KWD 0.700.");
-      expect(flat).toContain("Where the record gives it in that unit too (a field ending _major, \"7.00 EUR\"), say that one, never your own sum.");
+      expect(flat).toContain("Where the record gives it in that unit too (a field ending _major, \"7.00 EUR\"), say that one's number, never your own sum, with the currency's symbol in place of its code: \"7.00 EUR\" is €7.00, never \"€7.00 EUR\"; \"700 JPY\" is ¥700; a currency with no common symbol keeps its code in front (\"0.700 KWD\" is KWD 0.700).");
+      // The currency said once: a taf said "a €45.00 EUR charge" from planque's amount_major "45.00 EUR".
+      expect(flat).not.toContain("say that one, never your own sum.");
       // Only an amount declared in the smallest unit is: a vendor's decimal ("150.00", a Card's decimal_string) is said
       // as given, never divided, so the fix can't understate by 100 the other way.
       expect(flat).toContain("Any other amount is said as the record gives it (\"150.00\" in eur is €150.00), never divided");
