@@ -378,6 +378,15 @@ A step a taf may never take itself, such as approving a bank transfer, signing, 
 - **The phones that answer the account's holds hear about it twice at most:** once when it starts waiting ("Your step: {what}"), and once a day later ("Your step is still waiting: {what}"). Each push opens the taf and carries `handoff`. The sweep finds them with one read per account a pass, kiff/agents' `GET /runs/paused?tool=your_step` (the account's paused runs, from its own paused list), never one read per taf.
 - **Off until `TAFS_YOUR_STEP=on`:** a taf's definition gets `your_step: true` only then, once kiff/agents offers the tool and KIFF serves hand-offs, and the upgrade applies it.
 
+## Your turn in the hosted browser
+
+A taf on planque's hosted browser can hand its owner a step mid-run (a cookie wall, a check, an odd question) with planque's `browse_hand`; the owner does it themselves in the hosted browser's live view, on the phone, and nothing is solved for them. planque keeps it and refuses the taf's other calls on that grant until it ends: done, declined, or lapsed after ten minutes. A page that takes a payment is never handed over.
+
+- **Home** lists the hand-overs still waiting as `your_turns: [{grant, hand, site, ask, since, expires, taf: {id, name}, words: {title, ask, until, open, not_now}}]`, oldest first, read from planque's `GET /v1/accounts/{tenant}/hands` with the person's own session while tafs cloud offers it (`TAFS_HOSTED_HANDS=on`). Only the person's own tafs' hand-overs are listed, and none that has lapsed. Needs you counts each once (`needs_you.count`). A list planque can't give shows none.
+- **`site`** is planque's, from the page, a host only; **`ask`** is the taf's words, as planque checked them, one line of at most 200 characters.
+- **The words** are tafs cloud's, in the person's language: "Your turn on {site}", the taf's words in quotes ("“{ask}”"), "Open until {HH:MM}" in the person's zone, "Open" and "Not now". The apps add none of their own.
+- **The view and Not now go to planque**, not to tafs cloud, each signed with the phone's key: `POST /v1/accounts/{tenant}/grants/{grant}/hands/{hand}/view` answers `{view, expires, site, words}`, a one-time URL to the live view, so the app asks again each time it opens one; `POST …/hands/{hand}/decline` is Not now. Either answers 410 once the step no longer waits, and the app drops it; the next Home read doesn't list it.
+
 ## Keeping this page right
 
 A route added or changed in `handler.ts` changes this page in the same pull request, and

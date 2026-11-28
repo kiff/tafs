@@ -23,6 +23,11 @@ export const it: Words = {
   your_step_open: (vendor: string) => `Apri in ${vendor}`,
   your_step_reminder: (what: string) => `Il tuo passaggio è ancora in attesa: ${what}`,
   your_step_line: (what: string) => `Il tuo passaggio: ${what}`,
+  your_turn_title: (site: string) => `Tocca a te su ${site}`,
+  your_turn_ask: (words: string) => `«${words}»`,
+  your_turn_until: (hm: string) => `Aperto fino alle ${hm}`,
+  your_turn_open: "Apri",
+  your_turn_not_now: "Non ora",
   // KIFF's spending windows: `each` ends a limit ("€300 a day"), `now` names its use so far ("€40 used today").
   window_words: {
     calendar_day: { each: "al giorno", now: "oggi" },

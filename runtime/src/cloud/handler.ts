@@ -17,6 +17,7 @@ import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, rea
 import { AGENTS_MAX_INPUT, heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { failedLine, failureCode, retryOffered, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
+import { accountHands, handsOf } from "./hands.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
 import { baseLanguage, type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withoutTafsLines, withPageRead, withReplyLanguage, withZone, wordsIn } from "./words/index.js";
@@ -8592,14 +8593,19 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const conns = stepping && deps.planqueBase ? await accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => []) : [];
   const yourSteps = tafs.flatMap((t, i) => (recent[i] ?? []).flatMap((r) => yourStepsOf(r, langOf(event), vendorReach(conns, t.kiffAgent)).map((s) => ({ ...s, taf: { id: t.id, name: t.name } }))))
     .sort((a, b) => a.since.localeCompare(b.since));
+  // "Your turn" in planque's hosted browser (hands.ts): the hand-overs still waiting, each under its taf, read from
+  // planque while it offers them (TAFS_HOSTED_HANDS); a list that can't be read shows none.
+  const yourTurns = process.env.TAFS_HOSTED_HANDS === "on" && deps.planqueBase
+    ? handsOf(await accountHands(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => []), tafs, langOf(event), me.timeZone ?? "UTC", now)
+    : [];
   // What Needs you lists, counted once here so Home, the tab badge and the lock screen agree with it
   // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a
   // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
   // count what they have, rather than show a number that's short.
   const needsYou = unsure === undefined ? undefined : (() => {
     const parts = { held: kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length, unsure, unit: unitExceptions.length,
-      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, steps: yourSteps.length, coach: coachWaiting.length };
-    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.steps + parts.coach;
+      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, steps: yourSteps.length, turns: yourTurns.length, coach: coachWaiting.length };
+    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.steps + parts.turns + parts.coach;
     // Its parts, counts only, so a count the list doesn't show names where it comes from.
     if (count > 0) console.log(JSON.stringify({ event: "needs_you", tenant: me.tenantID, count, ...parts }));
     // In the person's language, as every line of tafs cloud's (docs/api.md, The person's language).
@@ -8609,7 +8615,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   })();
   // Which tafs matter now (docs/api.md, Home): something of theirs in Needs you, or a run or change in the last 24 hours. Worked
   // out here from what Home already read, so the iPad's sidebar and every other app show the same tafs.
-  const stepTafs = new Set(yourSteps.map((s) => s.taf.id));
+  const stepTafs = new Set([...yourSteps, ...yourTurns].map((s) => s.taf.id));
   const withRelevance = listed.map((v, i) => {
     const t = tafs[i]!;
     const why = relevantNow({ held: (waiting.get(t.kiffAgent) ?? 0) > 0, step: stepTafs.has(t.id), knock: lights[i]!.some((d) => d.knocks > 0),
@@ -8622,7 +8628,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const labels = labelSet ? labelsView(labelSet, listed, labelsOf, langOf(event)) : [];
   return { tafs: withRelevance, headline, setting_up: settingUp, others, removing, limits,
     ...(labels.length ? { labels, labels_words: { all: wordsIn(langOf(event)).labels_all } } : {}), ...(doors.length ? { doors_offered: doors } : {}),
-    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
+    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(yourTurns.length ? { your_turns: yourTurns } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
 /**
