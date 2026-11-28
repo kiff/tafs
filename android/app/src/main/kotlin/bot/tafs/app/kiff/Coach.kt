@@ -62,12 +62,19 @@ data class SetupConnection(val done: Boolean = false, val words: String = "")
 /**
  * What an approval card's one fingerprint covers, as tafs cloud decides it (`signs`, docs/secure-connection.md): [card] when
  * it signs the Card too; else [words] say the Card comes next ("Its Card: you approve it next"), and its limits aren't drawn.
- * [takes] is "tap" when Approve is a tap inside an open approval window, "fingerprint" when it always takes the fingerprint
- * (docs/chat.md): only a "tap" card says the window holds.
+ * [takes] is "tap" when Approve is a tap inside an open approval window, "fingerprint" when it always takes the fingerprint,
+ * and "none" when there's nothing to sign yet (docs/chat.md): only a "tap" card says the window holds.
  */
 @Serializable
 data class SetupSigns(val card: Boolean = false, val words: String? = null, val takes: String? = null) {
   val tap: Boolean get() = takes == "tap"
+
+  /**
+   * Approve signs nothing (`takes: "none"`, docs/chat.md): tafs cloud answers it with no step (already approved, nothing new),
+   * or reads the card again when it can't yet tell whether this conversation asked for it. The button never names the
+   * fingerprint; one is asked only for a step that signs.
+   */
+  val nothingToSign: Boolean get() = takes == "none"
 }
 
 /**
