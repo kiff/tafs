@@ -83,9 +83,6 @@ struct HomeSplitView: View {
     /// do, the first taf in the list is the one open (the 859 test).
     @State private var opened: HomeSelection?
     @State private var chosen = false
-    /// Bumped when the List's own nil is ignored, so the sidebar is drawn again and the List reads the item back (its
-    /// highlight), since ignoring the nil leaves nothing else changed to draw it again (kiff/tafs#2191).
-    @State private var listRedraw = 0
     /// The pointer is over the sidebar's Coach button (the Mac's, `Hover`).
     @State private var coachHovered = false
     /// A recipe's sheet, opened from the detail pane with no taf, or from the strip in the sidebar.
@@ -298,11 +295,8 @@ struct HomeSplitView: View {
         // A new item chosen ticks (Haptics).
         // The List sets its selection twice on one tap of a screen's item, the item then nil (kiff/tafs#2191, seen on
         // iPadOS 26), so Plan & usage took a second tap: nil is never the owner's choice here, since tapping an item can't
-        // clear the sidebar, so it's ignored, and the sidebar is drawn again on the next turn so the List shows the item
-        // chosen.
-        // Read here, so a bump draws the sidebar again.
-        let _ = listRedraw
-        return List(selection: Binding(get: { selection }, set: { guard let picked = $0 else { DispatchQueue.main.async { listRedraw += 1 }; return }; chosen = true; Haptics.select(selection, picked); selection = picked })) {
+        // clear the sidebar, so it's ignored.
+        List(selection: Binding(get: { selection }, set: { guard let picked = $0 else { return }; chosen = true; Haptics.select(selection, picked); selection = picked })) {
             // The app's own mark at the top, as its header (the owner's layout).
             // As one sidebar for the whole app, the mascot and "tafs" is the way to the tafs list (the owner's
             // layout): every taf is there; beside it, only those relevant now.
