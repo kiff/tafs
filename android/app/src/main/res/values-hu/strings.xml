@@ -1760,6 +1760,7 @@
     <string name="people_title">Tagok és csoportok</string>
     <string name="people_uses">Használja: %1$s</string>
     <string name="people_uses_none">Még nem használ tafot</string>
+    <string name="purchase_unreadable">Ez a vásárlás nem olvasható, ezért nem hagyható jóvá.</string>
     <string name="push_channel_briefs">Összefoglalók</string>
     <string name="push_channel_briefs_description">Az összefoglalód a beállított időpontokban.</string>
     <string name="push_channel_holds_description">Egy hívás a válaszodra vár. Semmi sem megy ki, amíg jóvá nem hagyod.</string>

@@ -410,6 +410,8 @@ tafs cloud leaves it out (it couldn't read all of it), the app counts what it ha
 Android shows each alert on the lock screen as it comes, with no count of its own there. Locked, the phone, and any watch it bridges alerts to, show only **A taf needs you** (`alert.needs_you`): every alert is private, with that as its public version (`Alert.Show.locked`), so an amount, a merchant or a person's name waits for the unlock, as iOS's hidden previews do (`LockedAlertTest`). An app's
 sheet with no saved workflow says so once, under a Workflow line of its own (`workflow_words`).
 
+**A held purchase** (a hold with `purchase`) draws KIFF's words for its case instead, and is answered with Approve once, from its own card only, or Refuse; every answer signs the case's line. See [purchases.md](purchases.md).
+
 **A held call's card** (`HeldCallCard`) has KIFF's face: the amount in its declared unit, the
 action as KIFF titles it, and the Card rule it crossed in KIFF's words (`reason_text`). Under it,
 when KIFF kept the taf's words with the call, **The taf says** (`needs_you.taf_says`) shows them

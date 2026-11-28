@@ -1760,6 +1760,7 @@
     <string name="people_title">ადამიანები და ჯგუფები</string>
     <string name="people_uses">იყენებს: %1$s</string>
     <string name="people_uses_none">ჯერ არც ერთ taf-ს არ იყენებს</string>
+    <string name="purchase_unreadable">ამ შენაძენის წაკითხვა შეუძლებელია, ამიტომ მისი დამტკიცება შეუძლებელია.</string>
     <string name="push_channel_briefs">მიმოხილვები</string>
     <string name="push_channel_briefs_description">თქვენი მიმოხილვა დადგენილ დროს.</string>
     <string name="push_channel_holds_description">ზარი თქვენს პასუხს ელოდება. არაფერი იგზავნება, სანამ არ დაამტკიცებთ.</string>

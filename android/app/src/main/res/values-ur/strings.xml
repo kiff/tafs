@@ -1760,6 +1760,7 @@
     <string name="people_title">لوگ اور گروپس</string>
     <string name="people_uses">%1$s استعمال کرتا ہے</string>
     <string name="people_uses_none">ابھی کوئی taf استعمال نہیں کرتا</string>
+    <string name="purchase_unreadable">یہ خریداری پڑھی نہیں جا سکتی، اس لیے اسے منظور نہیں کیا جا سکتا۔</string>
     <string name="push_channel_briefs">بریفس</string>
     <string name="push_channel_briefs_description">آپ کی بریف اس کے مقررہ اوقات پر۔</string>
     <string name="push_channel_holds_description">کوئی کال آپ کے جواب کے لیے روکی گئی ہے۔ آپ کے منظور کرنے تک کچھ نہیں بھیجا جاتا۔</string>

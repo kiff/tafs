@@ -1699,6 +1699,7 @@
     <string name="people_title">成員與群組</string>
     <string name="people_uses">使用 %1$s</string>
     <string name="people_uses_none">尚未使用任何 taf</string>
+    <string name="purchase_unreadable">無法讀取這筆購買，因此無法核准。</string>
     <string name="push_channel_briefs">摘要</string>
     <string name="push_channel_briefs_description">在設定的時間送上您的摘要。</string>
     <string name="push_channel_holds_description">有一項呼叫已保留，等待您的回覆。在您核准之前不會傳送任何內容。</string>

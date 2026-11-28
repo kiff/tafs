@@ -3392,6 +3392,10 @@ enum Words {
         /// Uses no taf yet
         static var usesNone: String { Words.line("people.uses_none") }
     }
+    enum Purchase {
+        /// This purchase can't be read, so it can't be approved.
+        static var unreadable: String { Words.line("purchase.unreadable") }
+    }
     enum Push {
         enum Channel {
             /// Briefs

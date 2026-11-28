@@ -1760,6 +1760,7 @@
     <string name="people_title">Хора и групи</string>
     <string name="people_uses">Използва %1$s</string>
     <string name="people_uses_none">Все още не използва taf</string>
+    <string name="purchase_unreadable">Тази покупка не може да бъде прочетена, затова не може да бъде одобрена.</string>
     <string name="push_channel_briefs">Резюмета</string>
     <string name="push_channel_briefs_description">Вашето резюме в зададените часове.</string>
     <string name="push_channel_holds_description">Заявка е задържана за вашия отговор. Нищо не се изпраща, докато не я одобрите.</string>

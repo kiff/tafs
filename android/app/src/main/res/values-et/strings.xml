@@ -1760,6 +1760,7 @@
     <string name="people_title">Inimesed ja grupid</string>
     <string name="people_uses">Kasutab: %1$s</string>
     <string name="people_uses_none">Ei kasuta veel ühtegi tafi</string>
+    <string name="purchase_unreadable">Seda ostu ei saa lugeda, seega ei saa seda kinnitada.</string>
     <string name="push_channel_briefs">Kokkuvõtted</string>
     <string name="push_channel_briefs_description">Sinu kokkuvõte määratud aegadel.</string>
     <string name="push_channel_holds_description">Päring on kinni peetud ja ootab sinu vastust. Midagi ei saadeta enne, kui selle kinnitad.</string>

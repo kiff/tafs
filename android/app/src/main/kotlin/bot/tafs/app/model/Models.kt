@@ -558,7 +558,52 @@ data class HeldCall(
    * Refuse included (KIFF checks the answer over it). Null for any other hold.
    */
   val browserSha256: String? = null,
+  /**
+   * A held purchase (docs/purchases.md): KIFF's case and its words, as the hold's `purchase` block came. Approve once and Refuse
+   * only, approved only from its own card; null for any other hold, and for one whose block can't be read ([purchaseLine] says).
+   */
+  val purchase: PurchaseApproval? = null,
+  /**
+   * The answer's purchase line (`purchase:<case_id>:<version>:<digest>`) for a held purchase whose case could be read, even when
+   * its words couldn't: every answer to it, Refuse included, signs it last. Null for any other hold.
+   */
+  val purchaseLine: String? = null,
+  /** The hold carries a `purchase` block, readable or not: a purchase is never answered as an ordinary held call. */
+  val isPurchase: Boolean = false,
 )
+
+/** A held purchase as KIFF serves it on the hold (contracts/purchase.json, `approval.value`): what the card draws and the answer signs. */
+@Serializable
+data class PurchaseApproval(val caseId: String, val version: Int, val digest: String, val words: PurchaseWords) {
+  /** What every answer to it signs as its last line. */
+  val line: String get() = bot.tafs.app.kiff.PurchaseHold.line(caseId, version, digest)
+}
+
+/** KIFF's words for a held purchase, every line as it came: the app writes none of its own here. */
+@Serializable
+data class PurchaseWords(
+  val title: String,
+  val subtitle: String? = null,
+  val total: String,
+  val totalNote: String? = null,
+  val delivery: String? = null,
+  val showMore: String? = null,
+  val lines: List<PurchaseLine> = emptyList(),
+  val charges: List<PurchaseCharge> = emptyList(),
+  val priceRule: String? = null,
+  val grant: String? = null,
+  val buysNow: String? = null,
+  val nothingUntil: String? = null,
+  val reason: String? = null,
+  /** The fingerprint prompt's words: what the owner confirms ("Buy from Papeterie Lumière · €84.20"). */
+  val prompt: String,
+)
+
+@Serializable
+data class PurchaseLine(val name: String, val quantity: String, val amount: String)
+
+@Serializable
+data class PurchaseCharge(val name: String, val amount: String)
 
 /** The taf and version a held version_install names, as Coach sent them: the taf's id in tafs cloud, or its name. */
 @Serializable

@@ -1699,6 +1699,7 @@
     <string name="people_title">Orang &amp; grup</string>
     <string name="people_uses">Memakai %1$s</string>
     <string name="people_uses_none">Belum memakai taf apa pun</string>
+    <string name="purchase_unreadable">Pembelian ini tidak bisa dibaca, jadi tidak bisa disetujui.</string>
     <string name="push_channel_briefs">Ringkasan</string>
     <string name="push_channel_briefs_description">Ringkasan Anda pada waktu yang ditentukan.</string>
     <string name="push_channel_holds_description">Sebuah panggilan ditahan menunggu jawaban Anda. Tidak ada yang dikirim sampai Anda menyetujuinya.</string>

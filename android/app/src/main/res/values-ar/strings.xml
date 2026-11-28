@@ -2004,6 +2004,7 @@
     <string name="people_title">الأشخاص والمجموعات</string>
     <string name="people_uses">يستخدم %1$s</string>
     <string name="people_uses_none">لا يستخدم أي taf بعد</string>
+    <string name="purchase_unreadable">لا يمكن قراءة عملية الشراء هذه، لذا لا يمكن الموافقة عليها.</string>
     <string name="push_channel_briefs">الملخصات</string>
     <string name="push_channel_briefs_description">ملخصك في أوقاته المحددة.</string>
     <string name="push_channel_holds_description">طلب استدعاء معلّق بانتظار ردك. لا يُرسل شيء حتى توافق عليه.</string>

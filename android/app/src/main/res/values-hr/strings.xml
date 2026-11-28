@@ -1821,6 +1821,7 @@
     <string name="people_title">Ljudi i grupe</string>
     <string name="people_uses">Koristi: %1$s</string>
     <string name="people_uses_none">Još ne koristi nijedan taf</string>
+    <string name="purchase_unreadable">Ova kupnja ne može se pročitati, pa se ne može odobriti.</string>
     <string name="push_channel_briefs">Sažeci</string>
     <string name="push_channel_briefs_description">Vaš sažetak u zadano vrijeme.</string>
     <string name="push_channel_holds_description">Poziv je zadržan do vašeg odgovora. Ništa se ne šalje dok ga ne odobrite.</string>

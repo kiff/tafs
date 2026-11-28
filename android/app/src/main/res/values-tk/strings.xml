@@ -1760,6 +1760,7 @@
     <string name="people_title">Adamlar we toparlar</string>
     <string name="people_uses">%1$s ulanýar</string>
     <string name="people_uses_none">Heniz hiç bir taf ulanmaýar</string>
+    <string name="purchase_unreadable">Bu satyn alşy okap bolmaýar, şonuň üçin ony tassyklap bolmaýar.</string>
     <string name="push_channel_briefs">Gysgaça maglumatlar</string>
     <string name="push_channel_briefs_description">Siziň gysgaça maglumatyňyz bellenen wagtlarynda.</string>
     <string name="push_channel_holds_description">Çagyryş siziň jogabyňyz üçin saklanýar. Siz tassyklamaňyzça hiç zat iberilmeýär.</string>

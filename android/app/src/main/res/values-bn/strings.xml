@@ -1760,6 +1760,7 @@
     <string name="people_title">সদস্য ও গ্রুপ</string>
     <string name="people_uses">ব্যবহার করেন %1$s</string>
     <string name="people_uses_none">এখনও কোনো taf ব্যবহার করেন না</string>
+    <string name="purchase_unreadable">এই কেনাকাটাটি পড়া যাচ্ছে না, তাই অনুমোদন করা যাবে না।</string>
     <string name="push_channel_briefs">সারসংক্ষেপ</string>
     <string name="push_channel_briefs_description">নির্ধারিত সময়ে আপনার সারসংক্ষেপ।</string>
     <string name="push_channel_holds_description">একটি কল আপনার উত্তরের জন্য ধরে রাখা হয়েছে। আপনি অনুমোদন না করা পর্যন্ত কিছু পাঠানো হয় না।</string>
