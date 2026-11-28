@@ -305,11 +305,9 @@ struct HomeSplitView: View {
         // Only the owner's taps write through this binding, so each one is a choice, a tap on
         // the taf already open too: the list settling later doesn't take them away from it.
         // A new item chosen ticks (Haptics).
-        List(selection: Binding(get: { selection }, set: {
-            chosen = true; Haptics.select(selection, $0); selection = $0
-            // A screen picked is kept on the model too, so a rebuild of this view doesn't lose it (kiff/tafs#2191).
-            model.sidebarPick = $0?.isScreen == true && $0 != .overview ? $0 : nil
-        })) {
+        // A screen picked is kept on the model too, by `onChange(of: selection)`, so a rebuild of this view doesn't
+        // lose it (kiff/tafs#2191).
+        List(selection: Binding(get: { selection }, set: { chosen = true; Haptics.select(selection, $0); selection = $0 })) {
             // The app's own mark at the top, as its header (the owner's layout).
             // As one sidebar for the whole app, the mascot and "tafs" is the way to the tafs list (the owner's
             // layout): every taf is there; beside it, only those relevant now.
