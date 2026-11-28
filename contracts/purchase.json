@@ -1,0 +1,420 @@
+{
+  "about": "A purchase in Thune v1 (buy within the Card), as KIFF keeps it and every other side reads it: the case and what its digest signs, its states, KIFF's execution lease, the live authorization's rules, the approval the apps draw, the owner's signed answer, and the signed receipt. Amounts are integers in the currency's minor units. Every word the owner reads comes from KIFF in `words`; the apps never compose or decide. Written by hand, as data, until KIFF's batch A writes it from its own test; then copied here byte for byte, as kiff-agent-draft-from-hold.json is.",
+  "case": {
+    "about": "The case KIFF builds from what it and planque read at the checkout (`Checkout.Same`), never from the taf's words. Every field here is signed: the digest is SHA-256, hex, of the object's canonical JSON (RFC 8785, as runtime/src/cloud/jcs.ts writes it). Any change to a signed field is a new `version` with a new digest, which voids the earlier signature and releases its reservation; a total that stays within `price.rule` is the one change that isn't. `price.total` is `lines` plus `shipping` plus `tax` (tax 0 when the line amounts include it), `price.max` is `total` plus `rule.up_to` (or `total` with no rule), and `grant.cap` equals it. `path` is the case's, never the page's: a merchant chosen for `token` that asks for a card number ends with nothing sent. `delivery` is signed, so an address changed after the decision sends nothing. `valid_for_seconds` is fixed at 900: an approved, unused case ends 15 minutes after its decision.",
+    "value": {
+      "schema": "kiff.purchase.v1",
+      "case_id": "pc_01JD8Q7M2K4T9V6X3B5N8R1Y0Z",
+      "version": 1,
+      "tenant": "t_acme",
+      "agent": "agt_supplies",
+      "card": {
+        "id": "card_9f2c",
+        "version": 4
+      },
+      "mode": "ask_each_time",
+      "route": "issued_card",
+      "path": "token",
+      "merchant": {
+        "name": "Papeterie Lumière",
+        "site": "papeterie-lumiere.example",
+        "category": "5943",
+        "country": "FR"
+      },
+      "lines": [
+        {
+          "name": "A4 paper, 80 g, 5 reams",
+          "quantity": 2,
+          "amount": 5980
+        },
+        {
+          "name": "Ballpoint pens, blue, box of 50",
+          "quantity": 1,
+          "amount": 1490
+        }
+      ],
+      "currency": "EUR",
+      "price": {
+        "lines": 7470,
+        "shipping": 950,
+        "tax": 0,
+        "total": 8420,
+        "rule": {
+          "up_to": 200,
+          "for": [
+            "shipping"
+          ]
+        },
+        "max": 8620
+      },
+      "delivery": {
+        "name": "Acme SAS",
+        "line1": "12 rue des Lilas",
+        "line2": "",
+        "postal_code": "69003",
+        "city": "Lyon",
+        "region": "",
+        "country": "FR"
+      },
+      "valid_for_seconds": 900,
+      "reference": {
+        "checkout": "chk_7c1e",
+        "request": "run_42.in"
+      },
+      "payer": {
+        "kind": "company",
+        "id": "t_acme"
+      },
+      "markets": {
+        "payer": "FR",
+        "merchant": "FR"
+      },
+      "grant": {
+        "kind": "single_use_card",
+        "cap": 8620,
+        "categories": [
+          "5943"
+        ],
+        "uses": 1
+      }
+    },
+    "enums": {
+      "mode": [
+        "ask_each_time",
+        "within_limits"
+      ],
+      "route": [
+        "issued_card",
+        "existing_method"
+      ],
+      "path": [
+        "token",
+        "card_fill",
+        "none"
+      ],
+      "payer.kind": [
+        "account",
+        "company"
+      ],
+      "grant.kind": [
+        "single_use_card",
+        "existing_method"
+      ]
+    },
+    "digest": "eadb632ede58179c980e88c28dcdbb2b467e28d7f47c79e55e5f953cc90cac35"
+  },
+  "facts": {
+    "about": "Read beside the case and never signed: re-read freely, shown as information. A change here makes no new version.",
+    "value": {
+      "read_at": {
+        "merchant": "2026-11-28T09:14:02Z",
+        "lines": "2026-11-28T09:14:02Z",
+        "price": "2026-11-28T09:14:03Z",
+        "delivery": "2026-11-28T09:14:03Z"
+      },
+      "fx_estimate": null,
+      "issuing_country": "IE"
+    }
+  },
+  "states": {
+    "about": "Three statuses, kept apart: the case's, the money's and the order's (payment, order and receipt are reconciled separately). `unknown` is a state, never a guess: a case whose outcome is unknown can't execute again until reconciliation says `ordered` or `not_ordered`, and a retry after it is the same case id, never a new case.",
+    "case": [
+      {
+        "state": "held",
+        "means": "waiting for the owner (ask_each_time, or outside the Card's limits)",
+        "next": [
+          "approved",
+          "refused",
+          "superseded",
+          "expired"
+        ]
+      },
+      {
+        "state": "approved",
+        "means": "decided: the owner signed this version, or KIFF found it within every limit; the room is reserved",
+        "next": [
+          "executing",
+          "expired",
+          "not_bought"
+        ]
+      },
+      {
+        "state": "refused",
+        "means": "the owner refused; no room was reserved",
+        "next": []
+      },
+      {
+        "state": "superseded",
+        "means": "a material change made a new version; this one's signature and reservation are void",
+        "next": []
+      },
+      {
+        "state": "expired",
+        "means": "no decision, or no execution, within its time; the reservation is released and any card cancelled",
+        "next": []
+      },
+      {
+        "state": "executing",
+        "means": "KIFF's lease is held by one execution; nothing else may execute this version",
+        "next": [
+          "done",
+          "unknown",
+          "not_bought"
+        ]
+      },
+      {
+        "state": "unknown",
+        "means": "the execution may or may not have placed an order; every further execution is refused until reconciled",
+        "next": [
+          "done",
+          "approved"
+        ]
+      },
+      {
+        "state": "done",
+        "means": "an order exists for this case (reconciled or confirmed); it never executes again",
+        "next": []
+      },
+      {
+        "state": "not_bought",
+        "means": "it ended with nothing charged; `ended` says why",
+        "next": []
+      }
+    ],
+    "ended": [
+      "not_used_in_time",
+      "issuer_check",
+      "declined_at_authorization",
+      "address_changed",
+      "card_number_asked",
+      "room_taken",
+      "price_outside_rule"
+    ],
+    "money": [
+      "none",
+      "authorized",
+      "captured",
+      "captured_less",
+      "split",
+      "over_capture",
+      "force_capture",
+      "reversed",
+      "refunded",
+      "lapsed",
+      "disputed"
+    ],
+    "order": [
+      "none",
+      "confirmed",
+      "unknown",
+      "not_ordered"
+    ]
+  },
+  "decision": {
+    "about": "How a case was decided, in its digest's record, never re-decided the other way. The room is reserved in the same transaction: a conditional write that fails if another purchase took the room first, and then the decision doesn't count (`ended: room_taken`, or held for the owner in within_limits). `approved_once` is set by the live authorization's single approval, as a conditional write in the same transaction as its answer.",
+    "by_owner": {
+      "decided_by": "owner",
+      "signature": "sig_5d0a",
+      "approver": {
+        "role": "owner"
+      },
+      "at": "2026-11-28T09:15:10Z",
+      "valid_until": "2026-11-28T09:30:10Z",
+      "reserved": 8620,
+      "approved_once": false
+    },
+    "within_limits": {
+      "decided_by": "card_limits",
+      "card": {
+        "id": "card_9f2c",
+        "version": 4
+      },
+      "limits": [
+        {
+          "limit": "per_purchase",
+          "figure": 10000,
+          "used": 8620
+        },
+        {
+          "limit": "per_day",
+          "figure": 20000,
+          "used": 17820
+        },
+        {
+          "limit": "purchases_per_hour",
+          "figure": 3,
+          "used": 1
+        },
+        {
+          "limit": "purchases_per_day",
+          "figure": 10,
+          "used": 2
+        },
+        {
+          "limit": "categories",
+          "figure": [
+            "5943"
+          ],
+          "used": "5943"
+        }
+      ],
+      "at": "2026-11-28T09:15:10Z",
+      "valid_until": "2026-11-28T09:30:10Z",
+      "reserved": 8620,
+      "approved_once": false
+    },
+    "approver.role": [
+      "owner",
+      "administrator",
+      "delegated_purchaser"
+    ]
+  },
+  "execution": {
+    "about": "KIFF's execution lease: one execution per case version, taken by conditional write; a second call (a double tap, an agent's retry, two runs) finds it and gets the first execution's state, never a second checkout. planque's mark armed before the click stays as a second guard.",
+    "value": {
+      "lease": {
+        "version": 1,
+        "holder": "exe_3b71",
+        "taken_at": "2026-11-28T09:15:11Z",
+        "until": "2026-11-28T09:30:10Z"
+      },
+      "outcome": "none",
+      "attempts": 1
+    },
+    "outcome": [
+      "none",
+      "ordered",
+      "not_ordered",
+      "unknown"
+    ]
+  },
+  "authorization": {
+    "about": "The issuer's live authorization: a lookup in KIFF's store, never a judgement, no model, person or outside call. It approves only when every check holds, at most once per case, and declines everything else, including any internal error. A timeout is a decline: the card's own controls (single use, `grant.cap`, `grant.categories`) are decline-shaped, so the issuer's fallback can't approve anything the case doesn't allow. The decision is logged with the case id, never a card number.",
+    "deadline_ms": 2000,
+    "timeout_is_decline": true,
+    "approves_only_if": [
+      "the card is the case's (one card per case)",
+      "the case is approved, within valid_until, with its lease held",
+      "approved_once is false",
+      "the currency is the case's",
+      "the merchant category is in grant.categories",
+      "the amount fits price.max minus what is already authorized",
+      "an incremental authorization or re-authorization fits within price.max"
+    ],
+    "never": [
+      "a second approval for the case",
+      "a verification result of `required` (declined)",
+      "a force capture (flagged to the owner; the Card's buying pauses)"
+    ],
+    "records": [
+      "authorization id",
+      "amount",
+      "the issuer's merchant name and category",
+      "verification result: authenticated, exempted (by whom) or required"
+    ]
+  },
+  "approval": {
+    "about": "What the apps draw on a held purchase, every line in KIFF's words. Show more is closed each time and opens every line; the signature covers the version, so approving with the lines closed approves exactly those lines. Never offers extra room.",
+    "value": {
+      "case_id": "pc_01JD8Q7M2K4T9V6X3B5N8R1Y0Z",
+      "version": 1,
+      "digest": "eadb632ede58179c980e88c28dcdbb2b467e28d7f47c79e55e5f953cc90cac35",
+      "words": {
+        "title": "Buy from Papeterie Lumière",
+        "under_title": "Stationery · France",
+        "total": "€84.20",
+        "show_more": "Show more",
+        "lines": [
+          "A4 paper, 80 g, 5 reams · 2 · €59.80",
+          "Ballpoint pens, blue, box of 50 · 1 · €14.90"
+        ],
+        "delivery": "Acme SAS, 12 rue des Lilas, 69003 Lyon, France",
+        "price_rule": "It can go up to €2.00 more for shipping.",
+        "grant": "A card for this purchase: up to €86.20, at stationery shops, used once.",
+        "buys_now": "It buys now. If the shop doesn't take it within 15 minutes, nothing is bought.",
+        "reason": "Your Card asks you each time.",
+        "prompt": "Buy from Papeterie Lumière · €84.20"
+      }
+    }
+  },
+  "answer": {
+    "about": "The owner's answer is KIFF's kiff.answer.v1 with the approval key (Approve once) or the current key (Refuse), plus `purchase`: the case id, version and digest the phone drew. KIFF refuses an answer whose digest isn't the current version's (stale).",
+    "value": {
+      "answer": "approve-once",
+      "hold_version": 1,
+      "purchase": {
+        "case_id": "pc_01JD8Q7M2K4T9V6X3B5N8R1Y0Z",
+        "version": 1,
+        "digest": "eadb632ede58179c980e88c28dcdbb2b467e28d7f47c79e55e5f953cc90cac35"
+      }
+    }
+  },
+  "receipt": {
+    "about": "KIFF's signed receipt, kept in the Record: what was decided and what happened, `unknown` said as unknown. Signed by KIFF (Ed25519, `kid`) over the canonical JSON of `value`. The issuer's merchant name and category sit beside the case's, so a mismatch is visible. A placeholder `sig` here; the reader checks the shape and that `digest` is the case's.",
+    "value": {
+      "schema": "kiff.purchase-receipt.v1",
+      "receipt_id": "rc_8a44",
+      "case_id": "pc_01JD8Q7M2K4T9V6X3B5N8R1Y0Z",
+      "version": 1,
+      "digest": "eadb632ede58179c980e88c28dcdbb2b467e28d7f47c79e55e5f953cc90cac35",
+      "decided_by": "owner",
+      "approver": {
+        "role": "owner"
+      },
+      "merchant": {
+        "case": {
+          "name": "Papeterie Lumière",
+          "category": "5943"
+        },
+        "issuer": {
+          "name": "PAPETERIE LUMIERE LYON",
+          "category": "5943"
+        }
+      },
+      "amounts": {
+        "approved_max": 8620,
+        "authorized": 8570,
+        "captured": 8570,
+        "refunded": 0,
+        "currency": "EUR"
+      },
+      "states": {
+        "case": "done",
+        "money": "captured",
+        "order": "confirmed"
+      },
+      "order": {
+        "reference": "PL-2026-118204",
+        "confirmed_at": "2026-11-28T09:16:40Z"
+      },
+      "verification": "exempted",
+      "issued_at": "2026-11-28T09:16:52Z",
+      "words": {
+        "line": "Bought from Papeterie Lumière · €85.70 (€1.50 more for shipping, inside what you approved)"
+      },
+      "kid": "kiff-receipts-1",
+      "sig": "placeholder"
+    }
+  },
+  "signed_fields": [
+    "agent",
+    "card",
+    "case_id",
+    "currency",
+    "delivery",
+    "grant",
+    "lines",
+    "markets",
+    "merchant",
+    "mode",
+    "path",
+    "payer",
+    "price",
+    "reference",
+    "route",
+    "schema",
+    "tenant",
+    "valid_for_seconds",
+    "version"
+  ]
+}
