@@ -508,6 +508,7 @@ export const ro: Words = {
   door_handled: (who: string, place: string, taf: string) => `Am tratat mesajul lui ${who} în ${place}; taful ${taf} își postează acolo singur răspunsul.`,
   door_answered: (who: string, door: string) => `I s-a răspuns lui ${who} prin ușa (${door}).`,
   door_reply_not_sent: (who: string, taf: string) => `Răspunsul dvs. către ${who} nu a fost trimis. Îl puteți trimite din nou din ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} a scris un răspuns pentru ${who}. Așteaptă să îl trimiteți.`,
   unanswered_dial: (n: number, form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? (form === "one" ? "eveniment" : form === "few" ? "evenimente" : "de evenimente") : (form === "one" ? "mesaj" : form === "few" ? "mesaje" : "de mesaje")} au rămas fără răspuns cât tafurile dvs. așteptau credite`,
   unanswered_door: (who: string, door: string) => `Un mesaj prin ${door} de la ${who} a rămas fără răspuns: tafurile dvs. așteptau credite.`,
   unanswered_event: (name: string) => `Un eveniment de la ${name} a rămas fără răspuns: tafurile dvs. așteptau credite.`,

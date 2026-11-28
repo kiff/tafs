@@ -515,6 +515,7 @@ export const ja: Words = {
   door_handled: (who: string, place: string, taf: string) => `${place}で${who}のメッセージを処理しました。${taf}が自分でそこに回答を投稿します。`,
   door_answered: (who: string, door: string) => `${door}窓口を通じて${who}に回答しました。`,
   door_reply_not_sent: (who: string, taf: string) => `${who}への返信は送信されませんでした。${taf}からもう一度送信できます。`,
+  door_reply_waiting: (who: string, taf: string) => `${taf}が${who}への返信を書きました。送信を待っています。`,
   unanswered_dial: (n: number, _form: Intl.LDMLPluralRule, event: boolean) => `tafsがクレジットを待っている間に、${event ? "イベント" : "メッセージ"}${n}件が未回答になりました`,
   unanswered_door: (who: string, door: string) => `${door}経由の${who}からのメッセージが未回答になりました：tafsがクレジットを待っていました。`,
   unanswered_event: (name: string) => `${name}からのイベントが未回答になりました：tafsがクレジットを待っていました。`,

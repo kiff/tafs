@@ -508,6 +508,7 @@ export const sk: Words = {
   door_handled: (who: string, place: string, taf: string) => `Vybavil som správu od ${who} v ${place}; ${taf} tam svoju odpoveď zverejní sám.`,
   door_answered: (who: string, door: string) => `Odpovedané používateľovi ${who} cez dvere (${door}).`,
   door_reply_not_sent: (who: string, taf: string) => `Vaša odpoveď používateľovi ${who} nebola odoslaná. Môžete ju odoslať znova z ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} napísal odpoveď pre ${who}. Čaká, kým ju odošlete.`,
   unanswered_dial: (n: number, form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? (form === "one" ? "udalosť" : form === "few" ? "udalosti" : "udalostí") : (form === "one" ? "správa" : form === "few" ? "správy" : "správ")} zostalo bez odpovede, kým tvoje tafy čakali na kredity`,
   unanswered_door: (who: string, door: string) => `Správa cez ${door} od ${who} zostala bez odpovede: tvoje tafy čakali na kredity.`,
   unanswered_event: (name: string) => `Udalosť z ${name} zostala bez odpovede: tvoje tafy čakali na kredity.`,

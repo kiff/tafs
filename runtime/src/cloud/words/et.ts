@@ -508,6 +508,7 @@ export const et: Words = {
   door_handled: (who: string, place: string, taf: string) => `Käsitlesin kasutaja ${who} sõnumit kohas ${place}; ${taf} postitab vastuse sinna ise.`,
   door_answered: (who: string, door: string) => `Vastasin kasutajale ${who} ukse (${door}) kaudu.`,
   door_reply_not_sent: (who: string, taf: string) => `Sinu vastust kasutajale ${who} ei saadetud. Saad selle uuesti saata tafist ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} kirjutas vastuse saajale ${who}. See ootab, et sa selle saadaksid.`,
   unanswered_dial: (n: number, _form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? "sündmusele" : "sõnumile"} jäi vastamata, kui sinu tafid ootasid krediite`,
   unanswered_door: (who: string, door: string) => `Kanali ${door} kaudu saadetud sõnumile kasutajalt ${who} jäi vastamata: sinu tafid ootasid krediite.`,
   unanswered_event: (name: string) => `Allika ${name} sündmusele jäi vastamata: sinu tafid ootasid krediite.`,

@@ -6,7 +6,7 @@ import { type Lang, type Words, wordsIn } from "../words/index.js";
 import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
-import { API_DOOR, type APIDraft, type APIField, type APIKey, type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
+import { API_DOOR, type APIDraft, type APIField, type APIKey, type Arrival, DOOR, type Door, doorKeys, type HeldReply, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
 import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
 import { apsFor, levelOf } from "../levels.js";
@@ -523,6 +523,15 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
     if (done.has(place)) continue;
     if (place === "door_reply") {
       if (!taf || !door || !app) { await stamp({ ...base, status: "not_sent", why: "the door was removed" }); done.add(place); continue; }
+      // A reply to someone outside waits for the owner, as the door's replies say (ask, the default): kept with
+      // the exact text, said in the chat and to the owner's phones, and nothing else goes until they send it.
+      if (holdsReply(door, reply)) {
+        await holdReply(ctx, tenant, taf, { ref, reply: { ...reply, run: runID }, text, at: ctx.now.toISOString() });
+        await stamp({ ...base, status: "held" });
+        await tellOwner(ctx, tenant, taf, (w) => w.door_reply_waiting(reply.name || reply.to, taf.name), `reply-${ref}`, "knock");
+        for (const p of placesOf(taf)) done.add(p);
+        break;
+      }
       const out = await sendReply(ctx, cfg, tenant, taf, door, { ...reply, run: runID }, text, ref);
       if (out.retry) { retry = true; sent = out.sent; continue; }
       await stamp(out.sent);
@@ -580,6 +589,62 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
     }
   }
   await forgetReply(ctx, tenant, reply.taf, ref);
+}
+
+/** Whether a door holds this reply for the owner: every reply but one to the owner's own address, unless set to auto. */
+export function holdsReply(door: Door, reply: Pick<Reply, "to">): boolean {
+  if ((door.replies ?? "ask") === "auto") return false;
+  return !door.keys.some((k) => k.auto && k.id === reply.to);
+}
+
+async function holdReply(ctx: DoorsContext, tenant: string, taf: Taf, held: HeldReply): Promise<void> {
+  const { store } = ctx.doors;
+  await store.put(doorKeys.heldReply(tenant, taf.id, held.reply.run), held, addDays(ctx.now, DOOR.replyDays));
+  await update<{ runs: string[] }>(store, doorKeys.heldReplies(tenant, taf.id),
+    (read) => ({ runs: [...new Set([...(read?.runs ?? []), held.reply.run])].slice(-100) }), addDays(ctx.now, DOOR.replyDays));
+}
+
+/** A taf's replies waiting for the owner, oldest first: who, what about, and the exact text. */
+export async function heldRepliesOf(store: DoorStore, tenant: string, taf: string): Promise<HeldReply[]> {
+  const runs = ((await store.get(doorKeys.heldReplies(tenant, taf))) as { runs?: string[] } | undefined)?.runs ?? [];
+  const held = await Promise.all(runs.map((r) => store.get(doorKeys.heldReply(tenant, taf, r)) as Promise<HeldReply | undefined>));
+  return held.filter((h): h is HeldReply => !!h);
+}
+
+/**
+ * The owner's answer to a held reply: "send" sends exactly the text they read, through its door, to its
+ * writer only; "discard" sends nothing. Either way the reply leaves Needs you, and the chat's stamp says
+ * what became of it.
+ */
+export async function answerHeldReply(ctx: DoorsContext, owner: Owner, taf: Taf, run: string, body: Record<string, unknown>) {
+  const { store } = ctx.doors;
+  const key = doorKeys.heldReply(owner.tenant, taf.id, run);
+  const held = (await store.get(key)) as HeldReply | undefined;
+  if (!held) throw new DoorError(404, "no reply of this run waits to be sent");
+  const action = body.action;
+  if (action !== "send" && action !== "discard") throw new DoorError(400, "action is send or discard");
+  const cfg = await ctx.doors.config();
+  const door = (await doorsOf(store, owner.tenant, taf.id)).find((d) => d.id === held.reply.door);
+  const app = door && appOf(cfg, door.app);
+  const stamp = (x: Sent) => update<{ sent: Sent[] }>(store, doorKeys.sent(owner.tenant, taf.id),
+    (read) => ({ sent: [x, ...(read?.sent ?? []).filter((s) => !(s.run === run && s.status === "held"))].slice(0, 100) }), addDays(ctx.now, DOOR.threadDays));
+  const base = { run, door: held.reply.door, app: door?.app ?? "", at: ctx.now.toISOString() };
+  let state: Sent["status"];
+  if (action === "discard") {
+    await stamp({ ...base, status: "not_sent", why: "the owner didn't send it" });
+    state = "not_sent";
+  } else {
+    if (!door || !app) throw new DoorError(409, "the door this reply goes through was removed");
+    // A fresh idempotency key: this send is the owner's, made once, now.
+    const out = await sendReply(ctx, cfg, owner.tenant, taf, door, held.reply, held.text, `${held.ref}:sent`);
+    await stamp(out.sent);
+    state = out.sent.status;
+    if (out.retry) throw new DoorError(503, "the door's provider didn't take it just now; try again");
+  }
+  await store.remove(key);
+  await update<{ runs: string[] }>(store, doorKeys.heldReplies(owner.tenant, taf.id), (read) => ({ runs: (read?.runs ?? []).filter((r) => r !== run) }), addDays(ctx.now, DOOR.replyDays));
+  await tellChange(owner.tenant, "taf", taf.id, { push: ctx.push, apns: ctx.apns });
+  return { run, state };
 }
 
 /**
@@ -869,10 +934,15 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
   const doors = await doorsOf(store, owner.tenant, taf.id);
   const counts = await Promise.all(doors.map((d) => todayOf(store, owner.tenant, taf.id, d.id, ctx.now)));
   const knocks = (await knocksOf(store, owner.tenant, taf.id)).filter((k) => k.state === "open");
+  // The replies waiting for the owner to send them, each with the exact text that would go.
+  const replies = (await heldRepliesOf(store, owner.tenant, taf.id)).map((h) => ({
+    run: h.reply.run, door: h.reply.door, to: h.reply.name || h.reply.to, ...(h.reply.subject ? { subject: h.reply.subject } : {}), text: h.text, at: h.at,
+  }));
   return {
     doors: doors.map((d, i) => doorView(d, appOf(cfg, d.app), counts[i], ctx.lang)),
     apps: offered(cfg, ctx.lang),
     knocks,
+    replies,
   };
 }
 

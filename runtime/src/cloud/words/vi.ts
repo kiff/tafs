@@ -508,6 +508,7 @@ export const vi: Words = {
   door_handled: (who: string, place: string, taf: string) => `Đã xử lý tin nhắn của ${who} trong ${place}; ${taf} tự đăng câu trả lời ở đó.`,
   door_answered: (who: string, door: string) => `Đã trả lời ${who} qua cửa ${door}.`,
   door_reply_not_sent: (who: string, taf: string) => `Câu trả lời của bạn cho ${who} chưa được gửi. Bạn có thể gửi lại từ ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} đã viết thư trả lời cho ${who}. Thư đang chờ bạn gửi.`,
   unanswered_dial: (n: number, _form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? "sự kiện" : "tin nhắn"} chưa được trả lời trong khi các taf của bạn chờ tín dụng`,
   unanswered_door: (who: string, door: string) => `Một tin nhắn qua ${door} từ ${who} chưa được trả lời: các taf của bạn đã chờ tín dụng.`,
   unanswered_event: (name: string) => `Một sự kiện từ ${name} chưa được trả lời: các taf của bạn đã chờ tín dụng.`,

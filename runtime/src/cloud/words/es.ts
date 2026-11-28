@@ -514,6 +514,7 @@ export const es: Words = {
   door_handled: (who, place, taf) => `Mensaje de ${who} atendido en ${place}; ${taf} publica allí su respuesta.`,
   door_answered: (who, door) => `Respondido a ${who} por su puerta de ${door}.`,
   door_reply_not_sent: (who, taf) => `Tu respuesta a ${who} no se envió. Puedes volver a enviarla desde ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} escribió una respuesta a ${who}. Espera a que la envíes.`,
   unanswered_dial: (n, form, event) => `${n} ${event ? (form === "one" ? "evento" : "eventos") : form === "one" ? "mensaje" : "mensajes"} ${form === "one" ? "quedó" : "quedaron"} sin respuesta mientras tus tafs esperaban créditos`,
   unanswered_door: (who, door) => `Un mensaje de ${who} por ${door} quedó sin respuesta: tus tafs esperaban créditos.`,
   unanswered_event: (name) => `Un evento de ${name} quedó sin respuesta: tus tafs esperaban créditos.`,

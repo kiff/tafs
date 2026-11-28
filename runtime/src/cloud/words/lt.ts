@@ -508,6 +508,7 @@ export const lt: Words = {
   door_handled: (who: string, place: string, taf: string) => `Apdorojau ${who} žinutę vietoje ${place}; ${taf} pats paskelbia atsakymą ten.`,
   door_answered: (who: string, door: string) => `Atsakyta ${who} per duris (${door}).`,
   door_reply_not_sent: (who: string, taf: string) => `Jūsų atsakymas ${who} nebuvo išsiųstas. Galite jį išsiųsti dar kartą iš ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} parašė atsakymą ${who}. Jis laukia, kol jį išsiųsite.`,
   unanswered_dial: (n: number, form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? (form === "one" ? "įvykis" : form === "few" ? "įvykiai" : "įvykių") : (form === "one" ? "žinutė" : form === "few" ? "žinutės" : "žinučių")} liko be atsakymo, kol tavo taf laukė kreditų`,
   unanswered_door: (who: string, door: string) => `Žinutė per ${door} nuo ${who} liko be atsakymo: tavo taf laukė kreditų.`,
   unanswered_event: (name: string) => `Įvykis iš ${name} liko be atsakymo: tavo taf laukė kreditų.`,

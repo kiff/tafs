@@ -6,7 +6,7 @@ import { AgentsError, type Run } from "../src/cloud/agents.js";
 import { coachTool, type Deps, handle, type HTTPEvent, sweepHeld, sweepReplies, type Taf } from "../src/cloud/handler.js";
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
-import { localPart, parseDoorMessage, replyText } from "../src/cloud/doors/doors.js";
+import { changeDoors, localPart, parseDoorMessage, replyText } from "../src/cloud/doors/doors.js";
 import { emailAPIBase, type EmailProvider, emailArrival, emailProvider, type OutgoingEmail, parseReceived, type ReceivedEmail } from "../src/cloud/doors/email.js";
 import { doorKeys, type DoorSecrets, type DoorStore } from "../src/cloud/doors/model.js";
 import { signedWebhook, whatsappSigned } from "../src/cloud/doors/sign.js";
@@ -203,10 +203,17 @@ async function pairBen(w: World) {
   expect(r.status).toBe(200);
 }
 
-async function emailDoor(w: World) {
+async function emailDoor(w: World, replies: "ask" | "auto" = "auto") {
   const r = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "email" } });
   expect(r.status).toBe(200);
+  // The tests below that send a reply on its own set the door to auto; a new door holds its replies (ask).
+  if (replies === "auto") await repliesAuto(w);
   return r.body.door;
+}
+
+/** A taf's doors set to send replies to paired senders on their own. */
+async function repliesAuto(w: World) {
+  await changeDoors(w.store, "t_acme", REFUNDS, (doors) => doors.map((d) => ({ ...d, replies: "auto" as const })));
 }
 
 /** kiff/agents' note that a run ended, after the fake run answers. */
@@ -985,6 +992,7 @@ describe("the WhatsApp door", () => {
     const r = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "whatsapp", code: "good-code", phone_number_id: "1098765432", waba_id: "2098765432" } });
     expect(r.status).toBe(200);
     await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/whatsapp/keys`, { token: "ana", body: { id: "+34 611 111 111", name: "Ana" } });
+    await repliesAuto(w);
     return r.body.door;
   }
 
@@ -2498,5 +2506,66 @@ describe("the door reply's disclosure line", () => {
     expect(withoutDisclosure("Rédigé par un agent d'IA au nom d'Acme.\n\nVotre commande part lundi.", "Acme")).toBe("Votre commande part lundi.");
     // Its own words stay, even ones that mention an AI agent mid-text.
     expect(withoutDisclosure("An AI agent wrote this summary for you.\nYour order ships Monday.", "Acme")).toBe("An AI agent wrote this summary for you.\nYour order ships Monday.");
+  });
+});
+
+// A door's reply to someone outside waits for the owner until the reply guard ships: drafted, held in Needs you,
+// and sent, exactly as read, only on the owner's signed yes, until replies have a content check of their own.
+describe("a door's reply held for the owner", () => {
+  function signing(w: World) {
+    const base = depsOf(w);
+    const deps: Deps = { ...base, fetch: (async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/v1/me/device-signature")) return new Response(JSON.stringify({ signed: true, key: "critical" }), { status: 200 });
+      return (base.fetch as typeof fetch)(url, init);
+    }) as typeof fetch };
+    return async (method: string, path: string, body: unknown, headers: Record<string, string> = {}) => {
+      const r = await handle({ rawPath: path, requestContext: { http: { method } }, headers: { Authorization: "Bearer ana", ...headers }, body: JSON.stringify(body) }, deps);
+      return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, any> };
+    };
+  }
+
+  it("sends nothing until the owner sends it, signed, and then sends exactly what they read", async () => {
+    const w = world();
+    await emailDoor(w, "ask");
+    await pairBen(w);
+    await emailHook(w, mail(w, { from: BEN }));
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    await finish(w, run, "Refunded the duplicate $180 on order 4471.");
+    expect(w.outbox).toHaveLength(0);
+    // The doors list carries it with the exact text, and Needs you counts it.
+    const list = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
+    expect(list.body.replies).toHaveLength(1);
+    const held = list.body.replies[0];
+    expect(held).toMatchObject({ run: run.id, to: "Ben" });
+    expect(held.text.startsWith("Written by an AI agent.\n\nRefunded the duplicate $180")).toBe(true);
+    // The owner's phones heard it waits for them.
+    expect(JSON.stringify(w.pushed)).toContain("It waits for you to send it.");
+    // Sending without the phone's signature sends nothing.
+    const path = `/v1/tafs/${REFUNDS}/doors/replies/${run.id}`;
+    expect((await send(w, "POST", path, { token: "ana", body: { action: "send" } })).status).toBeGreaterThanOrEqual(400);
+    expect(w.outbox).toHaveLength(0);
+    const call = signing(w);
+    const sent = await call("POST", path, { action: "send" }, { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=sig" });
+    expect(sent.body).toEqual({ run: run.id, state: "sent" });
+    expect(w.outbox).toHaveLength(1);
+    expect(w.outbox[0]!.text).toBe(held.text);
+    expect(w.outbox[0]!.to).toBe("ben@partner.example");
+    // Once: it's gone from the list, and a second send finds nothing.
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.replies).toEqual([]);
+    expect((await call("POST", path, { action: "send" }, { "kiff-device-signature": "t=2026-10-24T09:00:01Z,v1=sig" })).status).toBe(404);
+  });
+
+  it("discards a reply without sending it", async () => {
+    const w = world();
+    await emailDoor(w, "ask");
+    await pairBen(w);
+    await emailHook(w, mail(w, { from: BEN }));
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    await finish(w, run, "Done.");
+    const out = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/replies/${run.id}`, { token: "ana", body: { action: "discard" } });
+    expect(out.body).toEqual({ run: run.id, state: "not_sent" });
+    expect(w.outbox).toHaveLength(0);
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.replies).toEqual([]);
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/replies/${run.id}`, { token: "ana", body: { action: "later" } })).status).toBe(404);
   });
 });

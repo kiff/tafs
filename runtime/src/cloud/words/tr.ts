@@ -508,6 +508,7 @@ export const tr: Words = {
   door_handled: (who: string, place: string, taf: string) => `${who} kişisinin iletisini ${place} içinde ele aldım; ${taf} yanıtını orada kendisi yayınlar.`,
   door_answered: (who: string, door: string) => `${who} kişisine ${door} kapısı üzerinden yanıt verildi.`,
   door_reply_not_sent: (who: string, taf: string) => `${who} kişisine yanıtınız gönderilmedi. ${taf} içinden yeniden gönderebilirsiniz.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf}, ${who} için bir yanıt yazdı. Göndermenizi bekliyor.`,
   unanswered_dial: (n: number, _form: Intl.LDMLPluralRule, event: boolean) => `taf'larınız kredi beklerken ${n} ${event ? "olay" : "ileti"} yanıtsız kaldı`,
   unanswered_door: (who: string, door: string) => `${who} kişisinden ${door} üzerinden gelen bir ileti yanıtsız kaldı: taf'larınız kredi bekliyordu.`,
   unanswered_event: (name: string) => `${name} kaynaklı bir olay yanıtsız kaldı: taf'larınız kredi bekliyordu.`,

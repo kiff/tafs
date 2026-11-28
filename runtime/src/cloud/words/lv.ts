@@ -508,6 +508,7 @@ export const lv: Words = {
   door_handled: (who: string, place: string, taf: string) => `Apstrādāju ${who} ziņu vietā ${place}; ${taf} pats ievieto atbildi tur.`,
   door_answered: (who: string, door: string) => `Atbildēts ${who} caur durvīm (${door}).`,
   door_reply_not_sent: (who: string, taf: string) => `Tava atbilde ${who} netika nosūtīta. Tu vari to nosūtīt vēlreiz no ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} uzrakstīja atbildi ${who}. Tā gaida, kad tu to nosūtīsi.`,
   unanswered_dial: (n: number, form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? (form === "one" ? "notikums" : "notikumi") : (form === "one" ? "ziņa" : "ziņas")} palika bez atbildes, kamēr tavi taf gaidīja kredītus`,
   unanswered_door: (who: string, door: string) => `Ziņa caur ${door} no ${who} palika bez atbildes: tavi taf gaidīja kredītus.`,
   unanswered_event: (name: string) => `Notikums no ${name} palika bez atbildes: tavi taf gaidīja kredītus.`,

@@ -508,6 +508,7 @@ export const id: Words = {
   door_handled: (who: string, place: string, taf: string) => `Menangani pesan ${who} di ${place}; ${taf} memposting jawabannya sendiri di sana.`,
   door_answered: (who: string, door: string) => `Menjawab ${who} lewat pintu ${door}.`,
   door_reply_not_sent: (who: string, taf: string) => `Balasan Anda untuk ${who} tidak terkirim. Anda bisa mengirimnya lagi dari ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} menulis balasan untuk ${who}. Balasan itu menunggu Anda mengirimnya.`,
   unanswered_dial: (n: number, _form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? "peristiwa" : "pesan"} tidak terjawab saat taf Anda menunggu kredit`,
   unanswered_door: (who: string, door: string) => `Sebuah pesan lewat ${door} dari ${who} tidak terjawab: taf Anda menunggu kredit.`,
   unanswered_event: (name: string) => `Sebuah peristiwa dari ${name} tidak terjawab: taf Anda menunggu kredit.`,

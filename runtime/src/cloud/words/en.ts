@@ -554,6 +554,7 @@ export const en = {
   door_handled: (who: string, place: string, taf: string) => `Handled ${who}'s message in ${place}; ${taf} posts its answer there itself.`,
   door_answered: (who: string, door: string) => `Answered ${who} through its ${door} door.`,
   door_reply_not_sent: (who: string, taf: string) => `Your reply to ${who} wasn't sent. You can send it again from ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} wrote a reply to ${who}. It waits for you to send it.`,
   unanswered_dial: (n: number, form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? "event" : "message"}${form === "one" ? "" : "s"} went unanswered while your tafs waited for credits`,
   unanswered_door: (who: string, door: string) => `A message by ${door} from ${who} went unanswered: your tafs waited for credits.`,
   unanswered_event: (name: string) => `An event from ${name} went unanswered: your tafs waited for credits.`,

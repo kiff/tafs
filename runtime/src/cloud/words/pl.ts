@@ -514,6 +514,7 @@ export const pl: Words = {
   door_handled: (who, place, taf) => `Obsłużono wiadomość od: ${who} w ${place}; ${taf} sam publikuje tam odpowiedź.`,
   door_answered: (who, door) => `Odpowiedziano (${who}) przez drzwi ${door}.`,
   door_reply_not_sent: (who, taf) => `Twoja odpowiedź (${who}) nie została wysłana. Możesz wysłać ją ponownie z: ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} napisał odpowiedź do ${who}. Czeka, aż ją wyślesz.`,
   unanswered_dial: (n, _form, event) => `${event ? "Zdarzenia" : "Wiadomości"} bez odpowiedzi, gdy Twoje tafs czekały na kredyty: ${n}`,
   unanswered_door: (who, door) => `Wiadomość od: ${who} przez ${door} została bez odpowiedzi: Twoje tafs czekały na kredyty.`,
   unanswered_event: (name) => `Zdarzenie z ${name} zostało bez odpowiedzi: Twoje tafs czekały na kredyty.`,

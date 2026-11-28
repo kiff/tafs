@@ -508,6 +508,7 @@ export const bg: Words = {
   door_handled: (who: string, place: string, taf: string) => `Обработих съобщението на ${who} в ${place}; ${taf} публикува отговора си там сам.`,
   door_answered: (who: string, door: string) => `Отговорено на ${who} през вратата (${door}).`,
   door_reply_not_sent: (who: string, taf: string) => `Вашият отговор до ${who} не беше изпратен. Можете да го изпратите отново от ${taf}.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} написа отговор до ${who}. Той чака да го изпратите.`,
   unanswered_dial: (n: number, _form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? (n === 1 ? "събитие остана" : "събития останаха") : (n === 1 ? "съобщение остана" : "съобщения останаха")} без отговор, докато вашите taf чакаха кредити`,
   unanswered_door: (who: string, door: string) => `Съобщение през ${door} от ${who} остана без отговор: вашите taf чакаха кредити.`,
   unanswered_event: (name: string) => `Събитие от ${name} остана без отговор: вашите taf чакаха кредити.`,

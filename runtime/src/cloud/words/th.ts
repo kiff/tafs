@@ -508,6 +508,7 @@ export const th: Words = {
   door_handled: (who: string, place: string, taf: string) => `จัดการข้อความของ ${who} ใน ${place} แล้ว ${taf} โพสต์คำตอบของมันที่นั่นเอง`,
   door_answered: (who: string, door: string) => `ตอบ ${who} ผ่านประตู ${door} แล้ว`,
   door_reply_not_sent: (who: string, taf: string) => `คำตอบของคุณถึง ${who} ไม่ได้ถูกส่ง คุณส่งอีกครั้งได้จาก ${taf}`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} เขียนคำตอบถึง ${who} แล้ว รอให้คุณส่ง`,
   unanswered_dial: (n: number, _form: Intl.LDMLPluralRule, event: boolean) => `${event ? "เหตุการณ์" : "ข้อความ"} ${n} รายการไม่ได้รับคำตอบ ขณะที่ taf ของคุณรอเครดิต`,
   unanswered_door: (who: string, door: string) => `ข้อความผ่าน ${door} จาก ${who} ไม่ได้รับคำตอบ: taf ของคุณรอเครดิตอยู่`,
   unanswered_event: (name: string) => `เหตุการณ์จาก ${name} ไม่ได้รับคำตอบ: taf ของคุณรอเครดิตอยู่`,

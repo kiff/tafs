@@ -508,6 +508,7 @@ export const zhHant: Words = {
   door_handled: (who: string, place: string, taf: string) => `已在 ${place} 處理 ${who} 的訊息；${taf} 會自己在那裡發布它的回覆。`,
   door_answered: (who: string, door: string) => `已透過 ${door} 門回覆 ${who}。`,
   door_reply_not_sent: (who: string, taf: string) => `您給 ${who} 的回覆未送出。您可以從 ${taf} 再送一次。`,
+  door_reply_waiting: (who: string, taf: string) => `${taf} 已撰寫給 ${who} 的回覆，正等待您傳送。`,
   unanswered_dial: (n: number, _form: Intl.LDMLPluralRule, event: boolean) => `在您的 taf 等待額度時，有 ${n} ${event ? "個事件" : "則訊息"}沒有得到回覆`,
   unanswered_door: (who: string, door: string) => `來自 ${who} 透過 ${door} 的一則訊息沒有得到回覆：您的 taf 在等待額度。`,
   unanswered_event: (name: string) => `來自 ${name} 的一個事件沒有得到回覆：您的 taf 在等待額度。`,
