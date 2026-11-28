@@ -148,7 +148,8 @@ export function cantDo(r: Pick<Run, "status" | "stop" | "output">): { why: HeldR
     if (/^\s*no_app\b/.test(after)) return { why: "no_app" };
     const setup = /^\s*needs_setup\b:?([^\n]*)/.exec(after);
     if (setup) {
-      const said = setup[1]!.toLowerCase().split(/[^a-z_]+/);
+      // A plural reads as its kind ("folders" is folder).
+      const said = setup[1]!.toLowerCase().split(/[^a-z_]+/).map((w) => w.replace(/s$/, ""));
       const known = NEEDS.filter((n) => said.includes(n)).sort((a, b) => said.indexOf(a) - said.indexOf(b));
       return { why: "needs_setup", ...(known.length ? { needs: known } : {}) };
     }

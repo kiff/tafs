@@ -2667,7 +2667,7 @@ describe("a door's taf that can't do what was asked", () => {
     await emailHook(w, mail(w, { from: BEN }));
     const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
     // The taf's own words after the reason (an id, the writer's link) never reach the row: only the kinds it names.
-    await finish(w, run, `${CANT_DO} needs_setup: sheet, folder, a P2-GD id from https://drive.example/x`);
+    await finish(w, run, `${CANT_DO} needs_setup: sheets, folder, a P2-GD id from https://drive.example/x`);
     expect(w.outbox).toHaveLength(0);
     const held = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.unanswered;
     expect(held[0]).toMatchObject({ cant_do: "needs_setup", needs: ["sheet", "folder"] });
