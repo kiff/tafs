@@ -933,6 +933,27 @@ class TafsCloud(
     })
   }
 
+  /** The path a held reply is answered on: what Send's signature covers, with its body. */
+  fun heldReplyPath(id: String, run: String) = "/v1/tafs/${escaped(id)}/doors/replies/${escaped(run)}"
+
+  /** Send's body: the action and the hash of the text the owner read, the exact bytes signed and sent. */
+  fun sendReplyBody(textSha256: String): ByteArray =
+    KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), kotlinx.serialization.json.buildJsonObject {
+      put("action", kotlinx.serialization.json.JsonPrimitive("send"))
+      put("text_sha256", kotlinx.serialization.json.JsonPrimitive(textSha256))
+    }).toByteArray()
+
+  /** Sends a held reply: [body] from [sendReplyBody], signed with the approval key ([signature]). 409 `reply_changed` sends nothing. */
+  suspend fun sendHeldReply(id: String, run: String, body: ByteArray, signature: String) {
+    send("POST", heldReplyPath(id, run), body, mapOf("KIFF-Device-Signature" to signature))
+  }
+
+  /** Doesn't send a held reply: nothing goes, so nothing is signed. */
+  suspend fun discardHeldReply(id: String, run: String) {
+    send("POST", heldReplyPath(id, run), KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(),
+      kotlinx.serialization.json.buildJsonObject { put("action", kotlinx.serialization.json.JsonPrimitive("discard")) }).toByteArray())
+  }
+
   private fun door(r: DoorResponse): Door = r.door
 
   // MARK: A door "From another application" (`api`, docs/doors.md): its keys change only signed

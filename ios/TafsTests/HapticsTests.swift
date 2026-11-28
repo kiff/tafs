@@ -123,7 +123,7 @@ final class HapticsTests: XCTestCase {
         let tafs = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
         func source(_ path: String) throws -> String { try String(contentsOf: tafs.appendingPathComponent(path), encoding: .utf8) }
         XCTAssertTrue(try source("Views/TafDetailView.swift").contains("set: { Haptics.select(section, $0); section = $0 }"))
-        XCTAssertTrue(try source("Views/HomeSplitView.swift").contains("set: { chosen = true; Haptics.select(selection, $0); selection = $0 }"))
+        XCTAssertTrue(try source("Views/HomeSplitView.swift").contains("set: { guard let picked = $0 else { return }; chosen = true; Haptics.select(selection, picked); selection = picked }"))
         XCTAssertTrue(try source("Views/HomeSplitView.swift").contains("Button { Haptics.tap(); model.openCoach() }"))
         let bar = try source("Views/TafsBar.swift")
         XCTAssertTrue(bar.contains("Button { Haptics.tap(); model.openCoach() }"))

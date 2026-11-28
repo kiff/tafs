@@ -1,0 +1,1 @@
+- **The purchase approval's toggle says "Show less" while its lines are open** (`approval.words.show_less` in `contracts/purchase.json`), so the apps draw KIFF's words both ways.

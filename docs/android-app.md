@@ -676,7 +676,7 @@ one that has used the most of its limit; the app sorts none (`Taf.shownCards`). 
 
 The Activity tab of a taf on tafs cloud (`TafActivityList`) shows, for whoever manages it, its
 doors' knocks first (`KnocksPanel`: strangers' knocks with Do it, Pair them and Ignore, then paired
-senders), so a knock Needs you counts is on the taf's page too. Then come its held calls, then where its
+senders), so a knock Needs you counts is on the taf's page too. Before the knocks, **a reply the taf wrote to someone outside and tafs cloud held for the owner** (`HeldReplyCard`): tafs cloud's line, the subject, the exact text that would go, and **Send** and **Don't send**, every word tafs cloud's (`replies[].words`). Send is the approval key behind the fingerprint, whose prompt is tafs cloud's ("Send this reply to Ben"), signed over `{action: "send", text_sha256}`, the phone's own SHA-256 of the text drawn, which must equal tafs cloud's `text_sha256` before the fingerprint is even asked (else nothing is asked, and the reply is read again), so only that text goes; a reply that changed since (409 `reply_changed`) is read again and says so in tafs cloud's words. Don't send signs nothing. A reply from a tafs cloud that sends no words isn't drawn. Needs you lists the taf with the newest reply's line (Home's `doors[].reply_line`), opening it on Activity (`AppModel.sendHeldReply`, `discardHeldReply`). Then come its held calls, then where its
 work stands, then its runs (the same order on iOS: what needs the owner first), from `GET /v1/tafs/{id}/work` ([reliability.md](reliability.md#the-tafs-view);
 `WorkPanel`, `AppModel.loadWork`): tafs cloud's
 summary line, then its recent requests and skipped firings, newest first, each in tafs cloud's
