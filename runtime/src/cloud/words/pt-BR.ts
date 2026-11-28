@@ -14,6 +14,9 @@ const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
  */
 export const ptBR: Words = {
   ...pt,
+  door_reply_waiting: (who: string, taf: string) => `${taf} escreveu uma resposta para ${who}. Ela está esperando você enviar.`,
+  door_reply_prompt: (who: string) => `Enviar esta resposta para ${who}`,
+  door_reply_changed: "Esta resposta mudou desde que você a leu. Leia de novo antes de enviar.",
   work_working: "Em andamento",
   work_waiting_approval: "Aguardando sua aprovação",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
@@ -24,6 +27,11 @@ export const ptBR: Words = {
   your_step_skip: "Pular",
   your_step_reminder: (what: string) => `Seu passo ainda está aguardando: ${what}`,
   your_step_line: (what: string) => `Seu passo: ${what}`,
+  your_turn_title: (site: string) => `É a sua vez em ${site}`,
+  your_turn_ask: (words: string) => `“${words}”`,
+  your_turn_until: (hm: string) => `Aberto até ${hm}`,
+  your_turn_open: "Abrir",
+  your_turn_not_now: "Agora não",
   coach_waiting_approval: "O Coach está aguardando sua aprovação.",
   coach_waiting_answer: "O Coach está aguardando sua resposta.",
   coach_waiting_named_approval: (title: string, day: string) => `${title}: o Coach está aguardando sua aprovação desde ${day}.`,

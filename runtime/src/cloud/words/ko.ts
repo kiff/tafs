@@ -23,6 +23,11 @@ export const ko: Words = {
   your_step_open: (vendor: string) => `${vendor}에서 열기`,
   your_step_reminder: (what: string) => `내 단계가 아직 기다리고 있습니다: ${what}`,
   your_step_line: (what: string) => `내 단계: ${what}`,
+  your_turn_title: (site: string) => `${site}에서 직접 하실 차례예요`,
+  your_turn_ask: (words: string) => `“${words}”`,
+  your_turn_until: (hm: string) => `${hm}까지 열려 있어요`,
+  your_turn_open: "열기",
+  your_turn_not_now: "나중에",
   // KIFF's spending windows: `each` ends a limit ("€300 a day"), `now` names its use so far ("€40 used today").
   window_words: {
     calendar_day: { each: "하루", now: "오늘" },
@@ -512,6 +517,11 @@ export const ko: Words = {
   door_handled: (who: string, place: string, taf: string) => `${place}에서 ${who}의 메시지를 처리했습니다. ${taf}이(가) 그곳에 직접 답을 올립니다.`,
   door_answered: (who: string, door: string) => `${door} 창구로 ${who}에게 답했습니다.`,
   door_reply_not_sent: (who: string, taf: string) => `${who}에게 보낸 내 답장이 전송되지 않았습니다. ${taf}에서 다시 보낼 수 있습니다.`,
+  door_reply_waiting: (who: string, taf: string) => `${taf}이(가) ${who}에게 보낼 답장을 썼습니다. 보내기를 기다리고 있습니다.`,
+  door_reply_send: "보내기",
+  door_reply_discard: "보내지 않기",
+  door_reply_prompt: (who: string) => `${who}에게 이 답장 보내기`,
+  door_reply_changed: "읽은 후 이 답장이 바뀌었습니다. 보내기 전에 다시 읽어 주세요.",
   unanswered_dial: (n: number, _form: Intl.LDMLPluralRule, event: boolean) => `내 tafs가 크레딧을 기다리는 동안 ${event ? "이벤트" : "메시지"} ${n}건에 답하지 못했습니다`,
   unanswered_door: (who: string, door: string) => `${door}(으)로 온 ${who}의 메시지에 답하지 못했습니다: 내 tafs가 크레딧을 기다렸습니다.`,
   unanswered_event: (name: string) => `${name}에서 온 이벤트에 답하지 못했습니다: 내 tafs가 크레딧을 기다렸습니다.`,

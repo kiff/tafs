@@ -79,6 +79,8 @@ object HoldAllow {
     val states: List<String>,
     val resources: DraftResources?,
     val nextSteps: List<String>,
+    /** What it opens (K4), canonical: a draft that opens what wasn't offered isn't what was offered. */
+    val opens: List<String> = emptyList(),
   )
 
   /** One total's terms: its window as KIFF keeps it, and what it counts as KIFF would count it. */
@@ -180,6 +182,7 @@ object HoldAllow {
             g.entityStates.orEmpty().sorted(),
             g.resources?.let { it.copy(values = it.values.sorted()) },
             g.nextSteps.orEmpty().sorted(),
+            g.openTerms,
           )
         },
         aggregates.orEmpty().map { a ->

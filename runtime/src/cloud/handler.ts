@@ -17,6 +17,7 @@ import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, rea
 import { AGENTS_MAX_INPUT, heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { failedLine, failureCode, retryOffered, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
+import { accountHands, handsOf } from "./hands.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
 import { baseLanguage, type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withoutTafsLines, withPageRead, withReplyLanguage, withZone, wordsIn } from "./words/index.js";
@@ -47,7 +48,7 @@ import { AI_CONSENT_CODE, type AIConsent, type AIConsentView, aiConsentOf, aiCon
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
-import { addAPIDoor, addDoor, answerKnock, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addAPIDoor, addDoor, answerHeldReply, answerKnock, heldRepliesOf, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext, apiDoorsOn } from "./doors/api.js";
 import { type APIDraft, doorKeys } from "./doors/model.js";
@@ -3008,9 +3009,9 @@ export interface ThreadMessage {
   /**
    * A door's message and its answer: which door, who wrote (and the email's
    * subject); on the answer, whether it went back ("sent"), couldn't
-   * ("not_sent", with why), or hasn't yet ("pending").
+   * ("not_sent", with why), hasn't yet ("pending"), or waits for the owner to send it ("held").
    */
-  door?: { app: string; from?: string; subject?: string; reply?: "sent" | "not_sent" | "pending"; why?: string };
+  door?: { app: string; from?: string; subject?: string; reply?: "sent" | "not_sent" | "pending" | "held"; why?: string };
   /** The files the person attached to their message (kiff/tafs#209): opened through the attachments route. */
   attachments?: AttachmentRef[];
   /** The card the owner's message answered, by id: they wrote while it waited, and their words were its answer. */
@@ -5785,7 +5786,7 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
         doorLights(deps.doors!.store, me.tenantID, taf.id, now).catch(() => [])])
         .then(([ds, lights]) => ds.map((d) => {
           const l = lights.find((x) => x.app === d.app);
-          return { ...d, ...(l ? { resting: l.resting, knocks: l.knocks } : {}) };
+          return { ...d, ...(l ? { resting: l.resting, knocks: l.knocks, replies: l.replies } : {}) };
         }))
       : Promise.resolve([]),
     deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),
@@ -8500,7 +8501,12 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // Each taf's hand-offs the receiving taf didn't finish (delivery.ts): they count in its Needs you. One read each.
   const dead = await Promise.all(tafs.map((t) => deadOf(deps, me.tenantID, t.id, now)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
-  const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
+  const lights = await Promise.all(tafs.map((t) => deps.doors
+    ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date(), (who) => wordsIn(langOf(event)).door_reply_waiting(who, t.name)).catch(() => [])
+    : []));
+  // A door reply waiting for the owner to send it: one line in Needs you each. Each taf's door light carries its
+  // newest reply's line, in the person's language, so Needs you shows it as the notification says it.
+  const heldReplies = (await Promise.all(tafs.map((t) => deps.doors ? heldRepliesOf(deps.doors.store, me.tenantID, t.id).catch(() => []) : []))).flat();
   // Each taf's versions, kept a minute: the Cards its live version was approved with show as one Card, and its last change.
   const versionsOf = await Promise.all(tafs.map((t) => keptVersions(deps, me.tenantID, t.id, now)));
   // Labels (labels.ts): each taf's that the account still has. One that can't be read leaves the filter row out, never the list.
@@ -8592,14 +8598,19 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const conns = stepping && deps.planqueBase ? await accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => []) : [];
   const yourSteps = tafs.flatMap((t, i) => (recent[i] ?? []).flatMap((r) => yourStepsOf(r, langOf(event), vendorReach(conns, t.kiffAgent)).map((s) => ({ ...s, taf: { id: t.id, name: t.name } }))))
     .sort((a, b) => a.since.localeCompare(b.since));
+  // "Your turn" in planque's hosted browser (hands.ts): the hand-overs still waiting, each under its taf, read from
+  // planque while it offers them (TAFS_HOSTED_HANDS); a list that can't be read shows none.
+  const yourTurns = process.env.TAFS_HOSTED_HANDS === "on" && deps.planqueBase
+    ? handsOf(await accountHands(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => []), tafs, langOf(event), me.timeZone ?? "UTC", now)
+    : [];
   // What Needs you lists, counted once here so Home, the tab badge and the lock screen agree with it
   // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a
   // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
   // count what they have, rather than show a number that's short.
   const needsYou = unsure === undefined ? undefined : (() => {
     const parts = { held: kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length, unsure, unit: unitExceptions.length,
-      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, steps: yourSteps.length, coach: coachWaiting.length };
-    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.steps + parts.coach;
+      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, replies: heldReplies.length, steps: yourSteps.length, turns: yourTurns.length, coach: coachWaiting.length };
+    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.replies + parts.steps + parts.turns + parts.coach;
     // Its parts, counts only, so a count the list doesn't show names where it comes from.
     if (count > 0) console.log(JSON.stringify({ event: "needs_you", tenant: me.tenantID, count, ...parts }));
     // In the person's language, as every line of tafs cloud's (docs/api.md, The person's language).
@@ -8609,7 +8620,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   })();
   // Which tafs matter now (docs/api.md, Home): something of theirs in Needs you, or a run or change in the last 24 hours. Worked
   // out here from what Home already read, so the iPad's sidebar and every other app show the same tafs.
-  const stepTafs = new Set(yourSteps.map((s) => s.taf.id));
+  const stepTafs = new Set([...yourSteps, ...yourTurns].map((s) => s.taf.id));
   const withRelevance = listed.map((v, i) => {
     const t = tafs[i]!;
     const why = relevantNow({ held: (waiting.get(t.kiffAgent) ?? 0) > 0, step: stepTafs.has(t.id), knock: lights[i]!.some((d) => d.knocks > 0),
@@ -8622,7 +8633,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const labels = labelSet ? labelsView(labelSet, listed, labelsOf, langOf(event)) : [];
   return { tafs: withRelevance, headline, setting_up: settingUp, others, removing, limits,
     ...(labels.length ? { labels, labels_words: { all: wordsIn(langOf(event)).labels_all } } : {}), ...(doors.length ? { doors_offered: doors } : {}),
-    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
+    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(yourTurns.length ? { your_turns: yourTurns } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
 /**
@@ -11592,6 +11603,12 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   }
   if (parts.length === 4 && method === "POST") return addDoor(ctx, owner, taf, body);
   if (parts.length === 6 && method === "POST" && a === "knocks") return answerKnock(ctx, owner, taf, b ?? "", body);
+  // A held reply: sending it writes to someone outside, so it takes the phone's signature, as an approval does;
+  // discarding it sends nothing.
+  if (parts.length === 6 && method === "POST" && a === "replies") {
+    if (body.action === "send") await doorSigned(event, me, deps);
+    return answerHeldReply(ctx, owner, taf, decodeURIComponent(b ?? ""), body);
+  }
   if (parts.length === 5 && method === "PATCH" && a) {
     if (typeof body.open !== "boolean") throw new HTTPError(400, "open is true or false");
     return setOpen(ctx, owner, taf, a, body.open);

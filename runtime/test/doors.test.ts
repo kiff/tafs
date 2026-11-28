@@ -6,7 +6,8 @@ import { AgentsError, type Run } from "../src/cloud/agents.js";
 import { coachTool, type Deps, handle, type HTTPEvent, sweepHeld, sweepReplies, type Taf } from "../src/cloud/handler.js";
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
-import { localPart, parseDoorMessage, replyText } from "../src/cloud/doors/doors.js";
+import { changeDoors, localPart, parseDoorMessage, replyText } from "../src/cloud/doors/doors.js";
+import { disclosureLines } from "../src/jobs.js";
 import { emailAPIBase, type EmailProvider, emailArrival, emailProvider, type OutgoingEmail, parseReceived, type ReceivedEmail } from "../src/cloud/doors/email.js";
 import { doorKeys, type DoorSecrets, type DoorStore } from "../src/cloud/doors/model.js";
 import { signedWebhook, whatsappSigned } from "../src/cloud/doors/sign.js";
@@ -203,10 +204,17 @@ async function pairBen(w: World) {
   expect(r.status).toBe(200);
 }
 
-async function emailDoor(w: World) {
+async function emailDoor(w: World, replies: "ask" | "auto" = "auto") {
   const r = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "email" } });
   expect(r.status).toBe(200);
+  // The tests below that send a reply on its own set the door to auto; a new door holds its replies (ask).
+  if (replies === "auto") await repliesAuto(w);
   return r.body.door;
+}
+
+/** A taf's doors set to send replies to paired senders on their own. */
+async function repliesAuto(w: World) {
+  await changeDoors(w.store, "t_acme", REFUNDS, (doors) => doors.map((d) => ({ ...d, replies: "auto" as const })));
 }
 
 /** kiff/agents' note that a run ended, after the fake run answers. */
@@ -461,10 +469,14 @@ describe("the email door", () => {
     expect((await emailHook(w, unchecked)).body.outcome).toBe("knock");
   });
 
-  it("DKIM aligned with From proves the sender even when its domain has no DMARC policy", async () => {
+  // A provider's DKIM verdict passes any valid signature, from any domain: on a From domain with no DMARC record,
+  // a forger signing with their own domain would pass it. Only DMARC ties the message to its From domain.
+  it("DKIM passing without DMARC passing proves nothing: the message knocks", async () => {
     const w = world();
     await emailDoor(w);
-    expect((await emailHook(w, mail(w, { dmarc: "gray", dkim: "pass" }))).body.outcome).toBe("run");
+    expect((await emailHook(w, mail(w, { dmarc: "gray", dkim: "pass" }))).body.outcome).toBe("knock");
+    expect((await emailHook(w, mail(w, { dmarc: "none", dkim: "pass" }))).body.outcome).toBe("knock");
+    expect(w.agents.runs).toHaveLength(0);
   });
 
   it("DKIM passing while DMARC fails is a spoofed sender, never a key", async () => {
@@ -948,7 +960,7 @@ describe("knocks and keys", () => {
     await emailHook(w, mail(w, { from: "Ana Lima <ana@northwind.example>" }));
     const home = await send(w, "GET", "/v1/home", { token: "ana" });
     expect(home.status).toBe(200);
-    expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", label: "Email", open: true, resting: false, knocks: 1 }]);
+    expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", label: "Email", open: true, resting: false, knocks: 1, replies: 0 }]);
     // A knock waits, so the taf is relevant now (docs/api.md, Home), for the knock.
     expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS)).toMatchObject({ relevant_now: true, relevant_because: "knock" });
     // Knocks name their door, and the list says the limits the apps check.
@@ -981,6 +993,7 @@ describe("the WhatsApp door", () => {
     const r = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "whatsapp", code: "good-code", phone_number_id: "1098765432", waba_id: "2098765432" } });
     expect(r.status).toBe(200);
     await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/whatsapp/keys`, { token: "ana", body: { id: "+34 611 111 111", name: "Ana" } });
+    await repliesAuto(w);
     return r.body.door;
   }
 
@@ -2483,3 +2496,108 @@ async function ends(c: { w: World; runOf: () => Run }, outcome: string, words = 
   (run as { outcome?: string }).outcome = outcome;
   return finish(c.w, run, words);
 }
+
+describe("the door reply's disclosure line", () => {
+  // A test door's reply had the line twice, first and last: the taf wrote it too. The reply carries it once, first.
+  it("is the reply's first line, once, whatever the taf wrote", async () => {
+    const { withoutDisclosure } = await import("../src/cloud/doors/doors.js");
+    const line = "Written by an AI agent on behalf of Acme.";
+    expect(withoutDisclosure(`${line}\n\nYour order ships Monday.\n\n${line}`, "Acme")).toBe("Your order ships Monday.");
+    expect(withoutDisclosure("Written by an AI agent on behalf of tafs.\nYour order ships Monday.", "tafs")).toBe("Your order ships Monday.");
+    const fr = disclosureLines({ writesFor: "Acme" }).fr!;
+    expect(withoutDisclosure(`${fr}\n\nVotre commande part lundi.`, "Acme")).toBe("Votre commande part lundi.");
+    // Its own words stay, even ones that mention an AI agent mid-text.
+    expect(withoutDisclosure("An AI agent wrote this summary for you.\nYour order ships Monday.", "Acme")).toBe("An AI agent wrote this summary for you.\nYour order ships Monday.");
+  });
+});
+
+// A door's reply to someone outside waits for the owner until the reply guard ships: drafted, held in Needs you,
+// and sent, exactly as read, only on the owner's signed yes, until replies have a content check of their own.
+describe("a door's reply held for the owner", () => {
+  function signing(w: World) {
+    const base = depsOf(w);
+    const deps: Deps = { ...base, fetch: (async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/v1/me/device-signature")) return new Response(JSON.stringify({ signed: true, key: "critical" }), { status: 200 });
+      return (base.fetch as typeof fetch)(url, init);
+    }) as typeof fetch };
+    return async (method: string, path: string, body: unknown, headers: Record<string, string> = {}) => {
+      const r = await handle({ rawPath: path, requestContext: { http: { method } }, headers: { Authorization: "Bearer ana", ...headers }, body: JSON.stringify(body) }, deps);
+      return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, any> };
+    };
+  }
+
+  it("sends nothing until the owner sends it, signed, and then sends exactly what they read", async () => {
+    const w = world();
+    await emailDoor(w, "ask");
+    await pairBen(w);
+    await emailHook(w, mail(w, { from: BEN }));
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    await finish(w, run, "Refunded the duplicate $180 on order 4471.");
+    expect(w.outbox).toHaveLength(0);
+    // The doors list carries it with the exact text, and Needs you counts it.
+    const list = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
+    expect(list.body.replies).toHaveLength(1);
+    const held = list.body.replies[0];
+    expect(held).toMatchObject({ run: run.id, to: "Ben" });
+    expect(held.text.startsWith("Written by an AI agent.\n\nRefunded the duplicate $180")).toBe(true);
+    // The owner's phones heard it waits for them.
+    expect(JSON.stringify(w.pushed)).toContain("It waits for you to send it.");
+    // Sending without the phone's signature sends nothing.
+    const path = `/v1/tafs/${REFUNDS}/doors/replies/${run.id}`;
+    expect((await send(w, "POST", path, { token: "ana", body: { action: "send" } })).status).toBeGreaterThanOrEqual(400);
+    expect(w.outbox).toHaveLength(0);
+    const call = signing(w);
+    // Send names the hash of the text the owner read; another text's hash sends nothing.
+    expect(held.text_sha256).toBe(createHash("sha256").update(held.text).digest("hex"));
+    const stale = await call("POST", path, { action: "send", text_sha256: "0".repeat(64) }, { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=sig" });
+    expect(stale.status).toBe(409);
+    expect(w.outbox).toHaveLength(0);
+    // Home lists it on the taf's door, beside its knocks, with the line its notification said.
+    const home = await send(w, "GET", "/v1/home", { token: "ana" });
+    expect(JSON.stringify(home.body)).toContain('"replies":1');
+    expect(JSON.stringify(home.body)).toContain('"reply_line":"Refunds wrote a reply to Ben. It waits for you to send it."');
+    // Every line the apps draw comes with it, and the 409 says what to do in the person's words.
+    expect(held.words).toEqual({ line: "Refunds wrote a reply to Ben. It waits for you to send it.", send: "Send", discard: "Don't send",
+      prompt: "Send this reply to Ben", changed: "This reply changed since you read it. Read it again before sending." });
+    expect(stale.body.error).toBe("This reply changed since you read it. Read it again before sending.");
+    const sent = await call("POST", path, { action: "send", text_sha256: held.text_sha256 }, { "kiff-device-signature": "t=2026-10-24T09:00:02Z,v1=sig" });
+    expect(sent.body).toEqual({ run: run.id, state: "sent" });
+    expect(w.outbox).toHaveLength(1);
+    expect(w.outbox[0]!.text).toBe(held.text);
+    expect(w.outbox[0]!.to).toBe("ben@partner.example");
+    // Once: it's gone from the list, and a second send finds nothing.
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.replies).toEqual([]);
+    expect((await call("POST", path, { action: "send", text_sha256: held.text_sha256 }, { "kiff-device-signature": "t=2026-10-24T09:00:03Z,v1=sig" })).status).toBe(404);
+  });
+
+  it("discards a reply without sending it", async () => {
+    const w = world();
+    await emailDoor(w, "ask");
+    await pairBen(w);
+    await emailHook(w, mail(w, { from: BEN }));
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    await finish(w, run, "Done.");
+    const out = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/replies/${run.id}`, { token: "ana", body: { action: "discard" } });
+    expect(out.body).toEqual({ run: run.id, state: "not_sent" });
+    expect(w.outbox).toHaveLength(0);
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.replies).toEqual([]);
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/replies/${run.id}`, { token: "ana", body: { action: "later" } })).status).toBe(404);
+  });
+});
+
+describe("a door set to reply on its own", () => {
+  // The content check holds a reply that describes the owner's setup, even on a door that replies on its own.
+  it("still holds a reply the content check flags, with why", async () => {
+    const w = world();
+    await emailDoor(w, "auto");
+    await pairBen(w);
+    await emailHook(w, mail(w, { from: BEN }));
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    await finish(w, run, "I filed your receipt in the P2-GD folder of Google Drive and noted it in the orders sheet.");
+    expect(w.outbox).toHaveLength(0);
+    const held = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.replies;
+    expect(held).toHaveLength(1);
+    expect(held[0].concerns).toEqual(["it names google drive"]);
+    // (A reply about the job goes on its own on such a door: the email door's tests above, set to auto.)
+  });
+});

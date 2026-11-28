@@ -102,7 +102,12 @@ describe("the purchase contract", () => {
     const t = doc.execution.token.value;
     expect(t.max_amount).toBe(c.grant.cap);
     expect(t.currency).toBe(c.currency);
-    expect(t.seller).toBe(c.merchant.site);
+    // The token names the seller's Stripe profile, the signed one, read from the checkout's own site.
+    expect(c.path).toBe("token");
+    expect(c.merchant.stripe_profile).toMatch(/^profile_[A-Za-z0-9]{1,64}$/);
+    expect(t.seller).toBe(c.merchant.stripe_profile);
+    expect(doc.case.about).toMatch(/stripe_profile[^.]*read only from the case's own checkout site/);
+    expect(doc.execution.token.rules.join(" ")).toMatch(/before live/);
     expect(Date.parse(t.expires_at)).toBeLessThanOrEqual(Date.parse(doc.decision.by_owner.valid_until));
     const card = doc.execution.value.card;
     expect(card.metadata.case_id).toBe(c.case_id);
@@ -116,6 +121,7 @@ describe("the purchase contract", () => {
     expect(r.case_id).toBe(c.case_id);
     expect(r.version).toBe(c.version);
     expect(r.merchant.case.category).toBe(c.merchant.category);
+    expect(r.merchant.case.stripe_profile).toBe(c.merchant.stripe_profile);
     expect(r.merchant.issuer).toBeTruthy();
     expect(r.amounts.captured).toBeLessThanOrEqual(r.amounts.approved_max);
     expect(doc.states.money).toContain(r.states.money);
