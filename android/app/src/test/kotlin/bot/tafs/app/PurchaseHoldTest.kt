@@ -196,6 +196,12 @@ class PurchaseHoldTest {
     assertTrue(transport.requests.none { it.method == "POST" })
   }
 
+  @Test fun withNoReasonOfItsOwnTheBadgeIsTheHoldsKiffReason() = runTest {
+    val noReason = approval.toString().replace(Regex(""","reason":"[^"]*""""), "")
+    val m = model(held(purchase = noReason).replace("\"next_steps\"", "\"reason_text\":\"Your Card asks each time.\",\"next_steps\""))
+    assertEquals("Your Card asks each time.", m.state.value.held.single().purchase!!.words.reason)
+  }
+
   @Test fun anyOtherHoldIsAsBefore() = runTest {
     val m = model(held().replace(Regex(""","purchase":\{.*\}\}$""", RegexOption.DOT_MATCHES_ALL), "}"))
     val call = m.state.value.held.single()

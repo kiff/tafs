@@ -24,7 +24,7 @@ field, **`purchase`**: the contract's `approval.value`, `{case_id, version, dige
   - the `price_rule`;
   - what the card allows (`grant`);
   - when it buys (`buys_now`);
-  - the Card's `reason`, as the badge;
+  - the Card's `reason`, as the badge (else the hold's own `reason_text`, KIFF's too);
   - `nothing_until`, in place of the app's "Nothing is sent until you answer".
 
   The app writes none of its own, and passes each line through the same filter as any held call's
