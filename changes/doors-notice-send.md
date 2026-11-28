@@ -1,0 +1,1 @@
+- **With the email doors on tafs's own mail service, the owner's copy of a door's answer and the answer report to support arrive again.** tafs cloud asks for them by name as notices, the one kind of mail that service sends besides a reply to its writer.
