@@ -5630,6 +5630,7 @@ class AppModel(
     if (_state.value.approvalKeyLost) return false.also { note(noteKey, KiffClient.APPROVAL_KEY_LOST) }
     if (key.isBlank() || _state.value.connecting != null) return false
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - noteKey) }
+    connectAttempt = currentCoroutineContext()[Job]
     val generation = accountGeneration
     planque.tenant = tenant
     planque.deviceLoader = { kiff.thisDeviceId() }
@@ -5669,6 +5670,7 @@ class AppModel(
     } finally {
       planque.signer = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null) }
+      connectAttempt = null
     }
   }
 
@@ -5735,6 +5737,7 @@ class AppModel(
       return Connected.Stopped
     }
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - cardId) }
+    connectAttempt = currentCoroutineContext()[Job]
     val generation = accountGeneration
     // Whether this connection opened KIFF's window, which it closes when it ends.
     var ownWindow = false
@@ -5914,6 +5917,7 @@ class AppModel(
       planque.window = null
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
+      connectAttempt = null
       // The connection's own window ends with it, so the approvals after it each ask for their own fingerprint.
       if (ownWindow) kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) { closeWindow() }
       else if (generation == accountGeneration) readWindowWords()
@@ -6053,6 +6057,7 @@ class AppModel(
       ?.session?.ifEmpty { null } ?: _state.value.coachChat
     val shownAsTap = CoachWords.approvesAsTap(c, _state.value.windowWords, _state.value.windowSetup, shownSetup)
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - c.id) }
+    connectAttempt = currentCoroutineContext()[Job]
     val generation = accountGeneration
     planque.tenant = tenant
     planque.deviceLoader = { kiff.thisDeviceId() }
@@ -6218,6 +6223,7 @@ class AppModel(
       kiff.signsInWindow = false
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
+      connectAttempt = null
       if (generation == accountGeneration) readWindowWords()
     }
   }
@@ -6508,6 +6514,19 @@ class AppModel(
    * Sign in again, for a grant whose sign-in was left: a new approval, one confirmation. What it came to goes back to Coach as the
    * card's answer: "signed in", or "failed: why".
    */
+  /** The coroutine of the connection under way (`connecting`): Cancel ends it wherever it is ([cancelConnecting]). */
+  @Volatile private var connectAttempt: Job? = null
+
+  /**
+   * Cancel on a sign-in under way. While the vendor's page waits, its wait ends as a closed sign-in, as before. Before that (the
+   * approval still on its way, the fingerprint asked, or a request that never came back), the attempt itself ends: the card goes
+   * back to its sign-in, nothing is answered to Coach, and the owner can start it again. Before, Cancel there did nothing, and
+   * the card stayed on "Opening the sign-in…" (the Qonto re-test, a Home press mid-approval).
+   */
+  fun cancelConnecting() {
+    if (_state.value.vendorPageOpen) vendorSignIn.cancel() else connectAttempt?.cancel()
+  }
+
   /** The card says "finish it there" only while the vendor's page is actually open: an approval that reuses a sign-in opens none. */
   private suspend fun <T> vendorPageOpen(open: suspend () -> T): T {
     _state.update { it.copy(vendorPageOpen = true, vendorPageLeft = false) }

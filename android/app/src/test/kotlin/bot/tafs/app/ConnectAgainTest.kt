@@ -9,6 +9,7 @@ import bot.tafs.app.kiff.VendorSignInCancelled
 import bot.tafs.app.kiff.Jcs
 import java.security.MessageDigest
 import java.time.Instant
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -89,6 +90,28 @@ class ConnectAgainTest {
     assertEquals("Gmail is connected again. Mail can use it.", m.state.value.connectedAgain["mail-1"])
     assertNull(m.state.value.tafSetups["mail-1"]?.connectAgain)
     assertNull(m.state.value.coachNotes["g1"])
+  }
+
+  /**
+   * Cancel before the vendor's page opens: the approval still on its way (a Home press mid-approval in the Qonto re-test left the
+   * card on "Opening the sign-in…", and Cancel did nothing, since it only ended a page's wait). The attempt ends, the card is free
+   * to start again, and nothing else is asked of planque.
+   */
+  @Test fun cancelEndsASignInStillWaitingOnItsApproval() = kotlinx.coroutines.test.runTest {
+    reads("{$connectAgain}")
+    transport.answer(grants, 200, """{"grants":[${grant("needs_reconnect")}]}""")
+    transport.hold(approve)
+    val m = model()
+    m.refresh()
+    m.loadTafSetup("mail-1")
+    val attempt = launch { m.connectAgain("mail-1") }
+    testScheduler.runCurrent()
+    assertEquals("on its way", "g1", m.state.value.connecting)
+    m.cancelConnecting()
+    testScheduler.runCurrent()
+    assertTrue("the attempt ended", attempt.isCompleted)
+    assertNull("the card is free to start again", m.state.value.connecting)
+    assertEquals("nothing else asked of planque", 0, transport.requestsTo(confirm).size)
   }
 
   // planque can't sign it in again on its old account (`reconnect: fresh`): a new sign-in brings back every connection signed out
