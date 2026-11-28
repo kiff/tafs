@@ -1,0 +1,1 @@
+- **Android: a version's Card never shows a tool's internal id.** Where tafs cloud sends no lines for a draft Card, two grants for the same tool through two of planque's connections read as the tool's name, once, instead of "List client invoices · list client invoices yhbp" ([android-app.md](docs/android-app.md)).

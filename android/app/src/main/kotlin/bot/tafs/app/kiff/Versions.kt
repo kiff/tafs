@@ -220,8 +220,10 @@ data class DraftCard(
   val lines: List<String> get() = lines(alike(grants.orEmpty()))
 
   /**
-   * The lines, where a grant whose name is in [alike] (from every Card the owner reads together) adds its
-   * action in words. An amount's unit is KIFF's, or the number stays bare: never a guessed name or currency.
+   * The lines, in the app's words, only for a KIFF that sends none of its own. An amount's unit is KIFF's, or the number stays
+   * bare: never a guessed name or currency. A grant whose name is in [alike] (from every Card the owner reads together) adds its
+   * action in words when they tell it apart; the same tool through two of planque's grants (ids that differ only by planque's
+   * suffix) reads as its name, once when the terms are the same, and by its terms when they differ: never an id.
    */
   fun lines(alike: Set<String>): List<String> {
     kiffLines?.takeIf { it.isNotEmpty() }?.let { return it }
@@ -231,7 +233,10 @@ data class DraftCard(
       val caps = g.perActionMax.orEmpty().map { cap ->
         if (KiffMapping.isSum(cap.quantity)) Words.Card.Line.upToEach(amount = KiffMapping.money(cap.max, cap.unit, cap.scale).formatted) else Words.Card.Line.upToEach(amount = cap.max.toString())
       }
-      val action = if (name.lowercase() in alike) "$name · ${KiffMapping.toolWords(g.action)}" else name
+      // Two grants that read alike are told apart by their actions' words ("Write Stripe API data · create refund"), unless those
+      // only repeat the name with planque's own suffix ("list client invoices yhbp"): then they say nothing the owner can use.
+      val words = KiffMapping.toolWords(g.action)
+      val action = if (name.lowercase() in alike && !words.lowercase().startsWith(name.lowercase())) "$name · $words" else name
       val more = if (asksPastLimits) Words.Card.Line.moreAsks else ""
       out += if (caps.isEmpty()) action else "$action: " + caps.joinToString(", ") + more
     }
@@ -244,7 +249,7 @@ data class DraftCard(
         else -> Words.Card.Line.callsInWindow(count = a.limit.toInt(), window = window, then = then)
       }
     }
-    return out
+    return out.distinct()
   }
 
   companion object {
@@ -304,8 +309,9 @@ data class AgentDraft(
   fun approvedHold(id: String): Boolean = hold?.id == id && hold.status == "approved"
 
   /**
-   * Each Card's lines, as the owner reads them together before one confirmation signs them all: two grants that
-   * read alike, on one Card or two, each add their action. Every place that shows a draft's Cards reads them from here.
+   * Each Card's lines, as the owner reads them together before one confirmation signs them all: KIFF's own when it sends them,
+   * else the app's, where two grants that read alike add their action's words only when those tell them apart, never an id.
+   * Every place that shows a draft's Cards reads them from here.
    */
   val cardLines: List<List<String>>
     get() {
