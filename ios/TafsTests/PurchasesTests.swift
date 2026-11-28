@@ -75,6 +75,38 @@ final class PurchasesTests: XCTestCase {
         XCTAssertEqual(log.lines, ["kiff jws-1 pr_1", "finish 1"])
     }
 
+    /// From the App Store's confirmation until KIFF has it and the account is read again, the page says it's
+    /// confirming and every purchase control waits (kiff/tafs#2189); before Apple confirms, and after, it doesn't.
+    func testItSaysConfirmingFromApplesYesUntilKIFFHasIt() async {
+        let log = StoreLog()
+        let store = FakeStore(log: log)
+        let p = Purchases(front: store)
+        var seen: [(confirming: Bool, busy: Bool)] = []
+        p.record = { _, _ in seen.append((p.confirming, p.busy)) }
+        p.recorded = { seen.append((p.confirming, p.busy)) }
+        store.bought = store.purchaseNamed(7)
+        XCTAssertFalse(p.confirming)
+        let outcome = await p.buy("bot.tafs.pack.rayo", accountToken: UUID())
+        XCTAssertEqual(outcome, .done)
+        XCTAssertEqual(seen.map(\.confirming), [true, true], "while KIFF records it and the account is read again")
+        XCTAssertEqual(seen.map(\.busy), [true, true])
+        XCTAssertFalse(p.confirming, "over once it's done")
+        XCTAssertFalse(p.busy)
+        // Cancelled at Apple's sheet: never confirming.
+        store.bought = nil
+        seen = []
+        _ = await p.buy("bot.tafs.pack.rayo", accountToken: UUID())
+        XCTAssertTrue(seen.isEmpty)
+        XCTAssertFalse(p.confirming)
+        // A Restore holds the purchase controls too.
+        var restoringSeen: [Bool] = []
+        p.record = { _, _ in restoringSeen.append(p.busy) }
+        store.restored = [store.purchaseNamed(8)]
+        _ = await p.restore()
+        XCTAssertEqual(restoringSeen, [true])
+        XCTAssertFalse(p.busy)
+    }
+
     /// KIFF didn't record it: the purchase isn't finished, so the App Store gives it again.
     func testAPurchaseKIFFDidntRecordIsntFinished() async {
         let log = StoreLog()

@@ -846,7 +846,10 @@ message and a line where a day starts, with none of its code). Coach's chat is t
 - **Every other time of day on a screen follows the same setting** (kiff/tafs#2195): the decision line under a held call
   ("Approved once by you · 10:22 PM"), "next run at", "halted since" and the rest, so one screen never shows two clock styles.
   Android: `shortTime` (`model/AccountTime.kt`) reads the device's setting when the app starts and each time it comes back
-  (`ShortTimeClockTest`); a line already stored keeps the time it was written with. iOS follows.
+  (`ShortTimeClockTest`); a line already stored keeps the time it was written with. iOS: `Date.shortTime`
+  (`Design/Components.swift`), the hold alert's deadline (`HoldNotification.time`) and the alert extension's own
+  `shortTime` all go through `ChatTime.time`, the chat's stamps' own clock, read each time it's drawn
+  (`TimeZoneTests.testEveryTimeOfDayFollowsTheDevicesClockAsTheChatDoes`); a line already stored keeps its time too.
 - **A header where a day starts:** over the chat's first message and each first message of a new day: **Today**
   (`calendar.today`), **Yesterday** (`chat.day.yesterday`), then the date in the language's own order from the platform's
   skeleton (`EEEMMMd`: "Wed, Nov 18", "Mi., 18. Nov."), with the year (`EEEMMMdy`) when it isn't this one. It replaces the

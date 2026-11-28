@@ -321,13 +321,14 @@ extension Date.FormatStyle {
 }
 
 extension Date {
-    /// The time of day, as 14:05, in the account's zone.
-    var shortTime: String {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm"
-        if Words.namesCalendar { f.locale = Words.locale }
-        f.timeZone = AccountTime.zone
-        return f.string(from: self)
+    /// The time of day in the account's zone, in the same clock as the chat's own stamps (`ChatTime.time`): the
+    /// device's 12- or 24-hour setting, in the app's language ("14:05", or "2:05 PM"), so a screen never shows two
+    /// clock styles side by side (kiff/tafs#2195).
+    var shortTime: String { shortTime(twentyFour: ChatTime.deviceUses24Hour()) }
+
+    /// `shortTime` in a given clock, for tests and for a caller that already read the device's setting.
+    func shortTime(twentyFour: Bool) -> String {
+        ChatTime.time(self, zone: AccountTime.zone, twentyFour: twentyFour)
     }
 
     /// When something ends, in the account's zone: the time alone today, with its date on a
@@ -598,5 +599,37 @@ struct ApprovalKeyLostLine: View {
         }
         // Alerts that couldn't be taken back: ask before signing out.
         .askingAlertsStillOn(model)
+    }
+}
+
+/// A chat refused for want of a plan (kiff/tafs#2190, as Android's and the Mac's): tafs cloud's words, what Solo gives
+/// (Plan & usage's own line), Choose a plan and Not now. It stays above the box until one is tapped or the next send.
+struct PlanPrompt: View {
+    let words: String
+    let choose: () -> Void
+    let notNow: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(words).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(Words.Billing.tafsKiffOnePersonEvery).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                Button(action: choose) { Text(Words.Usage.choosePlan).frame(maxWidth: .infinity) }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .accessibilityIdentifier("plan-prompt.choose")
+                Button(action: notNow) { Text(Words.Common.notNow).frame(maxWidth: .infinity) }
+                    .buttonStyle(OutlineButtonStyle())
+                    .accessibilityIdentifier("plan-prompt.not-now")
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.raised))
+        .padding(.horizontal, 12)
+        .padding(.bottom, 6)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("plan-prompt")
     }
 }

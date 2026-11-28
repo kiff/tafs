@@ -84,6 +84,14 @@ extension StoreFront {
 final class Purchases: ObservableObject {
     @Published private(set) var products: [String: StoreProduct] = [:]
     @Published private(set) var buying: String?
+    /// From the App Store's confirmation until KIFF has recorded the purchase and the account is read again
+    /// (kiff/tafs#2189): the page says it's confirming, and no other purchase or Restore can start meanwhile.
+    @Published private(set) var confirming = false
+    /// A Restore under way: no purchase starts meanwhile either.
+    @Published private(set) var restoring = false
+
+    /// Whether a purchase, its confirming or a Restore is under way: every purchase control waits.
+    var busy: Bool { buying != nil || confirming || restoring }
 
     private let front: StoreFront
     /// Sends a signed purchase to KIFF, with the request it answers.
@@ -167,6 +175,9 @@ final class Purchases: ObservableObject {
         do {
             let (purchase, pending) = try await front.purchase(id, accountToken: accountToken)
             guard let purchase else { return pending ? .pending : .cancelled }
+            // Apple confirmed it: until KIFF has it and the account is read again, the page says so.
+            confirming = true
+            defer { confirming = false }
             return await deliver(purchase, requestID: requestID)
         } catch {
             return .failed(error.localizedDescription)
@@ -175,6 +186,8 @@ final class Purchases: ObservableObject {
 
     /// Restores this Apple account's purchases and sends each to KIFF.
     func restore() async -> PurchaseOutcome {
+        restoring = true
+        defer { restoring = false }
         do {
             let found = try await front.restore()
             // Nothing came back: said as it is, never "Purchases restored."

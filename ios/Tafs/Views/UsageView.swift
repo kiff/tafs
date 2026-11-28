@@ -109,7 +109,7 @@ struct UsageView: View {
                                 Button(Words.Usage.Requests.approve) { Task { await model.buyPack(pack, answering: r) } }
                                     .buttonStyle(PrimaryButtonStyle())
                                     .confirming()
-                                    .disabled(model.purchases.buying != nil)
+                                    .disabled(model.purchases.busy)
                             }
                             Button(Words.Usage.Requests.decline) { declining = r }.buttonStyle(OutlineButtonStyle())
                         }

@@ -47,7 +47,11 @@ struct TafChatView: View {
         VStack(spacing: 0) {
             thread
             VStack(spacing: 0) {
-                if let error = model.chatErrors[tafID] {
+                if let words = model.planPrompt(tafID) {
+                    // Refused for want of a plan: a prompt that stays, with Choose a plan (kiff/tafs#2190).
+                    PlanPrompt(words: words, choose: { model.dismissPlanPrompt(tafID); model.usageRequested = true },
+                               notNow: { model.dismissPlanPrompt(tafID) })
+                } else if let error = model.chatErrors[tafID] {
                     Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                         .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
                 }

@@ -58,7 +58,9 @@ final class HoldNotificationTests: XCTestCase {
         content.userInfo = ["hold_id": "ce_1", "open": "needs-you"]
         await HoldNotification.fill(content, kiff: kiff, cloud: cloud)
         XCTAssertEqual(content.title, "Rae needs you")
-        XCTAssertTrue(content.body.contains("Answer by 19:51"), "in the account's zone, Tokyo: \(content.body)")
+        // On the device's own clock (kiff/tafs#2195): 19:51 on a 24-hour one, 7:51 PM on a 12-hour one.
+        let by = ChatTime.deviceUses24Hour() ? "Answer by 19:51" : "Answer by 7:51"
+        XCTAssertTrue(content.body.contains(by), "in the account's zone, Tokyo: \(content.body)")
     }
 
     func testAHoldItCantReadLeavesThePushAsItCame() async {

@@ -1065,6 +1065,7 @@ final class AppModel: ObservableObject {
         planque.deviceID = nil
         forgetAIConsent()
         accountGeneration += 1
+        chatPlanNeeded = [:]; setupPlanNeeded = nil
         tafs = []; listOrder = []; waitingWhenSettled = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         alertsReady = nil
         canAnswerHolds = nil
@@ -2075,6 +2076,7 @@ final class AppModel: ObservableObject {
         handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
+        chatPlanNeeded = [:]; setupPlanNeeded = nil
         tafs = []; listOrder = []; waitingWhenSettled = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         scriptPosition = [:]; templateOf = [:]
         mode = .signedOut
@@ -4771,6 +4773,37 @@ final class AppModel: ObservableObject {
     /// The codes a chat, Coach or Run now is refused with while the tafs wait for credits.
     static let creditsCodes: Set<String> = ["credits_used_up", "limit_reached", "no_plan"]
 
+    /// tafs cloud's words for a refusal for want of a plan (`no_plan`), which the chat keeps as a prompt with
+    /// Choose a plan and Not now (kiff/tafs#2190, as Android's #2193); nil for every other refusal, which keeps
+    /// the plain line.
+    static func planNeeded(_ e: TafsCloud.CloudError) -> String? {
+        e.code == "no_plan" ? waitsForCredits(e) : nil
+    }
+
+    /// The plan prompt over a taf's chat: its words only while they're still that chat's line, so another error
+    /// never wears it.
+    func planPrompt(_ tafID: UUID) -> String? {
+        guard let words = chatPlanNeeded[tafID], chatErrors[tafID] == words else { return nil }
+        return words
+    }
+
+    /// Coach's plan prompt, the same way.
+    var setupPlanPrompt: String? {
+        guard let words = setupPlanNeeded, setupError == words else { return nil }
+        return words
+    }
+
+    /// Not now: the prompt and its line go; the words stay in the box.
+    func dismissPlanPrompt(_ tafID: UUID) {
+        if chatErrors[tafID] == chatPlanNeeded[tafID] { chatErrors[tafID] = nil }
+        chatPlanNeeded[tafID] = nil
+    }
+
+    func dismissSetupPlanPrompt() {
+        if setupError == setupPlanNeeded { setupError = nil }
+        setupPlanNeeded = nil
+    }
+
     /// tafs cloud's words for a refusal because the tafs wait for credits (409 with a credits
     /// code); nil for any other error.
     static func waitsForCredits(_ e: TafsCloud.CloudError) -> String? {
@@ -5649,6 +5682,8 @@ final class AppModel: ObservableObject {
     /// The tafs a message is on its way to, so one is sent at a time.
     @Published private(set) var chatSending: Set<UUID> = []
     @Published var chatErrors: [UUID: String] = [:]
+    /// A taf chat's refusal for want of a plan, kept while it's the chat's line (`planPrompt`, kiff/tafs#2190).
+    @Published var chatPlanNeeded: [UUID: String] = [:]
     /// How long a sample taf takes to answer; tests set it to zero, and the UI tests slow it.
     var sampleReplyDelay: UInt64 = Screenshots.sampleReplySeconds.map { UInt64($0 * 1_000_000_000) } ?? 700_000_000
 
@@ -5843,6 +5878,7 @@ final class AppModel: ObservableObject {
             chats[tafID]?.removeAll { $0.id == pending.id }
             chatSent[tafID]?.removeAll { $0.id == pending.id }
             chatErrors[tafID] = Self.waitsForCredits(e)
+            chatPlanNeeded[tafID] = Self.planNeeded(e)
             return .notTried
         } catch {
             guard current() else { return .notTried }
@@ -6300,6 +6336,7 @@ final class AppModel: ObservableObject {
                 return false
             } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
                 chatErrors[tafID] = Self.waitsForCredits(e)
+                chatPlanNeeded[tafID] = Self.planNeeded(e)
                 return false
             } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
                 // The consent's screen says why; the words stay in the composer.
@@ -8172,6 +8209,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupSending = false
     @Published private(set) var startingSetup = false
     @Published var setupError: String?
+    /// Coach's refusal for want of a plan, kept while it's Coach's line (`setupPlanPrompt`, kiff/tafs#2190).
+    @Published var setupPlanNeeded: String?
     /// The drafts Setup's approvals name, read from KIFF so the owner sees the Cards.
     @Published private(set) var setupDrafts: [String: KIFFClient.AgentDraft] = [:]
     /// Why KIFF's draft of a card's Card couldn't be read, by draft id: KIFF's reason, for the card.
@@ -9401,6 +9440,7 @@ final class AppModel: ObservableObject {
             setupSent.removeAll { $0.id == mine.id }
             setupThread.messages.removeAll { $0.id == mine.id }
             setupError = Self.waitsForCredits(e)
+            setupPlanNeeded = Self.planNeeded(e)
             return .notTried
         } catch {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
@@ -9486,6 +9526,7 @@ final class AppModel: ObservableObject {
                 return false
             } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
                 setupError = Self.waitsForCredits(e)
+                setupPlanNeeded = Self.planNeeded(e)
                 return false
             } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
                 // The consent's screen says why; the words stay in the composer.

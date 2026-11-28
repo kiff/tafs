@@ -994,7 +994,9 @@ final class WatchRelayTests: XCTestCase {
         let page = try await KeptWatchReading(kiff: kiff, cloud: cloud, signer: CurrentKeyOnly(), tenant: "t1", keyed: true).needsYou(now: now)
         XCTAssertEqual(page.calls.map(\.id), ["ce_1", "ce_2"], "the soonest to lapse first")
         XCTAssertEqual(page.calls.map(\.taf), [Words.Coach.title, "Rae"], "Coach's own agent is named Coach")
-        XCTAssertEqual(page.calls.map { String($0.answerBy.prefix(5)) }, ["19:51", "19:58"], "in the account's zone, Tokyo")
+        // On the device's own clock (kiff/tafs#2195): 19:51 on a 24-hour one, 7:51 PM on a 12-hour one.
+        let expected = ChatTime.deviceUses24Hour() ? ["19:51", "19:58"] : ["7:51", "7:58"]
+        XCTAssertEqual(page.calls.map { String($0.answerBy.prefix(expected[0].count)) }, expected, "in the account's zone, Tokyo")
         let tokyo = try XCTUnwrap(TimeZone(identifier: "Asia/Tokyo"))
         XCTAssertEqual(page.calls[0].answerBy, HoldNotification.time(now.addingTimeInterval(6 * 60), in: tokyo),
                        "as the phone's notification writes it, with the zone when the phone's clock differs")
