@@ -26,14 +26,12 @@ enum HoldNotification {
                      body: Words.Alert.answerNothingSentUntilYou(what: "\(what)", why: "\(call.reason)", zone: "\(time(call.expiresAt, in: zone))"))
     }
 
-    /// A deadline in the account's zone, with the zone's short name when its clock isn't
-    /// this device's at that moment ("14:05 CET").
-    static func time(_ date: Date, in zone: TimeZone) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm"
-        f.timeZone = zone
+    /// A deadline in the account's zone, in the device's 12- or 24-hour clock as the app's other times are
+    /// (`ChatTime.time`, kiff/tafs#2195), with the zone's short name when its clock isn't this device's at that
+    /// moment ("14:05 CET", "2:05 PM CET").
+    static func time(_ date: Date, in zone: TimeZone, twentyFour: Bool = ChatTime.deviceUses24Hour()) -> String {
         let named = zone.secondsFromGMT(for: date) != TimeZone.current.secondsFromGMT(for: date)
-        return f.string(from: date) + (named ? zone.abbreviation(for: date).map { " " + $0 } ?? "" : "")
+        return ChatTime.time(date, zone: zone, twentyFour: twentyFour) + (named ? zone.abbreviation(for: date).map { " " + $0 } ?? "" : "")
     }
 
     /// Fills in `content` for the hold it names: the hold from KIFF, its taf from tafs cloud,

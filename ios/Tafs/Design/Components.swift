@@ -321,13 +321,14 @@ extension Date.FormatStyle {
 }
 
 extension Date {
-    /// The time of day, as 14:05, in the account's zone.
-    var shortTime: String {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm"
-        if Words.namesCalendar { f.locale = Words.locale }
-        f.timeZone = AccountTime.zone
-        return f.string(from: self)
+    /// The time of day in the account's zone, in the same clock as the chat's own stamps (`ChatTime.time`): the
+    /// device's 12- or 24-hour setting, in the app's language ("14:05", or "2:05 PM"), so a screen never shows two
+    /// clock styles side by side (kiff/tafs#2195).
+    var shortTime: String { shortTime(twentyFour: ChatTime.deviceUses24Hour()) }
+
+    /// `shortTime` in a given clock, for tests and for a caller that already read the device's setting.
+    func shortTime(twentyFour: Bool) -> String {
+        ChatTime.time(self, zone: AccountTime.zone, twentyFour: twentyFour)
     }
 
     /// When something ends, in the account's zone: the time alone today, with its date on a

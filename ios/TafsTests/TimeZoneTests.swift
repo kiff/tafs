@@ -129,17 +129,33 @@ final class TimeZoneTests: XCTestCase {
         // Far from today, so the Record's day reads as a weekday, never Today or Yesterday.
         let at = Date(timeIntervalSince1970: 1_737_084_600) // 2025-01-17T03:30:00Z, a Friday in UTC
         AccountTime.use("America/New_York")
-        XCTAssertEqual(at.shortTime, "22:30")
+        XCTAssertEqual(at.shortTime(twentyFour: true), "22:30")
         XCTAssertEqual(AccountTime.calendar.component(.day, from: at), 16, "the day before, in New York")
         XCTAssertTrue(RecordView.dayTitle(at).hasPrefix("Thursday"), RecordView.dayTitle(at))
         AccountTime.use("Asia/Tokyo")
-        XCTAssertEqual(at.shortTime, "12:30")
+        XCTAssertEqual(at.shortTime(twentyFour: true), "12:30")
         XCTAssertEqual(AccountTime.calendar.component(.day, from: at), 17)
         XCTAssertTrue(RecordView.dayTitle(at).hasPrefix("Friday"), RecordView.dayTitle(at))
         AccountTime.use("Not/AZone")
-        XCTAssertEqual(at.shortTime, "03:30", "a zone this device doesn't know is UTC, KIFF's default")
+        XCTAssertEqual(at.shortTime(twentyFour: true), "03:30", "a zone this device doesn't know is UTC, KIFF's default")
         AccountTime.use(nil)
         XCTAssertEqual(AccountTime.zone, TimeZone.current, "no account: this device's")
+    }
+
+    /// Every time of day follows the device's 12- or 24-hour setting, as the chat's stamps do (kiff/tafs#2195): the
+    /// decision line, "next run at" and "halted since" never read "23:22" beside a chat's "11:21 PM".
+    func testEveryTimeOfDayFollowsTheDevicesClockAsTheChatDoes() {
+        let at = Date(timeIntervalSince1970: 1_737_084_600) // 03:30 UTC
+        AccountTime.use("America/New_York")
+        defer { AccountTime.use(nil) }
+        XCTAssertEqual(at.shortTime(twentyFour: true), ChatTime.time(at, zone: AccountTime.zone, twentyFour: true))
+        XCTAssertEqual(at.shortTime(twentyFour: false), ChatTime.time(at, zone: AccountTime.zone, twentyFour: false))
+        XCTAssertEqual(at.shortTime, ChatTime.time(at, zone: AccountTime.zone), "the device's own setting, as the chat")
+        XCTAssertNotEqual(at.shortTime(twentyFour: false), at.shortTime(twentyFour: true))
+        XCTAssertTrue(at.shortTime(twentyFour: false).contains("10:30"), at.shortTime(twentyFour: false))
+        let zone = TimeZone(identifier: "America/New_York")!
+        XCTAssertTrue(HoldNotification.time(at, in: zone, twentyFour: false).hasPrefix(ChatTime.time(at, zone: zone, twentyFour: false)))
+        XCTAssertTrue(HoldNotification.time(at, in: zone, twentyFour: true).hasPrefix("22:30"))
     }
 
     /// When the account's clock isn't this device's, a hold's deadline and the Record's

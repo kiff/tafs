@@ -155,6 +155,8 @@ targets:
       - path: Tafs/Model
         excludes: [SetupShape.swift]
       - Tafs/Services/HoldNotification.swift
+      # The chat's own clock (the device's 12- or 24-hour setting), which every time of day follows (kiff/tafs#2195).
+      - WatchShared/ChatTime.swift
       # The lost-key words name this device's Face ID or Touch ID (KIFFClient.approvalKeyLost).
       - Tafs/Services/BiometryName.swift
       # The app's words: Model and KIFF read them, and the extension's own bundle needs the catalog.

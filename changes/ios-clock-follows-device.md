@@ -1,0 +1,1 @@
+- **iPhone and iPad: every time of day follows the device's 12- or 24-hour clock.** The decision line under a held call, "next run at", "halted since", the hold alert's deadline and the other times now use the chat's own clock, so a screen never shows "11:21 PM" beside "23:22" (kiff/tafs#2195; docs/chat.md).
