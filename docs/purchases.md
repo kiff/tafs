@@ -59,7 +59,7 @@ calls:
 - **The case's id, version or digest isn't one** (an id outside `[A-Za-z0-9_-]{1,128}`, a version
   below 1, a digest that isn't 64 lower-case hex): no answer can be signed. The card says "This
   purchase can't be read, so it can't be approved." (`purchase.unreadable`) and offers nothing.
-- **The case is read but its words aren't** (no `title`, `total` or `prompt`, or an item without
+- **The case is read but its words aren't** (no `title`, `total`, `delivery` or `prompt`, or an item without
   a name or amount): the card says the same, and offers **Refuse** only, signed with the case's
   line.
 - **No block, or `null`:** any other held call, drawn as before.

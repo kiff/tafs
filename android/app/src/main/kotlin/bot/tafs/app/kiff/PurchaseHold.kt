@@ -30,7 +30,7 @@ object PurchaseHold {
 
   /**
    * Reads a hold's `purchase` block. Null when there's none (JSON null or absent). A block whose id, version or digest isn't one,
-   * or whose title, total, prompt or approve words are missing, is [Read.Unreadable]: drawn as such, never approved.
+   * or whose title, total, delivery address or prompt is missing, is [Read.Unreadable]: drawn as such, never approved.
    */
   fun read(block: JsonElement?): Read? {
     if (block == null || block is JsonNull) return null
@@ -47,7 +47,9 @@ object PurchaseHold {
     val title = w.text("title")?.let(KiffMapping::visible)?.takeIf { it.isNotBlank() }
     val total = w.text("total")?.let(KiffMapping::visible)?.takeIf { it.isNotBlank() }
     val prompt = w.text("prompt")?.let(KiffMapping::visible)?.takeIf { it.isNotBlank() }
-    if (title == null || total == null || prompt == null) return Read.Unreadable(line)
+    // The delivery address is signed with the case: a purchase drawn without it isn't the case approved.
+    val delivery = w.text("delivery")?.let(KiffMapping::visible)?.takeIf { it.isNotBlank() }
+    if (title == null || total == null || prompt == null || delivery == null) return Read.Unreadable(line)
     val lines = (w["lines"] as? JsonArray).orEmpty().map { e ->
       val l = e as? JsonObject ?: return Read.Unreadable(line)
       PurchaseLine(
@@ -68,7 +70,7 @@ object PurchaseHold {
       PurchaseApproval(
         caseId = caseId, version = version, digest = digest,
         words = PurchaseWords(
-          title = title, subtitle = say("subtitle"), total = total, totalNote = say("total_note"), delivery = say("delivery"),
+          title = title, subtitle = say("subtitle"), total = total, totalNote = say("total_note"), delivery = delivery,
           showMore = say("show_more"), lines = lines, charges = charges, priceRule = say("price_rule"), grant = say("grant"),
           buysNow = say("buys_now"), nothingUntil = say("nothing_until"), reason = say("reason"), prompt = prompt,
         ),

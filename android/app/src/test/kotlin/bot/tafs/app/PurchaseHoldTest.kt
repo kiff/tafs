@@ -179,6 +179,10 @@ class PurchaseHoldTest {
     assertTrue(auth.asked.isEmpty())
     assertTrue(m.answer(call, Answer.Refuse))
 
+    // No delivery address: it's signed with the case, so the words aren't the case's.
+    val noDelivery = PurchaseHold.read(KiffClient.json.parseToJsonElement(approval.toString().replace(Regex(""""delivery":"[^"]*","""), "")))
+    assertTrue(noDelivery is PurchaseHold.Read.Unreadable && noDelivery.line != null)
+
     // A digest that isn't one: no line can be signed, so nothing is answered at all.
     assertEquals(PurchaseHold.Read.Unreadable(null), PurchaseHold.read(KiffClient.json.parseToJsonElement(approval.toString().replace(Regex("\"digest\":\"[0-9a-f]+\""), "\"digest\":\"x\""))))
     assertEquals(PurchaseHold.Read.Unreadable(null), PurchaseHold.read(KiffClient.json.parseToJsonElement("\"not an object\"")))

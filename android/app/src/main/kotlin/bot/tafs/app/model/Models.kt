@@ -586,7 +586,8 @@ data class PurchaseWords(
   val subtitle: String? = null,
   val total: String,
   val totalNote: String? = null,
-  val delivery: String? = null,
+  /** Where it's delivered: signed with the case, so a purchase without it isn't drawn. */
+  val delivery: String,
   val showMore: String? = null,
   val lines: List<PurchaseLine> = emptyList(),
   val charges: List<PurchaseCharge> = emptyList(),

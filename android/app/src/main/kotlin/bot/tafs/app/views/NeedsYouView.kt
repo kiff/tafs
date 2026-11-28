@@ -533,7 +533,7 @@ internal fun PurchaseFace(p: bot.tafs.app.model.PurchaseApproval) {
     w.subtitle?.let { Text(it, style = scaled(13, color = Theme.soft)) }
     Text(w.total, style = scaled(44, FontWeight.Bold, Theme.ink, display = true))
     w.totalNote?.let { Text(it, style = scaled(13, color = Theme.soft)) }
-    w.delivery?.let { Text(it, style = scaled(14, color = Theme.ink)) }
+    Text(w.delivery, style = scaled(14, color = Theme.ink))
     if (w.lines.isNotEmpty() || w.charges.isNotEmpty()) {
       Text(
         w.showMore ?: if (open) Words.NeedsYou.detailsOpen else Words.NeedsYou.detailsClosed,

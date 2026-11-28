@@ -77,7 +77,7 @@ class PurchaseCardTest {
     val call = held()
     draw(call)
     val w = call.purchase!!.words
-    for (line in listOf(w.title, w.total, w.delivery!!, w.priceRule!!, w.grant!!, w.buysNow!!, w.nothingUntil!!)) {
+    for (line in listOf(w.title, w.total, w.delivery, w.priceRule!!, w.grant!!, w.buysNow!!, w.nothingUntil!!)) {
       compose.onNodeWithText(line).assertExists()
     }
     // The Card's own reason, as KIFF words it for a purchase, not the hold's generic one.
