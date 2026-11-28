@@ -3738,6 +3738,12 @@ async function markSteps(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     // owner spent a fingerprint on another taf's read-only approval).
     if (grant) {
       const earlier = await earlierFirst(event, me, taf, c, grant, draft, deps);
+      if (earlier === READ_AGAIN) {
+        // Whether this conversation asked for it can't be read now: drawn with nothing to sign, so no fingerprint is
+        // spent on it, and a tap reads it again (decide's own read_again).
+        c.component = { ...card, signs: { card: false, takes: "none" } };
+        continue;
+      }
       if (earlier) {
         c.answer = earlier;
         continue;
@@ -3999,7 +4005,9 @@ const earlierFirstKeys = {
  * per card, across phones and reads (a claim, then the answer kept), as rulesFirst is; a person who can't manage Cards or
  * hasn't agreed to AI use sees the card as before, and the tap refuses it.
  */
-async function earlierFirst(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadComponent, grant: ApprovalGrant, draft: string | undefined, deps: Deps): Promise<CardAnswer | undefined> {
+const READ_AGAIN = Symbol("read again");
+
+async function earlierFirst(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadComponent, grant: ApprovalGrant, draft: string | undefined, deps: Deps): Promise<CardAnswer | typeof READ_AGAIN | undefined> {
   if (!deps.coach || !me.capabilities.includes("cards.manage")) return undefined;
   if (grant.status !== "pending" && grant.status !== "approved") return undefined;
   const component = String((c.component as { id?: unknown })?.id ?? "");
@@ -4018,6 +4026,7 @@ async function earlierFirst(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: Thr
   } catch {
     return undefined;
   }
+  if (out?.outcome === "read_again") return READ_AGAIN;
   if (!out || out.outcome !== "answered") return undefined;
   const claim = earlierFirstKeys.claim(me.tenantID, c.session, component);
   const kept = new Date(now.getTime() + PRECHECK_KEPT_MS);

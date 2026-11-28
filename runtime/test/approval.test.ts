@@ -945,6 +945,23 @@ describe("a half-made connection from an earlier conversation: resumed only for 
     expect(settledApprovalAnswer(String(told?.answer))).toBe("asked again");
   });
 
+  it("a card whose conversation start can't be read is drawn with nothing to sign, and nothing is told", async () => {
+    const CHAT = `/v1/tafs/${COACH}/conversation`;
+    const s = services();
+    const g = resumed();
+    s.grants = [g];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "another-taf-a1b2c3d4", cards: CARD("refund") };
+    const w = await world(s, { draft: "drf_1" });
+    const sess = (w.agents.sessions as Array<{ id: string; started?: string }>).find((x) => x.id === w.stored.session)!;
+    delete sess.started;
+    const read = await w.call("GET", CHAT, undefined);
+    const a1 = (read.body.components as Array<{ component: { id?: string; signs?: { card?: boolean; takes?: string } }; answer?: unknown }>).find((c) => c.component.id === "a1");
+    // Never offered with a fingerprint while it can't be told whether this conversation asked for it.
+    expect(a1?.answer).toBeUndefined();
+    expect(a1?.component.signs).toEqual({ card: false, takes: "none" });
+    expect(w.told()).toBeUndefined();
+  });
+
   it("this conversation's own connection, or its taf's under its Card, is drawn with Approve as before", async () => {
     const CHAT = `/v1/tafs/${COACH}/conversation`;
     const s = services();
