@@ -6009,6 +6009,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.tafs.held.get(`t_acme#${RAE}`)?.work?.sources).toEqual([folder, sheet]);
   });
 
+  // Browser batch 2: how a taf browses is its version's, Coach's pick a code, and the live taf takes it once installed.
+  it("keeps an improvement's pick of the way on its version, on the taf once installed, and refuses a reason of Coach's own", async () => {
+    const better = { type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Runs in the cloud browser", browse: { way: "cloud", reason: "schedule", time: "08:00" } } };
+    const { w, note, answer } = await paused(better);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note();
+    const n = (answer() as { answer: { version: number } }).answer.version;
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.browse).toBeUndefined();
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.browseBy).toEqual({ [String(n)]: { way: "cloud", reason: "schedule", time: "08:00" } });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.browse).toEqual({ way: "cloud", reason: "schedule", time: "08:00" });
+    const own = await paused({ ...better, taf: { ...better.taf, browse: { way: "cloud", reason: "Because it runs at night." } } });
+    own.w.agents.access.set("u_ana", { cards_manage: true });
+    await own.note();
+    expect(own.answer()).toMatchObject({ answer: { failed: expect.stringContaining("never your own words") } });
+  });
+
   it("refuses an improvement's sources with no id, or for a starter job's taf, with words Coach can act on", async () => {
     const noID = await paused({ type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Logs in Orders", sources: [{ kind: "sheet", name: "Orders" }] } });
     noID.w.agents.access.set("u_ana", { cards_manage: true });

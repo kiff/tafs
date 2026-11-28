@@ -1,4 +1,4 @@
-import { browsingOf, waysView } from "./browse.js";
+import { type Browse, browseOf, browsingOf, waysView } from "./browse.js";
 import { checkMisfitSeen } from "./checkseen.js";
 import { anotherConnectionsTool, connectionsOfJob, connectionTail, grantSuffix, rulesAgreement } from "./rules.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
@@ -466,6 +466,13 @@ export interface Taf {
    * version that has none. A version from before this was kept, not listed, keeps the sources the taf has.
    */
   sourcesBy?: Record<string, Source[]>;
+  /**
+   * How it browses, as Coach picked it (browse.ts): the way and a reason from a closed list, never Coach's words. Its
+   * setup shows the reason only while it's for the way its browser grant has. `browseBy` keeps each version's, as
+   * `sourcesBy` does: the live one's becomes `browse` when it goes live.
+   */
+  browse?: Browse;
+  browseBy?: Record<string, Browse>;
   /**
    * Where its results go (docs/reliability.md): through the door the work came in on, a line
    * in the app, an email to the owner. Absent: the door's reply alone, as before.
@@ -1695,6 +1702,9 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   try { writesFor = writesForOf(body.writes_for); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   // No one named: the account's company, as KIFF names it (gap 18), never "for the company".
   writesFor ??= me.companyName ?? await companyOf(me.tenantID, deps);
+  // How it browses, as Coach picked it: a way and a reason from the closed list (browse.ts), refused otherwise.
+  let browse: Browse | undefined;
+  try { browse = browseOf(body.browse); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   if (body.job === undefined || body.job === CUSTOM) {
     const kickoff = str(body.kickoff).trim();
     if (!kickoff || kickoff.length > MAX_KICKOFF) throw new HTTPError(400, `a job of its own says what each run does (kickoff), in ${MAX_KICKOFF} characters at most`);
@@ -1830,7 +1840,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
     budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def), color,
     ...(unscheduled ? { unscheduled: true } : {}), ...(summary ? { summary } : {}), ...(work ? { work } : {}), ...(disclose?.length ? { disclose } : {}),
     ...(writesFor ? { writesFor } : {}), ...(ownerLang !== "en" ? { ownerLang } : {}), ...(workCheck ? { check: workCheck } : {}),
-    ...(tools.length ? { tools } : {}), ...(recipe ? { recipe } : {}),
+    ...(tools.length ? { tools } : {}), ...(recipe ? { recipe } : {}), ...(browse ? { browse } : {}),
   };
   try {
     await deps.agents.putAgent(me.tenantID, tafID, def);
@@ -5682,6 +5692,9 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   try { sources = sourcesOf(body.sources); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   if (sources && taf.job !== CUSTOM) throw new HTTPError(409, "a starter job's taf works from what its job names: only a taf with its own job takes sources");
   const built = sources ? { ...taf, work: { ...taf.work!, ...(sources.length ? { sources } : { sources: undefined }) } } : taf;
+  // How it browses under this version, when the improvement says (Coach's pick changed with the way): kept per version.
+  let browse: Browse | undefined;
+  try { browse = browseOf(body.browse); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   let def: AgentDefinition;
   try {
     // An improvement's sender name is this version's: the live taf takes it once it's installed (keepNotes).
@@ -5699,7 +5712,7 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   const listed = (summary && !taf.summaries) || (kept && !taf.sourcesBy) ? (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions : undefined;
   const live = listed ? listed.find((v) => v.live)?.n ?? (listed.length === 0 ? 1 : undefined) : undefined;
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", by_kind: "agent", ...(draft ? { draft } : {}) }));
-  if (from || tryWith || summary || kept) {
+  if (from || tryWith || summary || kept || browse) {
     // Kept so the same result hands over this version again, with what to
     // try it with and what it does. A record that changed meanwhile is read again once.
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -5709,7 +5722,9 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
       const summaries = summary ? { ...(live !== undefined && cur.summaries?.[String(live)] === undefined ? { [String(live)]: cur.summary ?? "" } : {}), ...cur.summaries, [String(n)]: summary } : undefined;
       // The live version keeps what it works from too, [] for nothing, so going back to it brings that back.
       const sourcesBy = kept ? { ...(live !== undefined && cur.sourcesBy?.[String(live)] === undefined ? { [String(live)]: cur.work?.sources ?? [] } : {}), ...cur.sourcesBy, [String(n)]: kept } : undefined;
-      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}), ...(sourcesBy ? { sourcesBy } : {}) };
+      // A version that says how it browses keeps it; the live one's own pick is kept first, so going back brings it back.
+      const browseBy = browse ? { ...(live !== undefined && cur.browse && cur.browseBy?.[String(live)] === undefined ? { [String(live)]: cur.browse } : {}), ...cur.browseBy, [String(n)]: browse } : undefined;
+      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}), ...(sourcesBy ? { sourcesBy } : {}), ...(browseBy ? { browseBy } : {}) };
       if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
     }
   }
@@ -6261,13 +6276,16 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const sources = taf.sourcesBy?.[String(n)];
     if (sources && named.work) named.work = { ...named.work, ...(sources.length ? { sources } : { sources: undefined }) };
     if (named.work && !named.work.sources) delete named.work.sources;
+    // How it browses is the live version's, when one said it.
+    const pick = taf.browseBy?.[String(n)];
+    if (pick) named.browse = pick;
     const next: Taf = { ...named, definition: digest(definition(taf.id, jobOf(named), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
     const summary = taf.summaries?.[String(n)];
     if (summary) next.summary = summary; else if (summary === "") delete next.summary;
     if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition || next.summary !== taf.summary || next.writesFor !== taf.writesFor || next.ownerLang !== taf.ownerLang ||
-      JSON.stringify(next.work?.sources ?? []) !== JSON.stringify(taf.work?.sources ?? [])) await deps.tafs.putIf(me.tenantID, next, taf);
+      JSON.stringify(next.work?.sources ?? []) !== JSON.stringify(taf.work?.sources ?? []) || JSON.stringify(next.browse) !== JSON.stringify(taf.browse)) await deps.tafs.putIf(me.tenantID, next, taf);
   } catch (err) {
     // The switch stands; the next switch, or the upgrade's read-back, catches the record up.
     console.error(`keep notes: ${taf.id} v${n}:`, err);
@@ -11119,7 +11137,7 @@ export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; p
  * the card with. Throws only what may pass on a retry (a server error).
  */
 /** What an improvement result names: the taf it improves, and the version it describes. */
-interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; writes_for?: unknown; sources?: unknown; tools?: string[] }
+interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; writes_for?: unknown; sources?: unknown; browse?: unknown; tools?: string[] }
 
 /**
  * The version an improvement result hands over, made once per result for the person whose run it
@@ -11179,6 +11197,7 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
     const { version } = await makeVersion({
       note: want.note, notes: want.notes, draft: want.draft, try: want.try, agent: want.agent, from: `${cardID}|${what}`, ...(writesFor ? { writes_for: writesFor } : {}),
       ...(want.sources !== undefined ? { sources: want.sources } : {}),
+      ...(want.browse !== undefined ? { browse: want.browse } : {}),
       ...(typeof want.summary === "string" ? { summary: want.summary } : {}),
     }, me, taf, deps);
     return { version };
@@ -11206,7 +11225,7 @@ async function sendingCheck(tenant: string, agent: string | undefined, tools: st
  * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` with the `check` its schedule reads first, or `unscheduled`. A `job` naming
  * one of the five starter jobs is refused (makeTaf), and Coach is told why.
  */
-interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; sources?: unknown; cron?: string; check?: unknown; disclose?: unknown; writes_for?: unknown; tools?: string[]; recipe?: unknown }
+interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; sources?: unknown; cron?: string; check?: unknown; disclose?: unknown; writes_for?: unknown; browse?: unknown; tools?: string[]; recipe?: unknown }
 
 async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
@@ -11241,6 +11260,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       ...(taf.check !== undefined ? { check: taf.check } : {}),
       ...(Array.isArray(taf.disclose) ? { disclose: taf.disclose } : {}),
       ...(typeof taf.writes_for === "string" ? { writes_for: taf.writes_for } : {}),
+      ...(taf.browse !== undefined ? { browse: taf.browse } : {}),
       ...(taf.tools ? { tools: taf.tools } : {}),
       // The recipe Coach built it from, when the result names one: kept for its estimate.
       ...(typeof taf.recipe === "string" ? { recipe: taf.recipe } : {}),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { browsingOf, wayFields, wayOf, waysView } from "../src/cloud/browse.js";
+import { browseOf, browsingOf, reasonWords, wayFields, wayOf, waysView } from "../src/cloud/browse.js";
 import type { GrantView } from "../src/cloud/taf-setup.js";
 
 const cloud: GrantView = { id: "g_cloud", status: "connected", provider: "browser", request: { agent: "files", browser: { sites: ["supplier-portal.example"] } } };
@@ -40,5 +40,38 @@ describe("the two ways a taf browses", () => {
     expect(browsingOf({ name: "Month end" }, [chrome])?.switch).toEqual({ words: { button: "Use the cloud browser instead" },
       ask: "Change Month end to use the cloud browser for books.example." });
     expect(browsingOf({ name: "Mail" }, [mail])).toBeUndefined();
+  });
+});
+
+// Coach's pick is a code from a closed list, worded by tafs cloud, never Coach's own sentence on an owner's row.
+describe("Coach's pick of the way", () => {
+  it("takes a way with a reason that goes with it, and the time for a schedule", () => {
+    expect(browseOf({ way: "cloud", reason: "schedule", time: "08:00" })).toEqual({ way: "cloud", reason: "schedule", time: "08:00" });
+    expect(browseOf({ way: "cloud", reason: "door" })).toEqual({ way: "cloud", reason: "door" });
+    expect(browseOf({ way: "chrome", reason: "signed_in", time: "08:00" })).toEqual({ way: "chrome", reason: "signed_in" });
+    expect(browseOf(undefined)).toBeUndefined();
+  });
+
+  it("refuses a way it doesn't know, a reason of Coach's own, a reason for the other way, and a schedule with no time", () => {
+    expect(() => browseOf({ way: "hosted", reason: "door" })).toThrow(/way is "cloud"/);
+    expect(() => browseOf({ way: "cloud", reason: "Because it runs at night." })).toThrow(/never your own words/);
+    expect(() => browseOf({ way: "chrome", reason: "schedule", time: "08:00" })).toThrow(/goes with cloud, not chrome/);
+    expect(() => browseOf({ way: "cloud", reason: "schedule" })).toThrow(/HH:MM/);
+    expect(() => browseOf({ way: "cloud", reason: "schedule", time: "8am" })).toThrow(/HH:MM/);
+  });
+
+  it("words each reason in tafs cloud's words", () => {
+    expect(reasonWords({ way: "cloud", reason: "schedule", time: "08:00" }, "File invoices")).toBe("Coach chose the cloud browser because File invoices runs at 08:00, when you may be away.");
+    expect(reasonWords({ way: "chrome", reason: "occasional" }, "Month end")).toBe("Coach chose your Chrome because Month end runs only when you ask.");
+  });
+
+  it("shows the reason on the taf's setup only while it's for the way its grant has", () => {
+    const picked = browsingOf({ name: "File invoices", browse: { way: "cloud", reason: "schedule", time: "08:00" } }, [cloud]);
+    expect(picked).toMatchObject({ way: "cloud", reason: "schedule", chosen_by: "coach", why: "Coach chose the cloud browser because File invoices runs at 08:00, when you may be away." });
+    // The owner moved it to their Chrome since: Coach's cloud reason says nothing about it.
+    const moved = browsingOf({ name: "File invoices", browse: { way: "cloud", reason: "schedule", time: "08:00" } }, [chrome]);
+    expect(moved?.way).toBe("chrome");
+    expect(moved).not.toHaveProperty("why");
+    expect(moved).not.toHaveProperty("reason");
   });
 });

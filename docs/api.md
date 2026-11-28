@@ -426,9 +426,9 @@ Coach picks the way for a taf's browsing by its job. A taf that runs on a schedu
 away, gets `cloud`. A taf that needs the sign-ins already in the owner's Chrome, or that runs only when they ask, gets
 `chrome`. The owner can change it (above).
 
-- **Coach's result for a taf with a browser connection** carries `browse: {way, reason}`. `reason` is a code from a
-  closed list, never Coach's sentence. tafs cloud refuses a result whose `way` isn't its browser grant's, or whose `reason`
-  isn't one of these:
+- **Coach's result for a taf with a browser connection** carries `browse: {way, reason, time?}`. `reason` is a code from a
+  closed list, never Coach's sentence. `time` ("HH:MM", the account's zone) is required with `schedule`. tafs cloud refuses
+  a `way` it doesn't know, a `reason` that isn't one of these, and a reason that doesn't go with its way:
 
   | `reason` | `way` | Words (tafs cloud's) |
   |---|---|---|
@@ -437,6 +437,11 @@ away, gets `cloud`. A taf that needs the sign-ins already in the owner's Chrome,
   | `signed_in` | `chrome` | "Coach chose your Chrome because {taf} needs the sign-ins already in it." |
   | `occasional` | `chrome` | "Coach chose your Chrome because {taf} runs only when you ask." |
 
+- **Matching the grant:**
+  - Coach's result is checked against the browser grant's way once planque's account connections say a browser grant's
+    `driver`.
+  - Until then, the setup shows the reason only while it's for the way the grant has. The setup reads the grant with the
+    phone's proof, so a pick that doesn't match is never shown, and nothing is refused on a guess.
 - **The taf's setup** (`GET /v1/tafs/{id}/setup`) shows `browsing: {sites, way, way_words, reason, why, chosen_by:
   "coach", switch}`. `why` is the reason's words. The reason belongs to the version: a new version without `browse` keeps
   it, and one with `browse` replaces it.
