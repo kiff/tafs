@@ -879,6 +879,24 @@ private fun EndedLine(end: ChatEnd, taf: String, onRetry: (String) -> Unit) {
 /** The taf is working on an answer: dots where its words will be. */
 @Composable
 private fun TypingDots() {
+  // With the phone's animations off, the dots stand still and read as stuck: words instead, counting the time a second at a
+  // time ("Thinking · 3 s"), as the working line does.
+  if (!remember { android.animation.ValueAnimator.areAnimatorsEnabled() }) {
+    val started = remember { System.currentTimeMillis() }
+    var now by remember { androidx.compose.runtime.mutableLongStateOf(started) }
+    LaunchedEffect(Unit) {
+      while (true) {
+        kotlinx.coroutines.delay(1_000)
+        now = System.currentTimeMillis()
+      }
+    }
+    Text(
+      "${Words.Chat.thinking} · ${Chat.elapsed(now - started)}",
+      style = scaled(13, color = Theme.dim),
+      modifier = Modifier.padding(vertical = 6.dp).semantics { contentDescription = Words.Chat.answering },
+    )
+    return
+  }
   val transition = rememberInfiniteTransition(label = "typing")
   val phase by transition.animateFloat(
     initialValue = 0f,
