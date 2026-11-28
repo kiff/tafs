@@ -276,7 +276,7 @@ fun NeedsYouView(
       items(state.held, key = { it.id }) { call -> HeldCallCard(call, state, onAnswer) }
       // A step a taf handed its owner in the hosted browser, in tafs cloud's words: Open asks planque for its live view.
       if (onYourTurn != null) items(turns, key = { "yt|" + it.hand }) { turn -> YourTurnPanel(turn, busy = state.answeringTurn != null, answer = onYourTurn) }
-      if (onSignIn != null) items(state.signIns, key = { "si|" + it.grant + "|" + it.site }) { item ->
+      if (onSignIn != null) items(state.signIns, key = { "si|" + it.key }) { item ->
         SignInPanel(item, busy = state.answeringSignIn != null, answer = onSignIn)
       }
       // Its knocks are answered on Activity (Do it, Pair them, Ignore), so the row opens the taf there, not on Chat.
@@ -631,7 +631,7 @@ enum class SignInAnswer { SignIn, Later, Skip }
 internal fun SignInPanel(item: bot.tafs.app.kiff.SignInItem, busy: Boolean, answer: (bot.tafs.app.kiff.SignInItem, SignInAnswer) -> Unit) {
   val w = item.words
   val tone = if (item.stopped) Theme.no else Theme.amber
-  Panel(stroke = tone.copy(alpha = 0.45f), modifier = Modifier.testTag("sign-in-" + item.grant + "-" + item.site)) {
+  Panel(stroke = tone.copy(alpha = 0.45f), modifier = Modifier.testTag("sign-in-" + item.key)) {
     Text(bot.tafs.app.kiff.KiffMapping.visible(w.title), style = scaled(15, FontWeight.SemiBold, Theme.ink))
     if (w.line.isNotBlank()) Text(bot.tafs.app.kiff.KiffMapping.visible(w.line), style = scaled(14, color = Theme.ink))
     PrimaryButton(w.signIn, { answer(item, SignInAnswer.SignIn) }, Modifier.fillMaxWidth(), enabled = !busy)

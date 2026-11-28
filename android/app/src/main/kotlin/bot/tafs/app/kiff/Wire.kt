@@ -195,6 +195,12 @@ data class SignInItem(
 ) {
   val stopped: Boolean get() = kind == STOPPED
 
+  /**
+   * One row each: tafs cloud sends no id, and two tafs on one site are two items (each its own run held, or its own soon item), so
+   * the row is its kind, connection, site and taf together.
+   */
+  val key: String get() = listOf(kind, grant, site, taf?.id.orEmpty()).joinToString("|")
+
   companion object {
     const val SOON = "sign_in_soon"
     const val STOPPED = "sign_in_stopped"
@@ -212,13 +218,17 @@ data class SignInItemWords(
   val why: String = "",
 )
 
-/** Sign-in items read one at a time: one of a kind this build doesn't know, or without its words, is left out. */
+/**
+ * Sign-in items read one at a time: one of a kind this build doesn't know, or without what its buttons need, is left out. Later
+ * needs the site and its word; Skip this run needs the taf whose run it skips. A repeat of a row already read is left out too.
+ */
 internal object EachSignInItem : EachReadable<SignInItem>(SignInItem.serializer()) {
   override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): List<SignInItem> =
     super.deserialize(decoder).filter {
-      it.grant.isNotBlank() && it.words.title.isNotBlank() && it.words.signIn.isNotBlank() &&
-        ((it.kind == SignInItem.SOON && it.words.later.isNotBlank()) || (it.kind == SignInItem.STOPPED && it.words.skip.isNotBlank()))
-    }
+      it.grant.isNotBlank() && it.site.isNotBlank() && it.words.title.isNotBlank() && it.words.signIn.isNotBlank() &&
+        ((it.kind == SignInItem.SOON && it.words.later.isNotBlank()) ||
+          (it.kind == SignInItem.STOPPED && it.words.skip.isNotBlank() && !it.taf?.id.isNullOrBlank()))
+    }.distinctBy { it.key }
 }
 
 /** tafs cloud's words: "Your turn on {site}", the taf's ask in quotes, "Open until {HH:MM}", Open and Not now. */

@@ -67,6 +67,24 @@ class SignInHealthTest {
     assertEquals("Skip this run", items[1].words.skip)
   }
 
+  @Test fun twoTafsHeldOnOneSiteAreTwoRowsAndARepeatIsOne() = runTest {
+    // Two tafs on the same connection and site each hold their own run: two rows, two keys. The same item twice is one row.
+    val other = stopped.replace("taf_2", "taf_3").replace("VAT return", "Payroll")
+    reads("[$stopped,$other,$stopped]")
+    val items = model().state.value.signIns
+    assertEquals(listOf("taf_2", "taf_3"), items.map { it.taf?.id })
+    assertEquals(2, items.map { it.key }.toSet().size)
+  }
+
+  @Test fun aStoppedItemWithNoTafHasNoSkipToDrawAndIsLeftOut() = runTest {
+    // Skip this run skips one taf's run: without the taf there's nothing for it to send, so the row isn't drawn at all.
+    val noTaf = stopped.replace(""""taf":{"id":"taf_2","name":"VAT return"},""", "")
+    val blankTaf = stopped.replace(""""id":"taf_2"""", """"id":""""")
+    val noSite = soon.replace(""""site":"supplier-portal.example",""", "")
+    reads("[$noTaf,$blankTaf,$noSite,$soon]")
+    assertEquals(listOf("g_7"), model().state.value.signIns.map { it.grant })
+  }
+
   @Test fun eachCountsInNeedsYouWhenTafsCloudSendsNoCount() = runTest {
     reads("[$soon,$stopped]")
     assertEquals(2, model().state.value.needsYouCount)

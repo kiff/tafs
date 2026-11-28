@@ -1590,8 +1590,10 @@ word is tafs cloud's; the app works out nothing: not which way, not "soon", not 
 - **Needs you** lists Home's `sign_ins[]` (`SignInPanel`): `sign_in_soon` with Sign in again and Later, and `sign_in_stopped`
   (a run waits) with Sign in again and Skip this run, each in tafs cloud's words, with its `why` under them. Later is
   `POST /v1/needs-you/sign-in/{grant}/{site}/later` and Skip this run `POST /v1/tafs/{id}/held-sign-in/skip`, each read again
-  after (`AppModel.signInLater`, `skipHeldRun`). An item of a kind this build doesn't know, or without its words, isn't drawn;
-  each counts in the app's own count when tafs cloud sends none.
+  after (`AppModel.signInLater`, `skipHeldRun`). An item of a kind this build doesn't know, or without what its buttons need
+  (its site, its words, and for Skip this run the taf whose run it skips), isn't drawn. Each row is its kind, connection,
+  site and taf together (`SignInItem.key`), so two tafs held on one site are two rows; the same item sent twice is one.
+  Each counts in the app's own count when tafs cloud sends none.
 - **Not yet:** the taf's setup (`connections[].way`, its sites' health, `browsing` and its switch button) comes next.
 
 ## Help: Chrome and the emailed code (Android follows)

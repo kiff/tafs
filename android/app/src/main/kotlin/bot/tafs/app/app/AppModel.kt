@@ -4925,8 +4925,6 @@ class AppModel(
   fun closeSiteSignIn() = _state.update { it.copy(siteSignIn = null) }
 
   /** A sign-in item's key: its connection and site. */
-  private fun signInKey(item: bot.tafs.app.kiff.SignInItem) = item.grant + "|" + item.site
-
   /** Later on a sign-in that needs the owner soon: tafs cloud hides it for the whole account until the next check. */
   suspend fun signInLater(item: bot.tafs.app.kiff.SignInItem): Boolean = answerSignIn(item) { cloud.signInLater(item.grant, item.site) }
 
@@ -4939,7 +4937,7 @@ class AppModel(
   private suspend fun answerSignIn(item: bot.tafs.app.kiff.SignInItem, call: suspend () -> Unit): Boolean {
     if (_state.value.mode != Mode.kiff || _state.value.answeringSignIn != null) return false
     val generation = accountGeneration
-    _state.update { it.copy(answeringSignIn = signInKey(item)) }
+    _state.update { it.copy(answeringSignIn = item.key) }
     try {
       call()
       if (generation != accountGeneration) return false
