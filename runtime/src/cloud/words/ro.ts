@@ -188,7 +188,7 @@ export const ro: Words = {
   browse_reason_occasional: (taf) => `Coach a ales Chrome-ul dvs. pentru că ${taf} rulează doar când cereți.`,
   browse_health_signed_in_today: (time) => `Conectat · verificat azi la ${time}`,
   browse_health_signed_in_on: (day) => `Conectat · verificat pe ${day}`,
-  browse_health_soon: (day) => `Aveți nevoie să interveniți până pe ${day}`,
+  browse_health_soon: (day) => `Trebuie să interveniți până pe ${day}`,
   browse_health_stopped: (time) => `S-a oprit la ${time}`,
   browse_health_unknown: "Neverificat",
   browse_health_why_soon: (time, day) => `La ${time}, tafs a deschis o pagină a site-ului cu conectarea dvs. salvată, fără să facă clic pe nimic. Site-ul a setat ca această conectare să expire pe ${day}.`,

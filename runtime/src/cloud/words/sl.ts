@@ -188,7 +188,7 @@ export const sl: Words = {
   browse_reason_occasional: (taf) => `Coach je izbral vaš Chrome, ker se ${taf} zažene samo, ko to zahtevate.`,
   browse_health_signed_in_today: (time) => `Prijavljeni · preverjeno danes ob ${time}`,
   browse_health_signed_in_on: (day) => `Prijavljeni · preverjeno ${day}`,
-  browse_health_soon: (day) => `Potrebujemo vas do ${day}`,
+  browse_health_soon: (day) => `Potrebna je vaša prijava do ${day}`,
   browse_health_stopped: (time) => `Nehalo delovati ob ${time}`,
   browse_health_unknown: "Ni preverjeno",
   browse_health_why_soon: (time, day) => `Ob ${time} je tafs odprl eno stran spletnega mesta z vašo shranjeno prijavo, ne da bi kar koli kliknil. Spletno mesto je nastavilo, da vaša shranjena prijava poteče ${day}.`,
