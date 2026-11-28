@@ -199,6 +199,7 @@
     <string name="billing_by_google_play">Naplaćuje Google Play</string>
     <string name="billing_by_kiff">Naplaćuje KIFF</string>
     <string name="billing_cancel_any_time_least_day">Otkažite bilo kada, najmanje dan prije obnove, u Pretplatama svojeg Apple računa.</string>
+    <string name="billing_confirming_purchase">Kupnja se potvrđuje…</string>
     <string name="billing_contact_support">KIFF ne može dodati ovu kupnju ovom računu. Platili ste je, pa se obratite podršci na support@kiff.dev i riješit ćemo to.</string>
     <string name="billing_conversation_goes_plan_tools_being">Kako razgovor teče, ovdje se prikazuju plan, aplikacije koje se povezuju i Card tafa.</string>
     <string name="billing_credits_buy">Krediti plaćaju izvođenja vaših tafova; mirna provjera, kad nema ničeg novog, ne troši nijedan. Solo uključuje Coacha za postavljanje oko 4 nova posla mjesečno.</string>

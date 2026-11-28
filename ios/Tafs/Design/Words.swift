@@ -409,6 +409,8 @@ enum Words {
         static var byKiff: String { Words.line("billing.by_kiff") }
         /// Cancel any time, at least a day before it renews, in your Apple account's Subscriptions.
         static var cancelAnyTimeLeastDay: String { Words.line("billing.cancel_any_time_least_day") }
+        /// Confirming the purchase…
+        static var confirmingPurchase: String { Words.line("billing.confirming_purchase") }
         /// KIFF can't add this purchase to this account. You paid for it, so contact support at support@kiff.dev and we'll sort it out.
         static var contactSupport: String { Words.line("billing.contact_support") }
         /// As the conversation goes, the plan, the apps being connected and the taf's Card show here.

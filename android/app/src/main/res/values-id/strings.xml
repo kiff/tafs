@@ -193,6 +193,7 @@
     <string name="billing_by_google_play">Ditagih oleh Google Play</string>
     <string name="billing_by_kiff">Ditagih oleh KIFF</string>
     <string name="billing_cancel_any_time_least_day">Batalkan kapan saja, minimal sehari sebelum diperpanjang, di Langganan akun Apple Anda.</string>
+    <string name="billing_confirming_purchase">Mengonfirmasi pembelian…</string>
     <string name="billing_contact_support">KIFF tidak dapat menambahkan pembelian ini ke akun ini. Anda sudah membayarnya, jadi hubungi dukungan di support@kiff.dev dan kami akan menyelesaikannya.</string>
     <string name="billing_conversation_goes_plan_tools_being">Seiring percakapan berjalan, paket, aplikasi yang sedang dihubungkan, dan Card taf muncul di sini.</string>
     <string name="billing_credits_buy">Kredit membayar proses taf Anda; pemeriksaan tenang, saat tidak ada yang baru, tidak memakai apa pun. Solo mencakup Coach untuk mengatur sekitar 4 pekerjaan baru sebulan.</string>

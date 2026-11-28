@@ -196,6 +196,7 @@
     <string name="billing_by_google_play">Google Play বিল করে</string>
     <string name="billing_by_kiff">KIFF বিল করে</string>
     <string name="billing_cancel_any_time_least_day">যেকোনো সময়, নবায়নের অন্তত একদিন আগে, আপনার Apple অ্যাকাউন্টের সাবস্ক্রিপশনে বাতিল করুন।</string>
+    <string name="billing_confirming_purchase">কেনাকাটা নিশ্চিত করা হচ্ছে…</string>
     <string name="billing_contact_support">KIFF এই কেনাকাটা এই অ্যাকাউন্টে যোগ করতে পারছে না। আপনি এর জন্য টাকা দিয়েছেন, তাই support@kiff.dev-এ সাপোর্টে যোগাযোগ করুন, আমরা সমাধান করব।</string>
     <string name="billing_conversation_goes_plan_tools_being">কথোপকথন এগোলে পরিকল্পনা, সংযুক্ত হওয়া অ্যাপ এবং taf-এর Card এখানে দেখা যায়।</string>
     <string name="billing_credits_buy">ক্রেডিট দিয়ে আপনার tafs-এর রানের খরচ মেটে; নতুন কিছু না থাকলে শান্ত যাচাইয়ে কোনো ক্রেডিট লাগে না। Solo-তে Coach আছে, মাসে প্রায় ৪টি নতুন কাজ সেট আপ করার জন্য।</string>

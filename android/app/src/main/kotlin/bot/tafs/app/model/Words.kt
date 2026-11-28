@@ -227,6 +227,7 @@ object Words {
     val byGooglePlay: String get() = Res.s(R.string.billing_by_google_play)
     val byKiff: String get() = Res.s(R.string.billing_by_kiff)
     val cancelAnyTimeLeastDay: String get() = Res.s(R.string.billing_cancel_any_time_least_day)
+    val confirmingPurchase: String get() = Res.s(R.string.billing_confirming_purchase)
     val contactSupport: String get() = Res.s(R.string.billing_contact_support)
     val conversationGoesPlanToolsBeing: String get() = Res.s(R.string.billing_conversation_goes_plan_tools_being)
     val creditsBuy: String get() = Res.s(R.string.billing_credits_buy)

@@ -21,6 +21,7 @@
   "billing.by_google_play": "Hesabı Google Play çıxarır",
   "billing.by_kiff": "Hesabı KIFF çıxarır",
   "billing.cancel_any_time_least_day": "İstənilən vaxt, yenilənmədən ən azı bir gün əvvəl, Apple hesabınızın Abunəliklərində ləğv edin.",
+  "billing.confirming_purchase": "Alış təsdiqlənir…",
   "billing.contact_support": "KIFF bu alışı bu hesaba əlavə edə bilmir. Siz onun üçün ödəmisiniz, ona görə support@kiff.dev ünvanında dəstəyə müraciət edin, biz həll edəcəyik.",
   "billing.conversation_goes_plan_tools_being": "Söhbət irəlilədikcə plan, qoşulan tətbiqlər və taf-ın Card-ı burada görünür.",
   "billing.credits_buy": "Kreditlər tafs-larınızın işlərini ödəyir; yeni heç nə olmadıqda sakit yoxlama heç birini istifadə etmir. Solo ayda təxminən 4 yeni iş qurmaq üçün Coach-u da əhatə edir.",

@@ -193,6 +193,7 @@
     <string name="billing_by_google_play">Google Play ເກັບເງິນ</string>
     <string name="billing_by_kiff">KIFF ເກັບເງິນ</string>
     <string name="billing_cancel_any_time_least_day">ຍົກເລີກໄດ້ທຸກເວລາ ຢ່າງໜ້ອຍໜຶ່ງມື້ກ່ອນມັນຕໍ່ອາຍຸ ໃນການສະໝັກຂອງບັນຊີ Apple ຂອງທ່ານ.</string>
+    <string name="billing_confirming_purchase">ກຳລັງຢືນຢັນການຊື້…</string>
     <string name="billing_contact_support">KIFF ເພີ່ມການຊື້ນີ້ໃສ່ບັນຊີນີ້ບໍ່ໄດ້. ທ່ານໄດ້ຈ່າຍເງິນແລ້ວ ສະນັ້ນຕິດຕໍ່ຝ່າຍສະໜັບສະໜູນທີ່ support@kiff.dev ແລ້ວພວກເຮົາຈະແກ້ໄຂ.</string>
     <string name="billing_conversation_goes_plan_tools_being">ເມື່ອການສົນທະນາດຳເນີນໄປ ແຜນ, ແອັບທີ່ກຳລັງເຊື່ອມຕໍ່ ແລະ Card ຂອງ taf ຈະສະແດງຢູ່ທີ່ນີ້.</string>
     <string name="billing_credits_buy">ເຄຣດິດຈ່າຍສຳລັບການເຮັດວຽກຂອງ tafs ຂອງທ່ານ; ການກວດສອບແບບງຽບໆ ເມື່ອບໍ່ມີຫຍັງໃໝ່ ບໍ່ໃຊ້ເຄຣດິດເລີຍ. Solo ລວມ Coach ເພື່ອຕັ້ງວຽກໃໝ່ປະມານ 4 ວຽກຕໍ່ເດືອນ.</string>

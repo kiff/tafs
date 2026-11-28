@@ -21,6 +21,7 @@
   "billing.by_google_play": "تتم المحاسبة عبر Google Play",
   "billing.by_kiff": "تتم المحاسبة عبر KIFF",
   "billing.cancel_any_time_least_day": "يمكنك الإلغاء في أي وقت، قبل التجديد بيوم على الأقل، من «الاشتراكات» في حساب Apple الخاص بك.",
+  "billing.confirming_purchase": "جارٍ تأكيد عملية الشراء…",
   "billing.contact_support": "لا يستطيع KIFF إضافة هذه العملية إلى هذا الحساب. لقد دفعت ثمنها، فتواصل مع الدعم على support@kiff.dev وسنحل الأمر.",
   "billing.conversation_goes_plan_tools_being": "مع تقدّم المحادثة، تظهر هنا الخطة والتطبيقات التي يجري ربطها وCard الخاصة بالـ taf.",
   "billing.credits_buy": "تدفع الأرصدة ثمن تشغيلات tafs الخاصة بك؛ والفحص الهادئ، حين لا يوجد جديد، لا يستهلك شيئًا. يتضمن Solo خدمة Coach لإعداد نحو 4 مهام جديدة شهريًا.",

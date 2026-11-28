@@ -21,6 +21,7 @@
   "billing.by_google_play": "Számlázó: Google Play",
   "billing.by_kiff": "Számlázó: KIFF",
   "billing.cancel_any_time_least_day": "Bármikor lemondhatod, legalább egy nappal a megújulás előtt, az Apple-fiókod Előfizetések részében.",
+  "billing.confirming_purchase": "A vásárlás megerősítése…",
   "billing.contact_support": "A KIFF nem tudja hozzáadni ezt a vásárlást ehhez a fiókhoz. Kifizetted, ezért írj az ügyfélszolgálatnak: support@kiff.dev, és elrendezzük.",
   "billing.conversation_goes_plan_tools_being": "A beszélgetés során itt jelenik meg a terv, a csatlakoztatott alkalmazások és a taf Cardja.",
   "billing.credits_buy": "A kreditekből fizeted a tafjaid futásait; egy csendes ellenőrzés, ha nincs semmi új, nem használ el egyet sem. A Solo tartalmazza a Coachot, havonta kb. 4 új feladat beállításához.",

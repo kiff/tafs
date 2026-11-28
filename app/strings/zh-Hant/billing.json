@@ -21,6 +21,7 @@
   "billing.by_google_play": "由 Google Play 計費",
   "billing.by_kiff": "由 KIFF 計費",
   "billing.cancel_any_time_least_day": "可隨時取消，請至少在續訂前一天，於您的 Apple 帳號的「訂閱」中取消。",
+  "billing.confirming_purchase": "正在確認購買…",
   "billing.contact_support": "KIFF 無法將此購買加入此帳號。您已完成付款，請聯絡 support@kiff.dev，我們會為您處理。",
   "billing.conversation_goes_plan_tools_being": "隨著對話進行，方案、正在連接的 App 以及 taf 的 Card 會顯示在這裡。",
   "billing.credits_buy": "點數用於支付您的 taf 執行；沒有新事項時的安靜檢查不會用到點數。Solo 包含 Coach，足以每月設定約 4 項新工作。",

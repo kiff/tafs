@@ -199,6 +199,7 @@
     <string name="billing_by_google_play">Účtuje Google Play</string>
     <string name="billing_by_kiff">Účtuje KIFF</string>
     <string name="billing_cancel_any_time_least_day">Zrušit můžete kdykoli, nejpozději den před obnovením, v Předplatných svého účtu Apple.</string>
+    <string name="billing_confirming_purchase">Nákup se potvrzuje…</string>
     <string name="billing_contact_support">KIFF nemůže tento nákup přidat k tomuto účtu. Zaplatili jste za něj, takže napište podpoře na support@kiff.dev a vyřešíme to.</string>
     <string name="billing_conversation_goes_plan_tools_being">Jak rozhovor pokračuje, zobrazuje se tu plán, připojované aplikace a Card tafu.</string>
     <string name="billing_credits_buy">Kredity platí běhy vašich tafů; klidná kontrola, když není nic nového, nespotřebuje žádné. Solo zahrnuje Coache na nastavení asi 4 nových úloh měsíčně.</string>

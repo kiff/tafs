@@ -202,6 +202,7 @@
     <string name="billing_by_google_play">Rozliczane przez Google Play</string>
     <string name="billing_by_kiff">Rozliczane przez KIFF</string>
     <string name="billing_cancel_any_time_least_day">Anuluj w dowolnym momencie, co najmniej dzień przed odnowieniem, w Subskrypcjach swojego konta Apple.</string>
+    <string name="billing_confirming_purchase">Potwierdzanie zakupu…</string>
     <string name="billing_contact_support">KIFF nie może dodać tego zakupu do tego konta. Zapłacono za niego, więc skontaktuj się z pomocą pod adresem support@kiff.dev, a my to rozwiążemy.</string>
     <string name="billing_conversation_goes_plan_tools_being">W miarę rozmowy pojawią się tu plan, łączone aplikacje i Card tafa.</string>
     <string name="billing_credits_buy">Kredyty opłacają uruchomienia Twoich tafów; spokojne sprawdzenie, gdy nic nowego nie ma, nie zużywa żadnych. Solo obejmuje Coacha, by skonfigurować około 4 nowych zadań miesięcznie.</string>
