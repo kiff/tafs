@@ -1,0 +1,1 @@
+- **Android: a saved sign-in can be signed in again at any time.** Connect apps offers Sign in again on every saved sign-in tafs cloud offers it for, not only one that needs you, and shows how tafs knows its health ([android-app.md](docs/android-app.md)).

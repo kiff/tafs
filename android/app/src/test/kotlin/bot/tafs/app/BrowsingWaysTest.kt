@@ -3,6 +3,7 @@ package bot.tafs.app
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.kiff.ConnectApps
@@ -46,6 +47,21 @@ class BrowsingWaysTest {
 
   @Test fun aReadWithoutWaysHasNone() {
     assertEquals(emptyList<ConnectApps.Way>(), KiffClient.json.decodeFromString<ConnectApps>("""{"apps":[]}""").ways)
+  }
+
+  @Test fun aSavedSignInOffersSignInAgainWhenTafsCloudDoesWhateverItsHealth() {
+    // A healthy sign-in can still be refreshed: the button follows tafs cloud's `sign_in`, never the app's reading of the health.
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+    val read = KiffClient.json.decodeFromString<ConnectApps>("""{"apps":[],"saved_sign_ins":[
+      {"grant":"g_9","site":"books.example","used_by":["Month end"],"health":{"state":"signed_in","words":{"line":"Signed in · checked today 07:00"}},
+        "sign_in":{"title":"Sign in again"}},
+      {"grant":"g_7","site":"supplier-portal.example","health":{"state":"needs_you_soon","words":{"line":"Needs you by Tue 2 Dec","why":"The site set your saved sign-in to end on 2 Dec."}}}]}""")
+    val opened = mutableListOf<String>()
+    compose.setContent { TafsTheme { androidx.compose.foundation.layout.Column { read.savedSignIns.forEach { bot.tafs.app.views.SavedSignInRow(it) { g -> opened += g } } } } }
+    compose.onNodeWithText("Sign in again").performClick()
+    assertEquals(listOf("g_9"), opened)
+    // Needs the owner, but tafs cloud sent no action: the line and its why, no button of the app's own.
+    compose.onNodeWithText("The site set your saved sign-in to end on 2 Dec.").assertExists()
   }
 
   @Test fun aWayIsDrawnInTafsCloudsWords() {
