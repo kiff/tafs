@@ -1211,6 +1211,197 @@ export const RECIPES = [
     }
   },
   {
+    "id": "order-to-e-invoice",
+    "title": "Turn an order into an e-invoice",
+    "category": "money",
+    "order": 7,
+    "line": "Builds the client invoice from an order or a timesheet in your email or files; you approve each one before your business account issues it as an e-invoice.",
+    "headline": "Invoice the day the order comes in.",
+    "today": "An invoice typed by hand goes out late, and a late invoice is paid late.",
+    "say": "When an order or a timesheet arrives in my email or my files, draft the client invoice in my business account, with the client, the lines and the amounts as the order gives them, and the details an e-invoice needs: the client's company number, the delivery address if it differs, and whether it's goods, services or both. Add the client if it's new. Ask me before finalising and sending each invoice, and when a required detail is missing. Never make a payment, cancel or delete an invoice, or add a discount the order doesn't have. Tell me which orders you couldn't read.",
+    "connections": [
+      [
+        "gmail",
+        "outlook",
+        "googledrive"
+      ],
+      [
+        "qonto"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Draft client invoices from an order or a timesheet, up to 20 a day",
+        "Add a client the order names, or update its details"
+      ],
+      "holds": [
+        "Finalising and sending an invoice, each one",
+        "An invoice that lacks a detail the law requires, such as the client's company number"
+      ],
+      "never": [
+        "A payment or a transfer",
+        "Cancelling or deleting an invoice",
+        "A discount the order doesn't have"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Aus einer Bestellung eine E-Rechnung machen",
+        "headline": "Rechnung am Tag der Bestellung.",
+        "today": "Eine von Hand getippte Rechnung geht spät raus, und eine späte Rechnung wird spät bezahlt.",
+        "line": "Erstellt die Kundenrechnung aus einer Bestellung oder einem Stundenzettel in deinen E-Mails oder Dateien; du gibst jede frei, bevor dein Geschäftskonto sie als E-Rechnung ausstellt.",
+        "say": "Wenn eine Bestellung oder ein Stundenzettel in meinen E-Mails oder Dateien ankommt, erstelle die Kundenrechnung als Entwurf in meinem Geschäftskonto, mit dem Kunden, den Positionen und den Beträgen, wie die Bestellung sie angibt, und den Angaben, die eine E-Rechnung braucht: die Unternehmensnummer des Kunden, die Lieferadresse, wenn sie abweicht, und ob es um Waren, Dienstleistungen oder beides geht. Lege den Kunden an, wenn er neu ist. Frag mich, bevor du eine Rechnung abschließt und sendest, und wenn eine vorgeschriebene Angabe fehlt. Mach nie eine Zahlung, storniere oder lösche nie eine Rechnung und füge keinen Rabatt hinzu, den die Bestellung nicht hat. Sag mir, welche Bestellungen du nicht lesen konntest.",
+        "card": {
+          "allows": [
+            "Kundenrechnungen als Entwurf aus einer Bestellung oder einem Stundenzettel, bis zu 20 am Tag",
+            "Einen Kunden anlegen, den die Bestellung nennt, oder seine Angaben aktualisieren"
+          ],
+          "holds": [
+            "Eine Rechnung abschließen und senden, jede einzeln",
+            "Eine Rechnung, der eine gesetzlich vorgeschriebene Angabe fehlt, etwa die Unternehmensnummer des Kunden"
+          ],
+          "never": [
+            "Eine Zahlung oder eine Überweisung",
+            "Eine Rechnung stornieren oder löschen",
+            "Einen Rabatt, den die Bestellung nicht hat"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Transformer une commande en facture électronique",
+        "headline": "Facturez le jour de la commande.",
+        "today": "Une facture tapée à la main part en retard, et une facture en retard est payée en retard.",
+        "line": "Prépare la facture client à partir d'une commande ou d'une feuille de temps dans vos e-mails ou vos fichiers ; vous approuvez chacune avant que votre compte professionnel l'émette en facture électronique.",
+        "say": "Quand une commande ou une feuille de temps arrive dans mes e-mails ou mes fichiers, prépare le brouillon de la facture client dans mon compte professionnel, avec le client, les lignes et les montants tels que la commande les donne, et les mentions qu'une facture électronique exige : le numéro SIREN du client, l'adresse de livraison si elle diffère, et s'il s'agit de biens, de services ou des deux. Ajoute le client s'il est nouveau. Demande-moi avant de finaliser et d'envoyer chaque facture, et quand une mention obligatoire manque. Ne fais jamais de paiement, n'annule ni ne supprime jamais une facture, et n'ajoute aucune remise que la commande ne prévoit pas. Dis-moi quelles commandes tu n'as pas pu lire.",
+        "card": {
+          "allows": [
+            "Des brouillons de factures clients à partir d'une commande ou d'une feuille de temps, jusqu'à 20 par jour",
+            "Ajouter un client que la commande nomme, ou mettre à jour ses coordonnées"
+          ],
+          "holds": [
+            "Finaliser et envoyer une facture, chacune",
+            "Une facture à laquelle manque une mention obligatoire, comme le numéro SIREN du client"
+          ],
+          "never": [
+            "Un paiement ou un virement",
+            "Annuler ou supprimer une facture",
+            "Une remise que la commande ne prévoit pas"
+          ]
+        }
+      },
+      "es": {
+        "title": "Convertir un pedido en una factura electrónica",
+        "headline": "Factura el mismo día del pedido.",
+        "today": "Una factura tecleada a mano sale tarde, y una factura tardía se cobra tarde.",
+        "line": "Prepara la factura del cliente a partir de un pedido o un parte de horas en tu correo o tus archivos; apruebas cada una antes de que tu cuenta de empresa la emita como factura electrónica.",
+        "say": "Cuando llegue un pedido o un parte de horas a mi correo o mis archivos, prepara el borrador de la factura del cliente en mi cuenta de empresa, con el cliente, las líneas y los importes tal como los da el pedido, y los datos que necesita una factura electrónica: el número de empresa del cliente, la dirección de entrega si es distinta, y si se trata de bienes, servicios o ambos. Añade el cliente si es nuevo. Pregúntame antes de emitir y enviar cada factura, y cuando falte un dato obligatorio. Nunca hagas un pago, anules o elimines una factura, ni añadas un descuento que el pedido no tiene. Dime qué pedidos no pudiste leer.",
+        "card": {
+          "allows": [
+            "Borradores de facturas a clientes a partir de un pedido o un parte de horas, hasta 20 al día",
+            "Añadir un cliente que nombra el pedido, o actualizar sus datos"
+          ],
+          "holds": [
+            "Emitir y enviar una factura, cada una",
+            "Una factura a la que le falta un dato que exige la ley, como el número de empresa del cliente"
+          ],
+          "never": [
+            "Un pago o una transferencia",
+            "Anular o eliminar una factura",
+            "Un descuento que el pedido no tiene"
+          ]
+        }
+      },
+      "it": {
+        "title": "Trasformare un ordine in una fattura elettronica",
+        "headline": "Fattura il giorno stesso dell'ordine.",
+        "today": "Una fattura scritta a mano parte in ritardo, e una fattura in ritardo viene pagata in ritardo.",
+        "line": "Prepara la fattura al cliente da un ordine o un foglio ore nella tua email o nei tuoi file; approvi ciascuna prima che il tuo conto aziendale la emetta come fattura elettronica.",
+        "say": "Quando arriva un ordine o un foglio ore nella mia email o nei miei file, prepara la bozza della fattura al cliente nel mio conto aziendale, con il cliente, le righe e gli importi come li dà l'ordine, e i dati che servono a una fattura elettronica: il numero d'impresa del cliente, l'indirizzo di consegna se è diverso, e se si tratta di beni, servizi o entrambi. Aggiungi il cliente se è nuovo. Chiedimi prima di finalizzare e inviare ogni fattura, e quando manca un dato obbligatorio. Non fare mai un pagamento, non annullare né eliminare mai una fattura e non aggiungere uno sconto che l'ordine non prevede. Dimmi quali ordini non sei riuscito a leggere.",
+        "card": {
+          "allows": [
+            "Bozze di fatture ai clienti da un ordine o un foglio ore, fino a 20 al giorno",
+            "Aggiungere un cliente che l'ordine indica, o aggiornarne i dati"
+          ],
+          "holds": [
+            "Finalizzare e inviare una fattura, ciascuna",
+            "Una fattura a cui manca un dato richiesto dalla legge, come il numero d'impresa del cliente"
+          ],
+          "never": [
+            "Un pagamento o un bonifico",
+            "Annullare o eliminare una fattura",
+            "Uno sconto che l'ordine non prevede"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Transformar uma encomenda numa fatura eletrónica",
+        "headline": "Fature no dia da encomenda.",
+        "today": "Uma fatura escrita à mão sai tarde, e uma fatura tardia é paga tarde.",
+        "line": "Prepara a fatura do cliente a partir de uma encomenda ou de uma folha de horas no seu email ou nos seus ficheiros; aprova cada uma antes de a sua conta empresarial a emitir como fatura eletrónica.",
+        "say": "Quando chegar uma encomenda ou uma folha de horas ao meu email ou aos meus ficheiros, prepara o rascunho da fatura do cliente na minha conta empresarial, com o cliente, as linhas e os valores tal como a encomenda os dá, e os dados de que uma fatura eletrónica precisa: o número de empresa do cliente, a morada de entrega se for diferente, e se se trata de bens, serviços ou ambos. Adiciona o cliente se for novo. Pergunta-me antes de finalizar e enviar cada fatura, e quando faltar um dado obrigatório. Nunca faças um pagamento, nunca anules nem elimines uma fatura, e não acrescentes um desconto que a encomenda não tem. Diz-me que encomendas não conseguiste ler.",
+        "card": {
+          "allows": [
+            "Rascunhos de faturas a clientes a partir de uma encomenda ou de uma folha de horas, até 20 por dia",
+            "Adicionar um cliente que a encomenda indica, ou atualizar os seus dados"
+          ],
+          "holds": [
+            "Finalizar e enviar uma fatura, cada uma",
+            "Uma fatura a que falte um dado exigido por lei, como o número de empresa do cliente"
+          ],
+          "never": [
+            "Um pagamento ou uma transferência",
+            "Anular ou eliminar uma fatura",
+            "Um desconto que a encomenda não tem"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Een bestelling omzetten in een e-factuur",
+        "headline": "Factureer op de dag van de bestelling.",
+        "today": "Een met de hand getypte factuur gaat laat de deur uit, en een late factuur wordt laat betaald.",
+        "line": "Maakt de klantfactuur op basis van een bestelling of een urenstaat in je e-mail of bestanden; je keurt elke factuur goed voordat je zakelijke rekening haar als e-factuur uitreikt.",
+        "say": "Als er een bestelling of een urenstaat in mijn e-mail of mijn bestanden binnenkomt, maak dan het concept van de klantfactuur in mijn zakelijke rekening, met de klant, de regels en de bedragen zoals de bestelling ze geeft, en de gegevens die een e-factuur nodig heeft: het ondernemingsnummer van de klant, het afleveradres als dat afwijkt, en of het om goederen, diensten of beide gaat. Voeg de klant toe als die nieuw is. Vraag het me voordat je een factuur definitief maakt en verstuurt, en als er een verplicht gegeven ontbreekt. Doe nooit een betaling, annuleer of verwijder nooit een factuur en voeg geen korting toe die niet in de bestelling staat. Vertel me welke bestellingen je niet kon lezen.",
+        "card": {
+          "allows": [
+            "Concepten van klantfacturen op basis van een bestelling of een urenstaat, tot 20 per dag",
+            "Een klant toevoegen die de bestelling noemt, of zijn gegevens bijwerken"
+          ],
+          "holds": [
+            "Een factuur definitief maken en versturen, elke factuur apart",
+            "Een factuur waarin een wettelijk verplicht gegeven ontbreekt, zoals het ondernemingsnummer van de klant"
+          ],
+          "never": [
+            "Een betaling of een overboeking",
+            "Een factuur annuleren of verwijderen",
+            "Een korting die niet in de bestelling staat"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Zamień zamówienie w e-fakturę",
+        "headline": "Faktura w dniu zamówienia.",
+        "today": "Faktura pisana ręcznie wychodzi późno, a spóźniona faktura jest późno opłacana.",
+        "line": "Przygotowuje fakturę dla klienta na podstawie zamówienia lub karty czasu pracy z Twojej poczty lub plików; zatwierdzasz każdą, zanim Twoje konto firmowe wystawi ją jako e-fakturę.",
+        "say": "Kiedy w mojej poczcie lub w moich plikach pojawi się zamówienie albo karta czasu pracy, przygotuj szkic faktury dla klienta na moim koncie firmowym, z klientem, pozycjami i kwotami tak, jak podaje je zamówienie, oraz z danymi, których wymaga e-faktura: numerem firmy klienta, adresem dostawy, jeśli jest inny, oraz informacją, czy chodzi o towary, usługi czy jedno i drugie. Dodaj klienta, jeśli jest nowy. Zapytaj mnie, zanim zatwierdzisz i wyślesz każdą fakturę, oraz gdy brakuje wymaganych danych. Nigdy nie dokonuj płatności, nie anuluj ani nie usuwaj faktury i nie dodawaj rabatu, którego nie ma w zamówieniu. Powiedz mi, których zamówień nie udało ci się odczytać.",
+        "card": {
+          "allows": [
+            "Szkice faktur dla klientów na podstawie zamówienia lub karty czasu pracy, do 20 dziennie",
+            "Dodanie klienta wskazanego w zamówieniu lub aktualizacja jego danych"
+          ],
+          "holds": [
+            "Zatwierdzenie i wysłanie faktury, każdej z osobna",
+            "Faktura, w której brakuje danych wymaganych przez prawo, na przykład numeru firmy klienta"
+          ],
+          "never": [
+            "Płatność lub przelew",
+            "Anulowanie lub usunięcie faktury",
+            "Rabat, którego nie ma w zamówieniu"
+          ]
+        }
+      }
+    }
+  },
+  {
     "id": "answer-questions-about-orders",
     "title": "Answer questions about orders",
     "category": "customers",

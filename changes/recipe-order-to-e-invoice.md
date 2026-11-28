@@ -1,0 +1,1 @@
+- **A recipe: Turn an order into an e-invoice.** A taf drafts the client invoice in your business account from an order or a timesheet in your email or files, and asks you before each one is finalised and sent.
