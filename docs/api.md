@@ -387,6 +387,97 @@ A taf on planque's hosted browser can hand its owner a step mid-run (a cookie wa
 - **The words** are tafs cloud's, in the person's language: "Your turn on {site}", the taf's words in quotes ("“{ask}”"), "Open until {HH:MM}" in the person's zone, "Open" and "Not now". The apps add none of their own.
 - **The view and Not now go to planque**, not to tafs cloud, each signed with the phone's key: `POST /v1/accounts/{tenant}/grants/{grant}/hands/{hand}/view` answers `{view, expires, site, words}`, a one-time URL to the live view, so the app asks again each time it opens one; `POST …/hands/{hand}/decline` is Not now. Either answers 410 once the step no longer waits, and the app drops it; the next Home read doesn't list it.
 
+## How a taf uses websites: the two ways, and sign-in health
+
+The contract behind browser batch 2's screens. The apps draw what tafs cloud sends, in its words; they work out nothing
+themselves: not which way, not "soon", not when a run waits.
+
+### The two ways
+
+A browser connection works one of two ways, named by what the owner gets, never by technology:
+
+| `way` | planque's grant | What the owner gets |
+|---|---|---|
+| `cloud` | `browser.driver` empty: the hosted browser | Works while the owner's computer is off. A fresh browser each run, on the sites the grant allows. The owner signs in once, in the live view; no password is kept. |
+| `chrome` | `browser.driver: "extension"`, with its paired Chrome | Works in the owner's Chrome, where they're signed in, only while that computer is on. Nothing is kept at tafs. |
+
+- **On each browser connection** (Connect apps, a taf's setup, `GET /v1/tafs/{id}/setup` `grants[]`): `way`, and
+  `way_words: {title, line}` ("Cloud browser", "Works while your computer is off."). A `chrome` connection also has
+  `chrome_name`, the paired Chrome's name as planque keeps it. `way` comes from planque's grant, and nothing else sets it.
+- **On the Card's line for a browser tool:** the same `way` and `way_words.line`, after the sites: "Uses
+  supplier-portal.example in the cloud browser: works while your computer is off."
+- **Changing the way** is a new grant, with the owner's approval and its Card, like any Card change: Touch ID or
+  the fingerprint, by device. The app shows the other way's button. Coach asks for the new grant with a new version of the taf
+  (improve-a-taf). No route changes `way` in place.
+
+### Coach's pick, and why
+
+Coach picks the way for a taf's browsing by its job: a taf that runs on a schedule, or from a door, while the owner may be away,
+gets `cloud`. A taf the owner runs now and then from their Chrome, on sites they're already signed in to, gets `chrome`. The owner
+can change it (above).
+
+- **Coach's result for a taf with a browser connection** carries `browse: {way, why}`. `why` is one sentence in the owner's
+  language, naming the job's reason ("File invoices runs at 8:00, when you may be away."). tafs cloud refuses a result whose
+  `way` isn't its browser grant's.
+- **The taf's setup** (`GET /v1/tafs/{id}/setup`) shows it as `browsing: {sites, way, way_words, why, chosen_by: "coach"}`.
+  `why` stays the version's: a new version without `browse` keeps it, and one with `browse` replaces it.
+
+### Sign-in health (`cloud` only)
+
+A `chrome` connection keeps no sign-in at tafs, so it has no health. A `cloud` connection's health per site comes from
+planque's check (planque#514): one reviewed fixed page, opened with the saved sign-in, with no click and no write. Only its
+verdict is kept.
+
+- **When tafs cloud asks** (`POST /v1/accounts/{tenant}/grants/{id}/health`, the account's key):
+  - once a day for each `cloud` connection a scheduled taf uses, **an hour before that taf's first run of the day** in its
+    time zone;
+  - again **5 minutes before** that run, when the hour-before check wasn't `signed_in`.
+  - planque's own limits hold: once a day per site when signed in, not again within 6 hours after `unknown`. When planque
+    answers from what it kept, tafs cloud uses that.
+  - No other check runs: never in a sweep of every connection, never for a taf with no schedule.
+- **What each site carries** (`sites[]` on the connection, in setup and Connect apps): `health: {state, checked_at?,
+  needs_you_by?, words: {line, why}}`. tafs cloud decides `state` from planque's answer:
+
+  | `state` | When | `needs_you_by` |
+  |---|---|---|
+  | `signed_in` | `signed_in`, and `expires_at` absent or more than 3 days after `checked_at` | none |
+  | `needs_you_soon` | `signed_in`, and `expires_at` within 3 days of `checked_at` | `expires_at` |
+  | `stopped` | `signed_out` | `checked_at` |
+  | `unknown` | `unknown`, or no check yet | none |
+
+  - `words.line` is the line the app shows: "Needs you by Tue 2 Dec", "Signed in · checked today 07:00", "Stopped working
+    at 07:55", and "Not checked" for `unknown`. The day and time are in the account's zone.
+  - `words.why` is the answer to Why?: "tafs opened one page with your saved sign-in this morning. The site said it
+    ends on 2 Dec."
+  - An `unknown` shows no warning. It isn't a reason to hold a run, and it never counts in Needs you.
+- **The one action** is **Sign in again**: planque's live view for that grant and site (`site_sign_in`, as today). The
+  owner types their password into the site itself. Once they've signed in, tafs cloud checks again and the state follows. There's no
+  automatic re-login.
+
+### Needs you, and the run that waits
+
+- **`needs_you_soon`** is a Needs you item `{kind: "sign_in_soon", grant, site, needs_you_by, taf: {id, name}, words: {title,
+  line, sign_in, later, why}}`, with one push on the ordinary channel, the day it starts. Later hides it until the next
+  check. It counts once in `needs_you.count`.
+- **`stopped` on a check before a run holds that run before it starts. It never runs and fails:**
+  - tafs cloud pauses the taf's schedules for that run (`held_for_sign_in: {grant, site, run_at}` on the taf), and adds
+    the item `{kind: "sign_in_stopped", grant, site, checked_at, run_at, taf, words: {title, line, sign_in, skip, why}}`
+    ("File invoices' 8:00 run waits for you: nothing is skipped or tried with a broken sign-in.").
+  - Its push is time-sensitive, but it isn't a held call, so it goes on the ordinary channel unless the item says
+    `urgent: true`. tafs cloud's `kind` decides, as for briefs.
+  - **Sign in again:** once the next check reads `signed_in`, the held run starts at once, and the schedules come back.
+  - **Skip today's run** (`POST /v1/tafs/{id}/held-sign-in/skip`, the person's session): that run is dropped, and the
+    schedules come back from the next one. The item stays until the sign-in works, but stops holding runs.
+  - A held run waits at most until the taf's next scheduled run, then it's dropped, and the item says so.
+- **The Record** lists each check as tafs's own call, before the run: "07:00 tafs checked your sign-in at
+  supplier-portal.example: read one page, no clicks. It ends on 2 Dec." It's counted like any call, and the privacy text names
+  it.
+
+### Words
+
+Every line above is tafs cloud's, in the person's language, through `words/*.ts`. The apps add none of their own. The words
+wait for a language review in Coach's 8 languages before any of this is on.
+
 ## Keeping this page right
 
 A route added or changed in `handler.ts` changes this page in the same pull request, and
