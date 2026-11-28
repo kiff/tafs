@@ -14,6 +14,10 @@ const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
  */
 export const ptBR: Words = {
   ...pt,
+  // A taf's needs in Brazil's own nouns.
+  door_need_sheet: "uma planilha",
+  door_need_file: "um arquivo",
+  door_need_link: "um link",
   door_reply_waiting: (who: string, taf: string) => `${taf} escreveu uma resposta para ${who}. Ela está esperando você enviar.`,
   door_reply_prompt: (who: string) => `Enviar esta resposta para ${who}`,
   door_reply_changed: "Esta resposta mudou desde que você a leu. Leia de novo antes de enviar.",
