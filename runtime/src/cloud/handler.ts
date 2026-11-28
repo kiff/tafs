@@ -5505,6 +5505,8 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
       const d = await draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))());
       if (d?.agent && d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
       if (!d || !issued(d.status)) throw new HTTPError(409, "confirm this version's Card first");
+      // A re-pointed Card confirmed in KIFF straight away is held to the same check as at try and switch.
+      await keepsVersionTools(event, taf, version, draft, deps);
     }
     // Going back without a switch: a version that ran under other Card revisions
     // goes live only once a switch has restored them, never under the Cards in
@@ -6326,16 +6328,23 @@ async function keepsVersionTools(event: HTTPEvent, taf: Taf, version: AgentVersi
 
 /**
  * How a later draft's Cards differ from a first draft's, tool by tool: "leaves out {tool}", "adds {tool}", "changes {tool}".
- * A tool is the same on any connection when its app and the vendor's own name for it are; its grant (every field but its
- * KIFF name) must be the same too. A tool the list doesn't know, or with no app, is compared by its KIFF name alone.
+ * A tool is the same on any connection when its app and the vendor's own name for it (`vendor_tool`, else `tool`) are; its
+ * grant (every field but its KIFF name) and its connection's pins and class marks must be the same too. A tool the list doesn't know, or with no app, is compared by its KIFF name alone.
  */
-export function cardDifferences(first: readonly unknown[], later: readonly unknown[], conns: ReadonlyArray<{ name: string; app?: unknown; tool?: unknown }>): string[] {
+export function cardDifferences(first: readonly unknown[], later: readonly unknown[], conns: ReadonlyArray<{ name: string; app?: unknown; tool?: unknown; vendor_tool?: unknown; vendor_pins?: unknown; read_only?: unknown; destructive_hint?: unknown }>): string[] {
   const fold = (x: unknown) => (typeof x === "string" ? x.trim().toLowerCase() : "");
   const byName = new Map(conns.map((c) => [fold(c.name), c]));
+  // The vendor's own name for the tool (a relay's `tool` is its own name for it), else the upstream one.
   const keyOf = (action: unknown) => {
     const c = byName.get(fold(action));
-    const app = fold(c?.app), tool = fold(c?.tool);
+    const app = fold(c?.app), tool = fold(c?.vendor_tool) || fold(c?.tool);
     return app && tool ? `${app} ${tool}` : fold(action);
+  };
+  // What makes a tool safe beside its grant, from its connection: the pins KIFF signs into its permit (a draft-only
+  // write is draft-only by them), and its class marks. The same vendor tool on a connection without them isn't the same.
+  const safety = (action: unknown) => {
+    const c = byName.get(fold(action));
+    return { vendor_pins: c?.vendor_pins ?? null, read_only: c?.read_only === true, destructive_hint: c?.destructive_hint === true };
   };
   const canon = (x: unknown): unknown => Array.isArray(x) ? x.map(canon)
     : x && typeof x === "object" ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, canon((x as Record<string, unknown>)[k])])) : x;
@@ -6347,7 +6356,7 @@ export function cardDifferences(first: readonly unknown[], later: readonly unkno
       for (const g of grants) {
         const { action, ...rest } = (g ?? {}) as Record<string, unknown>;
         const key = keyOf(action);
-        if (key) out.set(key, JSON.stringify(canon(rest)));
+        if (key) out.set(key, JSON.stringify(canon({ grant: rest, connection: safety(action) })));
       }
     }
     return out;
@@ -11361,10 +11370,13 @@ async function repointVersion(tenant: string, taf: Taf, want: ImprovedTaf, deps:
   if (!target || taf.withdrawn?.includes(n)) return { failed: `${taf.name} has no version ${n}` };
   if (target.live) return { failed: `version ${n} is live already: improve it as a new version` };
   if (state.switching?.n === n) return { failed: `the owner is switching to version ${n}: wait until it's done` };
+  // Only a mistaken remake of the version being tried: made after it, by Coach, and never live (one that ran keeps its Cards
+  // for going back to it).
   for (const k of withdraws) {
     const v = of(k);
-    if (!v || k === n) return { failed: `version ${k} can't be withdrawn here` };
-    if (v.live || state.switching?.n === k) return { failed: `version ${k} is live or being switched to: it can't be withdrawn` };
+    if (!v || k <= n) return { failed: `version ${k} can't be withdrawn: only a version made after version ${n} for the same change can` };
+    if (v.live || v.cards?.length || state.switching?.n === k) return { failed: `version ${k} is live, has been, or is being switched to: it can't be withdrawn` };
+    if (v.by_kind === "person") return { failed: `version ${k} was made by a person: only one Coach made can be withdrawn` };
   }
   for (let attempt = 0; attempt < 2; attempt++) {
     const cur = (await deps.tafs.get(tenant, taf.id)) ?? taf;
