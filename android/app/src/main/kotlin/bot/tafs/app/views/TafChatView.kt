@@ -96,6 +96,7 @@ import bot.tafs.app.model.ChatWords
 import bot.tafs.app.model.ReportResult
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.LiveAnswer
+import bot.tafs.app.model.StepLine
 import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.Refused
 import bot.tafs.app.model.Work
@@ -786,6 +787,8 @@ internal const val FAILED_RETRY = "failed-retry"
 internal const val JUMP_TO_LATEST = "jump-to-latest"
 internal const val NEW_BELOW = "new-below"
 internal const val MESSAGE_TIME = "message-time"
+/** The steps done so far, under the working line. */
+internal const val LIVE_STEPS = "live-steps"
 
 /** A refused connection's lines, each as tafs cloud wrote it: the step's in the failure colour, then why and what to do next. */
 @Composable
@@ -814,8 +817,18 @@ private fun WorkSummary(work: Work) {
       style = scaled(12, FontWeight.Medium, Theme.dim),
       modifier = Modifier.heightIn(min = 28.dp).tapping(enabled = steps.isNotEmpty()) { open = !open }.padding(vertical = 4.dp),
     )
-    // A failed step in the failure colour, with tafs cloud's reason under it when it sent one; nothing of the app's own.
-    if (open) steps.forEach { step ->
+    if (open) StepLines(steps)
+  }
+}
+
+/**
+ * Steps as the thread lists them, one line each: a failed step in the failure colour, with tafs cloud's reason under it when it
+ * sent one; nothing of the app's own. The same lines live, under the working line, and folded, under "Worked … · N steps".
+ */
+@Composable
+internal fun StepLines(steps: List<StepLine>, modifier: Modifier = Modifier) {
+  Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    steps.forEach { step ->
       Text("• " + step.words + if (step.notMade) " · " + Words.Chat.notMade else "", style = scaled(12, color = if (step.failed) Theme.no else Theme.soft))
       step.why?.let { Text(it, style = scaled(12, color = Theme.dim), modifier = Modifier.padding(start = 10.dp)) }
     }
@@ -823,12 +836,12 @@ private fun WorkSummary(work: Work) {
 }
 
 /**
- * The work of the answer streaming now: one calm line of what it's at, tafs cloud's (docs/chat.md, "The live line"), then the
- * words as they're written. No thinking text and no list of steps: when the run ends, the line folds into the message's
- * "Worked … · N steps". Before tafs cloud sends the line, the step at work stands in for it.
+ * The work of the answer streaming now (docs/chat.md, "The work block"): one calm line of what it's at, tafs cloud's ("The live
+ * line"), the steps done so far under it, then the words as they're written. No thinking text. When the run ends, the line and
+ * its steps fold into the message's "Worked … · N steps". Before tafs cloud sends the line, the step at work stands in for it.
  */
 @Composable
-private fun LiveWork(live: LiveAnswer) {
+internal fun LiveWork(live: LiveAnswer) {
   val writing = live.text.isNotBlank()
   Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     val line = Chat.liveLine(live)
@@ -855,6 +868,8 @@ private fun LiveWork(live: LiveAnswer) {
         )
       }
     }
+    // The steps done so far, as the folded list will show them: the owner sees what it has done while it works.
+    Chat.liveSteps(live).takeIf { it.isNotEmpty() }?.let { StepLines(it, Modifier.testTag(LIVE_STEPS)) }
     // An answer still being written can't yet say whether its turn read a page (a resumed stream carries no flag): its links
     // ask first, until the thread read says.
     if (writing) PageTurnText(live.text, asks = true, live = true)
