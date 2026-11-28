@@ -204,6 +204,7 @@ enum KIFFMapping {
             entry.onArg = c.onArg
             entry.answer = c.answer
             entry.receipt = c.receipt
+            entry.purchaseCase = c.caseID
             entry.why = c.reasons?.map(visible)
             entry.madeAt = c.madeAt
             entry.reason = c.reason.map(visible)

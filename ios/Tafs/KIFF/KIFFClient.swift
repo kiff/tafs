@@ -1152,7 +1152,10 @@ final class KIFFClient {
         /// KIFF: the call's tool moves money (by its owner-approved profile) and the call was sent. Only then did money
         /// move: an amount alone (an invoice written, a transfer requested) moved nothing.
         var payment: Bool? = nil
+        /// A purchase's line: the case its signed receipt is read by (`GET /v1/me/purchases/{case_id}/receipt`).
+        var caseID: String? = nil
         enum CodingKeys: String, CodingKey {
+            case caseID = "case_id"
             case title, outcome, held, amount, answer, receipt, reasons, detail, payment
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
@@ -1165,6 +1168,13 @@ final class KIFFClient {
     /// checked as written, never decoded and written again.
     func receipt(traceID: String) async throws -> Data {
         let raw: RawBody = try await send("GET", "/v1/receipts/\(escaped(traceID))")
+        return raw.data
+    }
+
+    /// KIFF's signed receipt for a purchase case, once the case has ended (404 before), as KIFF wrote it: its bytes are
+    /// what `PurchaseReceipt` reads and checks (contracts/purchase.json, `receipt.value`).
+    func purchaseReceipt(caseID: String) async throws -> Data {
+        let raw: RawBody = try await send("GET", "/v1/me/purchases/\(escaped(caseID))/receipt")
         return raw.data
     }
 
@@ -2077,6 +2087,8 @@ extension KIFFClient.ActivityCall {
         held = try c.decodeIfPresent(Bool.self, forKey: .held) ?? false
         toolOutcome = try c.decodeIfPresent(ToolOutcome.self, forKey: .toolOutcome)
         amount = try c.decodeIfPresent(Amount.self, forKey: .amount)
+        // A case id that's blank, or not one the apps take, reads as none: no purchase receipt is asked for.
+        caseID = (try? c.decodeIfPresent(String.self, forKey: .caseID)).flatMap { $0 }.flatMap { Purchase.isCaseID($0) ? $0 : nil }
         readOnly = try c.decodeIfPresent(Bool.self, forKey: .readOnly)
         entityID = try c.decodeIfPresent(String.self, forKey: .entityID)
         onHash = try c.decodeIfPresent(String.self, forKey: .onHash)

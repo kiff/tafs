@@ -593,6 +593,8 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     var onValue: String?
     var answer: KIFFClient.ActivityCall.Answer?
     var receipt: KIFFClient.ActivityCall.Receipt?
+    /// A purchase's line: the case KIFF's signed purchase receipt is read by (docs/purchases.md). Nil for any other call.
+    var purchaseCase: String?
     var why: [String]?
     /// When the call was made (KIFF's first decision), and why it wasn't sent, in KIFF's words.
     var madeAt: Date?
