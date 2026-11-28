@@ -21,8 +21,11 @@ enum AlertAnswers {
         let refuse = UNNotificationAction(identifier: refuse, title: Words.NeedsYou.refuse, options: [.authenticationRequired, .destructive])
         let hold = UNNotificationCategory(identifier: holdCategory, actions: [approve, refuse], intentIdentifiers: [],
                                           hiddenPreviewsBodyPlaceholder: Words.Alert.needsYou, options: [])
+        // A held purchase: Refuse only (HoldNotification.refuseOnlyCategory); it's approved from its own card.
+        let refuseOnly = UNNotificationCategory(identifier: HoldNotification.refuseOnlyCategory, actions: [refuse], intentIdentifiers: [],
+                                                hiddenPreviewsBodyPlaceholder: Words.Alert.needsYou, options: [])
         let halt = UNNotificationCategory(identifier: haltCategory, actions: [], intentIdentifiers: [], options: [])
-        return [hold, halt, WatchSignInAsk.category()]
+        return [hold, refuseOnly, halt, WatchSignInAsk.category()]
     }
 
     /// Where a hold's notification opens: that hold, with the answer chosen on it if any.

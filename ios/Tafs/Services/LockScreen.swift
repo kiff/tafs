@@ -50,7 +50,9 @@ final class LockScreen {
                 content.interruptionLevel = .timeSensitive
                 if let kiffID = call.kiffID {
                     content.userInfo = ["open": "needs-you", "hold_id": kiffID]
-                    content.categoryIdentifier = AlertAnswers.holdCategory
+                    // A purchase is approved only from its own card: its notification offers Refuse only.
+                    content.categoryIdentifier = call.purchase != nil || call.purchaseUnreadable == true
+                        ? HoldNotification.refuseOnlyCategory : AlertAnswers.holdCategory
                 } else {
                     content.userInfo = ["open": "needs-you"]
                 }

@@ -486,6 +486,9 @@ struct HeldCallCard: View {
         model.requestedHold = nil
         guard model.canAnswer(call) else { return }
         switch request.answer {
+        // A purchase is approved only from its own card, read first: an Approve chosen on its notification just opens it.
+        case AlertAnswers.approve? where call.purchase != nil || call.purchaseUnreadable == true:
+            break
         case AlertAnswers.approve? where call.approvableOnce:
             if call.install != nil { install() } else { send(.approveOnce, fromNotification: true) }
         case AlertAnswers.refuse?:

@@ -4069,6 +4069,12 @@ final class AppModel: ObservableObject {
     }
 
     /// The answer as KIFF's signed answer message, kiff.answer.v1, names it.
+    /// Whether a held purchase changed between the card the owner read and the hold as it is now: its case, version,
+    /// digest or any of its words. Approve once is signed only when they're the same.
+    nonisolated static func purchaseChanged(drawn: HeldCall, held: HeldCall) -> Bool {
+        drawn.purchase == nil || drawn.purchase != held.purchase || drawn.purchaseBinding != held.purchaseBinding
+    }
+
     nonisolated static func kiffAnswer(_ answer: Answer) -> String {
         switch answer {
         case .approveOnce: return "approve-once"
@@ -4155,6 +4161,12 @@ final class AppModel: ObservableObject {
             }
             guard allowed else {
                 lastError = Words.NeedsYou.answerInKiff
+                return
+            }
+            // Approve signs the purchase the card drew, never a newer case read since (other lines, another address):
+            // when they differ, nothing is signed and the card is drawn again with what's held now.
+            if answer == .approveOnce, AppModel.purchaseChanged(drawn: call, held: shown) {
+                lastError = Words.Error.changed
                 return
             }
         }

@@ -119,6 +119,33 @@ final class PurchaseApprovalTests: XCTestCase {
         XCTAssertEqual(read.purchaseBinding?.signedLine, call.purchaseBinding?.signedLine)
     }
 
+    /// Approve signs the purchase the card drew: a newer case version, other lines or another address read between the
+    /// drawing and the tap means nothing is signed. The same purchase, read again, is no change.
+    func testApproveIsOnlyForThePurchaseTheCardDrew() throws {
+        let drawn = KIFFMapping.held(try held(try approval()), tafID: UUID())
+        let same = KIFFMapping.held(try held(try approval()), tafID: drawn.tafID)
+        XCTAssertFalse(AppModel.purchaseChanged(drawn: drawn, held: same), "read again, unchanged")
+        let newerVersion = KIFFMapping.held(try held(try approval { $0["version"] = 2 }), tafID: drawn.tafID)
+        XCTAssertTrue(AppModel.purchaseChanged(drawn: drawn, held: newerVersion), "a newer case version")
+        let otherDigest = KIFFMapping.held(try held(try approval { $0["digest"] = String(repeating: "0", count: 64) }), tafID: drawn.tafID)
+        XCTAssertTrue(AppModel.purchaseChanged(drawn: drawn, held: otherDigest), "another digest")
+        let otherAddress = KIFFMapping.held(try held(try approval(words { $0["delivery"] = "Delivered to 1 Other Street" })), tafID: drawn.tafID)
+        XCTAssertTrue(AppModel.purchaseChanged(drawn: drawn, held: otherAddress), "another address")
+        let otherLines = KIFFMapping.held(try held(try approval(words { $0["lines"] = [["name": "Something else", "amount": "€1.00"]] })), tafID: drawn.tafID)
+        XCTAssertTrue(AppModel.purchaseChanged(drawn: drawn, held: otherLines), "other lines")
+        let unreadable = KIFFMapping.held(try held(try approval(words { $0["total"] = nil })), tafID: drawn.tafID)
+        XCTAssertTrue(AppModel.purchaseChanged(drawn: drawn, held: unreadable), "words that no longer read")
+    }
+
+    /// A purchase's notification offers Refuse only: it's approved from its own card, read first.
+    func testAPurchasesNotificationOffersRefuseOnly() throws {
+        let categories = AlertAnswers.categories()
+        let refuseOnly = try XCTUnwrap(categories.first { $0.identifier == HoldNotification.refuseOnlyCategory })
+        XCTAssertEqual(refuseOnly.actions.map(\.identifier), [AlertAnswers.refuse])
+        let hold = try XCTUnwrap(categories.first { $0.identifier == AlertAnswers.holdCategory })
+        XCTAssertEqual(Set(hold.actions.map(\.identifier)), [AlertAnswers.approve, AlertAnswers.refuse], "any other hold, as before")
+    }
+
     func testAHoldWithNoPurchaseIsAsBefore() throws {
         let one: [String: Any] = ["id": "exc_1", "subject": "agent_shop", "action": "refund", "entity_id": "ord_1",
                                   "status": "held", "breaches": [], "created_at": "2026-11-28T09:14:00Z", "accounting_version": 1]
