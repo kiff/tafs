@@ -145,4 +145,22 @@ final class WorkLogTests: XCTestCase {
         XCTAssertEqual(PinnedTurn(top: 300, foot: 1400).room(800), 0)
         XCTAssertEqual(PinnedTurn(top: 300, foot: 200).room(800), 800, "not laid out yet")
     }
+
+    /// A step's words as the list shows them: tafs cloud's without the live "…", and none at all rather than the tool's
+    /// name (docs/chat.md, "The answer as it comes").
+    func testAStepsWordsLoseTheLiveEllipsisAndAStepWithNoneIsLeftOut() {
+        XCTAssertEqual(WorkLog.shown("Reading the orders sheet…"), "Reading the orders sheet")
+        XCTAssertEqual(WorkLog.shown("Reading the orders sheet..."), "Reading the orders sheet")
+        XCTAssertEqual(WorkLog.shown("  Checked Qonto  "), "Checked Qonto")
+        XCTAssertNil(WorkLog.shown(nil))
+        XCTAssertNil(WorkLog.shown("   "))
+        XCTAssertNil(WorkLog.shown("…"))
+    }
+
+    /// A folded step carries tafs cloud's words when sent, as the live one does.
+    func testAFoldedStepReadsItsWords() throws {
+        let json = #"{"ms":1200,"steps":[{"tool":"sheets_read","words":"Read the orders sheet"},{"tool":"qonto_list","error":true}]}"#
+        let work = try JSONDecoder().decode(TafsCloud.Work.self, from: Data(json.utf8))
+        XCTAssertEqual(work.steps.map(\.words), ["Read the orders sheet", nil])
+    }
 }

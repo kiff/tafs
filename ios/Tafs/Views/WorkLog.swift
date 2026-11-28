@@ -29,6 +29,14 @@ enum WorkLog {
         return running || rows.contains { $0.status == .done } ? rows.filter { $0.status != .error } : rows
     }
 
+    /// A step's words as the list shows them: tafs cloud's, without the live "…", so the live list reads the same once it
+    /// folds. Nil when there are none: a step with no words is left out, never shown by its tool's name (docs/chat.md).
+    static func shown(_ words: String?) -> String? {
+        guard var w = words?.trimmingCharacters(in: .whitespacesAndNewlines), !w.isEmpty else { return nil }
+        while w.hasSuffix("…") || w.hasSuffix("...") { w = String(w.dropLast(w.hasSuffix("…") ? 1 : 3)).trimmingCharacters(in: .whitespaces) }
+        return w.isEmpty ? nil : w
+    }
+
     /// "12 s", "1 min 5 s".
     static func duration(ms: Int) -> String {
         let s = Swift.max(1, Int((Double(ms) / 1000).rounded()))
@@ -47,14 +55,16 @@ struct LiveWork: View {
     var body: some View {
         let at = live.steps.lastIndex { $0.status == .running }
         let current = at.map { live.steps[$0] }
-        let done = live.steps.enumerated().filter { $0.offset != at }.map { (words: Self.words($0.element, model), status: $0.element.status) }
+        // Each step that ended, in its words; one tafs cloud has no words for is left out, never named by its tool.
+        let done = live.steps.enumerated().filter { $0.offset != at }
+            .compactMap { s in Self.words(s.element, model).map { (words: $0, status: s.element.status) } }
         let rows = WorkLog.rows(done, running: true)
         let writing = !live.text.isEmpty
         if current != nil || !writing || !rows.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.mini).tint(Theme.dim)
-                    Text(live.line(current: current.map { Self.words($0, model) }))
+                    Text(live.line(current: current.flatMap { Self.words($0, model) }))
                         .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -67,8 +77,8 @@ struct LiveWork: View {
         }
     }
 
-    static func words(_ step: AppModel.LiveStep, _ model: AppModel) -> String {
-        step.words ?? model.tafActivityWords(step.tool) ?? step.tool
+    static func words(_ step: AppModel.LiveStep, _ model: AppModel) -> String? {
+        WorkLog.shown(step.words ?? model.tafActivityWords(step.tool))
     }
 }
 
@@ -128,8 +138,11 @@ struct WorkSummary: View {
     @Environment(\.layoutDirection) private var direction
 
     var body: some View {
-        let steps = coach ? work.steps.filter { AppModel.activityWords($0.tool) != nil } : work.steps
-        let rows = WorkLog.rows(steps.map { (words: Self.words($0.tool, coach: coach, model), status: $0.notMade ? .notMade : $0.error ? .error : .done) }, running: false)
+        // Each step in its words, tafs cloud's (`words`) else the app's for the tool; one with none is left out, never named
+        // by its tool (docs/chat.md).
+        let rows = WorkLog.rows(work.steps.compactMap { step in
+            Self.words(step, coach: coach, model).map { (words: $0, status: step.notMade ? .notMade : step.error ? .error : .done) }
+        }, running: false)
         VStack(alignment: .leading, spacing: 6) {
             Button { withMotion(.easeOut(duration: 0.25)) { open.toggle() } } label: {
                 HStack(spacing: 4) {
@@ -148,8 +161,10 @@ struct WorkSummary: View {
         .accessibilityIdentifier("work-summary")
     }
 
-    static func words(_ tool: String, coach: Bool, _ model: AppModel) -> String {
-        coach ? (AppModel.activityWords(tool) ?? tool) : (model.tafActivityWords(tool) ?? tool)
+    static func words(_ step: TafsCloud.Work.Step, coach: Bool, _ model: AppModel) -> String? {
+        // Coach's steps are in Coach's words only, never "Asking KIFF to run planque" (the 870 test).
+        if coach { return WorkLog.shown(AppModel.activityWords(step.tool)) }
+        return WorkLog.shown(step.words ?? model.tafActivityWords(step.tool))
     }
 }
 
