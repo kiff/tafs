@@ -45,7 +45,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@39", "did-this-happen@1", "draft-the-card@56", "drive-the-app@3", "halting@1", "improve-a-taf@5", "name-the-tools@23", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@39", "did-this-happen@1", "draft-the-card@56", "drive-the-app@3", "halting@1", "improve-a-taf@6", "name-the-tools@23", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -96,7 +96,9 @@ describe("Coach's skills, as files", () => {
       // grant (Qonto re-test 3, 27 Nov: a new conversation asked to sign in again over a listed Qonto sign-in no taf used).
       // connect-an-app at 2,460: a read needs a taf, said before any sign-in, with the small taf offered and never a one-time
       // read (28 Nov, a Qonto balance read: offered "once, no taf", refused by planque after the sign-in, three approvals).
-      const budget: Record<string, number> = { "set-up-a-taf": 2030, "connect-an-app": 2460, "draft-the-card": 2400, "name-the-tools": 1980 };
+      // improve-a-taf at 1,890: a version with a new connection to a vendor the taf already has names that connection's
+      // tools on every Card for it (a version's trial read through the old Qonto connection, its own never called).
+      const budget: Record<string, number> = { "improve-a-taf": 1890, "set-up-a-taf": 2030, "connect-an-app": 2460, "draft-the-card": 2400, "name-the-tools": 1980 };
       expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(budget[s.name] ?? 1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
@@ -579,6 +581,8 @@ describe("Coach's core", () => {
     const improve = COACH_SKILLS.find((k) => k.name === "improve-a-taf")!.body.replace(/\s+/g, " ");
     expect(improve).toContain("When its work moves to another app or connection (its check reads there now), every step that reads or writes the old one is rewritten for the new one's tools: none of the old tools' names stays in them.");
     expect(improve).toContain("note: what changed in one short sentence in the owner's language, only what this version's notes, draft or sources carry (a summary alone changes no run, so it never says the taf now does something else)");
+    // A version's own connection: a trial read through the old Qonto connection while version 2's new one was never called.
+    expect(improve).toContain("A version with a new connection to a vendor the taf already has (a fresh sign-in, for more access) uses only that one: every Card for that vendor in the draft names the new connection's tools, as planque's status for it lists them, never the old one's, or its runs keep calling the old connection.");
     // What it works from goes in the version (a folder and a sheet given in a chat, never read by a door run).
     expect(improve).toContain("Put the full list it should have, each {kind, name, id}, in the result's sources: every run of that version has them, from a door or a schedule too.");
   });
@@ -778,14 +782,14 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
     expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@39", "draft-the-card@56", "halting@1", "name-the-tools@23", "set-up-a-taf@16", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@39", "draft-the-card@56", "improve-a-taf@5", "name-the-tools@23"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@39", "draft-the-card@56", "improve-a-taf@6", "name-the-tools@23"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
     expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@39", "draft-the-card@56", "halting@1", "name-the-tools@23", "set-up-a-taf@16", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@39", "draft-the-card@56", "halting@1", "improve-a-taf@5", "name-the-tools@23"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@39", "draft-the-card@56", "halting@1", "improve-a-taf@6", "name-the-tools@23"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });
