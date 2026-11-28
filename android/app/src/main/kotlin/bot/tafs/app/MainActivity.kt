@@ -411,6 +411,7 @@ fun RootView(model: AppModel) {
         bot.tafs.app.views.LocalYourStepActions provides remember(model) { bot.tafs.app.views.YourStepActions(answer = model::answerYourStep) },
         bot.tafs.app.views.LocalAllowHold provides (if (state.mode == Mode.kiff && state.canManageCards) model::openAllow else null),
         bot.tafs.app.views.LocalFillRefusal provides model::fillRefusal,
+        bot.tafs.app.views.LocalApprovePurchase provides (if (state.mode == Mode.kiff) ({ call, shown -> model.answer(call, bot.tafs.app.model.Answer.ApproveOnce, shownPurchase = shown) }) else null),
         LocalCoachInstalls provides remember(model) {
           CoachInstalls(
             begin = model::beginCoachInstall,

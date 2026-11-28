@@ -609,6 +609,11 @@ data class CardException(
    * own hash ([HeldBrowser.servedSha256]).
    */
   @SerialName("browser_sha256") val browserSha256: String? = null,
+  /**
+   * A held purchase (contracts/purchase.json, `approval.value`; docs/purchases.md): the case's id, version and digest and KIFF's
+   * words for it, read by [PurchaseHold.read] so one bad block never hides the account's other held calls. Absent for any other hold.
+   */
+  val purchase: JsonElement? = null,
 )
 
 /**

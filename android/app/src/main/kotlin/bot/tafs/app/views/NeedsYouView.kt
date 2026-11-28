@@ -180,6 +180,12 @@ val LocalAllowHold = staticCompositionLocalOf<((HeldCall) -> Unit)?> { null }
  */
 val LocalFillRefusal = staticCompositionLocalOf<((HeldCall) -> bot.tafs.app.kiff.SealedRelease.Refusal?)?> { null }
 
+/**
+ * Approve once on a held purchase (docs/purchases.md), with the case its card drew: the model approves only when that's the case
+ * held. Null where it isn't offered (the sample, previews): the card then offers Refuse only.
+ */
+val LocalApprovePurchase = staticCompositionLocalOf<(suspend (HeldCall, bot.tafs.app.model.PurchaseApproval) -> Boolean)?> { null }
+
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun NeedsYouView(
@@ -323,6 +329,21 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
     }
   }
   val expired = now >= call.expiresAt
+  // A held purchase: KIFF's words for its case, every line as it came (docs/purchases.md). Approve once sends the case drawn.
+  val purchase = call.purchase
+  val approvePurchase = LocalApprovePurchase.current
+  fun approve(shown: bot.tafs.app.model.PurchaseApproval) {
+    val go = approvePurchase ?: return
+    if (sending) return
+    sending = true
+    scope.launch {
+      try {
+        go(call, shown)
+      } finally {
+        sending = false
+      }
+    }
+  }
   Panel(stroke = Theme.amber.copy(alpha = 0.4f)) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
       Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -330,12 +351,20 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
         Text(taf?.name ?: Words.NeedsYou.aTaf, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
         Text(remaining(call, now), style = scaled(12, color = Theme.amberText, mono = true))
       }
-      call.proposed.amount?.let { Text(it.formatted, style = scaled(44, FontWeight.Bold, Theme.ink, display = true)) }
-      Text(call.proposed.summary, style = scaled(16, FontWeight.SemiBold, Theme.ink))
-      if (call.proposed.context.isNotEmpty()) Text(call.proposed.context, style = scaled(14, color = Theme.soft))
-      // KIFF's reason, as a badge; none where there's none to say (Coach's install).
-      if (call.reason.isNotBlank()) Text(
-        call.reason,
+      if (purchase != null) {
+        PurchaseFace(purchase)
+      } else if (call.isPurchase) {
+        // A purchase whose words can't be read: said so, never drawn as an ordinary call, never approved.
+        Text(Words.Purchase.unreadable, style = scaled(14, color = Theme.soft))
+      } else {
+        call.proposed.amount?.let { Text(it.formatted, style = scaled(44, FontWeight.Bold, Theme.ink, display = true)) }
+        Text(call.proposed.summary, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+        if (call.proposed.context.isNotEmpty()) Text(call.proposed.context, style = scaled(14, color = Theme.soft))
+      }
+      // KIFF's reason, as a badge; none where there's none to say (Coach's install). A purchase's is in its own words.
+      val reason = if (call.isPurchase) purchase?.words?.reason.orEmpty() else call.reason
+      if (reason.isNotBlank()) Text(
+        reason,
         style = scaled(12, FontWeight.Medium, Theme.amberText),
         modifier = Modifier.clip(CircleShape).background(Theme.amber.copy(alpha = 0.14f)).padding(horizontal = 8.dp, vertical = 5.dp),
       )
@@ -347,11 +376,11 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
     // A sealed fill while the card is off: drawn as any step, and only Refuse, since it can't be allowed without its release.
     // Over a total, Extra room would let a sealed fill go on with no release: Refuse only there too.
     val fillOff = call.needsRelease && (fill == null || !call.approvableOnce)
-    if (fill != null) SealedFillBlock(fill, fillRefused) else call.browser?.let { BrowserStepBlock(it) }
+    if (fill != null) SealedFillBlock(fill, fillRefused) else if (!call.isPurchase) call.browser?.let { BrowserStepBlock(it) }
     if (fillOff) Text(Words.Chrome.releaseUnreadable, style = scaled(13, color = Theme.soft))
     // The taf's line on why, under its own heading: the taf's words, from text a customer wrote, drawn as plain text and never in
     // place of KIFF's amount, rule or action above.
-    if (call.tafAbout != null || call.tafSays != null) {
+    if (!call.isPurchase && (call.tafAbout != null || call.tafSays != null)) {
       Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Eyebrow(Words.NeedsYou.tafSays)
         call.tafAbout?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink)) }
@@ -360,26 +389,31 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
     }
     // What it's on, as KIFF keeps the call (kiff/tafs#102), under Details: ids and a vendor's own values aren't
     // words for the card's face (kiff/tafs#236, item 7).
-    call.details?.takeIf { it.isNotEmpty() }?.let { details -> Details(details) }
+    if (!call.isPurchase) call.details?.takeIf { it.isNotEmpty() }?.let { details -> Details(details) }
 
     val lasting = state.unanswerable[call.id]
     if (expired) {
       Text(Words.NeedsYou.expiredLine, style = scaled(14, color = Theme.soft))
+    } else if (call.isPurchase && call.purchaseLine == null) {
+      // Its case can't be read, so no answer can be signed for it: the line above says so, and nothing is offered.
     } else if (lasting != null && !AnswerRefusals.refusesOnly(lasting)) {
       // KIFF says this person may never answer it: words, not buttons that can't work.
       Text(AnswerRefusals.refusalWords(lasting) ?: Words.NeedsYou.answerNotTaken, style = scaled(14, color = Theme.soft))
     } else {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Said here, where the owner answers, so the taf's words needn't say it.
-        Text(NOTHING_SENT, style = scaled(14, color = Theme.soft))
+        Text(purchase?.words?.nothingUntil ?: NOTHING_SENT, style = scaled(14, color = Theme.soft))
         // They asked for it: someone else approves, and they can still refuse it.
         lasting?.let { code -> AnswerRefusals.refusalWords(code)?.let { Text(it, style = scaled(14, color = Theme.soft)) } }
         // No approval key KIFF holds: it says so before a tap, and only Refuse is offered.
         val keyLost = state.mode == Mode.kiff && state.approvalKeyLost
         if (keyLost) ApprovalKeyLine()
+        // A purchase is approved once from this card, with the case it drew, or refused: nothing else (docs/purchases.md).
+        val purchaseRefuseOnly = call.isPurchase && (purchase == null || approvePurchase == null || !call.approvableOnce)
         Answers(
-          call, state, refuseOnly = lasting != null || keyLost || fillRefused != null || fillOff, sending = sending, send = ::send,
+          call, state, refuseOnly = lasting != null || keyLost || fillRefused != null || fillOff || purchaseRefuseOnly, sending = sending, send = ::send,
           install = if (installs != null) ::install else null, fill = fill != null,
+          approvePurchase = purchase?.let { shown -> { approve(shown) } },
         )
         // A third answer: change the Card so calls like this go on their own. Shown by the app's own rule, from the call as KIFF
         // sent it; the offer is made on the tap, never to draw the button.
@@ -419,7 +453,16 @@ private fun installTaf(call: HeldCall, state: AppState): String? {
 
 /** What the owner can answer a held call with, while it can still be answered. [install]: approving Coach's held install installs it. */
 @Composable
-private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sending: Boolean, send: (Answer) -> Unit, install: (() -> Unit)?, fill: Boolean = false) {
+private fun Answers(
+  call: HeldCall,
+  state: AppState,
+  refuseOnly: Boolean,
+  sending: Boolean,
+  send: (Answer) -> Unit,
+  install: (() -> Unit)?,
+  fill: Boolean = false,
+  approvePurchase: (() -> Unit)? = null,
+) {
   val biometry = LocalBiometry.current
   // Changing a limit is changing the taf's Card: offered only to whoever may use Coach and manages the taf, as on the iPad.
   val improveInCoach = LocalImproveInCoach.current?.takeIf { state.mayAskCoachAbout(call.tafId) }
@@ -431,7 +474,7 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
       if (refuseOnly) {
         // KIFF takes this person's refusal but not their approval (they asked for the call): Refuse and the next
         // steps stay, approving and extra room go. Over a total, the limit itself can still be changed with Coach.
-        if (!call.approvableOnce) improveInCoach?.let { improve ->
+        if (!call.approvableOnce && !call.isPurchase) improveInCoach?.let { improve ->
           OutlineButton(Words.NeedsYou.changeLimit, { improve(call.tafId) }, Modifier.fillMaxWidth(), enabled = !sending)
         }
       } else if (call.install != null) {
@@ -445,7 +488,7 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
         // A sealed fill's Allow: the release's fingerprint, then the answer's, each prompt naming what it signs.
         ApprovalGate {
           PrimaryButton(
-            if (fill) Words.Chrome.releaseAllow else Words.NeedsYou.approveOnceWith(biometry), { send(Answer.ApproveOnce) },
+            if (fill) Words.Chrome.releaseAllow else Words.NeedsYou.approveOnceWith(biometry), approvePurchase ?: { send(Answer.ApproveOnce) },
             if (fill) Modifier.confirms() else Modifier, enabled = !sending,
           )
         }
@@ -469,7 +512,7 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
         }
       }
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        call.nextSteps.forEach { step -> OutlineButton(step, { send(Answer.NextStep(step)) }, Modifier.weight(1f).confirms(), enabled = !sending) }
+        if (!call.isPurchase) call.nextSteps.forEach { step -> OutlineButton(step, { send(Answer.NextStep(step)) }, Modifier.weight(1f).confirms(), enabled = !sending) }
         OutlineButton(Words.NeedsYou.refuse, { send(Answer.Refuse) }, Modifier.weight(1f).confirms(), color = Theme.no, enabled = !sending)
       }
     } else {
@@ -482,6 +525,50 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
         PrimaryButton(Words.NeedsYou.answerInKiffButton, { uri.openUri(page) })
       }
     }
+  }
+}
+
+/**
+ * A held purchase's face, every line in KIFF's words (contracts/purchase.json, `approval`): the shop, the total large with its note
+ * and the delivery address under it, the items and charges behind Show more, closed each time the card is drawn, then the price
+ * rule, what the card allows and when it buys. The answer signs the case's version, so approving with the lines closed approves
+ * exactly those lines.
+ */
+@Composable
+internal fun PurchaseFace(p: bot.tafs.app.model.PurchaseApproval) {
+  val w = p.words
+  var open by remember(p.caseId, p.version) { mutableStateOf(false) }
+  Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.testTag("purchase")) {
+    Text(w.title, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+    w.subtitle?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+    Text(w.total, style = scaled(44, FontWeight.Bold, Theme.ink, display = true))
+    w.totalNote?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+    Text(w.delivery, style = scaled(14, color = Theme.ink))
+    if (w.lines.isNotEmpty() || w.charges.isNotEmpty()) {
+      Text(
+        (if (open) w.showLess else w.showMore) ?: if (open) Words.NeedsYou.detailsOpen else Words.NeedsYou.detailsClosed,
+        style = scaled(13, FontWeight.SemiBold, Theme.blue),
+        modifier = Modifier.tapping { open = !open }.padding(vertical = 4.dp).testTag("purchase-show-more"),
+      )
+      if (open) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.testTag("purchase-lines")) {
+          w.lines.forEach { l ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              Text(l.name, style = scaled(14, color = Theme.ink), modifier = Modifier.weight(1f))
+              if (l.quantity.isNotEmpty()) Text(l.quantity, style = scaled(14, color = Theme.soft))
+              Text(l.amount, style = scaled(14, color = Theme.ink))
+            }
+          }
+          w.charges.forEach { c ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              Text(c.name, style = scaled(14, color = Theme.soft), modifier = Modifier.weight(1f))
+              Text(c.amount, style = scaled(14, color = Theme.ink))
+            }
+          }
+        }
+      }
+    }
+    listOfNotNull(w.priceRule, w.grant, w.buysNow).forEach { Text(it, style = scaled(14, color = Theme.ink)) }
   }
 }
 

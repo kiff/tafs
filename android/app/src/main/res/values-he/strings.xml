@@ -1821,6 +1821,7 @@
     <string name="people_title">אנשים וקבוצות</string>
     <string name="people_uses">משתמש ב-%1$s</string>
     <string name="people_uses_none">עדיין לא משתמש באף taf</string>
+    <string name="purchase_unreadable">אי אפשר לקרוא את הרכישה הזו, ולכן אי אפשר לאשר אותה.</string>
     <string name="push_channel_briefs">סיכומים</string>
     <string name="push_channel_briefs_description">הסיכום שלך בשעות שנקבעו.</string>
     <string name="push_channel_holds_description">קריאה מוחזקת עד שתשיב. שום דבר לא נשלח עד שתאשר.</string>

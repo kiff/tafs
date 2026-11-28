@@ -1699,6 +1699,7 @@
     <string name="people_title">ผู้คนและกลุ่ม</string>
     <string name="people_uses">ใช้ %1$s</string>
     <string name="people_uses_none">ยังไม่ได้ใช้ taf ใด</string>
+    <string name="purchase_unreadable">อ่านการซื้อนี้ไม่ได้ จึงอนุมัติไม่ได้</string>
     <string name="push_channel_briefs">สรุป</string>
     <string name="push_channel_briefs_description">สรุปของคุณตามเวลาที่ตั้งไว้</string>
     <string name="push_channel_holds_description">มีการเรียกที่ถูกพักไว้รอคำตอบของคุณ จะไม่มีอะไรถูกส่งจนกว่าคุณจะอนุมัติ</string>

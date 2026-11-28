@@ -1699,6 +1699,7 @@
     <string name="people_title">ຄົນ ແລະ ກຸ່ມ</string>
     <string name="people_uses">ໃຊ້ %1$s</string>
     <string name="people_uses_none">ຍັງບໍ່ໃຊ້ taf ໃດ</string>
+    <string name="purchase_unreadable">ບໍ່ສາມາດອ່ານການຊື້ນີ້ໄດ້ ຈຶ່ງອະນຸມັດບໍ່ໄດ້.</string>
     <string name="push_channel_briefs">ບົດສະຫຼຸບ</string>
     <string name="push_channel_briefs_description">ບົດສະຫຼຸບຂອງທ່ານຕາມເວລາທີ່ກຳນົດ.</string>
     <string name="push_channel_holds_description">ການໂທຖືກພັກໄວ້ລໍຖ້າຄຳຕອບຂອງທ່ານ. ບໍ່ມີຫຍັງຖືກສົ່ງຈົນກວ່າທ່ານຈະອະນຸມັດ.</string>

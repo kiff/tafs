@@ -1821,6 +1821,7 @@
     <string name="people_title">Ľudia a skupiny</string>
     <string name="people_uses">Používa %1$s</string>
     <string name="people_uses_none">Zatiaľ nepoužíva žiadny taf</string>
+    <string name="purchase_unreadable">Tento nákup sa nedá prečítať, preto ho nemožno schváliť.</string>
     <string name="push_channel_briefs">Prehľady</string>
     <string name="push_channel_briefs_description">Váš prehľad v nastavených časoch.</string>
     <string name="push_channel_holds_description">Volanie čaká na vašu odpoveď. Nič sa neodošle, kým ho neschválite.</string>

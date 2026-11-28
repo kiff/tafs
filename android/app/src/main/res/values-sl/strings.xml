@@ -1882,6 +1882,7 @@
     <string name="people_title">Ljudje in skupine</string>
     <string name="people_uses">Uporablja %1$s</string>
     <string name="people_uses_none">Še ne uporablja nobenega tafa</string>
+    <string name="purchase_unreadable">Tega nakupa ni mogoče prebrati, zato ga ni mogoče odobriti.</string>
     <string name="push_channel_briefs">Pregledi</string>
     <string name="push_channel_briefs_description">Vaš pregled ob nastavljenih časih.</string>
     <string name="push_channel_holds_description">Klic čaka na vaš odgovor. Nič se ne pošlje, dokler ga ne odobrite.</string>

@@ -1699,6 +1699,7 @@
     <string name="people_title">メンバーとグループ</string>
     <string name="people_uses">使用中：%1$s</string>
     <string name="people_uses_none">まだ使用中のtafなし</string>
+    <string name="purchase_unreadable">この購入は読み取れないため、承認できません。</string>
     <string name="push_channel_briefs">ブリーフィング</string>
     <string name="push_channel_briefs_description">設定した時刻に届くブリーフィング。</string>
     <string name="push_channel_holds_description">呼び出しがあなたの回答を待って保留されています。承認するまで何も送信されません。</string>

@@ -1760,6 +1760,7 @@
     <string name="people_title">Personnes et groupes</string>
     <string name="people_uses">Utilise %1$s</string>
     <string name="people_uses_none">N\'utilise encore aucun taf</string>
+    <string name="purchase_unreadable">Cet achat est illisible, il ne peut donc pas être approuvé.</string>
     <string name="push_channel_briefs">Briefings</string>
     <string name="push_channel_briefs_description">Votre briefing aux heures prévues.</string>
     <string name="push_channel_holds_description">Un appel est retenu en attente de votre réponse. Rien n\'est envoyé tant que vous ne l\'approuvez pas.</string>

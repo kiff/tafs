@@ -1760,6 +1760,7 @@
     <string name="people_title">İnsanlar və qruplar</string>
     <string name="people_uses">İstifadə edir: %1$s</string>
     <string name="people_uses_none">Hələ heç bir taf istifadə etmir</string>
+    <string name="purchase_unreadable">Bu alış oxuna bilmir, ona görə təsdiq edilə bilməz.</string>
     <string name="push_channel_briefs">Xülasələr</string>
     <string name="push_channel_briefs_description">Xülasəniz təyin olunmuş vaxtlarda.</string>
     <string name="push_channel_holds_description">Çağırış cavabınız üçün saxlanılıb. Siz təsdiq edənə qədər heç nə göndərilmir.</string>

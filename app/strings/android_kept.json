@@ -178,5 +178,8 @@
     "It wasn't deleted. Check your connection and try again.": "an English stand-in while tafs cloud sends no words for deleting a chat (an older cloud)",
     "This conversation is still working or waiting for you. Stop it or answer it first, then delete it.": "an English stand-in while tafs cloud sends no words for deleting a chat (an older cloud)",
     "Its messages and the files you added to it are deleted now, for good. Anything it saved to Memory stays there until you remove it. What was already done stays done, and what it did stays in your Record.": "an English stand-in while tafs cloud sends no words for deleting a chat (an older cloud)"
+  },
+  "kiff/KiffClient.kt": {
+    "a purchase has no browser line": "a programming error's message, never shown to a person"
   }
 }

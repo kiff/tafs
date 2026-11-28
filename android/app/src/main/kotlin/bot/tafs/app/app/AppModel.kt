@@ -7841,9 +7841,10 @@ class AppModel(
     installed: Boolean = false,
     approvedWithCard: Boolean = false,
     presigned: SignedAnswer? = null,
+    shownPurchase: bot.tafs.app.model.PurchaseApproval? = null,
   ): Boolean =
     // A held call's answer that goes through ticks success; one that doesn't, a warning.
-    answerNow(call, answer, confirmed, installed, approvedWithCard, presigned).also { done ->
+    answerNow(call, answer, confirmed, installed, approvedWithCard, presigned, shownPurchase).also { done ->
       if (done) bot.tafs.app.design.Haptics.success() else bot.tafs.app.design.Haptics.warning()
     }
 
@@ -7854,9 +7855,23 @@ class AppModel(
     installed: Boolean,
     approvedWithCard: Boolean,
     presigned: SignedAnswer?,
+    shownPurchase: bot.tafs.app.model.PurchaseApproval?,
   ): Boolean {
     val before = _state.value
     if (before.held.none { it.id == call.id }) return false
+    // A held purchase (docs/purchases.md) is answered with Approve once or Refuse only, and every answer signs its case's line.
+    // Approve once only from its own card, the case it drew being the case held ([shownPurchase]): never from another screen, a
+    // presigned answer or a Card's confirm. One whose case can't be read can't be signed at all; one whose words can't be read,
+    // only refused.
+    if (call.isPurchase) {
+      val approving = answer is Answer.ApproveOnce
+      if (call.purchaseLine == null || (answer !is Answer.ApproveOnce && answer !is Answer.Refuse) ||
+        approving && (call.purchase == null || shownPurchase != call.purchase || presigned != null || confirmed || installed || approvedWithCard)
+      ) {
+        fail(Words.Purchase.unreadable)
+        return false
+      }
+    }
     // Approving Coach's install is installing it (kiff/tafs#206): the switch and its Card come first, then this answer, so
     // tafs never hears of a half-done install.
     if (call.install != null && answer is Answer.ApproveOnce && !confirmed && !installed) {
@@ -7911,7 +7926,12 @@ class AppModel(
     val answered = try {
       presigned ?: signAnswer(
         call, answer,
-        if (release != null) Words.Chrome.releasePromptAllow(site = call.browser?.site.orEmpty()) else Words.NeedsYou.Prompt.answer(summary = call.proposed.summary),
+        when {
+          release != null -> Words.Chrome.releasePromptAllow(site = call.browser?.site.orEmpty())
+          // KIFF's own words for what's bought: the shop and the total.
+          call.purchase != null -> call.purchase.words.prompt
+          else -> Words.NeedsYou.Prompt.answer(summary = call.proposed.summary)
+        },
         confirmed,
       )
     } catch (e: SignerException) {
@@ -8014,7 +8034,7 @@ class AppModel(
     var signedAt = ""
     val message = {
       signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
-      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt, call.browserSha256)
+      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt, call.browserSha256.takeIf { call.purchaseLine == null }, call.purchaseLine)
     }
     // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
     // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no

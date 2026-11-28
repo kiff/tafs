@@ -1820,6 +1820,9 @@ object Words {
     fun uses(tafs: String): String = Res.s(R.string.people_uses, tafs)
     val usesNone: String get() = Res.s(R.string.people_uses_none)
   }
+  object Purchase {
+    val unreadable: String get() = Res.s(R.string.purchase_unreadable)
+  }
   object Push {
     object Channel {
       val briefs: String get() = Res.s(R.string.push_channel_briefs)
