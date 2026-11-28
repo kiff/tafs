@@ -651,7 +651,7 @@ describe("Coach's core", () => {
       "An owner or admin approves planque's address first: in Qonto, open Qonto AI, then Qonto MCP, then Advanced settings, and add https://planque.kiff.dev/oauth/callback.",
       "Use your own Qonto login, and \"Desktop site\" on a phone. If Qonto's page offers to create a company, close it. If it shows only Apple, open your browser's \"Desktop site\" view.",
       "Professional secrecy. Qonto's consent page asks you to accept the lifting of Qonto's professional secrecy for the tool you chose. It's your choice; without the tick, nothing is connected.",
-      "What it can read: the account balance, IBAN, transactions, the business and its team; supplier invoices; receipts and other attachments; client invoices and credit notes; products. It can draft a client invoice, which you send yourself, and add or update clients. It can't finalise, cancel, send or mark an invoice paid, or delete an invoice or a client. It can't make payments, approve or refuse card and transfer requests, set trusted beneficiaries, or store your login.",
+      "What it can read: transactions, the business and its team; supplier invoices; receipts and other attachments; client invoices and credit notes; products. It can draft a client invoice, which you send yourself, and add or update clients. It can't finalise, cancel, send or mark an invoice paid, or delete an invoice or a client. It can't make payments, approve or refuse card and transfer requests, set trusted beneficiaries, or store your login.",
     ];
     // As test/coach-wording.test.ts reads them: RE2 \pL is \p{L}, and a match needs a word edge on each side.
     const js = (p: string) => p.replace(/\\p([LN])/g, "\\p{$1}");
