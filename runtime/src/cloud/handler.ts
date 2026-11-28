@@ -5509,8 +5509,8 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
 /**
  * The app a draft's Cards reach through two connections, or undefined: each tool a Card names, by KIFF's name, is matched
  * to the account's gateway connection of that name, and the connections are told apart by their relay audience (one per
- * planque grant) and grouped by their app (the connection's `app`, else its server's host). A tool the list doesn't name,
- * or a connection with no audience (one connected straight to KIFF), says nothing. No list (KIFF's gateway didn't answer):
+ * planque grant) and grouped by their app (the connection's `app`). A tool the list doesn't name, a connection with no app,
+ * or one with no audience (connected straight to KIFF), says nothing. No list (KIFF's gateway didn't answer):
  * nothing is refused on a guess.
  */
 export function mixedConnections(cards: readonly unknown[], conns: ReadonlyArray<{ name: string; url?: string; app?: unknown; audience?: unknown }> | undefined): string | undefined {
@@ -5525,8 +5525,9 @@ export function mixedConnections(cards: readonly unknown[], conns: ReadonlyArray
       const c = byName.get(fold((g as { action?: unknown })?.action));
       const audience = typeof c?.audience === "string" ? c.audience.trim() : "";
       if (!c || !audience) continue;
-      let app = typeof c.app === "string" && c.app.trim() ? c.app.trim() : "";
-      if (!app) { try { app = new URL(c.url ?? "").host; } catch { app = ""; } }
+      // Only a connection whose app is named is grouped: a relay's url is planque's own host for every app, so an app-less
+      // connection says nothing about which app it is.
+      const app = typeof c.app === "string" ? c.app.trim() : "";
       if (!app) continue;
       const set = seen.get(app) ?? new Set<string>();
       set.add(audience);

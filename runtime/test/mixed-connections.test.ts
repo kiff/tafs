@@ -21,5 +21,8 @@ describe("a version's Card and its connections", () => {
     expect(mixedConnections([card("lookup_direct", "list_client_invoices_bhtn", "unknown_tool")], conns)).toBeUndefined();
     expect(mixedConnections([card("list_client_invoices_yhbp", "create_client_invoice_bhtn")], undefined)).toBeUndefined();
     expect(mixedConnections([{ grants: "nope" }, null, card()], conns)).toBeUndefined();
+    // Two app-less grants share planque's host as their url: never "two connections" of one app.
+    const appless = [relay("read_sheet_a1", "grt_sheets", ""), relay("send_mail_b2", "grt_mail", "")];
+    expect(mixedConnections([card("read_sheet_a1", "send_mail_b2")], appless)).toBeUndefined();
   });
 });
