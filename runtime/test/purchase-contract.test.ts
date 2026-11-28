@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { sha256 } from "../src/cloud/jcs.js";
@@ -11,6 +12,7 @@ describe("the purchase contract", () => {
   it("signs every field of the case, the delivery address included, under one digest that every side carries", () => {
     expect(Object.keys(c).sort()).toEqual(doc.signed_fields);
     expect(doc.signed_fields).toEqual(expect.arrayContaining(["delivery", "price", "lines", "merchant", "currency", "valid_for_seconds", "path", "version"]));
+    expect(c.merchant.match.name_key).toBe(c.merchant.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, ""));
     const digest = sha256(c);
     expect(doc.case.digest).toBe(digest);
     expect(doc.approval.value.digest).toBe(digest);
@@ -45,7 +47,9 @@ describe("the purchase contract", () => {
     const states = doc.states.case.map((s: { state: string }) => s.state);
     for (const s of doc.states.case) for (const n of s.next) expect(states, `${s.state} → ${n}`).toContain(n);
     const unknown = doc.states.case.find((s: { state: string }) => s.state === "unknown");
-    expect(unknown.next.sort()).toEqual(["approved", "done"]);
+    expect(unknown.next.sort()).toEqual(["approved", "done", "not_bought"]);
+    expect(doc.states.leave_unknown.to_approved).toMatch(/`none` or `reversed`/);
+    expect(doc.states.leave_unknown.to_approved).toMatch(/valid_until/);
     expect(unknown.means).toMatch(/refused until reconciled/);
     expect(doc.states.order).toContain("unknown");
     expect(doc.execution.outcome).toContain("unknown");
@@ -64,8 +68,16 @@ describe("the purchase contract", () => {
 
   it("gives the apps KIFF's words for every line they draw, and never a card number", () => {
     const w = doc.approval.value.words;
-    for (const k of ["title", "total", "show_more", "lines", "delivery", "price_rule", "grant", "buys_now", "reason", "prompt"]) expect(w[k], k).toBeTruthy();
+    for (const k of ["title", "subtitle", "total", "total_note", "show_more", "lines", "charges", "delivery", "price_rule", "grant", "buys_now", "nothing_until", "reason", "prompt"]) expect(w[k], k).toBeTruthy();
     expect(w.lines).toHaveLength(c.lines.length);
+    // The open list adds up to the total the owner approves: its lines and its charges.
+    const cents = (a: string) => Number(a.replace(/[^\d]/g, ""));
+    const listed = [...w.lines, ...w.charges].reduce((sum: number, l: { amount: string }) => sum + cents(l.amount), 0);
+    expect(listed).toBe(c.price.total);
+    for (const l of w.lines) expect(Object.keys(l).sort()).toEqual(["amount", "name", "quantity"]);
+    // "At this shop" holds only because the live authorization matches the shop itself.
+    expect(w.grant).toMatch(/at this shop/);
+    expect(doc.authorization.approves_only_if.join(" ")).toMatch(/merchant\.match/);
     const text = JSON.stringify(doc);
     // A Luhn-shaped run of 13 to 19 digits is never in the contract.
     for (const run of text.match(/\d{13,19}/g) ?? []) {
@@ -73,6 +85,30 @@ describe("the purchase contract", () => {
       const sum = digits.reduce((s, d, i) => s + (i % 2 ? (d * 2 > 9 ? d * 2 - 9 : d * 2) : d), 0);
       expect(sum % 10, run).not.toBe(0);
     }
+  });
+
+  it("binds the owner's signed bytes to this case's digest, with a vector of the exact message", () => {
+    const v = doc.answer.vector;
+    const purchase = `purchase:${c.case_id}:${c.version}:${doc.case.digest}`;
+    const lines = ["kiff.answer.v1", v.tenant, v.exception_id, v.answer, v.next_step, v.note ? createHash("sha256").update(v.note).digest("hex") : "", String(v.hold_version), v.signed_at, purchase];
+    expect(v.message).toBe(lines.join("\n"));
+    expect(v.message.split("\n").at(-1)).toBe(purchase);
+    expect(createHash("sha256").update(v.message, "utf8").digest("hex")).toBe(v.message_sha256);
+    expect(Object.keys(doc.answer.answers).sort()).toEqual(["approve-once", "reject"]);
+    expect(doc.answer.value.exception_id).toBe(v.exception_id);
+  });
+
+  it("scopes a token as the card is, links the card to the case, and never outlives the decision", () => {
+    const t = doc.execution.token.value;
+    expect(t.max_amount).toBe(c.grant.cap);
+    expect(t.currency).toBe(c.currency);
+    expect(t.seller).toBe(c.merchant.site);
+    expect(Date.parse(t.expires_at)).toBeLessThanOrEqual(Date.parse(doc.decision.by_owner.valid_until));
+    const card = doc.execution.value.card;
+    expect(card.metadata.case_id).toBe(c.case_id);
+    expect(card.metadata.permit_jti).toBeTruthy();
+    expect(Date.parse(card.created_at)).toBeGreaterThanOrEqual(Date.parse(doc.decision.by_owner.at));
+    expect(doc.case.v1.route).toEqual(["issued_card"]);
   });
 
   it("signs a receipt over the case's digest, with the issuer's merchant beside the case's", () => {
@@ -85,5 +121,11 @@ describe("the purchase contract", () => {
     expect(doc.states.money).toContain(r.states.money);
     expect(doc.states.order).toContain(r.states.order);
     expect(r.kid).toBeTruthy();
+    expect(r.path).toBe(c.path);
+    for (const k of ["line", "state", "allowed", "card", "shipping", "refunds"]) expect(r.words[k], k).toBeTruthy();
+    expect(doc.receipt["approver.method"]).toContain(r.approver.method);
+    expect(typeof r.approver.self).toBe("boolean");
+    expect(doc.receipt.examples.unknown.words.state).toBe("Not known yet");
+    expect(doc.receipt.examples.card_fill.words.card).not.toBe(r.words.card);
   });
 });
