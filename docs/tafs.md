@@ -325,6 +325,16 @@ reads every note in What it remembers.
 - Forgetting a note (`DELETE /v1/tafs/{id}/memory/{note}`) is final: kiff/agents keeps
   no versions. A person forgets their own notes (named `@…`); a shared note takes
   managing the taf.
+- **A taf never says it kept a note it didn't write.** Once `TAFS_NOTE_CLAIMS=on`, every
+  taf's definition carries a wording rule (`runtime/src/cloud/taf-wording.ts`): a
+  message that says it noted, remembered or saved something to its notes is held,
+  unless the same run made a memory write that went through. kiff/agents tells the agent why, and the agent
+  writes the note or says something else. After kiff/agents' rewording limit, the
+  sentence is replaced by the rule's own words, in that sentence's language ("I didn't
+  save that. To keep it for every run, ask Coach to add it to my setup."). Patterns
+  cover Coach's 8 languages. A folder, sheet, tab or id the job needs is its setup,
+  never a note: a note written in a person's chat is kept for that person only, so a
+  door or a schedule never reads it.
 
 ## The Record
 
