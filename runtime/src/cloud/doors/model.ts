@@ -93,6 +93,12 @@ export interface Door {
   address: string;
   /** How an arriving message finds this door (`door#<route>` names it). */
   route: string;
+  /**
+   * Whether its replies wait for the owner: "ask" (or none set, the default) holds each reply to someone
+   * outside until the owner sends it; "auto" sends a reply to a paired sender on its own. A reply to the
+   * owner's own address is never held.
+   */
+  replies?: "ask" | "auto";
   keys: Key[];
   created: string;
   /** A WhatsApp door's number, as the WhatsApp Business Platform names it. */
@@ -192,9 +198,22 @@ export interface Sent {
   run: string;
   door: string;
   app: string;
-  status: "sent" | "not_sent";
+  status: "sent" | "not_sent" | "held";
   why?: string;
   at: string;
+}
+
+/**
+ * A door's reply waiting for the owner to send it: the exact text they read, and what it answers. Sent as
+ * it is on their yes, never written again.
+ */
+export interface HeldReply {
+  ref: string;
+  reply: Reply;
+  text: string;
+  at: string;
+  /** What the content check found, for the owner (guard.ts): why it couldn't go on its own. */
+  concerns?: string[];
 }
 
 /**
@@ -266,6 +285,10 @@ export const doorKeys = {
   reply: (tenant: string, ref: string) => `${tenant}#door-reply#${ref}`,
   sending: (tenant: string, ref: string) => `${tenant}#door-sending#${ref}`,
   pending: (tenant: string, taf: string) => `${tenant}#door-pending#${taf}`,
+  /** A door's reply waiting for the owner to send it, by its run. */
+  heldReply: (tenant: string, taf: string, run: string) => `${tenant}#door-held-reply#${taf}#${run}`,
+  /** The runs whose reply waits for the owner, per taf: what Needs you and the taf's Activity read. */
+  heldReplies: (tenant: string, taf: string) => `${tenant}#door-held-replies#${taf}`,
   /** The replies waiting for their next try, on every account: what the sweep reads. */
   retrying: () => "door-retrying",
   /** A door reply given up on after its tries, by its run: kept so the owner can send it again. */

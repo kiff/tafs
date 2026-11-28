@@ -203,6 +203,9 @@ object KiffMapping {
       timeZoneWords = h.timeZoneWords,
       scheduleTimeZoneWords = h.scheduleTimeZoneWords,
       avatarRim = h.avatarRim,
+      knocks = h.doors.orEmpty().sumOf { it.knocks.coerceAtLeast(0) },
+      heldReplies = h.doors.orEmpty().sumOf { it.replies.coerceAtLeast(0) },
+      heldReplyLine = h.doors.orEmpty().firstNotNullOfOrNull { d -> d.replyLine?.takeIf { d.replies > 0 && it.isNotBlank() }?.let(::visible) },
       kiffCardIds = h.card.ids,
       // Each Card on its own (kiff/tafs#211), as tafs cloud read it from KIFF.
       kiffCards = h.card.cards?.map { c ->

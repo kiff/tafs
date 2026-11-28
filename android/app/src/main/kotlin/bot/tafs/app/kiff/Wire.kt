@@ -128,6 +128,8 @@ data class HomeTaf(
   val waiting: Int = 0,
   val card: HomeCardSummary = HomeCardSummary(),
   @SerialName("avatar_rim") val avatarRim: bot.tafs.app.model.AvatarRim? = null,
+  /** Its doors' lights, for whoever manages it: each door's knocks waiting for the owner. Absent for anyone else. */
+  val doors: List<HomeDoorLight>? = null,
   /** Where its work stands, in tafs cloud's words: its status and line (`GET /v1/tafs/{id}/work`'s `summary`). */
   val work: bot.tafs.app.kiff.WorkSummary? = null,
   /** How it's doing, in tafs cloud's words (docs/reliability.md › Its health); absent when it can't be read in time. */
@@ -157,6 +159,15 @@ data class HomeLabel(
    * person's own words for its goal. A label that isn't a mission's leaves it out.
    */
   val mission: HomeLabelMission? = null,
+)
+
+/** One door's light on Home: how many knocks wait at it for the owner (docs/doors.md). */
+@Serializable
+data class HomeDoorLight(
+  val knocks: Int = 0,
+  /** Replies at this door waiting for the owner to send them, and the newest one's line, as its notification said it. */
+  val replies: Int = 0,
+  @SerialName("reply_line") val replyLine: String? = null,
 )
 
 /** A mission, as its label carries it on Home: what the filtered list's mission row shows, and the id its log is read by. */

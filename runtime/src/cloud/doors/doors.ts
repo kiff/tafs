@@ -6,12 +6,13 @@ import { type Lang, type Words, wordsIn } from "../words/index.js";
 import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
-import { API_DOOR, type APIDraft, type APIField, type APIKey, type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
+import { API_DOOR, type APIDraft, type APIField, type APIKey, type Arrival, DOOR, type Door, doorKeys, type HeldReply, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
 import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
 import { apsFor, levelOf } from "../levels.js";
 import { eventLog, logEvent } from "../events.js";
-import { disclosureLineFor } from "../../jobs.js";
+import { replyConcerns } from "./guard.js";
+import { DISCLOSURE_LINE, disclosureLine, disclosureLineFor, disclosureLines } from "../../jobs.js";
 import { anyHeld, hold, replayHeld, waitsForCredits, waitsToStart } from "./hold.js";
 
 /** What doors are set up with in a deployment; a door whose part is missing isn't offered. */
@@ -129,7 +130,7 @@ export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: strin
   // message is a knock, never a run). So the taf does what they ask within its job, reads included, and
   // answers with what they asked for. What went wrong is only "not now", never an error, a tool, an id or how anything
   // is connected.
-  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; if something failed, say only that it can't be done right now and that the owner will follow up, never an error, a code, a tool, an id or how things are connected`;
+  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; say what you can do for them in terms of the job (orders, invoices, delivery dates), never the apps, folders, sheets, files, mailboxes, Card, limits or other people behind it, unless they need one to act (a link they were given); tafs puts the line saying an AI agent wrote it above your answer, so never write it yourself; if something failed, say only that it can't be done right now and that the owner will follow up, never an error, a code, a tool, an id or how things are connected`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}${botReply(a)}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
@@ -523,6 +524,17 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
     if (done.has(place)) continue;
     if (place === "door_reply") {
       if (!taf || !door || !app) { await stamp({ ...base, status: "not_sent", why: "the door was removed" }); done.add(place); continue; }
+      // A reply to someone outside waits for the owner, as the door's replies say (ask, the default): kept with
+      // the exact text, said in the chat and to the owner's phones, and nothing else goes until they send it.
+      // A door set to reply on its own still holds a reply the content check flags (guard.ts).
+      const concerns = replyConcerns(text, { to: reply.to, others: door.keys.map((k) => k.id) });
+      if (holdsReply(door, reply) || concerns.length > 0) {
+        await holdReply(ctx, tenant, taf, { ref, reply: { ...reply, run: runID }, text, at: ctx.now.toISOString(), ...(concerns.length ? { concerns } : {}) });
+        await stamp({ ...base, status: "held" });
+        await tellOwner(ctx, tenant, taf, (w) => w.door_reply_waiting(reply.name || reply.to, taf.name), `reply-${ref}`, "knock");
+        for (const p of placesOf(taf)) done.add(p);
+        break;
+      }
       const out = await sendReply(ctx, cfg, tenant, taf, door, { ...reply, run: runID }, text, ref);
       if (out.retry) { retry = true; sent = out.sent; continue; }
       await stamp(out.sent);
@@ -545,7 +557,7 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
         await cfg.email.send({
           from: `${taf.name.replace(/[<>"\n]/g, "")} <${from}>`, to: owner, subject: `${taf.name}: answered ${reply.name || reply.to}`,
           text: `${taf.name} answered ${reply.name || reply.to}${reply.subject ? ` about "${reply.subject}"` : ""}:\n\n${text}`,
-          idempotencyKey: hash("door-owner", ref),
+          idempotencyKey: hash("door-owner", ref), notice: true,
         });
         done.add(place);
       } catch (err) {
@@ -580,6 +592,81 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
     }
   }
   await forgetReply(ctx, tenant, reply.taf, ref);
+}
+
+/** Whether a door holds this reply for the owner: every reply but one to the owner's own address, unless set to auto. */
+export function holdsReply(door: Door, reply: Pick<Reply, "to">): boolean {
+  if ((door.replies ?? "ask") === "auto") return false;
+  return !door.keys.some((k) => k.auto && k.id === reply.to);
+}
+
+/**
+ * Keeps a reply for the owner, by its run. A run holds at most one reply: a door's run answers through the one door
+ * its message came by, and settle stops at the first hold. A run that could reply through two doors would need the
+ * door in this key.
+ */
+async function holdReply(ctx: DoorsContext, tenant: string, taf: Taf, held: HeldReply): Promise<void> {
+  const { store } = ctx.doors;
+  await store.put(doorKeys.heldReply(tenant, taf.id, held.reply.run), held, addDays(ctx.now, DOOR.replyDays));
+  await update<{ runs: string[] }>(store, doorKeys.heldReplies(tenant, taf.id),
+    (read) => ({ runs: [...new Set([...(read?.runs ?? []), held.reply.run])].slice(-100) }), addDays(ctx.now, DOOR.replyDays));
+}
+
+/** A held reply's lines, as the apps draw them: what waits, Send, Don't send, and what the fingerprint names. */
+export function heldReplyWords(w: Words, taf: string, who: string) {
+  return { line: w.door_reply_waiting(who, taf), send: w.door_reply_send, discard: w.door_reply_discard, prompt: w.door_reply_prompt(who), changed: w.door_reply_changed };
+}
+
+/** The hex SHA-256 of a held reply's text, UTF-8: what Send names, so it sends only the text the owner read. */
+export function textSHA256(text: string): string {
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
+
+/** A taf's replies waiting for the owner, oldest first: who, what about, and the exact text. */
+export async function heldRepliesOf(store: DoorStore, tenant: string, taf: string): Promise<HeldReply[]> {
+  const runs = ((await store.get(doorKeys.heldReplies(tenant, taf))) as { runs?: string[] } | undefined)?.runs ?? [];
+  const held = await Promise.all(runs.map((r) => store.get(doorKeys.heldReply(tenant, taf, r)) as Promise<HeldReply | undefined>));
+  return held.filter((h): h is HeldReply => !!h);
+}
+
+/**
+ * The owner's answer to a held reply: "send" sends exactly the text they read, through its door, to its
+ * writer only; "discard" sends nothing. Either way the reply leaves Needs you, and the chat's stamp says
+ * what became of it.
+ */
+export async function answerHeldReply(ctx: DoorsContext, owner: Owner, taf: Taf, run: string, body: Record<string, unknown>) {
+  const { store } = ctx.doors;
+  const key = doorKeys.heldReply(owner.tenant, taf.id, run);
+  const held = (await store.get(key)) as HeldReply | undefined;
+  if (!held) throw new DoorError(404, "no reply of this run waits to be sent");
+  const action = body.action;
+  if (action !== "send" && action !== "discard") throw new DoorError(400, "action is send or discard");
+  // Send binds the text the owner read: the hash of the held text, signed with the request, or nothing goes.
+  if (action === "send" && body.text_sha256 !== textSHA256(held.text)) {
+    throw new DoorError(409, wordsIn(ctx.lang ?? "en").door_reply_changed, "reply_changed");
+  }
+  const cfg = await ctx.doors.config();
+  const door = (await doorsOf(store, owner.tenant, taf.id)).find((d) => d.id === held.reply.door);
+  const app = door && appOf(cfg, door.app);
+  const stamp = (x: Sent) => update<{ sent: Sent[] }>(store, doorKeys.sent(owner.tenant, taf.id),
+    (read) => ({ sent: [x, ...(read?.sent ?? []).filter((s) => !(s.run === run && s.status === "held"))].slice(0, 100) }), addDays(ctx.now, DOOR.threadDays));
+  const base = { run, door: held.reply.door, app: door?.app ?? "", at: ctx.now.toISOString() };
+  let state: Sent["status"];
+  if (action === "discard") {
+    await stamp({ ...base, status: "not_sent", why: "the owner didn't send it" });
+    state = "not_sent";
+  } else {
+    if (!door || !app) throw new DoorError(409, "the door this reply goes through was removed");
+    // A fresh idempotency key: this send is the owner's, made once, now.
+    const out = await sendReply(ctx, cfg, owner.tenant, taf, door, held.reply, held.text, `${held.ref}:sent`);
+    await stamp(out.sent);
+    state = out.sent.status;
+    if (out.retry) throw new DoorError(503, "the door's provider didn't take it just now; try again");
+  }
+  await store.remove(key);
+  await update<{ runs: string[] }>(store, doorKeys.heldReplies(owner.tenant, taf.id), (read) => ({ runs: (read?.runs ?? []).filter((r) => r !== run) }), addDays(ctx.now, DOOR.replyDays));
+  await tellChange(owner.tenant, "taf", taf.id, { push: ctx.push, apns: ctx.apns });
+  return { run, state };
 }
 
 /**
@@ -699,7 +786,22 @@ export function replyText(taf: Taf, r: Run, reply: Pick<Reply, "attachments" | "
   const notes: string[] = [];
   if (reply.attachments) notes.push(`I read only the text of your message; I didn't open its ${reply.attachments === 1 ? "attachment" : `${reply.attachments} attachments`}.`);
   if (reply.cut) notes.push(`Your message was long, so I read its first ${DOOR.maxChars.toLocaleString("en")} characters.`);
-  return [disclosureLineFor({ writesFor: taf.writesFor }, answer), answer, ...(notes.length ? [notes.join(" ")] : [])].join("\n\n");
+  const body = withoutDisclosure(answer, taf.writesFor);
+  return [disclosureLineFor({ writesFor: taf.writesFor }, body), body, ...(notes.length ? [notes.join(" ")] : [])].join("\n\n");
+}
+
+/**
+ * The taf's answer without a disclosure line it wrote itself, at its start or its end: the reply carries the
+ * line once, first, as tafs writes it ("Nothing is added after it", docs/doors.md). A test door's reply had it
+ * twice, as its first and last line. Only a whole line that is a disclosure line goes; the answer's own words stay.
+ */
+export function withoutDisclosure(answer: string, writesFor: string | undefined): string {
+  const lines = new Set([...Object.values(disclosureLines({ writesFor })), disclosureLine({ writesFor }), DISCLOSURE_LINE].map((l) => l.trim()));
+  const isLine = (l: string) => lines.has(l.trim()) || /^written by (?:tafs, )?an ai agent\b[^\n]{0,200}\.$/i.test(l.trim());
+  const parts = answer.split("\n");
+  while (parts.length && (parts[0]!.trim() === "" || isLine(parts[0]!))) parts.shift();
+  while (parts.length && (parts.at(-1)!.trim() === "" || isLine(parts.at(-1)!))) parts.pop();
+  return parts.join("\n").trim() || answer.trim();
 }
 
 /** Sends through the door. `retry`: the provider didn't take it for now (it was down, or refused for a while). */
@@ -854,10 +956,20 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
   const doors = await doorsOf(store, owner.tenant, taf.id);
   const counts = await Promise.all(doors.map((d) => todayOf(store, owner.tenant, taf.id, d.id, ctx.now)));
   const knocks = (await knocksOf(store, owner.tenant, taf.id)).filter((k) => k.state === "open");
+  // The replies waiting for the owner to send them, each with the exact text that would go.
+  const w = wordsIn(ctx.lang ?? "en");
+  const replies = (await heldRepliesOf(store, owner.tenant, taf.id)).map((h) => ({
+    run: h.reply.run, door: h.reply.door, to: h.reply.name || h.reply.to, ...(h.reply.subject ? { subject: h.reply.subject } : {}), text: h.text, at: h.at,
+    text_sha256: textSHA256(h.text),
+    // Every line the apps draw for it, in the person's language, the notification's own among them.
+    words: heldReplyWords(w, taf.name, h.reply.name || h.reply.to),
+    ...(h.concerns?.length ? { concerns: h.concerns } : {}),
+  }));
   return {
     doors: doors.map((d, i) => doorView(d, appOf(cfg, d.app), counts[i], ctx.lang)),
     apps: offered(cfg, ctx.lang),
     knocks,
+    replies,
   };
 }
 
@@ -1113,16 +1225,22 @@ export async function keepBound(doors: DoorsDeps, tenant: string, ai: AIBound | 
  * The taf's doors as its avatar's rim shows them, for the home list: each
  * door's app, whether it's open or resting today, and whether a knock waits.
  */
-export async function doorLights(store: DoorStore, tenant: string, taf: string, now: Date) {
+export async function doorLights(store: DoorStore, tenant: string, taf: string, now: Date, replyLine?: (who: string) => string) {
   const doors = await doorsOf(store, tenant, taf);
   if (!doors.length) return [];
-  const [counts, knocks] = await Promise.all([
+  const [counts, knocks, held] = await Promise.all([
     Promise.all(doors.map((d) => todayOf(store, tenant, taf, d.id, now))),
     knocksOf(store, tenant, taf),
+    heldRepliesOf(store, tenant, taf),
   ]);
   return doors.map((d, i) => ({
     app: d.app, label: APPS.find((x) => x.id === d.app)?.label ?? d.app, open: d.open, resting: counts[i]!.keys >= DOOR.keysPerDay,
     knocks: knocks.filter((k) => k.door === d.id && k.state === "open" && !k.rest).length,
+    // The replies waiting for the owner to send them, so Needs you can list what it counts.
+    replies: held.filter((h) => h.reply.door === d.id).length,
+    // The newest held reply's line, as its notification said it, for Needs you's row.
+    ...(replyLine && held.some((h) => h.reply.door === d.id)
+      ? { reply_line: replyLine((() => { const h = held.filter((x) => x.reply.door === d.id).at(-1)!; return h.reply.name || h.reply.to; })()) } : {}),
   }));
 }
 

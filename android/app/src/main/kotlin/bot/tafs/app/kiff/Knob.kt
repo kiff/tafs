@@ -271,6 +271,11 @@ data class ConnectApps(
     /** The tafs that use it, as tafs cloud reads them; null from a tafs cloud that sends none, and this phone reads them itself. */
     @SerialName("used_by") val usedBy: List<UsedBy>? = null,
     /**
+     * Who uses one of the account's own, on its own, in tafs cloud's words ("Used by Rae", "Not used by any taf"): the row's grey
+     * line, beside its status. Null when tafs cloud couldn't read it, or from a tafs cloud before it, and then [line] is drawn.
+     */
+    @SerialName("used_by_words") val usedByWords: String? = null,
+    /**
      * The tafs that need it, as tafs cloud decides (their recipe, or their Card): "Which taf?" lists only these, and with none the
      * row offers Ask Coach. Null from a tafs cloud before it, and then every taf the person manages is asked.
      */

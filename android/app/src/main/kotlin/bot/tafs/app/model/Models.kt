@@ -450,6 +450,12 @@ data class Taf(
   /** While its schedule still runs in another zone, what tafs cloud says about it. */
   val scheduleTimeZoneWords: String? = null,
   val avatarRim: AvatarRim? = null,
+  /** The knocks waiting at its doors, as tafs cloud's Home counts them for whoever manages it: Needs you lists the taf while any wait. */
+  val knocks: Int = 0,
+  /** The replies waiting at its doors for the owner to send them, as Home counts them: Needs you lists the taf while any wait. */
+  val heldReplies: Int = 0,
+  /** The newest held reply's line, in tafs cloud's words ("Refunds wrote a reply to Ben. It waits for you to send it."). */
+  val heldReplyLine: String? = null,
 ) {
   /** Whether a result alerts the phones of the people who manage it (`app`), silently. */
   val alertsPhones: Boolean get() = "app" in results

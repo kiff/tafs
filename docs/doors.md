@@ -277,6 +277,9 @@ Nothing here is on until the deployment sets it up. tafs cloud reads:
   deliveries to `/v1/doors/email` the same way, such as a self-hosted inbox (`emailAPIBase`).
   One named that isn't such a URL turns the email door off, logged, and never falls back to
   Resend with the other provider's key.
+  tafs cloud's own mail that answers no message, the owner's copy of a door's answer and an answer report,
+  asks such a provider for a **notice** by name (`notice: true` in the send), since a self-hosted inbox (chutchut)
+  sends only replies otherwise. Resend gets no such field.
 - `DOORS_WHATSAPP_REGION`: where WhatsApp stores a number's message content, set at
   its registration.
 

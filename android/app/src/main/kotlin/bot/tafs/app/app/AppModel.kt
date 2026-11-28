@@ -182,6 +182,8 @@ data class TafDoors(
   val doors: List<Door> = emptyList(),
   val apps: List<DoorApp> = emptyList(),
   val knocks: List<Knock> = emptyList(),
+  /** Replies waiting for the owner to send them, with the exact text (docs/doors.md). */
+  val replies: List<bot.tafs.app.kiff.HeldReply> = emptyList(),
   val loaded: Boolean = false,
   val busy: Boolean = false,
   val error: String? = null,
@@ -5630,6 +5632,7 @@ class AppModel(
     if (_state.value.approvalKeyLost) return false.also { note(noteKey, KiffClient.APPROVAL_KEY_LOST) }
     if (key.isBlank() || _state.value.connecting != null) return false
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - noteKey) }
+    connectAttempt = currentCoroutineContext()[Job]
     val generation = accountGeneration
     planque.tenant = tenant
     planque.deviceLoader = { kiff.thisDeviceId() }
@@ -5669,6 +5672,7 @@ class AppModel(
     } finally {
       planque.signer = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null) }
+      connectAttempt = null
     }
   }
 
@@ -5735,6 +5739,7 @@ class AppModel(
       return Connected.Stopped
     }
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - cardId) }
+    connectAttempt = currentCoroutineContext()[Job]
     val generation = accountGeneration
     // Whether this connection opened KIFF's window, which it closes when it ends.
     var ownWindow = false
@@ -5914,6 +5919,7 @@ class AppModel(
       planque.window = null
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
+      connectAttempt = null
       // The connection's own window ends with it, so the approvals after it each ask for their own fingerprint.
       if (ownWindow) kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) { closeWindow() }
       else if (generation == accountGeneration) readWindowWords()
@@ -6053,6 +6059,7 @@ class AppModel(
       ?.session?.ifEmpty { null } ?: _state.value.coachChat
     val shownAsTap = CoachWords.approvesAsTap(c, _state.value.windowWords, _state.value.windowSetup, shownSetup)
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - c.id) }
+    connectAttempt = currentCoroutineContext()[Job]
     val generation = accountGeneration
     planque.tenant = tenant
     planque.deviceLoader = { kiff.thisDeviceId() }
@@ -6218,6 +6225,7 @@ class AppModel(
       kiff.signsInWindow = false
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
+      connectAttempt = null
       if (generation == accountGeneration) readWindowWords()
     }
   }
@@ -6504,10 +6512,19 @@ class AppModel(
     run?.let { resumeChat(COACH_CHAT, cloudId, it, again = true) } ?: followChat(COACH_CHAT)
   }
 
+  /** The coroutine of the connection under way (`connecting`): Cancel ends it wherever it is ([cancelConnecting]). */
+  @Volatile private var connectAttempt: Job? = null
+
   /**
-   * Sign in again, for a grant whose sign-in was left: a new approval, one confirmation. What it came to goes back to Coach as the
-   * card's answer: "signed in", or "failed: why".
+   * Cancel on a sign-in under way. While the vendor's page waits, its wait ends as a closed sign-in, as before. Before that (the
+   * approval still on its way, the fingerprint asked, or a request that never came back), the attempt itself ends: the card goes
+   * back to its sign-in, nothing is answered to Coach, and the owner can start it again. Before, Cancel there did nothing, and
+   * the card stayed on "Opening the sign-in…".
    */
+  fun cancelConnecting() {
+    if (_state.value.vendorPageOpen) vendorSignIn.cancel() else connectAttempt?.cancel()
+  }
+
   /** The card says "finish it there" only while the vendor's page is actually open: an approval that reuses a sign-in opens none. */
   private suspend fun <T> vendorPageOpen(open: suspend () -> T): T {
     _state.update { it.copy(vendorPageOpen = true, vendorPageLeft = false) }
@@ -6518,6 +6535,10 @@ class AppModel(
     }
   }
 
+  /**
+   * Sign in again, for a grant whose sign-in was left: a new approval, one confirmation. What it came to goes back to Coach as the
+   * card's answer: "signed in", or "failed: why".
+   */
   suspend fun signInAgain(c: SetupComponent) {
     val grantId = c.grant ?: return
     // The sign-in card shows no terms: it approves the grant as the app last showed it.
@@ -8458,7 +8479,7 @@ class AppModel(
       try {
         val read = cloud.doors(cloudId)
         if (generation != accountGeneration) return
-        updateDoors(tafId) { it.copy(doors = read.doors, apps = read.apps, knocks = read.knocks, loaded = true, error = null) }
+        updateDoors(tafId) { it.copy(doors = read.doors, apps = read.apps, knocks = read.knocks, replies = read.replies, loaded = true, error = null) }
         return
       } catch (e: CancellationException) {
         throw e
@@ -8669,6 +8690,70 @@ class AppModel(
       // In the app's words, as the chat says it, not tafs cloud's.
       val words = if (e is CloudError && e.status == 429) Words.Door.Knock.tooMany else Words.Door.Knock.notSent(why = ErrorWords.of(e))
       updateDoors(tafId) { it.copy(error = words) }
+    } finally {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
+  /**
+   * Sends a held reply (docs/doors.md): the approval key, behind the fingerprint, signs `POST` with the hash of the exact text the
+   * owner read, and tafs cloud sends only that text, to its writer only. A reply that changed since (409 `reply_changed`) sends
+   * nothing and is read again. False when nothing went.
+   */
+  suspend fun sendHeldReply(tafId: String, reply: bot.tafs.app.kiff.HeldReply): Boolean {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || !_state.value.manages(tafId)) return false
+    val words = reply.words?.takeIf { it.prompt.isNotBlank() } ?: return false
+    // The fingerprint binds the text this phone drew: its own hash of it, which must be the one tafs cloud gave. If they differ,
+    // what would go isn't what's shown, so nothing is asked or sent, and the reply is read again.
+    val shown = bot.tafs.app.kiff.PlanqueClient.sha256Hex(reply.text.toByteArray(Charsets.UTF_8))
+    if (shown != reply.textSha256) {
+      loadDoors(tafId)
+      updateDoors(tafId) { it.copy(error = words.changed.ifBlank { null }) }
+      return false
+    }
+    val path = cloud.heldReplyPath(cloudId, reply.run)
+    val body = cloud.sendReplyBody(shown)
+    val signature = signDoor(tafId, "POST", path, body, words.prompt) ?: return false
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true) }
+    try {
+      cloud.sendHeldReply(cloudId, reply.run, body, signature)
+      if (generation != accountGeneration) return false
+      updateDoors(tafId) { d -> d.copy(replies = d.replies.filterNot { it.run == reply.run }, error = null) }
+      refresh()
+      return true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation != accountGeneration) return false
+      val changed = e is CloudError && e.status == 409 && e.code == "reply_changed"
+      // A reply that changed is read again first, so the owner reads what would go now; then why nothing went.
+      if (changed) loadDoors(tafId)
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = if (changed) words.changed.ifBlank { ErrorWords.of(e) } else ErrorWords.of(e)) }
+      return false
+    } finally {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
+  /** Doesn't send a held reply: nothing goes, so nothing is signed. */
+  suspend fun discardHeldReply(tafId: String, reply: bot.tafs.app.kiff.HeldReply): Boolean {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || !_state.value.manages(tafId)) return false
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true) }
+    try {
+      cloud.discardHeldReply(cloudId, reply.run)
+      if (generation != accountGeneration) return false
+      updateDoors(tafId) { d -> d.copy(replies = d.replies.filterNot { it.run == reply.run }, error = null) }
+      refresh()
+      return true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = ErrorWords.of(e)) }
+      return false
     } finally {
       if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
     }
