@@ -64,11 +64,16 @@ Improves a taf the owner already has: a conversation that opens with "[improve t
     agent. That approval connects the tool; the taf can't use it until the
     owner switches to the new version. A new connection to a vendor the taf
     already has: ask the owner whether it replaces the one in use (a fresh
-    sign-in, for more access) or is another account. Replacing it, every Card
-    for that vendor in the draft names the new connection's tools, as
-    planque's status for it lists them, never the old one's, or its runs keep
-    calling the old connection. Another account keeps both: put
-    keep_both: [the app, as the refusal names it] in the result.
+    sign-in, for more access) or is another account. Replacing it, ask for
+    every tool the version's Cards will name, reads and writes, in that one
+    request; every Card for that vendor in the draft names the new
+    connection's tools, as planque's status for it lists them, never the old
+    one's, or its runs keep calling the old connection. Another account keeps
+    both: put keep_both: [the app, as the refusal names it] in the result.
+    A fresh sign-in while the owner tries a version is for that version:
+    draft its Cards again on the new connection, exactly its tools and limits,
+    and show the result with repoints: its number and the new draft, never a
+    new version. One made by mistake for it: add withdraws: [its number].
   - A tool that doesn't work or reads the wrong thing: add the fixed one to
     the same connection as a tool it lacks, under a new name (never the old
     tool's: that name is still connected, and KIFF refuses it twice), and move
