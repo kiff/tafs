@@ -231,7 +231,7 @@ Bezahle meine Rechnungen unter 100 EUR.
 
   it("keeps the apps' order: by category, then each recipe's place, with refunds leading Money", () => {
     expect(RECIPES.map((r) => r.id)).toEqual([
-      "refunds-within-a-limit", "chargebacks-with-evidence", "chase-overdue-invoices", "save-a-customer-who-cancels", "failed-card-payments", "payouts-matched-to-the-bank",
+      "refunds-within-a-limit", "chargebacks-with-evidence", "chase-overdue-invoices", "save-a-customer-who-cancels", "failed-card-payments", "payouts-matched-to-the-bank", "order-to-e-invoice",
       "answer-questions-about-orders", "follow-up-new-leads", "acknowledge-every-ticket", "returns-by-email", "late-parcels",
       "book-and-move-appointments", "ship-when-green",
       "file-receipts",
