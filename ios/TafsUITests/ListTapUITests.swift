@@ -66,6 +66,7 @@ final class ListTapUITests: TafsUITestCase {
         XCTAssertTrue(usage.waitForExistence(timeout: 10), "one tap opens Plan & usage beside the sidebar")
         // Whether the List draws the item as chosen, for the log: it set its own selection to nil on the tap.
         print("Plan & usage row selected after one tap: \(item.isSelected)")
+        XCTAssertTrue(item.isSelected, "and the sidebar shows Plan & usage as chosen (kiff/tafs#2297)")
     }
 
     // MARK: Helpers
