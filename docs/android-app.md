@@ -1583,9 +1583,10 @@ word is tafs cloud's; the app works out nothing: not which way, not "soon", not 
 
 - **Connect apps** draws both ways at the account level (`ways[]`, `WayCard`): each way's title and line, its two facts and
   its state on the account ("2 sign-ins saved"), above the apps while the search is empty. Under them, each saved sign-in in
-  the cloud browser (`saved_sign_ins[]`, `SavedSignInRow`): the site, the tafs that use it, and its health line. Where the
-  health says it needs the owner (`needs_you_soon` or `stopped`), the row offers its `sign_in` action, which opens planque's
-  live sign-in view for that connection (`AppModel.openSiteSignIn`). A way or a saved sign-in that can't be read, or has no
+  the cloud browser (`saved_sign_ins[]`, `SavedSignInRow`): the site, the tafs that use it, its health line (in amber when
+  it needs the owner) and its `why`. Whenever tafs cloud sends the row's `sign_in` action, the row offers it, whatever the
+  health, so a saved sign-in can be refreshed without removing the connection (as on the Mac). It opens planque's live
+  sign-in view for that connection (`AppModel.openSiteSignIn`). A way or a saved sign-in that can't be read, or has no
   words, is left out.
 - **Needs you** lists Home's `sign_ins[]` (`SignInPanel`): `sign_in_soon` with Sign in again and Later, and `sign_in_stopped`
   (a run waits) with Sign in again and Skip this run, each in tafs cloud's words, with its `why` under them. Later is

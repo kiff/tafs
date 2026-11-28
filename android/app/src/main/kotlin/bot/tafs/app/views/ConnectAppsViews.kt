@@ -623,8 +623,12 @@ internal fun SavedSignInRow(saved: ConnectApps.SavedSignIn, onSignIn: ((String) 
     Text(saved.site, style = scaled(15, FontWeight.SemiBold, Theme.ink))
     if (saved.usedBy.isNotEmpty()) Text(bot.tafs.app.model.Res.list(saved.usedBy), style = scaled(12, color = Theme.dim))
     Text(saved.health.words.line, style = scaled(13, FontWeight.Medium, if (saved.health.needsYou) Theme.amberText else Theme.soft))
+    // How tafs knows (Why?), in tafs cloud's words, when it says.
+    saved.health.words.why.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
+    // Sign in again whenever tafs cloud offers it (`sign_in`), not only when the health needs the owner: a saved sign-in can be
+    // refreshed without removing the connection. The app works out nothing about when it's worth it.
     val action = saved.signIn?.title?.takeIf { it.isNotBlank() }
-    if (saved.health.needsYou && action != null && onSignIn != null) {
+    if (action != null && onSignIn != null) {
       Text(action, style = scaled(14, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping { onSignIn(saved.grant) }.padding(top = 8.dp))
     }
   }
