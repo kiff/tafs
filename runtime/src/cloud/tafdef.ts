@@ -3,6 +3,7 @@ import { disclosureLine, disclosureLines, type Job, systemPrompt } from "../jobs
 import { KIFF_SKILL } from "../kiff-skill.js";
 import { ACTION_PLACES_INTRO, placesInstructions, type VendorPlace } from "./places.js";
 import { type AgentDefinition, type Effort, EVENT_KINDS, type EventKind, KEEP, type KeepRule } from "./agents.js";
+import { noteClaimsOn, TAF_WORDING } from "./taf-wording.js";
 
 /**
  * A taf as kiff/agents runs it: one stored agent definition per taf, built
@@ -74,7 +75,10 @@ export function keyRef(tafID: string): string {
 export const NOTES_INSTRUCTIONS = `Your notes about this job, kept between runs and chats, through your memory
 tool. Read them before you start. When the owner tells you a preference, or you
 learn something lasting about how they work or about a customer, write it down:
-one short note per topic, plain sentences. Fix or delete a note that turns out
+one short note per topic, plain sentences. Say you noted or will remember something
+only after your memory write went through in this run. A folder, sheet, tab or id the
+job needs is its setup, not a note: offer Coach's "add it to the setup" instead.
+Fix or delete a note that turns out
 wrong. Never write secrets, keys, card numbers or bank details. Never use notes for
 your working state: no list cursors, page tokens, ids to resume from, progress or
 scratch. Your check keeps where the work stands; the owner reads every note.
@@ -265,6 +269,8 @@ export function definition(tafID: string, job: Job, opts: { budgetCents?: number
     ...(job.disclose?.length ? { disclose: { line: disclosureLine(job), ...linesOf(job), in: job.disclose.map((d) => ({ tool: d.tool, fields: [...d.fields] })) } } : {}),
     // Its one card: a setting's request for Coach, with Coach's button (kiff/tafs#476, gap 15).
     show: true, show_types: ["ask_coach"],
+    // A note it says it kept is one its run wrote (taf-wording.ts): never said unbacked.
+    ...(noteClaimsOn() ? { wording: TAF_WORDING.map((w) => ({ ...w, patterns: [...w.patterns], unless_done: [...w.unless_done] })) } : {}),
     // A file it made (a report, a table, a document) handed to the account's Files for 30 days (docs/api.md, Files).
     files: true,
     // "Your step" (yourstep.ts): it hands its owner a step it may never take, once kiff/agents offers the tool.
