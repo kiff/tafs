@@ -8162,7 +8162,13 @@ class AppModel(
     val generation = accountGeneration
     kiff.tenant = tenant
     return try {
-      kiff.draft(id).takeIf { generation == accountGeneration }
+      val draft = kiff.draft(id).takeIf { generation == accountGeneration }
+      // A Card that opens a category (K4) is one this phone can't draw yet: never shown as if it didn't, so never signed here.
+      if (draft != null && draft.cards.orEmpty().any { c -> c.grants.orEmpty().any { it.opens.orEmpty().isNotEmpty() } }) {
+        versionError(tafId, Words.Version.cardNotRead(why = Words.Coach.unknownAnswer))
+        return null
+      }
+      draft
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
