@@ -45,7 +45,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@38", "did-this-happen@1", "draft-the-card@55", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@23", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@38", "did-this-happen@1", "draft-the-card@56", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@23", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -147,11 +147,11 @@ describe("Coach's core", () => {
   // The owner's phone, 27 Nov (New leads on 150): Pipedrive is a managed app no run has proved (planque's unproved: true), so
   // tafs cloud holds its every write. Coach still asked "how many deals a day" (10, 25 or 50), and the Card the owner agreed
   // was refused twice before Coach redrafted it at 0 a day. An unproved app is held as one set up on demand, and a held
-  // write's rule is never asked as a number (draft-the-card@55).
+  // write's rule is never asked as a number (draft-the-card@56).
   // The emulator, 27 Nov, after @54 (a new taf "Deal adder" adding a Pipedrive deal for each lead): Coach asked the sign-in and
   // "How many deals may it add a day? 10 / 25 / 50" in one card, before any grant existed, so no grant's unproved could say
   // otherwise. planque's search now marks an unproved managed app's tools (kiff/planque#473), and the rule reads it there too,
-  // so a new taf's first questions never ask a number for such a write (draft-the-card@55).
+  // so a new taf's first questions never ask a number for such a write (draft-the-card@56).
   it("holds a write the search marks unproved before any grant exists, so a new taf's first questions ask no number for it", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
     expect(body).toContain("or an app whose tools the search marks unproved: true, or a [tafs connections] line ending \"; unproved\" or \"; on_demand\" (a connection a new taf reuses), before any grant: draft every tool of it that changes data or moves money to ask the owner each time");
@@ -327,7 +327,7 @@ describe("Coach's core", () => {
     // Eval 44876949969 (replay-intros, 21 Nov): the row number again, then the sheet it had pinned (a pin isn't one of the
     // tool's arguments), and a row's values as additionalProperties alone, refused 5 times (name-the-tools@20).
     // Eval 45774332687 (replay-intros run 2, 26 Nov): `row` as the resource once more, planque's 400 ("resource_argument row
-    // must be one of the tool's string arguments"), from a per-item limit on the sheet (name-the-tools@22, draft-the-card@55).
+    // must be one of the tool's string arguments"), from a per-item limit on the sheet (name-the-tools@22, draft-the-card@56).
     expect(tools).toContain("A row number, or an argument you pinned, is never `resource_argument` (planque refuses it): with no other string argument, leave it out and limit the tool by calls a day.");
     expect(tools).toContain("An object argument (a row's values) names in properties each field the taf writes (the columns the job marks), never additionalProperties alone.");
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
@@ -492,15 +492,17 @@ describe("Coach's core", () => {
   // Go-to-market job 1 (owner's phone, 13 Nov): Coach asked how to tell who was already written to and where
   // do-not-contact is noted, and offered only the owner's or the company's name. The taf keeps its own records,
   // and speaks as itself first, which the disclosure line then names.
-  it("has the taf keep its own columns in the owner's sheet, and offers speaking as tafs first", () => {
+  it("has the taf keep its own columns in the owner's sheet, and asks which business the messages are sent for", () => {
     const setup = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
     expect(setup).toContain("A taf keeps its own records: when it works from the owner's sheet or list, propose it adds and updates its own columns there (written to, replied, do not contact), with a tool that writes to it. Ask only what only the owner knows, never how to track it.");
     const card = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
-    // The owner reads "tafs, your AI assistant"; the recipient reads "on behalf of tafs", never "your" assistant (#889).
-    expect(card).toContain("who its messages come from: first \"tafs, your AI assistant\" (it speaks as itself: writes_for \"tafs\"), then the owner's name, then the company's (\"Kiff Agents OÜ\"); never the app's default. Put the answer in the result's taf as writes_for.");
+    // The agent acts for the business: the recipient reads "on behalf of <business>", never "on behalf of tafs",
+    // which would name tafs or KIFF as the seller; the owner's own name only if they pick it.
+    expect(card).toContain("which business its messages are sent for: the company's name (\"Kiff Agents OÜ\") first; the owner's own name only if they pick it; never tafs, KIFF or the app's default. Put the answer in the result's taf as writes_for.");
     expect(card).not.toContain("or another name?");
     expect(card).toContain("Never promise an approval the Card can't give.");
-    expect(disclosureLine({ writesFor: "tafs" })).toBe("Written by an AI agent on behalf of tafs.");
+    expect(disclosureLine({ writesFor: "tafs" })).toBe("Written by an AI agent.");
+    expect(disclosureLine({ writesFor: "Kiff Agents OÜ" })).toBe("Written by an AI agent on behalf of Kiff Agents OÜ.");
   });
 
   // Go-to-market job 3 (owner's phone, 13 Nov): "each time we ship" was set up as one post. Coach went straight to the
@@ -586,7 +588,7 @@ describe("Coach's core", () => {
 
   // An Eval, 26 Nov (billing, run 2): Coach showed the rules notice and the key's approval with the draft, with no confirm
   // between them. tafs cloud refused the draft (rules_unagreed), and the card after the notice was an approval, never the
-  // confirm that agrees to it (draft-the-card@55).
+  // confirm that agrees to it (draft-the-card@56).
   it("shows the rules notice's confirm right after it, and nothing else until the owner agrees", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
     expect(body).toContain("The confirm comes right after its notice, in the same turn, and nothing follows them until the owner taps Agree: no planque request, no tools, no draft, no approval.");
@@ -769,15 +771,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   });
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@38", "draft-the-card@55", "halting@1", "name-the-tools@23", "set-up-a-taf@16", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@38", "draft-the-card@55", "improve-a-taf@4", "name-the-tools@23"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@38", "draft-the-card@56", "halting@1", "name-the-tools@23", "set-up-a-taf@16", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@38", "draft-the-card@56", "improve-a-taf@4", "name-the-tools@23"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@38", "draft-the-card@55", "halting@1", "name-the-tools@23", "set-up-a-taf@16", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@38", "draft-the-card@55", "halting@1", "improve-a-taf@4", "name-the-tools@23"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@38", "draft-the-card@56", "halting@1", "name-the-tools@23", "set-up-a-taf@16", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@38", "draft-the-card@56", "halting@1", "improve-a-taf@4", "name-the-tools@23"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });

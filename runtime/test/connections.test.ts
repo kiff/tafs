@@ -35,7 +35,7 @@ describe("the account's connections, as Coach starts with them", () => {
 
   // The emulator, 27 Nov: Coach offered to reuse New leads' Pipedrive connection for a new taf and asked "how many deals a day";
   // Pipedrive is a managed app no run has proved, so tafs cloud holds every change of it. planque's connections now say it
-  // (kiff/planque#474), and the line carries it, so Coach drafts a reused connection's writes to ask (draft-the-card@55).
+  // (kiff/planque#474), and the line carries it, so Coach drafts a reused connection's writes to ask (draft-the-card@56).
   it("keeps planque's unproved and on_demand on a connection, only as true, and ends its line with them", async () => {
     const got = await accountConnections((async () => new Response(JSON.stringify({ connections: [
       { agent: "nl", vendor: "Pipedrive", kind: "provider", entry: "connector:composio:pipedrive", status: "connected", unproved: true },

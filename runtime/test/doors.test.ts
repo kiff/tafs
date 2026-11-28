@@ -461,10 +461,14 @@ describe("the email door", () => {
     expect((await emailHook(w, unchecked)).body.outcome).toBe("knock");
   });
 
-  it("DKIM aligned with From proves the sender even when its domain has no DMARC policy", async () => {
+  // A provider's DKIM verdict passes any valid signature, from any domain: on a From domain with no DMARC record,
+  // a forger signing with their own domain would pass it. Only DMARC ties the message to its From domain.
+  it("DKIM passing without DMARC passing proves nothing: the message knocks", async () => {
     const w = world();
     await emailDoor(w);
-    expect((await emailHook(w, mail(w, { dmarc: "gray", dkim: "pass" }))).body.outcome).toBe("run");
+    expect((await emailHook(w, mail(w, { dmarc: "gray", dkim: "pass" }))).body.outcome).toBe("knock");
+    expect((await emailHook(w, mail(w, { dmarc: "none", dkim: "pass" }))).body.outcome).toBe("knock");
+    expect(w.agents.runs).toHaveLength(0);
   });
 
   it("DKIM passing while DMARC fails is a spoofed sender, never a key", async () => {
@@ -2483,3 +2487,16 @@ async function ends(c: { w: World; runOf: () => Run }, outcome: string, words = 
   (run as { outcome?: string }).outcome = outcome;
   return finish(c.w, run, words);
 }
+
+describe("the door reply's disclosure line", () => {
+  // A test door's reply had the line twice, first and last: the taf wrote it too. The reply carries it once, first.
+  it("is the reply's first line, once, whatever the taf wrote", async () => {
+    const { withoutDisclosure } = await import("../src/cloud/doors/doors.js");
+    const line = "Written by an AI agent on behalf of Acme.";
+    expect(withoutDisclosure(`${line}\n\nYour order ships Monday.\n\n${line}`, "Acme")).toBe("Your order ships Monday.");
+    expect(withoutDisclosure("Written by an AI agent on behalf of tafs.\nYour order ships Monday.", "tafs")).toBe("Your order ships Monday.");
+    expect(withoutDisclosure("Rédigé par un agent d'IA au nom d'Acme.\n\nVotre commande part lundi.", "Acme")).toBe("Votre commande part lundi.");
+    // Its own words stay, even ones that mention an AI agent mid-text.
+    expect(withoutDisclosure("An AI agent wrote this summary for you.\nYour order ships Monday.", "Acme")).toBe("An AI agent wrote this summary for you.\nYour order ships Monday.");
+  });
+});

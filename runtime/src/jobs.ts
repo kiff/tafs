@@ -49,11 +49,22 @@ export const DISCLOSURE_LINE = "Written by an AI agent.";
  * card network without it). It names who the messages come from, when the owner said.
  */
 export function disclosureLine(job: Pick<Job, "writesFor">): string {
-  const who = job.writesFor?.replace(/\s+/g, " ").trim();
+  const who = principal(job.writesFor);
   if (!who) return DISCLOSURE_LINE;
   // A name stored before "on behalf of", at the old cap, keeps the shorter "for" so the line still fits.
   for (const line of [lineFor(who), `Written by an AI agent for ${who}.`]) if (Buffer.byteLength(line) <= DISCLOSURE_MAX_BYTES) return line;
   return DISCLOSURE_LINE;
+}
+
+/**
+ * Who a disclosure line names: the business or person the taf writes for. Never tafs itself: the agent acts
+ * for the business, so "on behalf of tafs" would name tafs, or KIFF, as the seller; a taf that speaks as tafs
+ * says plainly that an AI agent wrote it (DISCLOSURE_LINE), and its mailbox names the business.
+ */
+function principal(writesFor: string | undefined): string | undefined {
+  const who = writesFor?.replace(/\s+/g, " ").trim();
+  if (!who || /^tafs\b/i.test(who)) return undefined;
+  return who;
 }
 
 /** The disclosure line naming who the messages come from. */
@@ -63,10 +74,13 @@ const lineFor = (who: string) => `Written by an AI agent on behalf of ${who}.`;
 /** The most bytes a disclosure line may have: kiff/agents refuses a definition with a longer one (agent.MaxDisclosureLine). */
 export const DISCLOSURE_MAX_BYTES = 300;
 
+/** French and Catalan "de", elided before a vowel or a mute h: "au nom d'Acme", "au nom de Lumière". */
+const elided = (who: string) => (/^[aeiouyàâäéèêëîïôöùûüh]/i.test(who) ? "d'" : "de ") + who;
+
 /** The line in other languages, by ISO 639-1 code, naming who the messages come from. */
 const LINES_FOR: Readonly<Record<string, (who: string) => string>> = {
   es: (who) => `Escrito por un agente de IA en nombre de ${who}.`,
-  fr: (who) => `Rédigé par un agent d'IA au nom de ${who}.`,
+  fr: (who) => `Rédigé par un agent d'IA au nom ${elided(who)}.`,
   de: (who) => `Von einem KI-Agenten im Auftrag von ${who} geschrieben.`,
   pt: (who) => `Escrito por um agente de IA em nome de ${who}.`,
   it: (who) => `Scritto da un agente di IA per conto di ${who}.`,
@@ -97,7 +111,7 @@ const LINES_FOR: Readonly<Record<string, (who: string) => string>> = {
   az: (who) => `${who} adından AI agenti tərəfindən yazılıb.`,
   bn: (who) => `${who}-এর পক্ষ থেকে AI এজেন্ট লিখেছে।`,
   he: (who) => `נכתב על ידי סוכן בינה מלאכותית מטעם ${who}.`,
-  ca: (who) => `Escrit per un agent d'IA en nom de ${who}.`,
+  ca: (who) => `Escrit per un agent d'IA en nom ${elided(who)}.`,
   mk: (who) => `Напишано од AI агент во име на ${who}.`,
   mn: (who) => `${who}-ийн нэрийн өмнөөс AI агент бичсэн.`,
   ne: (who) => `${who}को तर्फबाट AI एजेन्टले लेखेको।`,
@@ -106,7 +120,7 @@ const LINES_FOR: Readonly<Record<string, (who: string) => string>> = {
   tk: (who) => `${who} adyndan AI agenti tarapyndan ýazyldy.`,
   hi: (who) => `${who} की ओर से AI एजेंट द्वारा लिखा गया।`,
   ur: (who) => `${who} کی جانب سے AI ایجنٹ نے لکھا۔`,
-  el: (who) => `Γράφτηκε από πράκτορα τεχνητής νοημοσύνης εκ μέρους του ${who}.`,
+  el: (who) => `Γράφτηκε από πράκτορα τεχνητής νοημοσύνης για λογαριασμό της επιχείρησης ${who}.`,
 };
 
 /** The line in other languages, naming no one. */
@@ -162,7 +176,7 @@ const LINES_NAMING_NO_ONE: Readonly<Record<string, string>> = {
  * No message carries a credit line any more ("Built with tafs."): the owner's call, 7 Nov.
  */
 export function disclosureLines(job: Pick<Job, "writesFor">): Record<string, string> {
-  const who = job.writesFor?.replace(/\s+/g, " ").trim();
+  const who = principal(job.writesFor);
   if (!who) return { ...LINES_NAMING_NO_ONE };
   // A language whose line wouldn't fit in what kiff/agents takes is left out, and English heads the taf's
   // messages in it: a name stored before new names were capped at WRITES_FOR_MAX_BYTES (#587).
@@ -624,7 +638,13 @@ export function discloseOf(v: unknown): Job["disclose"] {
  * 272, still works: a language whose line doesn't fit is left out (disclosureLines).
  */
 export const WRITES_FOR_MAX = 100;
-export const WRITES_FOR_MAX_BYTES = DISCLOSURE_MAX_BYTES - Math.max(...[lineFor, ...Object.values(LINES_FOR)].map((line) => Buffer.byteLength(line(""))));
+/**
+ * The languages whose line doesn't set the cap: Greek names the business with its article ("για λογαριασμό της
+ * επιχείρησης …", so a name of any gender reads right), which would cut every new name to 162 bytes. A long name's
+ * Greek line is left out instead, as any language's line that doesn't fit is.
+ */
+const CAP_LEAVES_OUT: ReadonlySet<string> = new Set(["el"]);
+export const WRITES_FOR_MAX_BYTES = Math.min(195, DISCLOSURE_MAX_BYTES - Math.max(...[lineFor, ...Object.entries(LINES_FOR).filter(([lang]) => !CAP_LEAVES_OUT.has(lang)).map(([, line]) => line)].map((line) => Buffer.byteLength(line("")))));
 
 /** A result's writes_for, checked: a name on one line, or undefined for none. Throws, in words for Coach. */
 export function writesForOf(v: unknown): string | undefined {

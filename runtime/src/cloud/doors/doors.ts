@@ -11,7 +11,7 @@ import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
 import { apsFor, levelOf } from "../levels.js";
 import { eventLog, logEvent } from "../events.js";
-import { disclosureLineFor } from "../../jobs.js";
+import { DISCLOSURE_LINE, disclosureLine, disclosureLineFor, disclosureLines } from "../../jobs.js";
 import { anyHeld, hold, replayHeld, waitsForCredits, waitsToStart } from "./hold.js";
 
 /** What doors are set up with in a deployment; a door whose part is missing isn't offered. */
@@ -129,7 +129,7 @@ export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: strin
   // message is a knock, never a run). So the taf does what they ask within its job, reads included, and
   // answers with what they asked for. What went wrong is only "not now", never an error, a tool, an id or how anything
   // is connected.
-  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; if something failed, say only that it can't be done right now and that the owner will follow up, never an error, a code, a tool, an id or how things are connected`;
+  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; say what you can do for them in terms of the job (orders, invoices, delivery dates), never the apps, folders, sheets, files, mailboxes, Card, limits or other people behind it, unless they need one to act (a link they were given); tafs puts the line saying an AI agent wrote it above your answer, so never write it yourself; if something failed, say only that it can't be done right now and that the owner will follow up, never an error, a code, a tool, an id or how things are connected`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}${botReply(a)}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
@@ -699,7 +699,22 @@ export function replyText(taf: Taf, r: Run, reply: Pick<Reply, "attachments" | "
   const notes: string[] = [];
   if (reply.attachments) notes.push(`I read only the text of your message; I didn't open its ${reply.attachments === 1 ? "attachment" : `${reply.attachments} attachments`}.`);
   if (reply.cut) notes.push(`Your message was long, so I read its first ${DOOR.maxChars.toLocaleString("en")} characters.`);
-  return [disclosureLineFor({ writesFor: taf.writesFor }, answer), answer, ...(notes.length ? [notes.join(" ")] : [])].join("\n\n");
+  const body = withoutDisclosure(answer, taf.writesFor);
+  return [disclosureLineFor({ writesFor: taf.writesFor }, body), body, ...(notes.length ? [notes.join(" ")] : [])].join("\n\n");
+}
+
+/**
+ * The taf's answer without a disclosure line it wrote itself, at its start or its end: the reply carries the
+ * line once, first, as tafs writes it ("Nothing is added after it", docs/doors.md). A test door's reply had it
+ * twice, as its first and last line. Only a whole line that is a disclosure line goes; the answer's own words stay.
+ */
+export function withoutDisclosure(answer: string, writesFor: string | undefined): string {
+  const lines = new Set([...Object.values(disclosureLines({ writesFor })), disclosureLine({ writesFor }), DISCLOSURE_LINE].map((l) => l.trim()));
+  const isLine = (l: string) => lines.has(l.trim()) || /^written by (?:tafs, )?an ai agent\b[^\n]{0,200}\.$/i.test(l.trim());
+  const parts = answer.split("\n");
+  while (parts.length && (parts[0]!.trim() === "" || isLine(parts[0]!))) parts.shift();
+  while (parts.length && (parts.at(-1)!.trim() === "" || isLine(parts.at(-1)!))) parts.pop();
+  return parts.join("\n").trim() || answer.trim();
 }
 
 /** Sends through the door. `retry`: the provider didn't take it for now (it was down, or refused for a while). */

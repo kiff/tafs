@@ -34,7 +34,7 @@ export interface AccountConnection {
   /**
    * As planque's grant view says them (kiff/planque#474): an app set up on the owner's pick, or a managed one no recorded
    * run has proved. tafs cloud holds every change of either for the owner, so a new taf that reuses this connection asks
-   * no daily number for its writes (draft-the-card@55); only a `true` planque states is kept.
+   * no daily number for its writes (draft-the-card@56); only a `true` planque states is kept.
    */
   on_demand?: true;
   unproved?: true;
