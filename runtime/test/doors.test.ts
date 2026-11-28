@@ -2552,9 +2552,14 @@ describe("a door's reply held for the owner", () => {
     const stale = await call("POST", path, { action: "send", text_sha256: "0".repeat(64) }, { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=sig" });
     expect(stale.status).toBe(409);
     expect(w.outbox).toHaveLength(0);
-    // Home lists it on the taf's door, beside its knocks.
+    // Home lists it on the taf's door, beside its knocks, with the line its notification said.
     const home = await send(w, "GET", "/v1/home", { token: "ana" });
     expect(JSON.stringify(home.body)).toContain('"replies":1');
+    expect(JSON.stringify(home.body)).toContain('"reply_line":"Refunds wrote a reply to Ben. It waits for you to send it."');
+    // Every line the apps draw comes with it, and the 409 says what to do in the person's words.
+    expect(held.words).toEqual({ line: "Refunds wrote a reply to Ben. It waits for you to send it.", send: "Send", discard: "Don't send",
+      prompt: "Send this reply to Ben", changed: "This reply changed since you read it. Read it again before sending." });
+    expect(stale.body.error).toBe("This reply changed since you read it. Read it again before sending.");
     const sent = await call("POST", path, { action: "send", text_sha256: held.text_sha256 }, { "kiff-device-signature": "t=2026-10-24T09:00:02Z,v1=sig" });
     expect(sent.body).toEqual({ run: run.id, state: "sent" });
     expect(w.outbox).toHaveLength(1);

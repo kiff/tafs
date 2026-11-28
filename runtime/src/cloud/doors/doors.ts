@@ -612,6 +612,11 @@ async function holdReply(ctx: DoorsContext, tenant: string, taf: Taf, held: Held
     (read) => ({ runs: [...new Set([...(read?.runs ?? []), held.reply.run])].slice(-100) }), addDays(ctx.now, DOOR.replyDays));
 }
 
+/** A held reply's lines, as the apps draw them: what waits, Send, Don't send, and what the fingerprint names. */
+export function heldReplyWords(w: Words, taf: string, who: string) {
+  return { line: w.door_reply_waiting(who, taf), send: w.door_reply_send, discard: w.door_reply_discard, prompt: w.door_reply_prompt(who), changed: w.door_reply_changed };
+}
+
 /** The hex SHA-256 of a held reply's text, UTF-8: what Send names, so it sends only the text the owner read. */
 export function textSHA256(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("hex");
@@ -638,7 +643,7 @@ export async function answerHeldReply(ctx: DoorsContext, owner: Owner, taf: Taf,
   if (action !== "send" && action !== "discard") throw new DoorError(400, "action is send or discard");
   // Send binds the text the owner read: the hash of the held text, signed with the request, or nothing goes.
   if (action === "send" && body.text_sha256 !== textSHA256(held.text)) {
-    throw new DoorError(409, "this reply isn't the text you read; read it again before sending", "reply_changed");
+    throw new DoorError(409, wordsIn(ctx.lang ?? "en").door_reply_changed, "reply_changed");
   }
   const cfg = await ctx.doors.config();
   const door = (await doorsOf(store, owner.tenant, taf.id)).find((d) => d.id === held.reply.door);
@@ -952,9 +957,12 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
   const counts = await Promise.all(doors.map((d) => todayOf(store, owner.tenant, taf.id, d.id, ctx.now)));
   const knocks = (await knocksOf(store, owner.tenant, taf.id)).filter((k) => k.state === "open");
   // The replies waiting for the owner to send them, each with the exact text that would go.
+  const w = wordsIn(ctx.lang ?? "en");
   const replies = (await heldRepliesOf(store, owner.tenant, taf.id)).map((h) => ({
     run: h.reply.run, door: h.reply.door, to: h.reply.name || h.reply.to, ...(h.reply.subject ? { subject: h.reply.subject } : {}), text: h.text, at: h.at,
     text_sha256: textSHA256(h.text),
+    // Every line the apps draw for it, in the person's language, the notification's own among them.
+    words: heldReplyWords(w, taf.name, h.reply.name || h.reply.to),
     ...(h.concerns?.length ? { concerns: h.concerns } : {}),
   }));
   return {
@@ -1217,7 +1225,7 @@ export async function keepBound(doors: DoorsDeps, tenant: string, ai: AIBound | 
  * The taf's doors as its avatar's rim shows them, for the home list: each
  * door's app, whether it's open or resting today, and whether a knock waits.
  */
-export async function doorLights(store: DoorStore, tenant: string, taf: string, now: Date) {
+export async function doorLights(store: DoorStore, tenant: string, taf: string, now: Date, replyLine?: (who: string) => string) {
   const doors = await doorsOf(store, tenant, taf);
   if (!doors.length) return [];
   const [counts, knocks, held] = await Promise.all([
@@ -1230,6 +1238,9 @@ export async function doorLights(store: DoorStore, tenant: string, taf: string, 
     knocks: knocks.filter((k) => k.door === d.id && k.state === "open" && !k.rest).length,
     // The replies waiting for the owner to send them, so Needs you can list what it counts.
     replies: held.filter((h) => h.reply.door === d.id).length,
+    // The newest held reply's line, as its notification said it, for Needs you's row.
+    ...(replyLine && held.some((h) => h.reply.door === d.id)
+      ? { reply_line: replyLine((() => { const h = held.filter((x) => x.reply.door === d.id).at(-1)!; return h.reply.name || h.reply.to; })()) } : {}),
   }));
 }
 
