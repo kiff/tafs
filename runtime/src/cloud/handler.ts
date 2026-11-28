@@ -466,6 +466,11 @@ export interface Taf {
    */
   sourcesBy?: Record<string, Source[]>;
   /**
+   * By version, the apps (lower case) whose new connection is another account kept beside the one in use (a second
+   * inbox), as the owner told Coach and its result said (`keep_both`): that version's switch keeps both for those apps.
+   */
+  keepBothBy?: Record<string, string[]>;
+  /**
    * Where its results go (docs/reliability.md): through the door the work came in on, a line
    * in the app, an email to the owner. Absent: the door's reply alone, as before.
    */
@@ -5460,7 +5465,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   if (sub === "try") {
     if (version.live) throw new HTTPError(409, "that version is live already");
     const draft = await trialDraftFor(event, me, taf, version, deps);
-    await oneNewConnectionPerApp(event, taf, draft, deps);
+    await oneNewConnectionPerApp(event, taf, n, draft, deps);
     return { draft };
   }
   if (sub === "switch") {
@@ -5472,7 +5477,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     // The version it leaves keeps the Cards it ran under, for going back to it.
     await recordLiveCards(event, me, taf, state, deps);
     const draft = await draftFor(event, me, taf, version, again, deps);
-    if (draft) await oneNewConnectionPerApp(event, taf, draft, deps);
+    if (draft) await oneNewConnectionPerApp(event, taf, n, draft, deps);
     // Drafted again for a switch under way: it waits for the new draft instead,
     // its mark kept, so no run starts in between.
     if (sw && sw.n === n && draft) return { switching: await agentsCall(() => deps.agents.replaceSwitchDraft(me.tenantID, taf.id, n, draft)) };
@@ -5507,18 +5512,19 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
 /**
  * A version that brings in a new connection to an app uses it alone (a version 2 trial read through the old Qonto
  * connection, its own never called: its Card named both). Checked before the owner confirms the draft, when the Cards
- * in force are still the live version's: refused, naming the app, so Coach drafts it again on the new connection alone.
- * A taf that already works with one app through two connections (two inboxes) keeps both.
+ * in force are still the live version's: refused, naming the app, so the owner tells Coach whether the new one replaces
+ * the one in use (drafted again on the new connection alone) or is another account (a second inbox): a version its result
+ * gave `keep_both` for that app keeps both. A taf that already works with one app through two connections keeps both too.
  */
-async function oneNewConnectionPerApp(event: HTTPEvent, taf: Taf, draftID: string, deps: Deps): Promise<void> {
+async function oneNewConnectionPerApp(event: HTTPEvent, taf: Taf, n: number, draftID: string, deps: Deps): Promise<void> {
   const token = bearer(event);
   const [d, conns, live] = await Promise.all([
     draftInfo(token, draftID, deps.fetch, deps.kiffBase).catch(() => undefined),
     gatewayConnections(token, deps.fetch, deps.kiffGateway).catch(() => undefined),
     actionsInForce(token, taf.kiffAgent, deps.fetch, deps.kiffBase).catch(() => undefined),
   ]);
-  const mixed = mixedConnections(d?.cards ?? [], conns, live);
-  if (mixed) throw new HTTPError(409, `this version's Card names tools of a new ${mixed} connection beside the one in use: draft it again with the new connection's tools only`);
+  const mixed = mixedConnections(d?.cards ?? [], conns, live, new Set(taf.keepBothBy?.[String(n)] ?? []));
+  if (mixed) throw new HTTPError(409, `this version adds a new ${mixed} connection beside the one this taf uses: ask the owner whether to replace the old ${mixed} connection or keep both, never dropping one unasked. Replace: draft it again with the new connection's tools only. Keep both: show the result again with keep_both: ["${mixed.toLowerCase()}"]`);
 }
 
 /**
@@ -5529,7 +5535,7 @@ async function oneNewConnectionPerApp(event: HTTPEvent, taf: Taf, draftID: strin
  * connection with no app, or one with no audience (connected straight to KIFF), says nothing. No list, or no Cards in
  * force to compare with: nothing is refused on a guess.
  */
-export function mixedConnections(cards: readonly unknown[], conns: ReadonlyArray<{ name: string; url?: string; app?: unknown; audience?: unknown }> | undefined, live: ReadonlySet<string> | undefined): string | undefined {
+export function mixedConnections(cards: readonly unknown[], conns: ReadonlyArray<{ name: string; url?: string; app?: unknown; audience?: unknown }> | undefined, live: ReadonlySet<string> | undefined, keepBoth: ReadonlySet<string> = new Set()): string | undefined {
   if (!conns || !live) return undefined;
   const fold = (x: unknown) => (typeof x === "string" ? x.trim().toLowerCase() : "");
   const keyOf = (c: { app?: unknown; audience?: unknown } | undefined) => {
@@ -5554,6 +5560,7 @@ export function mixedConnections(cards: readonly unknown[], conns: ReadonlyArray
     }
   }
   for (const [app, audiences] of named) {
+    if (keepBoth.has(app.toLowerCase())) continue; // the owner said: another account, kept beside the one in use
     const used = inUse.get(app) ?? new Set<string>();
     const fresh = [...audiences].some((a) => !used.has(a));
     const old = [...audiences].some((a) => used.has(a));
@@ -5708,6 +5715,16 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
  * cloud's hand-over, with no session, both wait for the switch, which checks the draft is this
  * taf's with the owner's session before anything of it goes live.
  */
+/** A result's `keep_both`: up to 10 app names, lower case, or undefined for none. Throws a 400 in words for Coach. */
+function keepBothOf(v: unknown): string[] | undefined {
+  if (v === undefined || v === null) return undefined;
+  if (!Array.isArray(v) || v.length > 10 || !v.every((a) => typeof a === "string" && a.trim() && a.trim().length <= 60)) {
+    throw new HTTPError(400, "keep_both is a list of up to 10 app names, as the switch's refusal named them");
+  }
+  const apps = [...new Set((v as string[]).map((a) => a.trim().toLowerCase()))];
+  return apps.length ? apps : undefined;
+}
+
 async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<{ version: number }> {
   const note = str(body.note).trim();
   if (!note || note.length > VERSION_NOTE) throw new HTTPError(400, `say what changed in 1 to ${VERSION_NOTE} characters`);
@@ -5716,6 +5733,8 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   const draft = str(body.draft).trim() || undefined;
   // What to try it with (kiff/tafs#247): kept for its trial.
   const tryWith = body.try === undefined || body.try === null ? undefined : str(body.try).trim() || undefined;
+  // The apps whose new connection is another account, kept beside the one in use (the owner said so to Coach).
+  const keepBoth = keepBothOf(body.keep_both);
   if (tryWith !== undefined && tryWith.length > VERSION_TRY) throw new HTTPError(400, `what to try is at most ${VERSION_TRY} characters`);
   // What the taf does under it, from Coach's result: one line, never a reason to refuse it.
   const summary = body.summary === undefined ? undefined : oneLine(str(body.summary), MAX_SUMMARY) || undefined;
@@ -5759,7 +5778,7 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   const listed = (summary && !taf.summaries) || (kept && !taf.sourcesBy) ? (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions : undefined;
   const live = listed ? listed.find((v) => v.live)?.n ?? (listed.length === 0 ? 1 : undefined) : undefined;
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", by_kind: "agent", ...(draft ? { draft } : {}) }));
-  if (from || tryWith || summary || kept) {
+  if (from || tryWith || summary || kept || keepBoth) {
     // Kept so the same result hands over this version again, with what to
     // try it with and what it does. A record that changed meanwhile is read again once.
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -5769,7 +5788,7 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
       const summaries = summary ? { ...(live !== undefined && cur.summaries?.[String(live)] === undefined ? { [String(live)]: cur.summary ?? "" } : {}), ...cur.summaries, [String(n)]: summary } : undefined;
       // The live version keeps what it works from too, [] for nothing, so going back to it brings that back.
       const sourcesBy = kept ? { ...(live !== undefined && cur.sourcesBy?.[String(live)] === undefined ? { [String(live)]: cur.work?.sources ?? [] } : {}), ...cur.sourcesBy, [String(n)]: kept } : undefined;
-      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}), ...(sourcesBy ? { sourcesBy } : {}) };
+      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}), ...(sourcesBy ? { sourcesBy } : {}), ...(keepBoth ? { keepBothBy: { ...cur.keepBothBy, [String(n)]: keepBoth } } : {}) };
       if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
     }
   }
@@ -11177,7 +11196,7 @@ export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; p
  * the card with. Throws only what may pass on a retry (a server error).
  */
 /** What an improvement result names: the taf it improves, and the version it describes. */
-interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; writes_for?: unknown; sources?: unknown; tools?: string[] }
+interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; writes_for?: unknown; sources?: unknown; keep_both?: unknown; tools?: string[] }
 
 /**
  * The version an improvement result hands over, made once per result for the person whose run it
@@ -11238,6 +11257,7 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
       note: want.note, notes: want.notes, draft: want.draft, try: want.try, agent: want.agent, from: `${cardID}|${what}`, ...(writesFor ? { writes_for: writesFor } : {}),
       ...(want.sources !== undefined ? { sources: want.sources } : {}),
       ...(typeof want.summary === "string" ? { summary: want.summary } : {}),
+      ...(want.keep_both !== undefined ? { keep_both: want.keep_both } : {}),
     }, me, taf, deps);
     return { version };
   } catch (err) {

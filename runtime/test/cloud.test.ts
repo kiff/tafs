@@ -3670,7 +3670,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae", cards: [{ grants: [{ action: "list_client_invoices_yhbp" }, { action: "create_client_invoice_bhtn" }] }] } };
     const mixed = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
     expect(mixed.status).toBe(409);
-    expect(String(mixed.body.error)).toContain("a new Qonto connection beside the one in use");
+    expect(String(mixed.body.error)).toContain("adds a new Qonto connection beside the one this taf uses: ask the owner whether to replace the old Qonto connection or keep both");
     expect(w.agents.calls).not.toContain(`beginSwitch ${RAE} 2`);
     // The new connection alone: the switch begins.
     w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae", cards: [{ grants: [{ action: "list_client_invoices_bhtn" }, { action: "create_client_invoice_bhtn" }] }] } };
@@ -3683,6 +3683,31 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     w.account.connections = [inbox("send_email_a1", "grt_inbox_a"), inbox("send_email_b2", "grt_inbox_b")];
     w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, grants: [{ action: "send_email_a1" }, { action: "send_email_b2" }] } as never];
     w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae", cards: [{ grants: [{ action: "send_email_a1" }, { action: "send_email_b2" }] }] } };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" })).status).toBe(200);
+  });
+
+  // A second inbox beside the first has the same shape as a fresh sign-in beside the old one: the owner tells them apart.
+  it("asks the owner about a second account of an app the taf uses, and switches a version Coach gave keep_both for that app", async () => {
+    const w = twoVersions();
+    const inbox = (name: string, grant: string) => ({ name, url: "https://planque.example/v1/relay", app: "gmail", audience: `https://planque.example/mcp/t_acme/${grant}` });
+    w.account.connections = [inbox("send_email_a1", "grt_inbox_a"), inbox("send_email_b2", "grt_inbox_b")];
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, grants: [{ action: "send_email_a1" }] } as never];
+    w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae", cards: [{ grants: [{ action: "send_email_a1" }, { action: "send_email_b2" }] }] } };
+    const asked = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    expect(asked.status).toBe(409);
+    // Never "with the new connection's tools only" alone: that would drop the first inbox unasked.
+    expect(String(asked.body.error)).toBe(`this version adds a new Gmail connection beside the one this taf uses: ask the owner whether to replace the old Gmail connection or keep both, never dropping one unasked. Replace: draft it again with the new connection's tools only. Keep both: show the result again with keep_both: ["gmail"]`);
+    // The version Coach makes once the owner said keep both records it, by app.
+    const made = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Also watches the second inbox", keep_both: ["Gmail"] } });
+    const m = (made.body as { version: number }).version;
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.keepBothBy).toEqual({ [String(m)]: ["gmail"] });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "x", keep_both: "gmail" } })).status).toBe(400);
+    // keep_both for another app doesn't open this one.
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rae, keepBothBy: { ...rae.keepBothBy, "2": ["qonto"] } });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" })).status).toBe(409);
+    // keep_both for Gmail: the same draft switches.
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rae, keepBothBy: { ...rae.keepBothBy, "2": ["gmail"] } });
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" })).status).toBe(200);
   });
 

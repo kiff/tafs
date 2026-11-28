@@ -96,11 +96,12 @@ describe("Coach's skills, as files", () => {
       // grant (Qonto re-test 3, 27 Nov: a new conversation asked to sign in again over a listed Qonto sign-in no taf used).
       // connect-an-app at 2,460: a read needs a taf, said before any sign-in, with the small taf offered and never a one-time
       // read (28 Nov, a Qonto balance read: offered "once, no taf", refused by planque after the sign-in, three approvals).
-      // improve-a-taf at 1,890: a version with a new connection to a vendor the taf already has names that connection's
-      // tools on every Card for it (a version's trial read through the old Qonto connection, its own never called).
+      // improve-a-taf at 1,920: a version with a new connection to a vendor the taf already has asks the owner whether it
+      // replaces the one in use, then names that connection's tools on every Card for it (a version's trial read through
+      // the old Qonto connection, its own never called), or keeps both for another account (a second inbox).
       // connect-an-app at 2,510: a write that needs an id or a name the taf can't know is asked with the read that finds
       // it (a first append to "Sheet1" failed on an account whose tab is "Feuille 1"; a Qonto draft needs list_clients).
-      const budget: Record<string, number> = { "improve-a-taf": 1890, "set-up-a-taf": 2030, "connect-an-app": 2510, "draft-the-card": 2400, "name-the-tools": 1980 };
+      const budget: Record<string, number> = { "improve-a-taf": 1920, "set-up-a-taf": 2030, "connect-an-app": 2510, "draft-the-card": 2400, "name-the-tools": 1980 };
       expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(budget[s.name] ?? 1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
@@ -592,7 +593,7 @@ describe("Coach's core", () => {
     expect(improve).toContain("When its work moves to another app or connection (its check reads there now), every step that reads or writes the old one is rewritten for the new one's tools: none of the old tools' names stays in them.");
     expect(improve).toContain("note: what changed in one short sentence in the owner's language, only what this version's notes, draft or sources carry (a summary alone changes no run, so it never says the taf now does something else)");
     // A version's own connection: a trial read through the old Qonto connection while version 2's new one was never called.
-    expect(improve).toContain("A version with a new connection to a vendor the taf already has (a fresh sign-in, for more access) uses only that one: every Card for that vendor in the draft names the new connection's tools, as planque's status for it lists them, never the old one's, or its runs keep calling the old connection.");
+    expect(improve).toContain("A new connection to a vendor the taf already has: ask the owner whether it replaces the one in use (a fresh sign-in, for more access) or is another account. Replacing it, every Card for that vendor in the draft names the new connection's tools, as planque's status for it lists them, never the old one's, or its runs keep calling the old connection. Another account keeps both: put keep_both: [the app, as the refusal names it] in the result.");
     // What it works from goes in the version (a folder and a sheet given in a chat, never read by a door run).
     expect(improve).toContain("Put the full list it should have, each {kind, name, id}, in the result's sources: every run of that version has them, from a door or a schedule too.");
   });
