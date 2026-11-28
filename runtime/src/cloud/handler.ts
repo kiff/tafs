@@ -47,7 +47,7 @@ import { AI_CONSENT_CODE, type AIConsent, type AIConsentView, aiConsentOf, aiCon
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
-import { addAPIDoor, addDoor, answerKnock, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addAPIDoor, addDoor, answerHeldReply, answerKnock, heldRepliesOf, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext, apiDoorsOn } from "./doors/api.js";
 import { type APIDraft, doorKeys } from "./doors/model.js";
@@ -3008,9 +3008,9 @@ export interface ThreadMessage {
   /**
    * A door's message and its answer: which door, who wrote (and the email's
    * subject); on the answer, whether it went back ("sent"), couldn't
-   * ("not_sent", with why), or hasn't yet ("pending").
+   * ("not_sent", with why), hasn't yet ("pending"), or waits for the owner to send it ("held").
    */
-  door?: { app: string; from?: string; subject?: string; reply?: "sent" | "not_sent" | "pending"; why?: string };
+  door?: { app: string; from?: string; subject?: string; reply?: "sent" | "not_sent" | "pending" | "held"; why?: string };
   /** The files the person attached to their message (kiff/tafs#209): opened through the attachments route. */
   attachments?: AttachmentRef[];
   /** The card the owner's message answered, by id: they wrote while it waited, and their words were its answer. */
@@ -5785,7 +5785,7 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
         doorLights(deps.doors!.store, me.tenantID, taf.id, now).catch(() => [])])
         .then(([ds, lights]) => ds.map((d) => {
           const l = lights.find((x) => x.app === d.app);
-          return { ...d, ...(l ? { resting: l.resting, knocks: l.knocks } : {}) };
+          return { ...d, ...(l ? { resting: l.resting, knocks: l.knocks, replies: l.replies } : {}) };
         }))
       : Promise.resolve([]),
     deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),
@@ -8500,7 +8500,12 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // Each taf's hand-offs the receiving taf didn't finish (delivery.ts): they count in its Needs you. One read each.
   const dead = await Promise.all(tafs.map((t) => deadOf(deps, me.tenantID, t.id, now)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
-  const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
+  const lights = await Promise.all(tafs.map((t) => deps.doors
+    ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date(), (who) => wordsIn(langOf(event)).door_reply_waiting(who, t.name)).catch(() => [])
+    : []));
+  // A door reply waiting for the owner to send it: one line in Needs you each. Each taf's door light carries its
+  // newest reply's line, in the person's language, so Needs you shows it as the notification says it.
+  const heldReplies = (await Promise.all(tafs.map((t) => deps.doors ? heldRepliesOf(deps.doors.store, me.tenantID, t.id).catch(() => []) : []))).flat();
   // Each taf's versions, kept a minute: the Cards its live version was approved with show as one Card, and its last change.
   const versionsOf = await Promise.all(tafs.map((t) => keptVersions(deps, me.tenantID, t.id, now)));
   // Labels (labels.ts): each taf's that the account still has. One that can't be read leaves the filter row out, never the list.
@@ -8598,8 +8603,8 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // count what they have, rather than show a number that's short.
   const needsYou = unsure === undefined ? undefined : (() => {
     const parts = { held: kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length, unsure, unit: unitExceptions.length,
-      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, steps: yourSteps.length, coach: coachWaiting.length };
-    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.steps + parts.coach;
+      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, replies: heldReplies.length, steps: yourSteps.length, coach: coachWaiting.length };
+    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.replies + parts.steps + parts.coach;
     // Its parts, counts only, so a count the list doesn't show names where it comes from.
     if (count > 0) console.log(JSON.stringify({ event: "needs_you", tenant: me.tenantID, count, ...parts }));
     // In the person's language, as every line of tafs cloud's (docs/api.md, The person's language).
@@ -11592,6 +11597,12 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   }
   if (parts.length === 4 && method === "POST") return addDoor(ctx, owner, taf, body);
   if (parts.length === 6 && method === "POST" && a === "knocks") return answerKnock(ctx, owner, taf, b ?? "", body);
+  // A held reply: sending it writes to someone outside, so it takes the phone's signature, as an approval does;
+  // discarding it sends nothing.
+  if (parts.length === 6 && method === "POST" && a === "replies") {
+    if (body.action === "send") await doorSigned(event, me, deps);
+    return answerHeldReply(ctx, owner, taf, decodeURIComponent(b ?? ""), body);
+  }
   if (parts.length === 5 && method === "PATCH" && a) {
     if (typeof body.open !== "boolean") throw new HTTPError(400, "open is true or false");
     return setOpen(ctx, owner, taf, a, body.open);
