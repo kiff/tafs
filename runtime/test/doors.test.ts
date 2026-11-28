@@ -288,7 +288,7 @@ describe("the email door", () => {
     const input = w.agents.events.get(run.session)![0]!.body as { text: string };
     expect(input.text).toContain("[door email · from Ben <ben@partner.example> · your answer goes back by email to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for");
     // The sender is outside: no error, code, tool or id goes back to them.
-    expect(input.text).toContain("answer with the one line TAFS_CANT_DO followed by why, no_app (the app it needs isn't connected), no_tool or failed, and nothing else, and tafs asks the owner while they get nothing]");
+    expect(input.text).toContain("answer with the one line TAFS_CANT_DO followed by why, no_app (the app it needs isn't connected), needs followed by what you need from the owner, any of folder, sheet, file, link, info (a link or detail only the owner can give), no_tool or failed, and nothing else, and tafs asks the owner while they get nothing]");
     expect(input.text).toContain("Please refund order 4471");
     expect(input.text).toContain("only its text was read");
 
@@ -2602,7 +2602,7 @@ describe("a door's taf that can't do what was asked", () => {
 
   it("is told to say so with one line, never to write the writer a failure", () => {
     const text = doorMessage(APPS.find((a) => a.id === "email")!, { route: "r", from: "ben@partner.example", id: "m1", at: "", text: "hi", attachments: 0, thread: {} } as never, "hi", []);
-    expect(text).toContain(`answer with the one line ${CANT_DO} followed by why, no_app (the app it needs isn't connected), no_tool or failed, and nothing else`);
+    expect(text).toContain(`answer with the one line ${CANT_DO} followed by why, no_app (the app it needs isn't connected), needs followed by what you need from the owner, any of folder, sheet, file, link, info (a link or detail only the owner can give), no_tool or failed, and nothing else`);
     expect(text).not.toContain("the owner will follow up");
   });
 
@@ -2658,6 +2658,35 @@ describe("a door's taf that can't do what was asked", () => {
     expect(w.outbox).toHaveLength(1);
     expect(w.outbox[0]!.text).toBe(own);
     expect(w.outbox[0]!.to).toBe("ben@partner.example");
+  });
+
+  it("says what the taf needs from the owner in KIFF's own nouns, never the taf's words or ids", async () => {
+    const w = world();
+    await emailDoor(w, "auto");
+    await pairBen(w);
+    await emailHook(w, mail(w, { from: BEN }));
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    // The taf's own words after the reason (an id, the writer's link) never reach the row: only the kinds it names.
+    await finish(w, run, `${CANT_DO} needs: sheet, folder, a P2-GD id from https://drive.example/x`);
+    expect(w.outbox).toHaveLength(0);
+    const held = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.unanswered;
+    expect(held[0]).toMatchObject({ cant_do: "needs", needs: ["sheet", "folder"] });
+    expect(held[0].words.line).toBe("Refunds needs something from you to do what Ben asked: a spreadsheet and a folder. Share it in its chat. Their message waits here, and they haven't been answered.");
+    expect(held[0].words.connect).toBeUndefined();
+    expect(JSON.stringify(held[0])).not.toMatch(/P2-GD|drive\.example/);
+  });
+
+  it("reads a need it doesn't know as a plain can't-do", async () => {
+    const w = world();
+    await emailDoor(w, "auto");
+    await pairBen(w);
+    await emailHook(w, mail(w, { from: BEN }));
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    await finish(w, run, `${CANT_DO} needs: the password`);
+    const held = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.unanswered;
+    expect(held[0]).toMatchObject({ cant_do: "other" });
+    expect(held[0].needs).toBeUndefined();
+    expect(held[0].words.line).toBe("Refunds can't do what Ben asked. Their message waits here, and they haven't been answered.");
   });
 
   it("holds a run that stopped before answering, and says it couldn't finish, never mailing the writer so", async () => {

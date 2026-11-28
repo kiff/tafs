@@ -6,7 +6,7 @@ import { type Lang, type Words, wordsIn } from "../words/index.js";
 import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
-import { API_DOOR, type APIDraft, type APIField, type APIKey, type Arrival, DOOR, type Door, doorKeys, type HeldReply, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
+import { API_DOOR, type APIDraft, type APIField, type APIKey, type Arrival, DOOR, type Door, doorKeys, type HeldReply, type DoorSecrets, type DoorStore, type Key, type Knock, NEEDS, type Need, type Reply, type Sent, whatsappSecretName } from "./model.js";
 import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
 import { apsFor, levelOf } from "../levels.js";
@@ -129,15 +129,31 @@ export const CANT_DO = "TAFS_CANT_DO";
  * stopped before an answer, failed or was stopped (`unfinished`). Either way nothing is drafted to the writer.
  */
 export function cantDoOf(r: Pick<Run, "status" | "stop" | "output">): HeldReply["cant_do"] {
+  return cantDo(r).why;
+}
+
+/**
+ * Why, and for `needs` what the taf needs from the owner: only the kinds of NEEDS it names after `needs`, in their
+ * order, once each; none known reads `other`. The taf's own words after the marker never reach the owner's row.
+ */
+export function cantDo(r: Pick<Run, "status" | "stop" | "output">): { why: HeldReply["cant_do"]; needs?: Need[] } {
   if (r.status === "COMPLETED" && (!r.stop || r.stop === "answered")) {
     // Anywhere in the answer: a sentence before the marker never sends the marker to someone outside.
     const out = r.output ?? "";
     const at = out.indexOf(CANT_DO);
-    if (at < 0) return undefined;
+    if (at < 0) return { why: undefined };
+    const after = out.slice(at + CANT_DO.length);
     // Only the reason the taf names says an app is missing; no tool, a failure or none is said plainly.
-    return /^\s*no_app\b/.test(out.slice(at + CANT_DO.length)) ? "no_app" : "other";
+    if (/^\s*no_app\b/.test(after)) return { why: "no_app" };
+    const needs = /^\s*needs\b:?([^\n]*)/.exec(after);
+    if (needs) {
+      const said = needs[1]!.toLowerCase().split(/[^a-z_]+/);
+      const known = NEEDS.filter((n) => said.includes(n)).sort((a, b) => said.indexOf(a) - said.indexOf(b));
+      if (known.length) return { why: "needs", needs: known };
+    }
+    return { why: "other" };
   }
-  return "unfinished";
+  return { why: "unfinished" };
 }
 
 /**
@@ -152,7 +168,7 @@ export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: strin
   // message is a knock, never a run). So the taf does what they ask within its job, reads included, and
   // answers with what they asked for. What went wrong is only "not now", never an error, a tool, an id or how anything
   // is connected.
-  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; say what you can do for them in terms of the job (orders, invoices, delivery dates), never the apps, folders, sheets, files, mailboxes, Card, limits or other people behind it, unless they need one to act (a link they were given); tafs puts the line saying an AI agent wrote it above your answer, so never write it yourself; if you can't do what they ask (the app it needs isn't connected, you have no tool for it, or something failed), don't answer them: answer with the one line ${CANT_DO} followed by why, no_app (the app it needs isn't connected), no_tool or failed, and nothing else, and tafs asks the owner while they get nothing`;
+  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; say what you can do for them in terms of the job (orders, invoices, delivery dates), never the apps, folders, sheets, files, mailboxes, Card, limits or other people behind it, unless they need one to act (a link they were given); tafs puts the line saying an AI agent wrote it above your answer, so never write it yourself; if you can't do what they ask (the app it needs isn't connected, you need something only the owner can give, you have no tool for it, or something failed), don't answer them: answer with the one line ${CANT_DO} followed by why, no_app (the app it needs isn't connected), needs followed by what you need from the owner, any of ${NEEDS.join(", ")} (a link or detail only the owner can give), no_tool or failed, and nothing else, and tafs asks the owner while they get nothing`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}${botReply(a)}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
@@ -548,11 +564,11 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
       if (!taf || !door || !app) { await stamp({ ...base, status: "not_sent", why: "the door was removed" }); done.add(place); continue; }
       // A taf that couldn't do what was asked drafts nothing to its writer, whatever the door's replies say: their
       // message waits for the owner, who connects an app, answers in their own words, or ignores it.
-      const cantDo = cantDoOf(r);
-      if (cantDo) {
-        await holdReply(ctx, tenant, taf, { ref, reply: { ...reply, run: runID }, text: "", at: ctx.now.toISOString(), cant_do: cantDo });
+      const { why: cantDoWhy, needs } = cantDo(r);
+      if (cantDoWhy) {
+        await holdReply(ctx, tenant, taf, { ref, reply: { ...reply, run: runID }, text: "", at: ctx.now.toISOString(), cant_do: cantDoWhy, ...(needs ? { needs } : {}) });
         await stamp({ ...base, status: "held" });
-        await tellOwner(ctx, tenant, taf, (w) => cantDoLine(w, cantDo, taf.name, reply.name || reply.to), `reply-${ref}`, "knock");
+        await tellOwner(ctx, tenant, taf, (w) => cantDoLine(w, cantDoWhy, taf.name, reply.name || reply.to, needs), `reply-${ref}`, "knock");
         for (const p of placesOf(taf)) done.add(p);
         break;
       }
@@ -649,17 +665,18 @@ export function heldReplyWords(w: Words, taf: string, who: string) {
   return { line: w.door_reply_waiting(who, taf), send: w.door_reply_send, discard: w.door_reply_discard, prompt: w.door_reply_prompt(who), changed: w.door_reply_changed };
 }
 
-/** The line Needs you says for a writer a taf couldn't answer. */
-export function cantDoLine(w: Words, why: NonNullable<HeldReply["cant_do"]>, taf: string, who: string): string {
-  return why === "no_app" ? w.door_cant_do(taf, who) : why === "other" ? w.door_cant_do_other(taf, who) : w.door_cant_finish(taf, who);
+/** The line Needs you says for a writer a taf couldn't answer: for `needs`, what it needs in KIFF's own nouns. */
+export function cantDoLine(w: Words, why: NonNullable<HeldReply["cant_do"]>, taf: string, who: string, needs?: readonly Need[]): string {
+  if (why === "needs" && needs?.length) return w.door_cant_do_needs(taf, who, needs.map((n) => w[`door_need_${n}`]));
+  return why === "no_app" ? w.door_cant_do(taf, who) : why === "unfinished" ? w.door_cant_finish(taf, who) : w.door_cant_do_other(taf, who);
 }
 
 /**
  * A held writer's lines when the taf couldn't do it: what waits, Connect an app (only when an app is missing),
  * Answer them yourself (the owner's own words, sent with Send), and Ignore; and what the fingerprint names.
  */
-export function cantDoWords(w: Words, why: NonNullable<HeldReply["cant_do"]>, taf: string, who: string) {
-  return { line: cantDoLine(w, why, taf, who), ...(why === "no_app" ? { connect: w.door_cant_do_action } : {}), reply: w.door_cant_do_reply,
+export function cantDoWords(w: Words, why: NonNullable<HeldReply["cant_do"]>, taf: string, who: string, needs?: readonly Need[]) {
+  return { line: cantDoLine(w, why, taf, who, needs), ...(why === "no_app" ? { connect: w.door_cant_do_action } : {}), reply: w.door_cant_do_reply,
     ignore: w.door_cant_do_ignore, prompt: w.door_reply_prompt(who), changed: w.door_reply_changed };
 }
 
@@ -1028,7 +1045,7 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
   // app when one is missing. Not counted in Needs you until the apps draw them.
   const unanswered = held.filter((h) => h.cant_do).map((h) => ({
     run: h.reply.run, door: h.reply.door, to: h.reply.name || h.reply.to, ...(h.reply.subject ? { subject: h.reply.subject } : {}), at: h.at,
-    cant_do: h.cant_do!, words: cantDoWords(w, h.cant_do!, taf.name, h.reply.name || h.reply.to),
+    cant_do: h.cant_do!, ...(h.needs?.length ? { needs: h.needs } : {}), words: cantDoWords(w, h.cant_do!, taf.name, h.reply.name || h.reply.to, h.needs),
   }));
   return {
     doors: doors.map((d, i) => doorView(d, appOf(cfg, d.app), counts[i], ctx.lang)),
