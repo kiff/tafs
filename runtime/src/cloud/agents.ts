@@ -217,6 +217,9 @@ export interface Fired {
    */
   reason?: string;
   vendor?: string;
+  /** A `held_sign_in`'s connection and site: the saved sign-in kiff/agents found stopped before the run (kiff/agents#712). */
+  grant?: string;
+  site?: string;
 }
 
 export interface Run {

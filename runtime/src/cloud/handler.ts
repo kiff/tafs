@@ -1,5 +1,6 @@
 import { type Browse, browseOf, browsingOf, wayOf, waysView } from "./browse.js";
-import { type Health as SignInHealth, healthOf as signInHealthOf, readHealth } from "./sign-in-health.js";
+import { type Health as SignInHealth, healthOf as signInHealthOf, readHealth, type SiteVerdict } from "./sign-in-health.js";
+import { heldSignIn, laterKey, type SignInItem, signInItems } from "./sign-ins.js";
 import { checkMisfitSeen } from "./checkseen.js";
 import { anotherConnectionsTool, connectionsOfJob, connectionTail, grantSuffix, rulesAgreement } from "./rules.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
@@ -480,6 +481,12 @@ export interface Taf {
    */
   keepBothBy?: Record<string, string[]>;
   /**
+   * Home's sign-in items the owner put off or skipped (browser batch 2): Later hides a site's "needs you soon" until planque's
+   * next check (by `grant|site`, the check it was put off at); Skip drops a held run's item (the held firing's due time).
+   */
+  signInLater?: Record<string, string>;
+  signInSkipped?: string;
+  /**
    * Where its results go (docs/reliability.md): through the door the work came in on, a line
    * in the app, an email to the owner. Absent: the door's reply alone, as before.
    */
@@ -814,6 +821,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts[1] === "connect" && parts[2] === "grants" && parts.length === 5 && parts[4] === "sheet" && method === "GET") {
     return grantSheet(event, decodeURIComponent(parts[3] ?? ""), await person(event, deps), deps);
+  }
+  if (parts[1] === "needs-you" && parts[2] === "sign-in" && parts.length === 6 && parts[5] === "later" && method === "POST") {
+    return signInLater(decodeURIComponent(parts[3] ?? ""), decodeURIComponent(parts[4] ?? ""), event, await person(event, deps), deps);
   }
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
   if (method === "GET" && parts.length === 2 && parts[1] === "recipes") return recipes(event, await person(event, deps), deps);
@@ -1194,6 +1204,16 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     await deps.tafs.put(me.tenantID, updated);
     await tellChange(me.tenantID, "taf", taf.id, deps);
     return { taf: await view(updated, me, deps, undefined, undefined, langOf(event)) };
+  }
+  if (parts.length === 5 && method === "POST" && action === "held-sign-in" && parts[4] === "skip") {
+    // Skip this run (browser batch 2): the run its stopped sign-in held is dropped, and Home lists it no more. The next
+    // firing is checked again: a sign-in still stopped holds it too.
+    await needTaf(event, me, taf, deps);
+    const held = heldSignIn(await deps.agents.scheduleFirings(me.tenantID, taf.id, HEALTH_FIRINGS).catch(() => [] as Fired[]), taf);
+    if (!held) throw new HTTPError(409, "no run of this taf waits for a sign-in");
+    await deps.tafs.put(me.tenantID, { ...taf, signInSkipped: held.due });
+    await tellChange(me.tenantID, "taf", taf.id, deps);
+    return { skipped: held.due };
   }
   if (parts.length === 4 && method === "POST" && action === "run") {
     await needTaf(event, me, taf, deps);
@@ -8836,14 +8856,16 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const yourTurns = process.env.TAFS_HOSTED_HANDS === "on" && deps.planqueBase
     ? handsOf(await accountHands(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => []), tafs, langOf(event), me.timeZone ?? "UTC", now)
     : [];
+  // A hosted-browser connection's saved sign-in that needs the owner soon, or stopped and held a run (browser batch 2).
+  const signIns = await homeSignIns(event, me, tafs, fired, deps, now);
   // What Needs you lists, counted once here so Home, the tab badge and the lock screen agree with it
   // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a
   // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
   // count what they have, rather than show a number that's short.
   const needsYou = unsure === undefined ? undefined : (() => {
     const parts = { held: kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length, unsure, unit: unitExceptions.length,
-      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, replies: heldReplies.length, steps: yourSteps.length, turns: yourTurns.length, coach: coachWaiting.length };
-    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.replies + parts.steps + parts.turns + parts.coach;
+      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, replies: heldReplies.length, steps: yourSteps.length, turns: yourTurns.length, coach: coachWaiting.length, sign_ins: signIns.length };
+    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.replies + parts.steps + parts.turns + parts.coach + parts.sign_ins;
     // Its parts, counts only, so a count the list doesn't show names where it comes from.
     if (count > 0) console.log(JSON.stringify({ event: "needs_you", tenant: me.tenantID, count, ...parts }));
     // In the person's language, as every line of tafs cloud's (docs/api.md, The person's language).
@@ -8853,7 +8875,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   })();
   // Which tafs matter now (docs/api.md, Home): something of theirs in Needs you, or a run or change in the last 24 hours. Worked
   // out here from what Home already read, so the iPad's sidebar and every other app show the same tafs.
-  const stepTafs = new Set([...yourSteps, ...yourTurns].map((s) => s.taf.id));
+  const stepTafs = new Set([...yourSteps, ...yourTurns, ...signIns].map((s) => s.taf.id));
   const withRelevance = listed.map((v, i) => {
     const t = tafs[i]!;
     const why = relevantNow({ held: (waiting.get(t.kiffAgent) ?? 0) > 0, step: stepTafs.has(t.id), knock: lights[i]!.some((d) => d.knocks > 0),
@@ -8866,7 +8888,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const labels = labelSet ? labelsView(labelSet, listed, labelsOf, langOf(event)) : [];
   return { tafs: withRelevance, headline, setting_up: settingUp, others, removing, limits,
     ...(labels.length ? { labels, labels_words: { all: wordsIn(langOf(event)).labels_all } } : {}), ...(doors.length ? { doors_offered: doors } : {}),
-    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(yourTurns.length ? { your_turns: yourTurns } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
+    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(yourTurns.length ? { your_turns: yourTurns } : {}), ...(signIns.length ? { sign_ins: signIns } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
 /**
@@ -9496,6 +9518,54 @@ async function syncSignIn(me: KIFFIdentity, tafs: ReadonlyArray<Taf>, grants: Re
         console.warn(JSON.stringify({ msg: "sign_in not kept on schedule", taf: taf.id, schedule: s.id, why: (err as Error).message })));
     }
   }));
+}
+
+/**
+ * Home's sign-in items (sign-ins.ts): each taf's run a stopped sign-in holds, from its schedule's firings, and each site
+ * whose saved sign-in ends within 3 days, from what planque keeps of the connection its schedule names (`sign_in`), read
+ * with the person's own session. A read that fails or is late shows no "soon" item; a held run still shows.
+ */
+async function homeSignIns(event: HTTPEvent, me: KIFFIdentity, tafs: Taf[], fired: ReadonlyArray<readonly Fired[] | undefined>, deps: Deps, now: Date): Promise<SignInItem[]> {
+  const grantOf = new Map<string, string>();
+  const health = new Map<string, SiteVerdict[]>();
+  if (deps.planqueBase && tafs.length) {
+    const schedules = await within(deps.agents.listSchedules(me.tenantID).catch(() => [] as Schedule[]), SIGN_IN_HEALTH_MS) ?? [];
+    const ours = new Set(tafs.map((t) => t.id));
+    for (const s of schedules) if (s.sign_in?.grant && ours.has(s.agent) && !grantOf.has(s.agent)) grantOf.set(s.agent, s.sign_in.grant);
+    await Promise.all([...new Set(grantOf.values())].map(async (grant) => {
+      const read = await within(readHealth(deps.fetch ?? fetch, deps.planqueBase!, me.tenantID, bearer(event), grant).catch(() => undefined), SIGN_IN_HEALTH_MS);
+      if (read) health.set(grant, read);
+    }));
+  }
+  return signInItems({ tafs, fired, grantOf, health, now, timeZone: me.timeZone ?? "UTC", lang: langOf(event) });
+}
+
+/**
+ * Later on a sign-in that needs the owner soon: hidden for everyone on the account until planque's next check of that
+ * site, kept on each taf whose schedule names the connection. Answers the check it was put off at.
+ */
+async function signInLater(grant: string, site: string, event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(grant) || !site || site.length > 253) throw new HTTPError(400, "name a connection and one of its sites");
+  if (!deps.planqueBase) throw new HTTPError(503, "sign-in checks aren't set up here");
+  const verdict = (await readHealth(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), grant).catch(() => {
+    throw new HTTPError(502, "planque couldn't say how that sign-in is; try again");
+  })).find((v) => v.site === site.toLowerCase());
+  if (!verdict?.checked_at) throw new HTTPError(404, "that site has no check to put off");
+  const schedules = await agentsCall(() => deps.agents.listSchedules(me.tenantID));
+  const tafIDs = new Set(schedules.filter((s) => s.sign_in?.grant === grant).map((s) => s.agent));
+  const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => tafIDs.has(t.id) && !t.removing);
+  if (!tafs.length) throw new HTTPError(404, "no taf of this account uses that connection");
+  const key = laterKey(grant, verdict.site);
+  // As Home compares it: the check's time as healthOf writes it.
+  const at = new Date(verdict.checked_at);
+  if (Number.isNaN(at.getTime())) throw new HTTPError(502, "planque's check has no readable time");
+  const checked = at.toISOString();
+  for (const t of tafs) {
+    await needTaf(event, me, t, deps);
+    await deps.tafs.put(me.tenantID, { ...t, signInLater: { ...t.signInLater, [key]: checked } });
+    await tellChange(me.tenantID, "taf", t.id, deps);
+  }
+  return { later: { grant, site: verdict.site, until_check_after: checked } };
 }
 
 /** How long a read waits for planque's kept sign-in checks before it's drawn without them. */

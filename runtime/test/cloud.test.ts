@@ -1281,6 +1281,44 @@ describe("tafs cloud", () => {
     expect(w.agents.calls.filter((c) => c.startsWith(`updateSchedule ${RAE} `)).length).toBe(writes);
   });
 
+  it("lists a run a stopped sign-in holds and a sign-in that needs the owner soon on Home, with Skip and Later", async () => {
+    const w = world();
+    w.now = new Date("2026-11-28T10:00:00Z");
+    w.agents.schedules.set(`t_acme|${RAE}`, { tenant: "t_acme", id: RAE, agent: RAE, cron: "0 7 * * *", input: "Go", enabled: true, sign_in: { grant: "grt_cloud" } });
+    w.agents.firings.set(`t_acme|${RAE}`, [{ due: "2026-11-28T06:00:00.000Z", at: "2026-11-28T06:00:01.000Z", outcome: "held_sign_in", grant: "grt_cloud", site: "shop.example" }]);
+    const deps = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/grants/grt_cloud/health")) return new Response(JSON.stringify({ sites: [
+        { site: "portal.example", verdict: "signed_in", checked_at: "2026-11-28T06:00:00Z", expires_at: "2026-11-30T06:00:00Z" },
+        { site: "shop.example", verdict: "signed_out", checked_at: "2026-11-28T05:59:00Z" },
+      ] }), { status: 200 });
+      if (url.startsWith("https://planque.test/")) return new Response("{}", { status: 500 });
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] } as Deps;
+    const req = (method: string, path: string) => handle({ rawPath: path, requestContext: { http: { method } }, headers: { Authorization: "Bearer ana" } }, deps);
+    const home = async () => JSON.parse((await req("GET", "/v1/home")).body) as { sign_ins?: Array<{ kind: string; site: string; taf: { id: string }; words: { line: string; skip?: string; later?: string } }>; needs_you?: { count: number } };
+    const before = await home();
+    expect(before.sign_ins?.map((i) => [i.kind, i.site, i.taf.id])).toEqual([["sign_in_stopped", "shop.example", RAE], ["sign_in_soon", "portal.example", RAE]]);
+    expect(before.sign_ins?.[0].words.line).toBe("Rae's 06:00 run waits for you. It won't run with a broken sign-in, and it's skipped only if you skip it.");
+    expect(before.sign_ins?.[0].words.skip).toBe("Skip this run");
+    expect(before.sign_ins?.[1].words.later).toBe("Later");
+    const count = before.needs_you!.count;
+    // Later: hidden until planque's next check of that site.
+    expect((await req("POST", "/v1/needs-you/sign-in/grt_cloud/portal.example/later")).statusCode).toBe(200);
+    // Skip this run: that held run's item goes.
+    expect((await req("POST", `/v1/tafs/${RAE}/held-sign-in/skip`)).statusCode).toBe(200);
+    const after = await home();
+    expect(after.sign_ins).toBeUndefined();
+    expect(after.needs_you!.count).toBe(count - 2);
+    expect((await req("POST", `/v1/tafs/${RAE}/held-sign-in/skip`)).statusCode).toBe(409);
+    // A later firing held again shows again.
+    w.agents.firings.set(`t_acme|${RAE}`, [{ due: "2026-11-29T06:00:00.000Z", at: "2026-11-29T06:00:01.000Z", outcome: "held_sign_in", grant: "grt_cloud", site: "shop.example" }]);
+    expect((await home()).sign_ins?.map((i) => i.kind)).toEqual(["sign_in_stopped"]);
+    // A run that started after it clears it.
+    w.agents.firings.set(`t_acme|${RAE}`, [{ due: "2026-11-30T06:00:00.000Z", at: "2026-11-30T06:00:01.000Z", outcome: "run", run: "r1" },
+      { due: "2026-11-29T06:00:00.000Z", at: "2026-11-29T06:00:01.000Z", outcome: "held_sign_in", grant: "grt_cloud", site: "shop.example" }]);
+    expect((await home()).sign_ins).toBeUndefined();
+  });
+
   // After a fresh sign-in the owner sees which account it went to and which tafs use it now, as planque names them, so a
   // sign-in to the wrong mailbox shows at once. Without the account's name, nothing: the app keeps the done words.
   it("says which account a fresh sign-in went to, and which tafs use it now, when asked after it", async () => {
