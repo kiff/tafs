@@ -184,7 +184,7 @@ export const lt: Words = {
   browse_switch_ask_cloud: (taf, site) => `Pakeisk ${taf}, kad svetainei ${site} naudotų debesies naršyklę.`,
   browse_reason_schedule: (taf, time) => `Coach pasirinko debesies naršyklę, nes ${taf} veikia ${time}, kai jūsų gali nebūti.`,
   browse_reason_door: (taf) => `Coach pasirinko debesies naršyklę, nes ${taf} tvarko žinutes vos jas gavęs, kai jūsų gali nebūti.`,
-  browse_reason_signed_in: (taf) => `Coach pasirinko jūsų Chrome, nes ${taf} reikia prisijungimų, kurie jau yra jame.`,
+  browse_reason_signed_in: (taf) => `Coach pasirinko jūsų Chrome, nes ${taf} naudoja prisijungimus, kurie jau yra jame.`,
   browse_reason_occasional: (taf) => `Coach pasirinko jūsų Chrome, nes ${taf} veikia tik tada, kai paprašote.`,
   setup_connected_app: "Prijungta programėlė",
   setup_connections_unread: "Prijungtų programėlių nepavyko perskaityti; bandykite dar kartą",

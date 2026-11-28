@@ -182,7 +182,7 @@ export const tr: Words = {
   browse_switch_to_cloud: "Bunun yerine bulut tarayıcıyı kullanın",
   browse_switch_ask_chrome: (taf, site) => `${taf} taf'ını ${site} için Chrome'umu kullanacak şekilde değiştir.`,
   browse_switch_ask_cloud: (taf, site) => `${taf} taf'ını ${site} için bulut tarayıcıyı kullanacak şekilde değiştir.`,
-  browse_reason_schedule: (taf, time) => `Coach bulut tarayıcıyı seçti, çünkü ${taf} saat ${time}'da çalışıyor ve o sırada orada olmayabilirsiniz.`,
+  browse_reason_schedule: (taf, time) => `Coach bulut tarayıcıyı seçti, çünkü ${taf} için çalışma saati ${time} ve o sırada orada olmayabilirsiniz.`,
   browse_reason_door: (taf) => `Coach bulut tarayıcıyı seçti, çünkü ${taf} mesajları geldikçe işliyor ve o sırada orada olmayabilirsiniz.`,
   browse_reason_signed_in: (taf) => `Coach Chrome'unuzu seçti, çünkü ${taf} içinde zaten olan oturumlara ihtiyaç duyuyor.`,
   browse_reason_occasional: (taf) => `Coach Chrome'unuzu seçti, çünkü ${taf} yalnızca siz istediğinizde çalışıyor.`,
