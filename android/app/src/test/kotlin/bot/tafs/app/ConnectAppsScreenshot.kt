@@ -42,9 +42,9 @@ class ConnectAppsScreenshot {
   private val secrets = InMemorySecretStore()
   private val answer = KiffClient.json.parseToJsonElement(File(repo, "contracts/connect-apps.json").readText()).jsonObject["answer"]!!.jsonObject
 
-  /** The answer's sign-in that no taf uses: its line, as tafs cloud wrote it. */
+  /** The answer's sign-in that no taf uses: who uses it, as tafs cloud wrote it ("Not used by any taf"), its grey line. */
   private val unusedLine = answer["apps"]!!.jsonArray.map { it.jsonObject }
-    .single { it["state"]?.jsonPrimitive?.content == "signed_in" && it["used_by"]?.jsonArray?.isEmpty() == true }["line"]!!.jsonPrimitive.content
+    .single { it["state"]?.jsonPrimitive?.content == "signed_in" && it["used_by"]?.jsonArray?.isEmpty() == true }["used_by_words"]!!.jsonPrimitive.content
 
   /** Someone who manages the account's Cards, with one taf (Rae), and Connect apps read from the contract's answer. */
   private fun model(): AppModel = runBlocking {

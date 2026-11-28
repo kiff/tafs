@@ -2159,6 +2159,12 @@ describe("Connect apps' contracts", () => {
     expect(page.apps.find((a) => a.name === "Stripe")!.line).toBe("Sign in · Connected · Used by Rae");
     // A taf's connection under the other form of its agent's name is still that taf's, never "Not used by any taf".
     expect(page.apps.find((a) => a.name === "Gmail")!.line).toBe("Sign in · Sign in again · Used by Rae");
+    // Who uses each of the account's own, on its own, for the apps' grey line; the line stays whole for builds that draw it.
+    expect(page.apps.find((a) => a.name === "Pipedrive")!.used_by_words).toBe("Not used by any taf");
+    expect(page.apps.find((a) => a.name === "Stripe")!.used_by_words).toBe("Used by Rae");
+    expect(page.apps.find((a) => a.name === "Gmail")!.used_by_words).toBe("Used by Rae");
+    // An app to connect is no one's yet: nothing is said of who uses it.
+    expect(page.apps.find((a) => a.name === "Typeform")!.used_by_words).toBeUndefined();
     expect(page).toMatchObject({ by_key: true, provider: "p", next_cursor: "cur_2" });
     expect(page.apps.find((a) => a.name === "Stripe")!.logo).toMatch(/^\/v1\/logos\/[0-9a-f]{32}$/);
     expect(page.apps.find((a) => a.name === "Qonto")!.subtitle).toBe("Invoicing: reads and drafts");

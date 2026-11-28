@@ -11803,14 +11803,18 @@ function appRow(app: { entry: string; vendor: string; title: string; how: "oauth
   // An app to connect says no status: under Discover, "Not connected" on every row says nothing.
   const status = app.state === "connected" ? w.apps_connected : app.state === "needs_reconnect" ? w.apps_reconnect
     : app.state === "signed_in" ? w.setup_status_signed_in : app.state === "needs_setup" ? w.apps_needs_setup : undefined;
+  // Who uses it, on its own ("Used by Rae", "Not used by any taf"): only for the account's own, and only when it's known.
+  const usedByWords = used?.length ? w.apps_used_by(used.map((u) => u.name).join(", ")) : unused ? w.apps_used_by_none : undefined;
+  // The whole line as before, for builds that draw it: how it connects, its status and who uses it.
   const line = [app.how === "key" ? w.apps_method_key : w.apps_method_sign_in, ...(status ? [status] : []),
-    ...(used?.length ? [w.apps_used_by(used.map((u) => u.name).join(", "))] : unused ? [w.apps_used_by_none] : [])].join(" · ");
+    ...(usedByWords ? [usedByWords] : [])].join(" · ");
   return {
     connected: app.state === "connected",
     method: app.how === "key" ? "key" as const : "sign_in" as const,
     // In the person's language, drawn as sent: the person's own, or the company account's, shared by its people.
     ...(own && me.accountKind ? { whose: me.accountKind === "personal" ? w.apps_whose_yours : w.apps_whose_company } : {}),
     ...(used ? { used_by: used } : {}),
+    ...(usedByWords ? { used_by_words: usedByWords } : {}),
     line,
   };
 }

@@ -134,7 +134,9 @@ Signed in · Not used by any taf”, and a connected app no taf uses says “Not
 too. It opens the same connections, where its row has **Remove unfinished connection** (or
 **Disconnect**, once it has actions), so the owner can always end it. “Not used by any taf” is
 said only when no live taf uses the app, one you can't see included; when tafs cloud can't
-read the connections, nothing is said.
+read the connections, nothing is said. tafs cloud also sends who uses it on its own (`used_by_words`), and Android draws that
+alone as the row's grey line, since the status and its action are beside it. A build before it, iPhone, iPad and the
+Mac draw `line`, which stays whole.
 
 ### Connections from removed tafs
 

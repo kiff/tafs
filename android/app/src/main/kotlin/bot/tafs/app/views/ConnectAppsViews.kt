@@ -83,11 +83,12 @@ object ConnectAppsWords {
   val TITLE get() = Words.Connect.Apps.title
 
   /**
-   * An app's second line: tafs cloud's `line` as sent. Without it, the same words put together here: how it connects, whose it
-   * is when tafs cloud says, and which tafs use it ([usedBy]).
+   * An app's second line. For one of the account's own, who uses it, in tafs cloud's words (`used_by_words`): its status and
+   * action are already beside it, so the line says only that ("Not used by any taf"). Else tafs cloud's `line` as sent. Without
+   * either, the same words put together here: how it connects, whose it is when tafs cloud says, and which tafs use it ([usedBy]).
    */
   fun secondLine(app: ConnectApps.App, usedBy: List<String>): String =
-    app.line?.takeIf { it.isNotBlank() } ?: listOfNotNull(
+    app.usedByWords?.takeIf { app.yours && it.isNotBlank() } ?: app.line?.takeIf { it.isNotBlank() } ?: listOfNotNull(
       if (app.byKey) Words.Connect.How.key else Words.Connect.How.signIn,
       app.whose?.takeIf { it.isNotBlank() },
       // Where it stands, as on iPhone and iPad: connected, or to sign in again.
