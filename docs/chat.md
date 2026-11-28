@@ -556,7 +556,10 @@ run pauses on it, and the answer comes back to the run as data, never as text in
 - On Android, an answered approval keeps one line saying what it was, "Approved · Connect
   Stripe" (`CoachWords.answeredApproval`): the Card when one was signed (KIFF's draft confirmed, or its key claimed since, and holding tools:
   "Approved · Refunds' Card"), else Coach's title for the card, else planque's words for the
-  connection, else the draft's Card, else its service, cut to one line however long those are. A card waiting for the owner sits
+  connection, else the draft's Card, else its service, cut to one line however long those are. An approval tafs cloud answered
+  before any fingerprint, because its connection came from an earlier chat or another taf (stored answer `asked again`) or
+  because the rules weren't agreed yet (`rules first`), reads as tafs cloud's line alone, never with the title or planque's
+  words beside it, which would contradict it. A card waiting for the owner sits
   after what Coach wrote with it, so the open question is at the end. Once answered, it stays
   after the words that asked for it, and what Coach wrote after the answer (`answer.at`) comes
   below it (`CoachWords.items`).

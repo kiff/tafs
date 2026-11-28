@@ -1,0 +1,1 @@
+- **Android: an approval tafs cloud answered before any fingerprint reads as its line alone.** A card whose connection was started in an earlier chat or for another taf (`asked again`), or one Coach checked before the rules were agreed (`rules first`), no longer shows planque's "You're already signed in" beside it ([chat.md](docs/chat.md)).

@@ -519,7 +519,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
     "notice" -> NoticeCard(c)
     "confirm" -> ConfirmCard(c, answered, error, actions.answer)
     "questions" -> QuestionsCard(c, answered, error, actions.answer)
-    "approval" -> ApprovalCard(c, shown.session.ifEmpty { null } ?: state.coachChat, state, answered, error, actions)
+    "approval" -> ApprovalCard(c, shown.session.ifEmpty { null } ?: state.coachChat, state, answered, error, actions, settled = shown.answer?.answer)
     "sign_in" -> SignInCard(c, state, answered, error, actions)
     "knob" -> KnobDraftCard(c, state, answered, error, actions)
     // Coach's drafted door "From another application" (ApiDoorViews.kt), behind its switch.
@@ -534,7 +534,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
  * reads it, and the one confirmation signs exactly what is shown. Coach's own description of it is never what is approved.
  */
 @Composable
-private fun ApprovalCard(c: SetupComponent, setup: String?, state: AppState, answered: String?, error: String?, actions: CoachActions) {
+private fun ApprovalCard(c: SetupComponent, setup: String?, state: AppState, answered: String?, error: String?, actions: CoachActions, settled: String? = null) {
   val grant = state.grants.firstOrNull { it.id == c.grant }
   val draft = c.draft?.let { state.setupDrafts[it] }
   val busy = approvalHeld(state, c.grant)
@@ -543,6 +543,13 @@ private fun ApprovalCard(c: SetupComponent, setup: String?, state: AppState, ans
   // length: with no title, planque's text can run to paragraphs. With a Card, a tap opens it again to read the Card that was
   // approved, KIFF's draft at the version signed, with nothing to answer; another tap folds it. planque's grant isn't shown
   // there: it reads as it is now, and a later approval can widen it past what this one approved.
+  // A connection from an earlier chat or another taf (`asked again`), or an approval checked before the rules were agreed
+  // (`rules first`), both answered by tafs cloud before any fingerprint: its line alone. Nothing was approved or failed, and
+  // the grant's own text ("You're already signed in") would contradict it.
+  if (answered != null && settled in CoachWords.NOTE_ALONE) {
+    Text(answered, style = scaled(14, FontWeight.Medium, Theme.dim), modifier = Modifier.testTag("asked-again-" + c.id))
+    return
+  }
   if (answered != null) {
     // A signed Card is named, and its lines, KIFF's own from the draft this phone read, stay under it: what the fingerprint signed.
     val signed = draft?.signedCard == true

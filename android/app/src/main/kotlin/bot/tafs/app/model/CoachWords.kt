@@ -303,6 +303,21 @@ object CoachWords {
     // A window covers the next steps of the one setup whose step opened it (one taf): another setup's card asks for the fingerprint.
     windowWords != null && c.signs?.tap == true && windowSetup != null && setup == windowSetup
 
+  /**
+   * tafs cloud's stored answer for an approval card it answered before any fingerprint: a connection from an earlier chat or
+   * another taf, which Coach asks for again (docs/chat.md). Nothing failed; the card reads as tafs cloud's note alone.
+   */
+  const val ASKED_AGAIN = "asked again"
+
+  /**
+   * tafs cloud's stored answer for an approval Coach checked before the owner agreed to the rules: a step still to come, not a
+   * failure. It reads as tafs cloud's line alone, as [ASKED_AGAIN] does.
+   */
+  const val RULES_FIRST = "rules first"
+
+  /** Stored answers whose card reads as tafs cloud's line alone, never beside the title or planque's grant text. */
+  val NOTE_ALONE = setOf(ASKED_AGAIN, RULES_FIRST)
+
   /** Taken by tafs cloud, before the thread shows it in kiff/agents' words. */
   val TAKEN get() = Words.Coach.answered
 
