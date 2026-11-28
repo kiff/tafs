@@ -436,3 +436,23 @@ export function answeredAgent(text: string): string | undefined {
   }
   return typeof agent === "string" && /^[a-z0-9][a-z0-9-]{0,63}$/.test(agent) ? agent : undefined;
 }
+
+/**
+ * The agents a chat asked connections for, as the connection server kept each request's chat
+ * (`GET /v1/accounts/{tenant}/sessions/{session}/agents`, kiff/planque#489): its grants that haven't ended. Read with the
+ * person's own session when the chat is deleted, beside the record tafs cloud kept as answers streamed, so a request made
+ * with no stream, or whose stream the app left, is ended too. `null` from a connection server without the route (404),
+ * or for a chat id it wouldn't take: the record alone then.
+ */
+export async function sessionAgents(fetchFn: Fetch, base: string, tenant: string, session: string, bearer: string): Promise<string[] | null> {
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(session)) return null;
+  const res = await fetchFn(`${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/sessions/${encodeURIComponent(session)}/agents`, {
+    headers: { authorization: `Bearer ${bearer}`, accept: "application/json" },
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`the connection server answered ${res.status}`);
+  const got = await res.json().catch(() => ({})) as { agents?: unknown };
+  return (Array.isArray(got.agents) ? got.agents : [])
+    .map((a) => (a && typeof a === "object" ? (a as { agent?: unknown }).agent : undefined))
+    .filter((a): a is string => typeof a === "string" && /^[a-z0-9][a-z0-9-]{0,63}$/.test(a));
+}

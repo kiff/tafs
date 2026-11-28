@@ -37,7 +37,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, answeredAgent, chatLeftAgents, otherForm, requestedAgents, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, browserLine, chromeLine, tafPageSites } from "./connections.js";
+import { type AccountConnection, type AppGuide, accountConnections, answeredAgent, chatLeftAgents, sessionAgents, otherForm, requestedAgents, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, browserLine, chromeLine, tafPageSites } from "./connections.js";
 import { maskedPath, normalHost, onSites, pageSiteRefused } from "./page-sites.js";
 import { maskedCodes } from "./page-codes.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, PAGE_TOOLS, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
@@ -7067,7 +7067,7 @@ async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Dep
       ...drives.flatMap((d) => [driveKeys.recap(me.tenantID, d), driveKeys.steps(me.tenantID, d)]), driveKeys.recaps(me.tenantID, chat.id)];
     await Promise.all(kept.map((key) => coach.remove(key).catch((err) => console.error(`delete chat: a kept note stays until it ends: ${(err as Error).message}`))));
   }
-  await endChatConnections(me, chat.started, agents, deps, token);
+  await endChatConnections(me, chat.id, chat.started, agents, deps, token);
   return { session: chat.id, deleted: true };
 }
 
@@ -7077,9 +7077,15 @@ async function deleteChat(me: KIFFIdentity, taf: Taf, session: string, deps: Dep
  * is gone: one that can't be read or ended is left as it was, and logged with counts only. 27 Nov: a Qonto sign-in
  * made in a chat the owner deleted, for a taf never made, stayed signed in, with no door left to end it.
  */
-async function endChatConnections(me: KIFFIdentity, started: string, asked: ReadonlySet<string>, deps: Deps, token: string): Promise<void> {
-  if (!deps.planqueBase || !token || asked.size === 0) return;
+async function endChatConnections(me: KIFFIdentity, chat: string, started: string, recorded: ReadonlySet<string>, deps: Deps, token: string): Promise<void> {
+  if (!deps.planqueBase || !token) return;
   try {
+    // What the connection server kept as this chat's requests, whatever the app did while it ran (no stream, or a stream
+    // it left): with tafs cloud's own record, every agent the chat asked under. A server without the route adds none.
+    const kept = await sessionAgents(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, chat, token)
+      .catch((err) => { console.error(`delete chat: the connection server's record wasn't read: ${(err as Error).message}`); return null; });
+    const asked = new Set([...recorded, ...(kept ?? [])]);
+    if (asked.size === 0) return;
     const [conns, tafs] = await Promise.all([accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token), deps.tafs.list(me.tenantID)]);
     const live = new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent!));
     const agents = chatLeftAgents(asked, conns, live, iso(started));
@@ -7093,7 +7099,7 @@ async function endChatConnections(me: KIFFIdentity, started: string, asked: Read
         results.push({ agent, error: (err as Error).message });
       }
     }
-    console.log(JSON.stringify({ event: "chat_connections_ended", tenant: me.tenantID, asked: [...asked], left: agents, results }));
+    console.log(JSON.stringify({ event: "chat_connections_ended", tenant: me.tenantID, asked: [...asked], recorded: [...recorded], kept: kept ?? null, left: agents, results }));
   } catch (err) {
     console.error(`delete chat: its connections weren't read: ${(err as Error).message}`);
   }

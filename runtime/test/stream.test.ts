@@ -407,12 +407,14 @@ describe("a message streamed (kiff/tafs#60)", () => {
     logged.mockRestore();
     expect(del.statusCode).toBe(200);
     expect(asked).toEqual([
+      `GET https://planque.test/v1/accounts/t_acme/sessions/${run.session}/agents Bearer ana`,
       "GET https://planque.test/v1/accounts/t_acme/connections Bearer ana",
       "POST https://planque.test/v1/accounts/t_acme/agents/qonto-morning-balance-example1/end Bearer ana",
     ]);
     // One line says what was asked, what was left to end and how each went: agent ids and counts only.
     expect(JSON.parse(line!)).toEqual({ event: "chat_connections_ended", tenant: "t_acme", asked: ["qonto-morning-balance-example1"],
-      left: ["qonto-morning-balance-example1"], results: [{ agent: "qonto-morning-balance-example1", ended: 1 }] });
+      recorded: ["qonto-morning-balance-example1"], kept: [], left: ["qonto-morning-balance-example1"],
+      results: [{ agent: "qonto-morning-balance-example1", ended: 1 }] });
     // What was kept for the chat goes with it.
     expect(await w.coach.get(`t_acme#coach-asked#${run.session}`)).toBeUndefined();
   });
