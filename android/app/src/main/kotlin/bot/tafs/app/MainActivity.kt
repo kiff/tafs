@@ -1060,7 +1060,17 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
           NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null,
             // A taf with knocks opens on Activity, where they're answered, as a knock's alert opens it.
             onOpenKnocks = if (state.mode == Mode.kiff) ({ id -> tab = Tab.Tafs; showingSettings = false; coachOpen = false; openTaf = id; openOnActivity = id }) else null,
-            onYourTurn = if (state.mode == Mode.kiff) ({ turn, open -> scope.launch { if (open) model.openYourTurn(turn) else model.declineYourTurn(turn) } }) else null)
+            onYourTurn = if (state.mode == Mode.kiff) ({ turn, open -> scope.launch { if (open) model.openYourTurn(turn) else model.declineYourTurn(turn) } }) else null,
+            // A cloud browser sign-in that needs the owner: planque's live view to sign in again, Later, or Skip this run.
+            onSignIn = if (state.mode == Mode.kiff) ({ item, answer ->
+              scope.launch {
+                when (answer) {
+                  bot.tafs.app.views.SignInAnswer.SignIn -> model.openSiteSignIn(item.grant)
+                  bot.tafs.app.views.SignInAnswer.Later -> model.signInLater(item)
+                  bot.tafs.app.views.SignInAnswer.Skip -> model.skipHeldRun(item)
+                }
+              }
+            }) else null)
         }
         Tab.Record -> RecordView(
           state,
@@ -1162,6 +1172,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
         onClearRemoved = if (state.canManageCards) ({ ids -> scope.launch { model.clearRemovedConnections(ids); model.loadConnectApps(null) } }) else null,
         // Gap 13: a new key on the key sheet over the list, or a sign-in again, each behind the fingerprint.
         onReplaceKey = if (state.canManageCards) model::openReplaceKey else null,
+        // A saved sign-in in the cloud browser that needs the owner: planque's live sign-in view for it.
+        onSiteSignIn = if (state.mode == Mode.kiff) ({ grant -> scope.launch { model.openSiteSignIn(grant) } }) else null,
         onSignInAgain = if (state.canManageCards) model::startReconnect else null,
         // "Your Chrome" 2: planque's action moves a connection to another paired Chrome, behind the fingerprint.
         onUseAnotherChrome = if (state.canManageCards) ({ g, c -> model.switchChrome(g, c) }) else null,

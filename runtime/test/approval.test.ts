@@ -1186,20 +1186,40 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     expect(early.body).toMatchObject({ code: "sign_in_not_confirmed", error: WORDS.confirmFirst });
     expect(JSON.stringify(early.body)).not.toContain("Nothing was connected");
     expect(w.told()).toBeUndefined();
-    // planque was read twice: once more in case the phone had just confirmed.
-    expect(s.proofs.length - before).toBe(2);
+    // planque was read once: it takes each signed read once, so a second read with the same proof would be refused.
+    expect(s.proofs.length - before).toBe(1);
     // The phone confirms with planque's code, planque lists the tools, and the next report is approved.
     s.grants = [grant({ status: "listed" })];
     expect((await w.report({ result: "listed" })).body).toMatchObject({ answer: "approved" });
     expect(w.told()).toMatchObject({ answer: "approved" });
   });
 
-  it("a sign-in confirmed between the report and tafs cloud's read is approved on the second read", async () => {
+  it("a sign-in confirmed after the report's read is approved on the phone's next report, never read twice with one proof", async () => {
     const s = services();
     const w = await asked(s);
     let reads = 0;
     Object.defineProperty(s, "grants", { get: () => [grant({ status: reads++ === 0 ? "signed_in" : "connected" })], configurable: true });
+    const before = s.proofs.length;
+    expect((await w.report({ result: "connected" })).body).toMatchObject({ code: "sign_in_not_confirmed" });
+    expect(s.proofs.length - before).toBe(1);
     expect((await w.report({ result: "connected" })).body).toMatchObject({ answer: "approved" });
+  });
+
+  // A full-scope Qonto sign-in went through at Qonto, but tafs cloud read planque's grants twice with the phone's one proof:
+  // planque refused the second (409, a signed request is used once), the report failed, and the ask was already taken, so
+  // the owner's next try found nothing waiting and signed in to Qonto again.
+  it("a report whose read planque refuses leaves the ask waiting, and the phone's next report settles it with no new sign-in", async () => {
+    const s = services();
+    const w = await asked(s);
+    s.grants = [grant({ status: "connected" })];
+    s.grantsDown = 409;
+    const refused = await w.report({ result: "connected" });
+    expect(refused.status).toBe(502);
+    expect(w.told()).toBeUndefined();
+    s.grantsDown = undefined;
+    const again = await w.report({ result: "connected" });
+    expect(again.body).toMatchObject({ answer: "approved" });
+    expect(w.told()).toMatchObject({ answer: "approved" });
   });
 
   // Go-to-market job 3 (owner's phone, 13 Nov): a message typed while the owner approved GitHub (a fingerprint and a

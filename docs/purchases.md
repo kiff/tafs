@@ -9,8 +9,8 @@ owner's answer.
 The contract is [contracts/purchase.json](../contracts/purchase.json): the case, its states,
 the approval the apps draw, the answer's signed bytes and their test vector.
 
-**Built on Android.** The iPhone and iPad and the Mac follow, from the same contract. The receipt
-in the Record comes next.
+**Built on Android, the Mac, and the iPhone and iPad**, each from the same contract. The receipt in the
+Record is built on Android; the other apps follow once KIFF's receipt key is pinned.
 
 ## The held purchase
 

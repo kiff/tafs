@@ -1616,11 +1616,21 @@ async function settleAsk(askID: string, report: Report, ctx: ReportContext): Pro
   // above spends nothing, so the phone can report again.
   if (!(await ctx.store.once(`${key}#taken`, new Date(ctx.now.getTime() + ASK_KEPT_MS)))) throw new ApprovalError(404, "no approval waits for that answer");
   await ctx.store.remove(key);
+  // planque takes each signed read once (a second with the same proof is 409 signature_replayed): the grants are read
+  // at most once for this report, and every step below uses that read. A read planque refused or couldn't answer puts
+  // the ask back, so the phone's next report, with a new signature, settles it: never "no approval waits" for a sign-in
+  // that worked (a full-scope Qonto sign-in looped the owner through it twice).
+  let grantsRead: Promise<ApprovalGrant[]> | undefined;
+  const readOnce = (): Promise<ApprovalGrant[]> => (grantsRead ??= readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch).catch(async (err: unknown) => {
+    await ctx.store.put(key, pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
+    await ctx.store.remove(`${key}#taken`);
+    throw err;
+  }));
   if (pending.step === "key_and_cards" || pending.step === "tools_and_cards") {
     // One signature, two requests: approved only when the connection server says connected and KIFF says the
     // Card is issued. A key that went in with a Card that didn't says so, and the card's next tap asks the Card alone.
     const [grants, draft] = await Promise.all([
-      readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch),
+      readOnce(),
       pending.draft ? draftInfo(ctx.token, pending.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now) : Promise.resolve(undefined),
     ]);
     const grant = grants.find((g) => g.id === pending.grant);
@@ -1641,7 +1651,7 @@ async function settleAsk(askID: string, report: Report, ctx: ReportContext): Pro
   if (pending.step === "cards") {
     const draft = pending.draft ? await draftInfo(ctx.token, pending.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now) : undefined;
     if (draft && issued(draft.status) && draft.cards) {
-      const grants = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
+      const grants = await readOnce();
       const own = grants.find((g) => g.id === pending.grant);
       const waiting = own ? appsWaiting(own, sameTafOf(own, grants), draft.cards) : [];
       if (waiting.length) return { answer: `failed: the Card is issued, but ${waitsLine(waiting[0]!)}`, note: W.otherAppFirst(waiting[0]!.name) };
@@ -1650,18 +1660,16 @@ async function settleAsk(askID: string, report: Report, ctx: ReportContext): Pro
     const why = report.result === "failed" && report.why ? report.why : draft ? W.draftIs(draft.status) : W.noDraft;
     return { answer: `failed: ${W.cardsNotIssued(why)}`, note: W.cardsNotIssued(why) };
   }
-  let grant = (await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch)).find((g) => g.id === pending.grant);
+  const all = await readOnce();
+  const grant = all.find((g) => g.id === pending.grant);
   // signed_in: planque holds the sign-in's token, unused, until the approving phone confirms it with planque's
-  // one-use code; unconfirmed, planque revokes it. So it's "not yet", never approved and never failed: read once
-  // more (the phone may have just confirmed), and if it's still waiting, the ask waits again for the phone's
-  // report after its confirm, and Coach hears nothing yet (go-to-market job 1, 13 Nov).
+  // one-use code; unconfirmed, planque revokes it. So it's "not yet", never approved and never failed: the ask waits
+  // again for the phone's report after its confirm, with a new signature (this one's read is spent), and Coach hears
+  // nothing yet (go-to-market job 1, 13 Nov).
   if (grant?.status === "signed_in") {
-    grant = (await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch)).find((g) => g.id === pending.grant);
-    if (grant?.status === "signed_in") {
-      await ctx.store.put(key, pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
-      await ctx.store.remove(`${key}#taken`);
-      throw new ApprovalError(409, W.confirmFirst, "sign_in_not_confirmed");
-    }
+    await ctx.store.put(key, pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
+    await ctx.store.remove(`${key}#taken`);
+    throw new ApprovalError(409, W.confirmFirst, "sign_in_not_confirmed");
   }
   if (grant && (grant.status === "connected" || grant.status === "listed")) {
     await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
@@ -1684,7 +1692,6 @@ async function settleAsk(askID: string, report: Report, ctx: ReportContext): Pro
         return { answer: `failed: ${pending.vendor} ${done}; ${W.cardsNotIssued(why)}; show the approval again for its Card alone`, note: W.cardsNotIssued(why) };
       }
       // Its Card issued, but another app it covers still waits: never approved until that app's tools are too.
-      const all = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
       const waiting = draft.cards ? appsWaiting(grant, sameTafOf(grant, all), draft.cards) : [];
       if (waiting.length) return { answer: `failed: ${pending.vendor} is connected and its Card is issued, but ${waitsLine(waiting[0]!)}`, note: W.otherAppFirst(waiting[0]!.name) };
     }

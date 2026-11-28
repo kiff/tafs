@@ -148,6 +148,8 @@ struct HeldCallCard: View {
     @EnvironmentObject private var model: AppModel
     let call: HeldCall
     @State private var sending = false
+    /// A purchase's lines, opened with Show more: closed each time the card is drawn (Thune).
+    @State private var purchaseOpen = false
     /// Coach's install, its switch begun, while its Card is read (kiff/tafs#206).
     @State private var installing: AppModel.CoachInstall?
     @Environment(\.openURL) private var openURL
@@ -176,6 +178,9 @@ struct HeldCallCard: View {
             } else if model.showsApprovalKeyLost, call.kiffID != nil {
                 // Approving or extra room would fail: the way out instead. Refuse stays below.
                 ApprovalKeyLostLine()
+            } else if call.purchaseUnreadable == true {
+                // A purchase this app can't read is never approved here: Refuse only, below, when its case reads.
+                EmptyView()
             } else if call.needsRelease == true {
                 // A sign-in fill takes a release this app can't make yet: never an allowing answer without it.
                 Text(Words.Chrome.releaseUnreadable)
@@ -206,7 +211,7 @@ struct HeldCallCard: View {
                         .scaledFont(13).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                if model.canManageCards {
+                if model.canManageCards, call.purchase == nil {
                     ApprovalGate {
                         Button { send(.extraRoom) } label: {
                             Label(Words.NeedsYou.extraRoomWith(biometry: "\(Biometry.name)"), systemImage: Biometry.symbol)
@@ -242,14 +247,20 @@ struct HeldCallCard: View {
                 }
             }
 
+            // A purchase is approved or refused, nothing else; one whose case can't be signed as sent isn't answered here.
+            let purchase = call.purchase != nil || call.purchaseUnreadable == true
             HStack(spacing: 8) {
-                ForEach(call.nextSteps, id: \.self) { step in
-                    Button(step) { send(.nextStep(step)) }
-                        .buttonStyle(OutlineButtonStyle())
+                if !purchase {
+                    ForEach(call.nextSteps, id: \.self) { step in
+                        Button(step) { send(.nextStep(step)) }
+                            .buttonStyle(OutlineButtonStyle())
+                    }
                 }
-                Button(Words.NeedsYou.refuse) { send(.refuse) }
-                    .buttonStyle(OutlineButtonStyle(color: Theme.no))
-                    .confirming()
+                if !purchase || call.purchaseBinding != nil {
+                    Button(Words.NeedsYou.refuse) { send(.refuse) }
+                        .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                        .confirming()
+                }
             }
             .disabled(sending)
         } else {
@@ -289,22 +300,31 @@ struct HeldCallCard: View {
                         .foregroundColor(Theme.amberText)
                 }
             }
-            if let amount = call.proposed.amount {
-                Text(amount.formatted).scaledFont(44, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+            if call.purchase != nil {
+                // A purchase's card is KIFF's own words, drawn below.
+            } else if call.purchaseUnreadable == true {
+                // A purchase this app can't read: its name only, and nothing approved here.
+                Text(call.proposed.summary).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+            } else {
+                if let amount = call.proposed.amount {
+                    Text(amount.formatted).scaledFont(44, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                }
+                Text(call.proposed.summary).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                if !call.proposed.context.isEmpty {
+                    Text(call.proposed.context).scaledFont(14).foregroundColor(Theme.soft)
+                }
+                Text(call.reason)
+                    .scaledFont(12, weight: .medium)
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .foregroundColor(Theme.amberText)
+                    .background(Theme.amber.opacity(0.14))
+                    .clipShape(Capsule())
             }
-            Text(call.proposed.summary).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
-            if !call.proposed.context.isEmpty {
-                Text(call.proposed.context).scaledFont(14).foregroundColor(Theme.soft)
-            }
-            Text(call.reason)
-                .scaledFont(12, weight: .medium)
-                .padding(.horizontal, 10).padding(.vertical, 5)
-                .foregroundColor(Theme.amberText)
-                .background(Theme.amber.opacity(0.14))
-                .clipShape(Capsule())
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Self.sentence(call, taf: model.holderName(call.tafID)))
+
+            if let purchase = call.purchase { purchaseBody(purchase) }
 
             // What the call is on and why, in the taf's own words (wave 1 item 4). They may come
             // from a customer's text, so they sit under their own heading, drawn verbatim (no
@@ -332,8 +352,8 @@ struct HeldCallCard: View {
             if let step = call.browser { BrowserStepBlock(step: step) }
 
             // What it's on, as KIFF keeps the call (kiff/tafs#102), under Details: ids and
-            // a vendor's own values aren't words for the card's face (kiff/tafs#236, item 7).
-            if let details = call.details, !details.isEmpty {
+            // a vendor's own values aren't words for the card's face (kiff/tafs#236, item 7). A purchase's own lines say it.
+            if call.purchase == nil, let details = call.details, !details.isEmpty {
                 DisclosureGroup {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(details, id: \.self) { line in
@@ -358,9 +378,11 @@ struct HeldCallCard: View {
                         .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 } else {
                     VStack(alignment: .leading, spacing: 12) {
-                        // Said here, where the owner answers, so the taf's words needn't say it.
-                        Text(HeldCallCard.nothingSent)
-                            .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                        // Said here, where the owner answers, so the taf's words needn't say it. A purchase says it in KIFF's words.
+                        if call.purchase == nil {
+                            Text(HeldCallCard.nothingSent)
+                                .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                        }
                         // They asked for it: someone else approves, and they can still refuse it.
                         if let code = model.unanswerable[call.id], let words = AppModel.refusalWords(code) {
                             Text(words).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
@@ -378,6 +400,74 @@ struct HeldCallCard: View {
         .onChange(of: model.requestedHold) { _ in takeRequest() }
     }
 
+    /// A held purchase, as the approved design draws it (Thune): the shop, the total and what it includes, where it's
+    /// delivered, the lines behind Show more (closed each time), then the price rule, what the card allows and when it
+    /// buys, and why the Card asks, every word KIFF's. Approving signs exactly these lines, open or closed.
+    @ViewBuilder private func purchaseBody(_ p: Purchase) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: p.words.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let subtitle = p.words.subtitle { Text(verbatim: subtitle).scaledFont(13).foregroundColor(Theme.soft) }
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: p.words.total).scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                    .accessibilityIdentifier("purchase.total")
+                if let note = p.words.totalNote { Text(verbatim: note).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim) }
+            }
+            Text(verbatim: p.words.delivery).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            if !p.words.lines.isEmpty || !p.words.charges.isEmpty {
+                Button { purchaseOpen.toggle() } label: {
+                    HStack(spacing: 4) {
+                        Text(verbatim: (purchaseOpen ? p.words.showLess : p.words.showMore) ?? (p.words.showMore ?? ""))
+                        Image(systemName: purchaseOpen ? "chevron.up" : "chevron.down").scaledFont(11, weight: .semibold).accessibilityHidden(true)
+                    }
+                    .scaledFont(13, weight: .semibold).foregroundColor(Theme.amberText)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("purchase.show_more")
+                if purchaseOpen {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(Array(p.words.lines.enumerated()), id: \.offset) { _, line in
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(verbatim: line.name).scaledFont(13, weight: .medium).foregroundColor(Theme.ink)
+                                Spacer(minLength: 8)
+                                Text(verbatim: [line.quantity, line.amount].compactMap { $0 }.joined(separator: " · ")).scaledFont(13).foregroundColor(Theme.soft)
+                            }
+                        }
+                        ForEach(Array(p.words.charges.enumerated()), id: \.offset) { _, charge in
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(verbatim: charge.name).scaledFont(13, weight: .medium).foregroundColor(Theme.ink)
+                                Spacer(minLength: 8)
+                                Text(verbatim: charge.amount).scaledFont(13).foregroundColor(Theme.soft)
+                            }
+                        }
+                    }
+                    .padding(.top, 2)
+                    .accessibilityIdentifier("purchase.lines")
+                }
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach([p.words.priceRule, p.words.grant, p.words.buysNow].compactMap { $0 }, id: \.self) { fact in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Circle().fill(Theme.dim.opacity(0.6)).frame(width: 5, height: 5).accessibilityHidden(true)
+                        Text(verbatim: fact).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            if let reason = p.words.reason {
+                Text(verbatim: reason).scaledFont(12, weight: .medium).foregroundColor(Theme.amberText)
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(Capsule().fill(Theme.amber.opacity(0.14)))
+            }
+            if let nothing = p.words.nothingUntil {
+                Text(verbatim: nothing).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("purchase")
+    }
+
     /// While a call waits: nothing the call asks for happens until someone approves it. The
     /// card, its alert and VoiceOver say it, so the taf's own words don't have to.
     static let nothingSent = Words.NeedsYou.nothingSent
@@ -385,7 +475,9 @@ struct HeldCallCard: View {
     /// The hold as VoiceOver reads it: "Rae asks: Refund order 42, €150.00. Over €50 each.
     /// It lapses at 14:05. Nothing is sent until you approve."
     static func sentence(_ call: HeldCall, taf: String?) -> String {
-        let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
+        // A purchase reads as KIFF names it: the shop and the total.
+        let what = call.purchase.map { "\($0.words.title), \($0.words.total)" }
+            ?? [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
         return Words.NeedsYou.asksLapses(taf: taf ?? Words.NeedsYou.aTaf, what: what, reason: call.reason, time: call.expiresAt.shortTime, nothingSent: nothingSent)
     }
 
@@ -394,6 +486,9 @@ struct HeldCallCard: View {
         model.requestedHold = nil
         guard model.canAnswer(call) else { return }
         switch request.answer {
+        // A purchase is approved only from its own card, read first: an Approve chosen on its notification just opens it.
+        case AlertAnswers.approve? where call.purchase != nil || call.purchaseUnreadable == true:
+            break
         case AlertAnswers.approve? where call.approvableOnce:
             if call.install != nil { install() } else { send(.approveOnce, fromNotification: true) }
         case AlertAnswers.refuse?:

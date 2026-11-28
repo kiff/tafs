@@ -1,0 +1,1 @@
+- **Coach asks for the read a write needs (tafs cloud).** When a taf's write needs an id or a name it can't know, Coach now asks for the read that finds it alongside the write (`connect-an-app@40`): the client list with a Qonto invoice, and the sheet's tab list with an append. A first append failed on an account whose tab is "Feuille 1", not "Sheet1".

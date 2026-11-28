@@ -501,6 +501,12 @@ struct HeldCall: Identifiable, Hashable, Codable {
     /// A step a taf wants to take in a paired Chrome (docs/chrome.md, "The approval card"): which site, what
     /// it does there in planque's words, and what the page showed. Nil for any other call.
     var browser: BrowserStep?
+    /// A held purchase (Thune): the case and KIFF's words, drawn as sent. Nil for any other call.
+    var purchase: Purchase?
+    /// The purchase's case on its own, signed into every answer: set whenever the case reads, even when its words don't.
+    var purchaseBinding: Purchase.Binding?
+    /// A purchase whose words this app can't read: never approved here, and refused only when its case reads.
+    var purchaseUnreadable: Bool?
 }
 
 /// A held browser step, as the card draws it: each line made safe to draw, and never read for anything.

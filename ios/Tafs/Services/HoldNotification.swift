@@ -9,6 +9,10 @@ import UserNotifications
 /// push as tafs cloud sent it. The lock screen's "Show Previews" setting applies as usual.
 @MainActor
 enum HoldNotification {
+    /// A hold answered from its notification with Refuse only: a held purchase, approved only from its own card, where
+    /// every line and where it's delivered are read first (Thune). Registered with the app's categories (AlertAnswers).
+    nonisolated static let refuseOnlyCategory = "hold_refuse"
+
     /// The Keychain item holding the KIFF session, as the app keeps it (`AppModel.tokenAccount`).
     static let sessionAccount = "kiff.session"
 
@@ -48,6 +52,10 @@ enum HoldNotification {
         let words = words(hold, taf: taf, zone: zone)
         content.title = words.title
         content.body = words.body
+        // A purchase is never approved from its notification: Refuse only, and a tap opens its card.
+        if hold.purchaseBlock != nil, content.categoryIdentifier == "hold" {
+            content.categoryIdentifier = refuseOnlyCategory
+        }
     }
 
     /// `fill` with the session the app keeps in the Keychain, shared with the extension.
