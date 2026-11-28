@@ -3560,7 +3560,7 @@ export function approvalAnswerWords(b: { type?: unknown; answer?: unknown; note?
     // Coach's re-ask for the rules, before the owner agreed to them: a step, never "it didn't go through".
     if (rulesFirstAnswer(b.answer)) return w.approval_rules_first;
     // A connection from an earlier chat or another taf: tafs cloud's own note says Coach asks for the app again, and
-    // nothing more ("it didn't go through" read as a failure to the owner, 28 Nov).
+    // nothing more. Nothing failed, so it never reads "it didn't go through".
     if (earlierConnectionAnswer(b.answer)) {
       if (typeof b.note === "string" && b.note) return b.note;
       // No note kept (past its time): the same words, from the app the answer names.
