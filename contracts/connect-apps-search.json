@@ -25,6 +25,30 @@
       }
     ],
     "by_key": true,
+    "ways": [
+      {
+        "way": "cloud",
+        "words": {
+          "title": "Cloud browser",
+          "line": "Works while your computer is off.",
+          "facts": [
+            "A fresh browser for each run, only on the sites you allow.",
+            "You sign in once, in a live view. Your password is never kept."
+          ]
+        }
+      },
+      {
+        "way": "chrome",
+        "words": {
+          "title": "Chrome extension",
+          "line": "Works in your Chrome, where you're signed in.",
+          "facts": [
+            "Uses the sign-ins already in your Chrome. Your passwords stay there.",
+            "Banks and password managers stay blocked unless your phone allows each one."
+          ]
+        }
+      }
+    ],
     "removed_tafs": [
       {
         "agent": "old-refunds",

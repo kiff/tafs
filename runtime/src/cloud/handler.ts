@@ -1,3 +1,4 @@
+import { browsingOf, waysView } from "./browse.js";
 import { checkMisfitSeen } from "./checkseen.js";
 import { anotherConnectionsTool, connectionsOfJob, connectionTail, grantSuffix, rulesAgreement } from "./rules.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
@@ -5871,6 +5872,8 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
         ? { fresh: true, words: w.connect_again_fresh_words(out.name, taf.name), done_words: w.connect_again_fresh_done(out.name) }
         : { words: connectAgainWords(w, out.signed_out_cause, out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) }) } } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}),
+    // How it uses websites (browse.ts): its browser connection's way, and the other way's button.
+    ...(() => { const b = browsingOf(taf, grants.grants.filter((g) => g.request.agent === taf.kiffAgent), langOf(event)); return b ? { browsing: b } : {}; })(),
     ...(grants.error ? { connections_error: grants.error } : {}) };
 }
 
@@ -11781,7 +11784,9 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       // A proof is tafs cloud's for the gallery (connectsOf), never served to the apps.
       const apps = page.apps.map(({ icon, proved: _proof, ...app }) => ({ ...(icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app), ...appRow(app, me, uses, langOf(event)), ...needFields(app, needs) }));
       const { proved: _proved, ...listed } = page;
-      return { ...listed, apps, removed_tafs: removed };
+      // The two ways a taf browses, at the account level, with or without a browser connection (browse.ts).
+      const ways = waysView((await reads())?.grants, langOf(event));
+      return { ...listed, apps, ways, removed_tafs: removed };
     }
     if (parts.length === 4 && method === "POST") {
       need(me, "cards.manage");
