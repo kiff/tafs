@@ -183,14 +183,18 @@ function day(at: Date, lang: Lang = "en"): string {
 
 /**
  * The period's line, with its first and last days as KIFF bounds the period (UTC): the start's
- * date, and the day before the end's date, never the instant before the end in the account's
+ * date, and the day before the end's date when it ends at midnight (else the end's own date, as
+ * a store-billed period ends mid-day), never the instant before the end in the account's
  * zone, which east of UTC is already the next day. "This period: 1,240 credits used · ends on
  * 30 Nov", or "Last period: 980 credits used · 1 Oct to 31 Oct".
  */
 export function periodWords(k: Pick<KIFFCredits, "period" | "current" | "credits">, lang: Lang = "en"): string {
   const w = wordsIn(lang);
   const start = new Date(k.period.start), end = new Date(k.period.end);
-  const last = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() - 1));
+  // A period that ends at midnight ends the day before; one that ends mid-day (a store's or Stripe's,
+  // at the time it was bought) still runs on its end's date, the day the store says it renews.
+  const midnight = end.getUTCHours() === 0 && end.getUTCMinutes() === 0 && end.getUTCSeconds() === 0 && end.getUTCMilliseconds() === 0;
+  const last = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() - (midnight ? 1 : 0)));
   const used = k.credits > 0 ? w.cr_used(credits(k.credits, lang)) : k.current ? w.cr_none_yet : w.cr_none;
   if (k.current) return w.cr_this_period(used, day(last, lang));
   return w.cr_last_period(used, day(start, lang), day(last, lang));
