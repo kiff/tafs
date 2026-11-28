@@ -5976,6 +5976,52 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect((home.body.tafs as Array<{ id: string; job_summary?: string }>).find((t) => t.id === RAE)?.job_summary).not.toBe("Offers a free month to customers who cancel.");
   });
 
+  // A run said "I've noted the tab name for future runs" over links given in the owner's chat; a door run five minutes
+  // later had none. What a taf works from is its version's: every run has it, a door's and a schedule's too.
+  it("puts what a taf works from in an improvement's version, its run's definition with each id, and on the taf once that version goes live", async () => {
+    const folder = { kind: "folder", name: "P2-GD", id: "1AbCdEfGhIjKlMnOp" };
+    const sheet = { kind: "sheet", name: "Orders", id: "1ZyXwVuTsRqPoNmLk" };
+    const better = { type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Files in the P2-GD folder and logs in the Orders sheet", sources: [folder, sheet] } };
+    const { w, note, answer } = await paused(better);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rae, job: "custom", work: { kickoff: "File the receipts that come in." } });
+    await note();
+    const n = (answer() as { answer: { version: number } }).answer.version;
+    const def = w.agents.versionDefs.get(`t_acme|${RAE}|${n}`)!;
+    expect(def.instructions).toContain(`- the folder "P2-GD": id ${folder.id}`);
+    expect(def.instructions).toContain(`- the sheet "Orders": id ${sheet.id}`);
+    // Made, not live: the taf works from what it did.
+    const kept = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(kept.work?.sources).toBeUndefined();
+    expect(kept.sourcesBy).toEqual({ "1": [], [String(n)]: [folder, sheet] });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.work?.sources).toEqual([folder, sheet]);
+    // A later version made without sources keeps what the one it came from works from, and going back to it brings that back.
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
+    const later = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Replies in French" } });
+    const m = (later.body as { version: number }).version;
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.sourcesBy?.[String(m)]).toEqual([folder, sheet]);
+    // Back to version 1: nothing again.
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/1/live`, { token: "ana" });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.work?.sources).toBeUndefined();
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/${m}/live`, { token: "ana" });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.work?.sources).toEqual([folder, sheet]);
+  });
+
+  it("refuses an improvement's sources with no id, or for a starter job's taf, with words Coach can act on", async () => {
+    const noID = await paused({ type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Logs in Orders", sources: [{ kind: "sheet", name: "Orders" }] } });
+    noID.w.agents.access.set("u_ana", { cards_manage: true });
+    const rae = noID.w.tafs.held.get(`t_acme#${RAE}`)!;
+    noID.w.tafs.held.set(`t_acme#${RAE}`, { ...rae, job: "custom", work: { kickoff: "File the receipts that come in." } });
+    await noID.note();
+    expect(noID.answer()).toMatchObject({ answer: { failed: expect.stringContaining(`the sheet "Orders" has no id`) } });
+    const starter = await paused({ type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Logs in Orders", sources: [{ kind: "sheet", name: "Orders", id: "1ZyXwVuTsRqPoNmLk" }] } });
+    starter.w.agents.access.set("u_ana", { cards_manage: true });
+    await starter.note();
+    expect(starter.answer()).toMatchObject({ answer: { failed: expect.stringContaining("only a taf with its own job takes sources") } });
+  });
+
   it("leaves a taf's job line as it is for an improvement without a summary", async () => {
     const { w, note, answer } = await paused({ type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Checks first" } });
     w.agents.access.set("u_ana", { cards_manage: true });
@@ -6671,7 +6717,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@39,draft-the-card@56,halting@1,improve-a-taf@4,name-the-tools@23`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@39,draft-the-card@56,halting@1,improve-a-taf@5,name-the-tools@23`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);

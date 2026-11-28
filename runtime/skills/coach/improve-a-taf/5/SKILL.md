@@ -69,12 +69,19 @@ Improves a taf the owner already has: a conversation that opens with "[improve t
     its Card to the new tool in the same draft. The old tool stays on the
     connection, unused once the new version is installed: say so in the
     result's sentence.
+  - What it works from (a folder, sheet, form or board its job needs, which
+    a run asked for or couldn't find): find each id in its connection's list
+    by name, or from the link the owner gives, never by asking the owner for
+    an id. Put the full list it should have, each {kind, name, id}, in the
+    result's sources: every run of that version has them, from a door or a
+    schedule too. Never leave them to a chat or the taf's notes.
   When it's made, show result with taf {agent: its agent id, name, job,
   improves: the taf's id from the first line, else its agent id, note: what
   changed in one short sentence in the owner's language, only what this
-  version's notes or draft carry (a summary alone changes no run, so it
+  version's notes, draft or sources carry (a summary alone changes no run, so it
   never says the taf now does something else), notes: the full new
   instructions only if they changed, draft: the draft if you submitted one,
+  sources: what it works from, only if this change sets it,
   summary: one short line on what the taf does now, in the owner's language,
   only if this change changes what it does, never the job's general words,
   try: one task to try it with that uses the change, in the owner's words (for a

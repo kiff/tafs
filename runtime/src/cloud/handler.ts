@@ -459,6 +459,13 @@ export interface Taf {
    */
   summaries?: Record<string, string>;
   /**
+   * What each version works from (a folder, a sheet, a form, a board, each by id), as an improvement's result set it
+   * ("add this to the setup"), by version, recorded for every version of a taf with its own job: the live one's
+   * becomes `work.sources` when it goes live, so every run of it, a door's and a schedule's too, has them. [] is a
+   * version that has none. A version from before this was kept, not listed, keeps the sources the taf has.
+   */
+  sourcesBy?: Record<string, Source[]>;
+  /**
    * Where its results go (docs/reliability.md): through the door the work came in on, a line
    * in the app, an email to the owner. Absent: the door's reply alone, as before.
    */
@@ -5669,11 +5676,16 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   const actionResults = Array.isArray(body.actionResults) ? await vendorPlaces(body.actionResults, me, taf, deps) : taf.actionResults;
   let writesFor: string | undefined;
   try { writesFor = writesForOf(body.writes_for); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+  // What it works from, set by this version (the full list): its definition names each by id, for every run.
+  let sources: Source[] | undefined;
+  try { sources = sourcesOf(body.sources); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+  if (sources && taf.job !== CUSTOM) throw new HTTPError(409, "a starter job's taf works from what its job names: only a taf with its own job takes sources");
+  const built = sources ? { ...taf, work: { ...taf.work!, ...(sources.length ? { sources } : { sources: undefined }) } } : taf;
   let def: AgentDefinition;
   try {
     // An improvement's sender name is this version's: the live taf takes it once it's installed (keepNotes).
     // A new version speaks the account's language as kept now; the live taf takes it once it's installed (keepNotes).
-    def = definition(taf.id, { ...jobOf({ ...taf, ownerLang: await languageKept(me.tenantID, deps) }), ...(writesFor ? { writesFor } : {}) }, { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined, actionResults });
+    def = definition(taf.id, { ...jobOf({ ...built, ownerLang: await languageKept(me.tenantID, deps) }), ...(writesFor ? { writesFor } : {}) }, { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined, actionResults });
   } catch (err) {
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
@@ -5681,10 +5693,12 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   if (event) await recordLiveCards(event, me, taf, await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)), deps);
   // The version live now keeps the line it has, so going back to it brings the line back too.
   // A taf stored before versions has none listed: what's live then is version 1.
-  const listed = summary && !taf.summaries ? (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions : undefined;
+  // Every version of a taf with its own job records what it works from, so going back to any of them brings that back.
+  const kept = sources ?? (taf.job === CUSTOM ? taf.work?.sources ?? [] : undefined);
+  const listed = (summary && !taf.summaries) || (kept && !taf.sourcesBy) ? (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions : undefined;
   const live = listed ? listed.find((v) => v.live)?.n ?? (listed.length === 0 ? 1 : undefined) : undefined;
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", by_kind: "agent", ...(draft ? { draft } : {}) }));
-  if (from || tryWith || summary) {
+  if (from || tryWith || summary || kept) {
     // Kept so the same result hands over this version again, with what to
     // try it with and what it does. A record that changed meanwhile is read again once.
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -5692,7 +5706,9 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
       if (!cur) break;
       // The live version keeps its line, or "" for none, so going back to it brings that back.
       const summaries = summary ? { ...(live !== undefined && cur.summaries?.[String(live)] === undefined ? { [String(live)]: cur.summary ?? "" } : {}), ...cur.summaries, [String(n)]: summary } : undefined;
-      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}) };
+      // The live version keeps what it works from too, [] for nothing, so going back to it brings that back.
+      const sourcesBy = kept ? { ...(live !== undefined && cur.sourcesBy?.[String(live)] === undefined ? { [String(live)]: cur.work?.sources ?? [] } : {}), ...cur.sourcesBy, [String(n)]: kept } : undefined;
+      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}), ...(sourcesBy ? { sourcesBy } : {}) };
       if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
     }
   }
@@ -6238,12 +6254,17 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     // Its owner's language is the live version's, as its instructions say it.
     const ownerLang = typeof live.instructions === "string" ? ownerLanguageIn(live.instructions) : undefined;
     if (ownerLang) named.ownerLang = ownerLang; else delete named.ownerLang;
+    // What it works from is the live version's, when an improvement set it ("add this to the setup").
+    const sources = taf.sourcesBy?.[String(n)];
+    if (sources && named.work) named.work = { ...named.work, ...(sources.length ? { sources } : { sources: undefined }) };
+    if (named.work && !named.work.sources) delete named.work.sources;
     const next: Taf = { ...named, definition: digest(definition(taf.id, jobOf(named), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
     const summary = taf.summaries?.[String(n)];
     if (summary) next.summary = summary; else if (summary === "") delete next.summary;
-    if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition || next.summary !== taf.summary || next.writesFor !== taf.writesFor || next.ownerLang !== taf.ownerLang) await deps.tafs.putIf(me.tenantID, next, taf);
+    if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition || next.summary !== taf.summary || next.writesFor !== taf.writesFor || next.ownerLang !== taf.ownerLang ||
+      JSON.stringify(next.work?.sources ?? []) !== JSON.stringify(taf.work?.sources ?? [])) await deps.tafs.putIf(me.tenantID, next, taf);
   } catch (err) {
     // The switch stands; the next switch, or the upgrade's read-back, catches the record up.
     console.error(`keep notes: ${taf.id} v${n}:`, err);
@@ -11095,7 +11116,7 @@ export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; p
  * the card with. Throws only what may pass on a retry (a server error).
  */
 /** What an improvement result names: the taf it improves, and the version it describes. */
-interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; writes_for?: unknown; tools?: string[] }
+interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; writes_for?: unknown; sources?: unknown; tools?: string[] }
 
 /**
  * The version an improvement result hands over, made once per result for the person whose run it
@@ -11154,6 +11175,7 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
     const what = want.draft || createHash("sha256").update(want.note ?? "").digest("hex").slice(0, 16);
     const { version } = await makeVersion({
       note: want.note, notes: want.notes, draft: want.draft, try: want.try, agent: want.agent, from: `${cardID}|${what}`, ...(writesFor ? { writes_for: writesFor } : {}),
+      ...(want.sources !== undefined ? { sources: want.sources } : {}),
       ...(typeof want.summary === "string" ? { summary: want.summary } : {}),
     }, me, taf, deps);
     return { version };
