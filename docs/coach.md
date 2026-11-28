@@ -231,6 +231,15 @@ then shows its plan. Then, each step behind the owner's yes:
    refuses a source with no id, and a job that leaves an id to fill in (`[form ID]`), so a
    taf never reaches its first run without what it reads (kiff/tafs#2227); its definition
    lists each source by id.
+   What a taf works from later is its version's too, never one chat's. When the owner gives a
+   taf a folder or a sheet in its chat, the taf uses it for that request and shows an
+   `ask_coach` card to add it to its setup. Coach makes the next version with the
+   improvement result's `sources`, the full list, each by id (`improve-a-taf@5`). That
+   version's definition lists them, so every run of it has them: a door's, a schedule's
+   and a chat's. tafs cloud keeps each version's list (`sourcesBy`), and the taf's
+   `work.sources` follows the version that's live, and goes back with it. A starter job's
+   taf takes none. Before this, a link given in a chat reached only that chat's runs: a door run
+   five minutes later had nothing.
    Every schedule checks first: each firing makes that read without the model, and the
    AI runs only when it lists something new, so a quiet schedule costs nothing. `first:
    "all"` makes the first check hand the queue already there. Before the result, Coach

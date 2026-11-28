@@ -366,6 +366,17 @@ object Chat {
   }
 
   /**
+   * Whether something new waits below the part of the thread on screen, for the dot on the way to the end (as on the iPad): set
+   * when something [arrived] (a row, or the answer's words) while the thread wasn't following it, cleared once the end is in
+   * view. Otherwise it stays as it [was].
+   */
+  fun newBelow(was: Boolean, atBottom: Boolean, following: Boolean, arrived: Boolean): Boolean = when {
+    atBottom -> false
+    arrived && !following -> true
+    else -> was
+  }
+
+  /**
    * The live answer's key: the key its words will have once they're in the thread, the run's next message; [fallback] until the
    * stream names the run.
    */
@@ -398,6 +409,13 @@ object Chat {
     "working" -> s.words?.let { Words.Chat.workingOn(it) } ?: Words.Chat.working
     "waiting_for_you" -> Words.Chat.waitingForYou
     else -> Words.Chat.thinking
+  }
+
+  /** How long the answer has been at work, in whole seconds, then minutes and seconds: "12 s", "1 min 05 s". */
+  fun elapsed(ms: Long): String {
+    val total = (ms.coerceAtLeast(0) / 1000).toInt()
+    return if (total < 60) Words.Work.Duration.seconds(total.toString())
+    else Words.Work.Duration.minutes((total / 60).toString(), "%02d".format(java.util.Locale.ROOT, total % 60))
   }
 
   /** How long a taf worked and how many steps it took, with those that failed. Which steps, only in tafs cloud's words ([steps]). */

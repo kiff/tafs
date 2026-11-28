@@ -45,7 +45,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@40", "did-this-happen@1", "draft-the-card@56", "drive-the-app@3", "halting@1", "improve-a-taf@4", "name-the-tools@23", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@40", "did-this-happen@1", "draft-the-card@56", "drive-the-app@3", "halting@1", "improve-a-taf@5", "name-the-tools@23", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -588,7 +588,9 @@ describe("Coach's core", () => {
     expect(dial).toContain("A wake never takes input: what runs do is in the instructions; change those.");
     const improve = COACH_SKILLS.find((k) => k.name === "improve-a-taf")!.body.replace(/\s+/g, " ");
     expect(improve).toContain("When its work moves to another app or connection (its check reads there now), every step that reads or writes the old one is rewritten for the new one's tools: none of the old tools' names stays in them.");
-    expect(improve).toContain("note: what changed in one short sentence in the owner's language, only what this version's notes or draft carry (a summary alone changes no run, so it never says the taf now does something else)");
+    expect(improve).toContain("note: what changed in one short sentence in the owner's language, only what this version's notes, draft or sources carry (a summary alone changes no run, so it never says the taf now does something else)");
+    // What it works from goes in the version (a folder and a sheet given in a chat, never read by a door run).
+    expect(improve).toContain("Put the full list it should have, each {kind, name, id}, in the result's sources: every run of that version has them, from a door or a schedule too.");
   });
 
   // A taf on a large list paged through it until its cost cap, its first check failed, and Coach called it set up:
@@ -786,14 +788,14 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
     expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@40", "draft-the-card@56", "halting@1", "name-the-tools@23", "set-up-a-taf@16", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@40", "draft-the-card@56", "improve-a-taf@4", "name-the-tools@23"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@40", "draft-the-card@56", "improve-a-taf@5", "name-the-tools@23"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
     expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@40", "draft-the-card@56", "halting@1", "name-the-tools@23", "set-up-a-taf@16", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@40", "draft-the-card@56", "halting@1", "improve-a-taf@4", "name-the-tools@23"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@40", "draft-the-card@56", "halting@1", "improve-a-taf@5", "name-the-tools@23"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });

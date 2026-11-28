@@ -195,6 +195,8 @@ private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, m
   // Read again when the thread changes.
   LaunchedEffect(items.size, showKnocks) { if (showKnocks) actions.doors.load(tafId) }
   val atBottom by remember { derivedStateOf { !listState.canScrollForward } }
+  // Something new arrived below what's on screen while the thread wasn't following it: the way to the end says so, with a dot.
+  var newBelow by remember(tafId) { mutableStateOf(false) }
   val scope = rememberCoroutineScope()
   // The list's rows by key, in its order, so a pinned row is found by its index even when it's off the screen.
   val heldWords = state.chatSteering[tafId]?.held?.text
@@ -480,6 +482,10 @@ private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, m
             }
           }
         }
+        LaunchedEffect(total, rows.lastOrNull()?.key, live?.text?.length) {
+          newBelow = Chat.newBelow(newBelow, atBottom, following, arrived = true)
+        }
+        LaunchedEffect(atBottom) { newBelow = Chat.newBelow(newBelow, atBottom, following, arrived = false) }
         if (!atBottom && !following) {
           Box(
             Modifier
@@ -492,12 +498,16 @@ private fun TafChatScreen(tafId: String, state: AppState, actions: TafActions, m
                 // The way to the end lets the pinned message go: the thread follows what arrives again.
                 unpin()
                 following = true
+                newBelow = false
                 scope.launch { toEnd(animated = true) }
               }
-              .semantics { contentDescription = Words.Chat.jumpToLatest },
+              .semantics { contentDescription = if (newBelow) Words.Chat.jumpLatestSomethingNew else Words.Chat.jumpToLatest }
+              .testTag(JUMP_TO_LATEST),
             contentAlignment = Alignment.Center,
           ) {
             Icon(painterResource(R.drawable.ic_arrow_down), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(16.dp))
+            // Something new below: an amber dot on the way to the end, as on the iPad.
+            if (newBelow) Box(Modifier.align(Alignment.TopEnd).padding(5.dp).size(8.dp).clip(CircleShape).background(Theme.amber).testTag(NEW_BELOW))
           }
         }
       }
@@ -771,6 +781,10 @@ private fun MessageTime(message: ChatMessage) {
 internal const val DAY_HEADER = "day-header"
 /** Try again under a failed run's line, for tests. */
 internal const val FAILED_RETRY = "failed-retry"
+
+/** The way to the end of the thread, and its dot when something new arrived below. */
+internal const val JUMP_TO_LATEST = "jump-to-latest"
+internal const val NEW_BELOW = "new-below"
 internal const val MESSAGE_TIME = "message-time"
 
 /** A refused connection's lines, each as tafs cloud wrote it: the step's in the failure colour, then why and what to do next. */
@@ -821,9 +835,24 @@ private fun LiveWork(live: LiveAnswer) {
     if (line != null) {
       // Waiting for the owner, nothing is at work: the line says so in amber, with no spinner.
       val waiting = live.state?.state == "waiting_for_you"
+      // With the phone's animations off, a spinner stands still and reads as stuck: none, and the line counts the time instead,
+      // a second at a time (a change of words, never an animation).
+      val animating = remember { android.animation.ValueAnimator.areAnimatorsEnabled() }
+      // From when the answer began, as the stream says, so it reads the same however often the line is drawn again.
+      val started = live.started.toEpochMilli()
+      var now by remember { androidx.compose.runtime.mutableLongStateOf(System.currentTimeMillis()) }
+      if (!animating && !waiting) LaunchedEffect(Unit) {
+        while (true) {
+          kotlinx.coroutines.delay(1_000)
+          now = System.currentTimeMillis()
+        }
+      }
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (!waiting) androidx.compose.material3.CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Theme.dim)
-        Text(line, style = scaled(13, color = if (waiting) Theme.amberText else Theme.dim))
+        if (!waiting && animating) androidx.compose.material3.CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Theme.dim)
+        Text(
+          if (!waiting && !animating) "$line · ${Chat.elapsed(now - started)}" else line,
+          style = scaled(13, color = if (waiting) Theme.amberText else Theme.dim),
+        )
       }
     }
     // An answer still being written can't yet say whether its turn read a page (a resumed stream carries no flag): its links
@@ -851,6 +880,24 @@ private fun EndedLine(end: ChatEnd, taf: String, onRetry: (String) -> Unit) {
 /** The taf is working on an answer: dots where its words will be. */
 @Composable
 private fun TypingDots() {
+  // With the phone's animations off, the dots stand still and read as stuck: words instead, counting the time a second at a
+  // time ("Thinking · 3 s"), as the working line does.
+  if (!remember { android.animation.ValueAnimator.areAnimatorsEnabled() }) {
+    val started = remember { System.currentTimeMillis() }
+    var now by remember { androidx.compose.runtime.mutableLongStateOf(started) }
+    LaunchedEffect(Unit) {
+      while (true) {
+        kotlinx.coroutines.delay(1_000)
+        now = System.currentTimeMillis()
+      }
+    }
+    Text(
+      "${Words.Chat.thinking} · ${Chat.elapsed(now - started)}",
+      style = scaled(13, color = Theme.dim),
+      modifier = Modifier.padding(vertical = 6.dp).semantics { contentDescription = Words.Chat.answering },
+    )
+    return
+  }
   val transition = rememberInfiniteTransition(label = "typing")
   val phase by transition.animateFloat(
     initialValue = 0f,

@@ -458,6 +458,38 @@ class VersionsTest {
     }
   }
 
+  @Test fun twoGrantsThatReadAlikeNeverShowTheirToolIds() {
+    // The same tool through two of planque's grants: its ids differ only by planque's own suffix ("…_yhbp", "…_yhbp_bhtn"). The
+    // owner reads the tool's name, once where the terms are the same, and by its terms where they differ; never an id.
+    val same = KiffClient.json.decodeFromString<DraftCard>(
+      """{"grants":[{"action":"list_client_invoices_yhbp","title":"List client invoices"},{"action":"list_client_invoices_yhbp_bhtn","title":"List client invoices"}]}""",
+    )
+    assertEquals(listOf("List client invoices"), same.lines)
+    val differ = KiffClient.json.decodeFromString<DraftCard>(
+      """{"grants":[{"action":"list_client_invoices_yhbp","title":"List client invoices","per_action_max":[{"quantity":"count","max":5}]},
+          {"action":"list_client_invoices_yhbp_bhtn","title":"List client invoices"}]}""",
+    )
+    assertEquals(listOf("List client invoices: up to 5 each", "List client invoices"), differ.lines)
+    // Across two Cards read together, too.
+    val draft = KiffClient.json.decodeFromString<AgentDraft>(
+      """{"id":"d1","version":"1","cards":[{"grants":[{"action":"list_client_invoices_yhbp","title":"List client invoices"}]},
+          {"grants":[{"action":"list_client_invoices_yhbp_bhtn","title":"List client invoices"}]}]}""",
+    )
+    assertEquals(listOf(listOf("List client invoices"), listOf("List client invoices")), draft.cardLines)
+    assertTrue((same.lines + differ.lines + draft.cardLines.flatten()).none { "yhbp" in it || "bhtn" in it })
+  }
+
+  @Test fun twoToolsUnderOneNameAreStillToldApartByTheirWords() {
+    // Under one name, two tools whose words after it are real words, not planque's four-character suffixes, read apart.
+    val card = KiffClient.json.decodeFromString<DraftCard>(
+      """{"grants":[{"action":"send_email","title":"Send"},{"action":"send_sms","title":"Send"}]}""",
+    )
+    assertEquals(listOf("Send · send email", "Send · send sms"), card.lines)
+    assertFalse(DraftCard.onlyPlanqueSuffix("Send", "send email"))
+    assertTrue(DraftCard.onlyPlanqueSuffix("List client invoices", "list client invoices yhbp bhtn"))
+    assertFalse(DraftCard.onlyPlanqueSuffix("List client invoices", "list client invoices"))
+  }
+
   @Test fun kiffsOwnLinesAreShownAsTheyCome() {
     val card = KiffClient.json.decodeFromString<DraftCard>(
       """{"on_exceed":"owner","aggregates":[{"quantity":"count","limit":0,"window":"day"}],"lines":["Each call asks you first, in KIFF's words"],

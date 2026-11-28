@@ -243,7 +243,8 @@ class ChatPinTest {
     rule.waitForIdle()
     assertTrue("the message was pulled back to the top after the owner scrolled: $readAt then ${sentTop()}", abs(sentTop() - readAt) <= 1f)
 
-    rule.onNodeWithContentDescription(Words.Chat.jumpToLatest).performClick()
+    // Its label says "…, something new" when something arrived below: either way it starts with the same words.
+    rule.onNodeWithContentDescription(Words.Chat.jumpToLatest, substring = true).performClick()
     rule.waitForIdle()
     rule.onNodeWithText("One more line, written after the owner scrolled", substring = true).assertIsDisplayed()
   }
