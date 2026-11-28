@@ -326,6 +326,10 @@ data class AppState(
   val setAsideNote: String? = null,
   /** Cards asked to take another currency, as tafs cloud draws them from KIFF; counted with the held calls in Needs you. */
   val cardUnitExceptions: List<bot.tafs.app.kiff.CardUnitException> = emptyList(),
+  /** Steps handed to the owner in the hosted browser ("Your turn"), as Home lists them, with tafs cloud's words. */
+  val yourTurns: List<bot.tafs.app.kiff.YourTurn> = emptyList(),
+  /** The hand being opened or put off now: its row waits, so a second tap sends nothing. */
+  val answeringTurn: String? = null,
   /** The ones whose Dismiss is on its way to KIFF. */
   val dismissingCardUnits: Set<String> = emptySet(),
   /** The ones KIFF took a Dismiss for: kept out of every page and Setup read since, even one that was on its way already. */
@@ -830,7 +834,7 @@ data class AppState(
   /** Coach's waiting rows as Needs you draws them: one being set aside isn't drawn while tafs cloud is asked. */
   val coachWaitingShown: List<bot.tafs.app.kiff.CoachWaiting> get() = coachWaiting.filterNot { it.session in settingAside }
 
-  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size + coachWaiting.size)
+  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size + coachWaiting.size + yourTurns.size)
 
   /**
    * The tab's badge: Needs you's count, less a Coach chat waiting on its person while that very chat is on screen, where the
@@ -1767,6 +1771,9 @@ class AppModel(
         settingUp = settingUp.orEmpty(),
         held = held,
         cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
+        yourTurns = read.home.yourTurns.orEmpty().filter { t ->
+          t.grant.isNotBlank() && t.hand.isNotBlank() && t.words.title.isNotBlank() && t.words.open.isNotBlank() && t.words.notNow.isNotBlank()
+        },
         yourSteps = read.home.yourSteps.orEmpty().filterNot { it.handoff in s.answeredSteps },
         coachWaiting = read.home.coachWaiting.orEmpty().filter { it.session.isNotBlank() && it.words.line.isNotBlank() && it.session !in s.settingAside },
         coachWaitingClear = read.home.coachWaitingClear?.takeIf { it.words.button.isNotBlank() },
@@ -4899,6 +4906,50 @@ class AppModel(
   }
 
   fun closeSiteSignIn() = _state.update { it.copy(siteSignIn = null) }
+
+  /**
+   * Opens a step a taf handed its owner in the hosted browser ("Your turn"): planque's live view, asked for with this device's
+   * signature and opened as the site sign-in's is, only on planque's own address. The owner does the step there, and Done or Not
+   * now is the page's own. A step that no longer waits (410) leaves the list.
+   */
+  suspend fun openYourTurn(turn: bot.tafs.app.kiff.YourTurn) = answerTurn(turn) {
+    val view = planque.handView(turn.grant, turn.hand) { signer.signConfirmed(it) }
+    if (!onPlanque(view.view)) {
+      fail(Words.Connect.SignInView.wrongAddress)
+      return@answerTurn
+    }
+    _state.update { it.copy(siteSignIn = view) }
+  }
+
+  /** Not now on a handed step: signed, nothing kept, and the row goes. */
+  suspend fun declineYourTurn(turn: bot.tafs.app.kiff.YourTurn) = answerTurn(turn) {
+    planque.handDecline(turn.grant, turn.hand) { signer.signConfirmed(it) }
+    _state.update { s -> s.copy(yourTurns = s.yourTurns.filterNot { it.hand == turn.hand }) }
+  }
+
+  private suspend fun answerTurn(turn: bot.tafs.app.kiff.YourTurn, act: suspend () -> Unit) {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null || _state.value.answeringTurn != null) return
+    val generation = accountGeneration
+    _state.update { it.copy(answeringTurn = turn.hand) }
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    try {
+      act()
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation != accountGeneration) return
+      if (e is PlanqueError.Server && e.status == 410) {
+        // It no longer waits: done, put off or lapsed. Gone from the list, and the next read agrees.
+        _state.update { s -> s.copy(yourTurns = s.yourTurns.filterNot { it.hand == turn.hand }) }
+      } else if (e !is SignerException) {
+        fail(Words.Connect.SignInView.notOpened(why = ErrorWords.of(e)))
+      }
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(answeringTurn = null) }
+    }
+  }
 
   /** Whether [url] is on planque's own https origin (scheme, host and port): the only place a sign-in view may come from. */
   private fun onPlanque(url: String): Boolean = bot.tafs.app.views.sameHttpsOrigin(url, planque.baseUrl)

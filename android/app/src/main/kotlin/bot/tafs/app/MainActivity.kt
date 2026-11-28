@@ -1054,7 +1054,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
         Tab.NeedsYou -> BriefTab(state, briefActions, onAnswerHold = { call, answer -> model.answer(call, answer) }) {
           NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null,
             // A taf with knocks opens on Activity, where they're answered, as a knock's alert opens it.
-            onOpenKnocks = if (state.mode == Mode.kiff) ({ id -> tab = Tab.Tafs; showingSettings = false; coachOpen = false; openTaf = id; openOnActivity = id }) else null)
+            onOpenKnocks = if (state.mode == Mode.kiff) ({ id -> tab = Tab.Tafs; showingSettings = false; coachOpen = false; openTaf = id; openOnActivity = id }) else null,
+            onYourTurn = if (state.mode == Mode.kiff) ({ turn, open -> scope.launch { if (open) model.openYourTurn(turn) else model.declineYourTurn(turn) } }) else null)
         }
         Tab.Record -> RecordView(
           state,

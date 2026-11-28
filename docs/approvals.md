@@ -356,6 +356,22 @@ with Coach on that one call (`POST /v1/setup/check-call {proposal}`), and the ap
 card stays until it's answered. A KIFF that sends no `answers` gets the app's **No** and **Yes, it
 did**, and no Not sure. On Android: `AppModel.checkDidThisHappen`.
 
+## Your turn in the hosted browser
+
+A taf working in planque's hosted browser can hand its owner a step it can't do itself, such as a cookie wall, a check or an
+odd question (`browse_hand`). tafs cloud lists each one on Home as `your_turns`, and Needs you counts it. Each carries tafs
+cloud's words, "Your turn on {site}", the taf's ask in quotes, "Open until {HH:MM}", **Open** and **Not now**, and the apps draw
+them as they are.
+
+- **Open** asks planque for the step's live view, signed by this device: `POST …/grants/{grant}/hands/{hand}/view`. It's asked
+  fresh on each open, because a view URL is good once, for ten minutes. The app opens it as it opens a site's sign-in view, and
+  only on planque's own address. The owner does the step there, and Done or Not now is the view page's own. planque ends the
+  view on a page that pays, or off the connection's sites.
+- **Not now** in the row is `POST …/hands/{hand}/decline`, signed: the view ends, nothing is kept, and the taf reads it as put
+  off.
+- **A step that no longer waits** (410: done, put off or lapsed) leaves the list.
+- **Android:** `AppModel.openYourTurn` and `declineYourTurn`, and the row is `YourTurnPanel`. iOS and the Mac follow.
+
 ## After the answer
 
 1. The answer goes to KIFF: `POST /v1/me/card-exceptions/{id}/approve-once`, `reject` or `change-card`, with its signature.
