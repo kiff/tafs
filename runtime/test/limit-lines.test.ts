@@ -10,7 +10,7 @@ describe("limit lines from the agreed figures", () => {
     expect(limitLine({ quantity: "sum(amount)", window: "call", limit: 5000 }, "ask", { title: "Refunds", currency: "JPY" }, "en")).toBe("Refunds: up to JP¥5,000 each time; past that, it asks you");
   });
   it("says a count, a per-item figure and a limit of 0", () => {
-    expect(limitLine({ quantity: "count", window: "calendar_day", limit: 1000 }, "ask", { title: "Replies to customers" }, "en"))
+    expect(limitLine({ quantity: "count", window: "calendar_day", limit: 1000 }, "ask", { title: "replies to customers" }, "en"))
       .toBe("Replies to customers: up to 1,000 a day; past that, it asks you");
     expect(limitLine({ quantity: "count", window: "calendar_day", limit: 1, per: "order_id" }, "refuse", { title: "Draft invoices", perLabel: "order" }, "en"))
       .toBe("Draft invoices: up to 1 a day for each order; past that, it's refused");

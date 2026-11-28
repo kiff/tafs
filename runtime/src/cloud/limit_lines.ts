@@ -54,7 +54,9 @@ const CURRENCY = /^[A-Z]{3}$/;
  */
 export function limitLine(l: AgreedLimit, ruleOver: "ask" | "refuse", names: LineNames, lang: Lang): string | undefined {
   const w = WORDS[lang];
-  const title = names.title?.replace(/\s+/g, " ").trim();
+  // The line starts with the title, so its first letter is a capital, as the notice's own words may not be ("replies to customers").
+  const named = names.title?.replace(/\s+/g, " ").trim();
+  const title = named ? named.charAt(0).toLocaleUpperCase(locale(lang)) + named.slice(1) : "";
   if (!w || !title) return undefined;
   if (!(l.window in EN_WINDOW)) return undefined;
   const per = l.per !== undefined ? names.perLabel?.replace(/\s+/g, " ").trim() : undefined;
