@@ -144,6 +144,7 @@ export const pt: Words = {
   approval_rules_unsaid: "As regras que aceitou não diziam todos os limites deste Card. Nada foi aprovado. O Coach volta a mostrar as regras com cada limite, para que as aceite primeiro.",
   approval_rules_unagreed: "O Coach redigiu isto antes de aceitar as regras que mostrou. Nada foi aprovado. Aceite primeiro as regras e o Coach volta a redigi-lo.",
   approval_rules_required: "O Coach redigiu isto sem lhe mostrar as regras para aceitar. Nada foi aprovado. O Coach mostra-lhe primeiro as regras.",
+  approval_rules_first: "Primeiro as regras: aceite-as e o Coach mostra-lhe a aprovação.",
   setup_every_call_asks: "Cada chamada precisa da sua aprovação",
   setup_not_allowed: "Não permitido por este Card",
   setup_per_action: (amount) => `${amount} por ação`,

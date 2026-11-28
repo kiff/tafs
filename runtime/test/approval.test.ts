@@ -910,6 +910,54 @@ describe("a half-made connection from an earlier conversation: resumed only for 
     }
   });
 
+  // 28 Nov, the owner's phone: a pending Qonto grant asked in an earlier chat for another taf ("Qonto morning balance",
+  // read-only) was shown in this chat with Approve. The owner spent a fingerprint on it, and it came back "Approve · it
+  // didn't go through". The chat's read now answers it before Approve exists, with tafs cloud's note, and Coach asks again.
+  it("the chat's read answers it before Approve, so no fingerprint is spent, and never says it didn't go through", async () => {
+    const CHAT = `/v1/tafs/${COACH}/conversation`;
+    const s = services();
+    const g = resumed();
+    s.grants = [g];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "another-taf-a1b2c3d4", cards: CARD("refund") };
+    const w = await world(s, { draft: "drf_1" });
+    const a1 = (r: { body: Record<string, unknown> }) =>
+      (r.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string; words: string; answer?: string } }>).find((c) => c.component.id === "a1");
+    const read = await w.call("GET", CHAT, undefined);
+    expect(a1(read)?.answer?.state).toBe("answered");
+    expect(a1(read)?.component.signs).toBeUndefined();
+    expect(a1(read)?.answer?.words).toBe(wordsIn("en").approval_earlier_connection("Stripe"));
+    expect(a1(read)?.answer?.answer).toBe("asked again");
+    expect(JSON.stringify(a1(read))).not.toContain("didn't go through");
+    // Coach hears decide's own refusal, and asks for the app again for this taf.
+    expect(String(w.told()?.answer)).toMatch(/^failed: this Stripe connection was started in an earlier conversation, /);
+    expect(String(w.told()?.answer)).toContain("request Stripe again for this taf as a new connection");
+    // Once, across reads: drawn answered again, and Coach is told nothing more.
+    const told = w.told();
+    const again = await w.call("GET", CHAT, undefined);
+    expect(a1(again)?.answer?.words).toBe(wordsIn("en").approval_earlier_connection("Stripe"));
+    expect(w.told()).toEqual(told);
+    // An Approve sent anyway, from any app, gets nothing to sign: the card is answered and no longer waits.
+    const tapped = await w.call("POST", ASK, ask(g, "drf_1"));
+    expect(tapped.status).toBe(409);
+    expect(tapped.body).not.toHaveProperty("ask");
+    // With no note kept (past its time), the same words, never "it didn't go through".
+    expect(approvalAnswerWords({ type: "approval", answer: String(told?.answer) }, "en")).toBe(wordsIn("en").approval_earlier_connection("Stripe"));
+    expect(settledApprovalAnswer(String(told?.answer))).toBe("asked again");
+  });
+
+  it("this conversation's own connection, or its taf's under its Card, is drawn with Approve as before", async () => {
+    const CHAT = `/v1/tafs/${COACH}/conversation`;
+    const s = services();
+    const g = resumed();
+    s.grants = [g];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: CARD("refund") };
+    const w = await world(s, { draft: "drf_1" });
+    const read = await w.call("GET", CHAT, undefined);
+    const a1 = (read.body.components as Array<{ component: { id?: string }; answer?: unknown }>).find((c) => c.component.id === "a1");
+    expect(a1?.answer).toBeUndefined();
+    expect(w.told()).toBeUndefined();
+  });
+
   it("with no Card draft: refused, so it's never signed alone", async () => {
     const s = services();
     const g = resumed();
@@ -2768,6 +2816,21 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     process.env.TAFS_RULES_REQUIRED = "on";
     expect(await check(none.w, { conversation: [] })).toMatchObject({ outcome: "answered", code: "rules_required", redraft: true });
     expect(await check(none.w)).toMatchObject({ outcome: "ok", rules_unchecked: true });
+    // Coach's re-asks for the rules are a step, never a failure (28 Nov, a Qonto read: two "it didn't go through" before the
+    // one approval): the owner reads "Rules first", in their language, and the apps get "rules first", not approved.
+    // Any other refusal still reads as one.
+    const reasks = [
+      await check(none.w, { conversation: [] }),
+      await check(unagreed.w, { conversation: events(unagreed.w) }),
+      await check(unsaid.w, { conversation: events(unsaid.w) }),
+    ];
+    for (const r of reasks) {
+      expect(approvalAnswerWords({ type: "approval", answer: r.answer, note: r.note }, "en"), String(r.code)).toBe(wordsIn("en").approval_rules_first);
+      expect(approvalAnswerWords({ type: "approval", answer: r.answer, note: r.note }, "de")).toBe(wordsIn("de").approval_rules_first);
+      expect(settledApprovalAnswer(r.answer)).toBe("rules first");
+    }
+    expect(approvalAnswerWords({ type: "approval", answer: ruled.answer, note: ruled.note }, "en")).toMatch(/^Approve · it didn't go through/);
+    expect(settledApprovalAnswer(ruled.answer)).toBe(ruled.answer);
     // Not a list of events, or too long: refused.
     for (const conversation of ["rules-1", [1, 2], [[]], Array.from({ length: 2001 }, () => ({}))]) {
       expect((await none.w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3", conversation })).status).toBe(400);
@@ -2796,15 +2859,16 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       (r.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string; words: string } }>).find((c) => c.component.id === "a1");
     expect(card(read)?.answer?.state).toBe("answered");
     expect(card(read)?.component.signs).toBeUndefined();
-    // The person reads why, in their words; Coach hears Approve's own refusal, and shows the rules' confirm now.
-    expect(card(read)?.answer?.words).toBe(`Approve · it didn't go through: ${WORDS.rulesUnagreed}`);
+    // The person reads "Rules first", never a failure (28 Nov); Coach hears Approve's own refusal, and shows the rules' confirm now.
+    expect(card(read)?.answer?.words).toBe(wordsIn("en").approval_rules_first);
+    expect((card(read)?.answer as { answer?: string } | undefined)?.answer).toBe("rules first");
     expect(String(w.told()?.answer)).toMatch(/^failed: the rules notice "rules-1" isn't agreed yet/);
     expect(String(w.told()?.answer)).toContain(`${AGREE_FIRST} ${SHOW_NOW}`);
     // Once, across reads: the next read draws it answered and tells Coach nothing more, with the draft back too.
     s.drafts.drf_1 = drafts;
     const told = w.told();
     const again = await w.call("GET", CHAT, undefined);
-    expect(card(again)?.answer?.words).toBe(`Approve · it didn't go through: ${WORDS.rulesUnagreed}`);
+    expect(card(again)?.answer?.words).toBe(wordsIn("en").approval_rules_first);
     expect(w.told()).toEqual(told);
     expect(s.checks).toEqual([]);
   });

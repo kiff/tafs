@@ -106,6 +106,16 @@ type CardsChecked = Decision | { waitsFor: string } | { draft: NonNullable<Await
 export const REFUSAL_CLOSED = "Refused by tafs cloud's check, not by the owner: this approval is closed and nothing waits for them.";
 export const DRAW_AGAIN = "Draft it again now and show a new approval.";
 export const AGREE_FIRST = "Show the rules for the owner to agree first, then draft it again and show a new approval.";
+
+/**
+ * Whether an approval's answer is Coach's own re-ask for the rules (rules_required, rules_unagreed, rules_unsaid): the
+ * approval was checked before the owner agreed to the rules, and nothing was approved or refused by them. It's a step of
+ * the setup, never a failure: the owner reads "Rules first" (approval_rules_first), never "it didn't go through" (28 Nov,
+ * the owner on a Qonto read: "it just reads as if something didn't work out"). Their one approval comes after they agree.
+ */
+export function rulesFirstAnswer(answer: string): boolean {
+  return answer.startsWith("failed: ") && answer.includes(AGREE_FIRST);
+}
 /**
  * What a held per-action limit's Card carries instead, said with a refusal that took its total away (count_on_amount on
  * that Card, day_total_twice): KIFF refuses a Card with no total, so its one total is KIFF's own count (kiffsOwnCount),
@@ -1197,6 +1207,25 @@ async function resumedRefusal(ask: ApprovalAsk, grant: ApprovalGrant, vendor: st
   const left = uncoveredTool(grant, draft.cards, new Set());
   if (left) return refuse("resumed_beyond_card", `it asks for "${left}", which this conversation's Card doesn't cover`);
   return undefined;
+}
+
+/**
+ * Whether an approval's answer is the earlier-connection refusal (resumedRefusal): the grant was asked in an earlier
+ * conversation, or for another taf, and isn't resumed here. Nothing was approved and nothing failed: Coach asks for the app
+ * again for this taf, so the apps never draw it as "it didn't go through".
+ */
+export function earlierConnectionAnswer(answer: unknown): boolean {
+  return typeof answer === "string" && /^failed: this .{1,200} connection was started in an earlier conversation, /.test(answer);
+}
+
+/**
+ * The earlier-connection refusal for an approval card, read before the card is drawn (the chat's read): the same check
+ * decide makes after Approve, so a grant asked in another conversation or for another taf is answered before the owner
+ * spends a fingerprint on it. Undefined when it would be resumed, or when it can't be told yet (read again).
+ */
+export async function earlierConnectionOnRead(ask: ApprovalAsk, grant: ApprovalGrant, ctx: DecideContext): Promise<Decision | undefined> {
+  const d = await resumedRefusal(ask, grant, vendorOf(grant), ctx);
+  return d && d.outcome === "answered" && earlierConnectionAnswer(d.answer) ? d : undefined;
 }
 
 /** The steps a phone signs for an approval card. */

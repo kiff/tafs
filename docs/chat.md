@@ -545,7 +545,9 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   with `answers` naming the card, so they never vanish from the thread.
 - An approval's or a sign-in's **outcome** comes from the stored `answer` beside `words`, which is
   in no language (tafs#1283): `approved`, `already approved` and `connected` (a connect step that
-  worked, its Card next) read as done; `declined`; `failed: why`; or a sign-in's `signed in`. `words`
+  worked, its Card next) read as done; `declined`; `rules first` (Coach checked the approval before the owner
+  agreed to the rules: nothing approved, nothing failed; an app draws it as a step still to come, never as a failure);
+  `failed: why`; or a sign-in's `signed in`. `words`
   are in the owner's language, so they're never read for an outcome, except tafs cloud's exact English
   while `answer` isn't sent. **Nothing reads as approved by default:** any other value or words read as
   not approved, in tafs cloud's own words (Android: `SetupShape.recorded`; iOS and the Mac:

@@ -158,7 +158,7 @@ const UNUSED_OFFERED = new Set(["listed", "connected"]);
  * With `live` (every live taf's KIFF agent, whether or not the person may see it), also the account's signed-in
  * connections no taf uses, left by an earlier conversation that made no taf: "- Qonto, for no taf yet (asked
  * 2026-11-27): vendor_sign_in, …; listed", so a new conversation offers that sign-in by its vendor instead of asking
- * for a new one (connect-an-app@38). Never one under a live taf's agent or the other form of its name, one that
+ * for a new one (connect-an-app@39). Never one under a live taf's agent or the other form of its name, one that
  * isn't signed in, or one with no day it was asked.
  */
 export function connectionLines(conns: AccountConnection[], tafs: Map<string, string>, live?: Set<string>): string[] {

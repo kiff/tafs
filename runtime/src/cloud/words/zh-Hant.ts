@@ -138,6 +138,7 @@ export const zhHant: Words = {
   approval_rules_unsaid: "您同意的規則沒有說明此 Card 所含的每一項上限。未核准任何內容。Coach 會再次顯示規則，並列出每一項上限，供您先同意。",
   approval_rules_unagreed: "Coach 在您同意其顯示的規則之前就擬定了這份內容。未核准任何內容。請先同意規則，Coach 會重新擬定。",
   approval_rules_required: "Coach 擬定這份內容時沒有向您顯示要同意的規則。未核准任何內容。Coach 會先向您顯示規則。",
+  approval_rules_first: "先看規則：您同意後，Coach 會顯示核准。",
   setup_every_call_asks: "每次呼叫都需要您核准",
   setup_not_allowed: "此 Card 不允許",
   setup_per_action: (amount: string) => `每個動作 ${amount}`,

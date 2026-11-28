@@ -138,6 +138,7 @@ export const tr: Words = {
   approval_rules_unsaid: "Kabul ettiğiniz kurallar, bu Card'ın taşıdığı her limiti belirtmedi. Hiçbir şey onaylanmadı. Coach kuralları, önce kabul etmeniz için her limitle birlikte tekrar gösterir.",
   approval_rules_unagreed: "Coach bunu, gösterdiği kuralları kabul etmenizden önce hazırladı. Hiçbir şey onaylanmadı. Önce kuralları kabul edin, Coach onu yeniden hazırlar.",
   approval_rules_required: "Coach bunu, kabul etmeniz gereken kuralları size göstermeden hazırladı. Hiçbir şey onaylanmadı. Coach önce size kuralları gösterir.",
+  approval_rules_first: "Önce kurallar: kabul edin, ardından Coach size onayı gösterir.",
   setup_every_call_asks: "Her çağrı için onayınız gerekir",
   setup_not_allowed: "Bu Card tarafından izin verilmiyor",
   setup_per_action: (amount: string) => `Eylem başına ${amount}`,

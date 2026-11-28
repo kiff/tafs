@@ -138,6 +138,7 @@ export const cs: Words = {
   approval_rules_unsaid: "Pravidla, se kterými jste souhlasili, neuváděla každý limit, který tato Card obsahuje. Nic nebylo schváleno. Coach pravidla ukáže znovu s každým limitem, abyste s nimi nejdřív souhlasili.",
   approval_rules_unagreed: "Coach to připravil dřív, než jste souhlasili s pravidly, která ukázal. Nic nebylo schváleno. Nejdřív s pravidly souhlaste a Coach to připraví znovu.",
   approval_rules_required: "Coach to připravil, aniž by vám ukázal pravidla, se kterými máte souhlasit. Nic nebylo schváleno. Coach vám nejdřív ukáže pravidla.",
+  approval_rules_first: "Nejdřív pravidla: odsouhlaste je a Coach vám ukáže schválení.",
   setup_every_call_asks: "Každé volání vyžaduje vaše schválení",
   setup_not_allowed: "Tato Card to nepovoluje",
   setup_per_action: (amount: string) => `${amount} za akci`,

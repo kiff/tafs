@@ -138,6 +138,7 @@ export const th: Words = {
   approval_rules_unsaid: "กฎที่คุณตกลงไม่ได้ระบุทุกขีดจำกัดที่ Card นี้มี ไม่มีสิ่งใดถูกอนุมัติ Coach จะแสดงกฎอีกครั้งพร้อมทุกขีดจำกัด เพื่อให้คุณตกลงก่อน",
   approval_rules_unagreed: "Coach ร่างสิ่งนี้ก่อนที่คุณจะตกลงกับกฎที่แสดง ไม่มีสิ่งใดถูกอนุมัติ โปรดตกลงกับกฎก่อน แล้ว Coach จะร่างใหม่",
   approval_rules_required: "Coach ร่างสิ่งนี้โดยไม่ได้แสดงกฎให้คุณตกลง ไม่มีสิ่งใดถูกอนุมัติ Coach จะแสดงกฎให้คุณดูก่อน",
+  approval_rules_first: "กฎมาก่อน: ยอมรับกฎ แล้ว Coach จะแสดงการอนุมัติให้คุณ",
   setup_every_call_asks: "ทุกการเรียกต้องได้รับการอนุมัติจากคุณ",
   setup_not_allowed: "Card นี้ไม่อนุญาต",
   setup_per_action: (amount: string) => `${amount} ต่อการดำเนินการ`,

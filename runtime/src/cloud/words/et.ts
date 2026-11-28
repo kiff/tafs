@@ -138,6 +138,7 @@ export const et: Words = {
   approval_rules_unsaid: "Reeglid, mis sa kinnitasid, ei maininud kõiki piire, mida see Card sisaldab. Midagi ei kinnitatud. Coach näitab reegleid uuesti, iga piir nende sees, et sa need esmalt kinnitaksid.",
   approval_rules_unagreed: "Coach koostas selle enne, kui sa kinnitasid reeglid, mida ta näitas. Midagi ei kinnitatud. Kinnita esmalt reeglid ja Coach koostab selle uuesti.",
   approval_rules_required: "Coach koostas selle, näitamata sulle reegleid, mida kinnitada. Midagi ei kinnitatud. Coach näitab sulle esmalt reegleid.",
+  approval_rules_first: "Kõigepealt reeglid: nõustu nendega ja Coach näitab sulle kinnitust.",
   setup_every_call_asks: "Iga kutse vajab sinu kinnitust",
   setup_not_allowed: "Selle Card ei luba",
   setup_per_action: (amount: string) => `${amount} toimingu kohta`,

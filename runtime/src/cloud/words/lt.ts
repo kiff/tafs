@@ -138,6 +138,7 @@ export const lt: Words = {
   approval_rules_unsaid: "Taisyklėse, dėl kurių sutarėte, nebuvo paminėti visi šio Card limitai. Niekas nebuvo patvirtinta. Coach dar kartą parodo taisykles su kiekvienu limitu, kad pirmiausia su jomis sutiktumėte.",
   approval_rules_unagreed: "Coach tai parengė, kol dar nebuvote sutikę su taisyklėmis, kurias parodė. Niekas nebuvo patvirtinta. Pirmiausia sutikite su taisyklėmis, ir Coach parengs jį iš naujo.",
   approval_rules_required: "Coach tai parengė nepaprodęs taisyklių, su kuriomis reikia sutikti. Niekas nebuvo patvirtinta. Coach pirmiausia parodys taisykles.",
+  approval_rules_first: "Pirmiausia taisyklės: sutikite su jomis, ir Coach parodys patvirtinimą.",
   setup_every_call_asks: "Kiekvienam iškvietimui reikia jūsų patvirtinimo",
   setup_not_allowed: "Šio Card neleidžiama",
   setup_per_action: (amount: string) => `${amount} už veiksmą`,

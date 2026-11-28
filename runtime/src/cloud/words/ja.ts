@@ -145,6 +145,7 @@ export const ja: Words = {
   approval_rules_unsaid: "あなたが合意したルールには、このCardのすべての上限が書かれていませんでした。何も承認されていません。Coachが各上限を含めたルールをもう一度表示するので、先に合意してください。",
   approval_rules_unagreed: "Coachは、表示したルールにあなたが合意する前にこれを作成しました。何も承認されていません。先にルールに合意すると、Coachが下書きを作り直します。",
   approval_rules_required: "Coachは、合意するルールを表示せずにこれを作成しました。何も承認されていません。Coachが先にルールを表示します。",
+  approval_rules_first: "まずルールです。同意すると、Coachが承認を表示します。",
   setup_every_call_asks: "呼び出しのたびにあなたの承認が必要",
   setup_not_allowed: "このCardでは許可されていません",
   setup_per_action: (amount: string) => `1回の操作あたり${amount}`,
