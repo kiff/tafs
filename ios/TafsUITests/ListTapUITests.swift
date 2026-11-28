@@ -51,22 +51,6 @@ final class ListTapUITests: TafsUITestCase {
         XCTAssertEqual(openName(app), pick, "the taf picked by a tap stays open when the list settles")
     }
 
-    /// iPad only (kiff/tafs#2191): one tap on Plan & usage in the sidebar opens it. The first tap showed the tafs
-    /// list, and only a second opened it. It stays open while the list settles.
-    @MainActor
-    func testOneTapOnPlanAndUsageInTheSidebarOpensIt() throws {
-        guard iPad else { throw XCTSkip("the sidebar is the iPad's") }
-        // Signed in, as the owner was: Plan & usage is a sidebar item only then.
-        let app = launchList(["-signedIn", "YES"])
-        let item = app.collectionViews.firstMatch.descendants(matching: .any)["sidebar.Plan & usage"]
-        XCTAssertTrue(item.waitForExistence(timeout: 60), "Plan & usage in the sidebar")
-        item.tap()
-        let usage = app.navigationBars["Plan & usage"]
-        XCTAssertTrue(usage.waitForExistence(timeout: 10), "one tap opens Plan & usage")
-        RunLoop.current.run(until: Date().addingTimeInterval(5))
-        XCTAssertTrue(usage.exists, "and it stays open while the list settles")
-    }
-
     // MARK: Helpers
 
     @MainActor

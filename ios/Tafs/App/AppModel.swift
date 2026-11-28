@@ -1065,7 +1065,6 @@ final class AppModel: ObservableObject {
         planque.deviceID = nil
         forgetAIConsent()
         accountGeneration += 1
-        sidebarPick = nil
         chatPlanNeeded = [:]; setupPlanNeeded = nil
         tafs = []; listOrder = []; waitingWhenSettled = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         alertsReady = nil
@@ -2077,7 +2076,6 @@ final class AppModel: ObservableObject {
         handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
-        sidebarPick = nil
         chatPlanNeeded = [:]; setupPlanNeeded = nil
         tafs = []; listOrder = []; waitingWhenSettled = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         scriptPosition = [:]; templateOf = [:]
@@ -2101,11 +2099,6 @@ final class AppModel: ObservableObject {
     /// didn't always see: Start trying pushed the trial beside a sidebar still showing the
     /// taf (the 755 retest).
     var sidebarShown = false
-
-    /// The screen the person last picked in the iPad's sidebar (Plan & usage, Connect apps…), kept here so it
-    /// survives the sidebar being drawn again: a rebuild just after a first tap put the tafs list back
-    /// (kiff/tafs#2191). Cleared whenever the account's lists are.
-    var sidebarPick: HomeSelection?
 
     /// Usage, asked for by a tapped alert (a member's request for tasks, kiff/tafs#215): the
     /// root view shows it on its own screen and clears this.
