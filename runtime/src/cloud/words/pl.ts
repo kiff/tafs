@@ -523,7 +523,7 @@ export const pl: Words = {
   door_reply_send: "Wyślij",
   door_reply_discard: "Nie wysyłaj",
   door_reply_prompt: (who: string) => `Wyślij tę odpowiedź do ${who}`,
-  door_reply_changed: "Ta odpowiedź zmieniła się, odkąd ją przeczytałeś. Przeczytaj ją ponownie przed wysłaniem.",
+  door_reply_changed: "Ta odpowiedź zmieniła się od chwili przeczytania. Przeczytaj ją ponownie przed wysłaniem.",
   unanswered_dial: (n, _form, event) => `${event ? "Zdarzenia" : "Wiadomości"} bez odpowiedzi, gdy Twoje tafs czekały na kredyty: ${n}`,
   unanswered_door: (who, door) => `Wiadomość od: ${who} przez ${door} została bez odpowiedzi: Twoje tafs czekały na kredyty.`,
   unanswered_event: (name) => `Zdarzenie z ${name} zostało bez odpowiedzi: Twoje tafs czekały na kredyty.`,

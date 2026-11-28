@@ -517,7 +517,7 @@ export const lt: Words = {
   door_reply_send: "Siųsti",
   door_reply_discard: "Nesiųsti",
   door_reply_prompt: (who: string) => `Siųsti šį atsakymą ${who}`,
-  door_reply_changed: "Šis atsakymas pasikeitė, kai jį perskaitėte. Prieš siųsdami perskaitykite jį dar kartą.",
+  door_reply_changed: "Šis atsakymas pasikeitė nuo tada, kai jį perskaitėte. Prieš siųsdami perskaitykite jį dar kartą.",
   unanswered_dial: (n: number, form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? (form === "one" ? "įvykis" : form === "few" ? "įvykiai" : "įvykių") : (form === "one" ? "žinutė" : form === "few" ? "žinutės" : "žinučių")} liko be atsakymo, kol tavo taf laukė kreditų`,
   unanswered_door: (who: string, door: string) => `Žinutė per ${door} nuo ${who} liko be atsakymo: tavo taf laukė kreditų.`,
   unanswered_event: (name: string) => `Įvykis iš ${name} liko be atsakymo: tavo taf laukė kreditų.`,
