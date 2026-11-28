@@ -44,9 +44,14 @@ describe("the period's credits, in words", () => {
     const west = await get(world(kiff({ credits: kiffCredits({ current: false, credits: 0, by_agent: [], period: { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z" } }),
       me: { ...ME, time_zone: "America/New_York" } })), "/v1/usage/credits", "period=previous");
     expect(west.body.words).toBe("Last period: no credits used · 1 Oct to 31 Oct");
-    // A period Stripe bounds mid-day ends the day before its end's date.
+    // A period bounded mid-day (Stripe's, or a store's at the time it was bought) still runs on its end's
+    // date, the day the store's sheet says it renews.
     expect(periodWords({ period: { start: "2026-10-20T09:12:00Z", end: "2026-11-20T09:12:00Z" }, current: true, credits: 3 }))
-      .toBe("This period: 3 credits used · ends on 19 Nov");
+      .toBe("This period: 3 credits used · ends on 20 Nov");
+    expect(periodWords({ period: { start: "2026-10-27T19:50:00Z", end: "2026-11-27T19:50:00Z" }, current: true, credits: 0 }))
+      .toBe("This period: no credits used yet · ends on 27 Nov");
+    expect(periodWords({ period: { start: "2026-10-27T19:50:00Z", end: "2026-11-27T19:50:00Z" }, current: false, credits: 1 }))
+      .toBe("Last period: 1 credit used · 27 Oct to 27 Nov");
   });
 
   it("names each taf that used credits, most first, Coach past what's included, and what wasn't counted", () => {
