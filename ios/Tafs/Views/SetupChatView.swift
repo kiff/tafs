@@ -96,7 +96,12 @@ struct SetupChatView: View {
                     // Beside the chat, the plan is in the panel.
                     if !shaping, let plan = model.setupThread.plan { SetupPlan(shown: plan).padding(.horizontal, 12).padding(.top, 8) }
                     thread
-                    if let error = model.setupError {
+                    if let words = model.setupPlanPrompt {
+                        // Refused for want of a plan: a prompt that stays; Choose a plan closes Coach on the way to
+                        // Plan & usage, as Android's does (kiff/tafs#2190).
+                        PlanPrompt(words: words, choose: { model.dismissSetupPlanPrompt(); model.coachOpen = false; model.usageRequested = true },
+                                   notNow: { model.dismissSetupPlanPrompt() })
+                    } else if let error = model.setupError {
                         Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                             .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
                     }

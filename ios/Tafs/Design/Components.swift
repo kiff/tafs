@@ -601,3 +601,35 @@ struct ApprovalKeyLostLine: View {
         .askingAlertsStillOn(model)
     }
 }
+
+/// A chat refused for want of a plan (kiff/tafs#2190, as Android's and the Mac's): tafs cloud's words, what Solo gives
+/// (Plan & usage's own line), Choose a plan and Not now. It stays above the box until one is tapped or the next send.
+struct PlanPrompt: View {
+    let words: String
+    let choose: () -> Void
+    let notNow: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(words).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(Words.Billing.tafsKiffOnePersonEvery).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                Button(action: choose) { Text(Words.Usage.choosePlan).frame(maxWidth: .infinity) }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .accessibilityIdentifier("plan-prompt.choose")
+                Button(action: notNow) { Text(Words.Common.notNow).frame(maxWidth: .infinity) }
+                    .buttonStyle(OutlineButtonStyle())
+                    .accessibilityIdentifier("plan-prompt.not-now")
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.raised))
+        .padding(.horizontal, 12)
+        .padding(.bottom, 6)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("plan-prompt")
+    }
+}

@@ -525,6 +525,30 @@ final class ChatTests: XCTestCase {
         XCTAssertNil(AppModel.waitsForCredits(TafsCloud.refusal(503, Data(#"{"error":"down","code":"no_plan"}"#.utf8))))
     }
 
+    /// A chat refused for want of a plan keeps tafs cloud's words as a prompt, with Choose a plan and Not now
+    /// (kiff/tafs#2190, as Android's #2193): only for `no_plan`; Not now takes it and its line away, and a later
+    /// refusal of another kind is the plain line again, never wearing the prompt.
+    func testANoPlanRefusalStaysAsAPromptUntilNotNow() async throws {
+        let (model, id) = await kiffModel()
+        let words = "Choose a plan to start your tafs."
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (409, #"{"error":"waiting","code":"no_plan","words":"\#(words)"}"#)
+        _ = await model.sendChat("hello", to: id)
+        XCTAssertEqual(model.planPrompt(id), words, "the prompt, with tafs cloud's words")
+        model.dismissPlanPrompt(id)
+        XCTAssertNil(model.planPrompt(id))
+        XCTAssertNil(model.chatErrors[id], "Not now takes its line away too")
+
+        let limit = "Your tafs are waiting: the spend limit is reached."
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (409, #"{"error":"waiting","code":"limit_reached","words":"\#(limit)"}"#)
+        _ = await model.sendChat("hello", to: id)
+        XCTAssertNil(model.planPrompt(id), "another credits refusal is the plain line")
+        XCTAssertEqual(model.chatErrors[id], limit)
+
+        XCTAssertEqual(AppModel.planNeeded(TafsCloud.refusal(409, Data(#"{"error":"waiting","code":"no_plan","words":"x"}"#.utf8))), "x")
+        XCTAssertNil(AppModel.planNeeded(TafsCloud.refusal(409, Data(#"{"error":"waiting","code":"credits_used_up","words":"x"}"#.utf8))))
+        XCTAssertNil(AppModel.planNeeded(TafsCloud.refusal(503, Data(#"{"error":"down","code":"no_plan"}"#.utf8))))
+    }
+
     /// The 755 retest: after Not sent for writing too fast, the warning stayed under every
     /// message that went through after it. A message that goes through takes it away.
     func testAWarningForWritingTooFastGoesOnceAMessageGoesThrough() async throws {
