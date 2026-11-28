@@ -11,7 +11,7 @@ import UserNotifications
 enum HoldNotification {
     /// A hold answered from its notification with Refuse only: a held purchase, approved only from its own card, where
     /// every line and where it's delivered are read first (Thune). Registered with the app's categories (AlertAnswers).
-    static let refuseOnlyCategory = "hold_refuse"
+    nonisolated static let refuseOnlyCategory = "hold_refuse"
 
     /// The Keychain item holding the KIFF session, as the app keeps it (`AppModel.tokenAccount`).
     static let sessionAccount = "kiff.session"
