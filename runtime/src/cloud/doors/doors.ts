@@ -607,6 +607,11 @@ async function holdReply(ctx: DoorsContext, tenant: string, taf: Taf, held: Held
     (read) => ({ runs: [...new Set([...(read?.runs ?? []), held.reply.run])].slice(-100) }), addDays(ctx.now, DOOR.replyDays));
 }
 
+/** The hex SHA-256 of a held reply's text, UTF-8: what Send names, so it sends only the text the owner read. */
+export function textSHA256(text: string): string {
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
+
 /** A taf's replies waiting for the owner, oldest first: who, what about, and the exact text. */
 export async function heldRepliesOf(store: DoorStore, tenant: string, taf: string): Promise<HeldReply[]> {
   const runs = ((await store.get(doorKeys.heldReplies(tenant, taf))) as { runs?: string[] } | undefined)?.runs ?? [];
@@ -626,6 +631,10 @@ export async function answerHeldReply(ctx: DoorsContext, owner: Owner, taf: Taf,
   if (!held) throw new DoorError(404, "no reply of this run waits to be sent");
   const action = body.action;
   if (action !== "send" && action !== "discard") throw new DoorError(400, "action is send or discard");
+  // Send binds the text the owner read: the hash of the held text, signed with the request, or nothing goes.
+  if (action === "send" && body.text_sha256 !== textSHA256(held.text)) {
+    throw new DoorError(409, "this reply isn't the text you read; read it again before sending", "reply_changed");
+  }
   const cfg = await ctx.doors.config();
   const door = (await doorsOf(store, owner.tenant, taf.id)).find((d) => d.id === held.reply.door);
   const app = door && appOf(cfg, door.app);
@@ -940,6 +949,7 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
   // The replies waiting for the owner to send them, each with the exact text that would go.
   const replies = (await heldRepliesOf(store, owner.tenant, taf.id)).map((h) => ({
     run: h.reply.run, door: h.reply.door, to: h.reply.name || h.reply.to, ...(h.reply.subject ? { subject: h.reply.subject } : {}), text: h.text, at: h.at,
+    text_sha256: textSHA256(h.text),
     ...(h.concerns?.length ? { concerns: h.concerns } : {}),
   }));
   return {
@@ -1205,13 +1215,16 @@ export async function keepBound(doors: DoorsDeps, tenant: string, ai: AIBound | 
 export async function doorLights(store: DoorStore, tenant: string, taf: string, now: Date) {
   const doors = await doorsOf(store, tenant, taf);
   if (!doors.length) return [];
-  const [counts, knocks] = await Promise.all([
+  const [counts, knocks, held] = await Promise.all([
     Promise.all(doors.map((d) => todayOf(store, tenant, taf, d.id, now))),
     knocksOf(store, tenant, taf),
+    heldRepliesOf(store, tenant, taf),
   ]);
   return doors.map((d, i) => ({
     app: d.app, label: APPS.find((x) => x.id === d.app)?.label ?? d.app, open: d.open, resting: counts[i]!.keys >= DOOR.keysPerDay,
     knocks: knocks.filter((k) => k.door === d.id && k.state === "open" && !k.rest).length,
+    // The replies waiting for the owner to send them, so Needs you can list what it counts.
+    replies: held.filter((h) => h.reply.door === d.id).length,
   }));
 }
 

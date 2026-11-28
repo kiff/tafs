@@ -5785,7 +5785,7 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
         doorLights(deps.doors!.store, me.tenantID, taf.id, now).catch(() => [])])
         .then(([ds, lights]) => ds.map((d) => {
           const l = lights.find((x) => x.app === d.app);
-          return { ...d, ...(l ? { resting: l.resting, knocks: l.knocks } : {}) };
+          return { ...d, ...(l ? { resting: l.resting, knocks: l.knocks, replies: l.replies } : {}) };
         }))
       : Promise.resolve([]),
     deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),

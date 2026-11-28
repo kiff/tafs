@@ -960,7 +960,7 @@ describe("knocks and keys", () => {
     await emailHook(w, mail(w, { from: "Ana Lima <ana@northwind.example>" }));
     const home = await send(w, "GET", "/v1/home", { token: "ana" });
     expect(home.status).toBe(200);
-    expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", label: "Email", open: true, resting: false, knocks: 1 }]);
+    expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", label: "Email", open: true, resting: false, knocks: 1, replies: 0 }]);
     // A knock waits, so the taf is relevant now (docs/api.md, Home), for the knock.
     expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS)).toMatchObject({ relevant_now: true, relevant_because: "knock" });
     // Knocks name their door, and the list says the limits the apps check.
@@ -2547,14 +2547,22 @@ describe("a door's reply held for the owner", () => {
     expect((await send(w, "POST", path, { token: "ana", body: { action: "send" } })).status).toBeGreaterThanOrEqual(400);
     expect(w.outbox).toHaveLength(0);
     const call = signing(w);
-    const sent = await call("POST", path, { action: "send" }, { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=sig" });
+    // Send names the hash of the text the owner read; another text's hash sends nothing.
+    expect(held.text_sha256).toBe(createHash("sha256").update(held.text).digest("hex"));
+    const stale = await call("POST", path, { action: "send", text_sha256: "0".repeat(64) }, { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=sig" });
+    expect(stale.status).toBe(409);
+    expect(w.outbox).toHaveLength(0);
+    // Home lists it on the taf's door, beside its knocks.
+    const home = await send(w, "GET", "/v1/home", { token: "ana" });
+    expect(JSON.stringify(home.body)).toContain('"replies":1');
+    const sent = await call("POST", path, { action: "send", text_sha256: held.text_sha256 }, { "kiff-device-signature": "t=2026-10-24T09:00:02Z,v1=sig" });
     expect(sent.body).toEqual({ run: run.id, state: "sent" });
     expect(w.outbox).toHaveLength(1);
     expect(w.outbox[0]!.text).toBe(held.text);
     expect(w.outbox[0]!.to).toBe("ben@partner.example");
     // Once: it's gone from the list, and a second send finds nothing.
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.replies).toEqual([]);
-    expect((await call("POST", path, { action: "send" }, { "kiff-device-signature": "t=2026-10-24T09:00:01Z,v1=sig" })).status).toBe(404);
+    expect((await call("POST", path, { action: "send", text_sha256: held.text_sha256 }, { "kiff-device-signature": "t=2026-10-24T09:00:03Z,v1=sig" })).status).toBe(404);
   });
 
   it("discards a reply without sending it", async () => {
