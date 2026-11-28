@@ -204,6 +204,8 @@ object KiffMapping {
       scheduleTimeZoneWords = h.scheduleTimeZoneWords,
       avatarRim = h.avatarRim,
       knocks = h.doors.orEmpty().sumOf { it.knocks.coerceAtLeast(0) },
+      heldReplies = h.doors.orEmpty().sumOf { it.replies.coerceAtLeast(0) },
+      heldReplyLine = h.doors.orEmpty().firstNotNullOfOrNull { d -> d.replyLine?.takeIf { d.replies > 0 && it.isNotBlank() }?.let(::visible) },
       kiffCardIds = h.card.ids,
       // Each Card on its own (kiff/tafs#211), as tafs cloud read it from KIFF.
       kiffCards = h.card.cards?.map { c ->
@@ -361,6 +363,8 @@ object KiffMapping {
     // and no rule badge, since installing is asked every time by design, never something outside the Card.
     val installs = install(e, coach)
     val breach = reasonBreach(e)
+    // A held purchase draws KIFF's words for its case, and signs the case as the answer's last line (docs/purchases.md).
+    val purchase = PurchaseHold.read(e.purchase)
     // KIFF's own words first; the app's only where KIFF sends none.
     val reason = e.reasonText?.takeIf { it.isNotBlank() } ?: moneyReason(e) ?: countReason(e) ?: breach?.reason ?: e.reason ?: outcomeText(breach?.outcome)
     // A gateway call is filed under its tool call's id, which says nothing to the owner: what it's on is in
@@ -389,6 +393,16 @@ object KiffMapping {
       browser = e.browser?.let { browserStep(it, e.expiresAt?.toEpochMilli() ?: 0L, e.browserSha256) },
       needsRelease = e.browser?.needsRelease == true,
       browserSha256 = e.browserSha256?.takeIf { it.isNotEmpty() },
+      // The badge is the purchase's own reason, else the hold's in KIFF's words (`reason_text`), never the app's, as on the Mac.
+      purchase = (purchase as? PurchaseHold.Read.Readable)?.approval?.let { p ->
+        if (p.words.reason != null) p else p.copy(words = p.words.copy(reason = e.reasonText?.takeIf { it.isNotBlank() }?.let(::visible)))
+      },
+      purchaseLine = when (purchase) {
+        is PurchaseHold.Read.Readable -> purchase.approval.line
+        is PurchaseHold.Read.Unreadable -> purchase.line
+        null -> null
+      },
+      isPurchase = purchase != null,
     )
   }
 

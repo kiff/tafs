@@ -1760,6 +1760,7 @@
     <string name="people_title">Persones i grups</string>
     <string name="people_uses">Fa servir %1$s</string>
     <string name="people_uses_none">Encara no fa servir cap taf</string>
+    <string name="purchase_unreadable">Aquesta compra no es pot llegir, així que no es pot aprovar.</string>
     <string name="push_channel_briefs">Resums</string>
     <string name="push_channel_briefs_description">El teu resum a les hores establertes.</string>
     <string name="push_channel_holds_description">Una crida es reté per a la teva resposta. No s\'envia res fins que ho aprovis.</string>

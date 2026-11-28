@@ -1699,6 +1699,7 @@
     <string name="people_title">Người &amp; nhóm</string>
     <string name="people_uses">Dùng %1$s</string>
     <string name="people_uses_none">Chưa dùng taf nào</string>
+    <string name="purchase_unreadable">Không đọc được giao dịch mua này nên không thể phê duyệt.</string>
     <string name="push_channel_briefs">Bản tóm tắt</string>
     <string name="push_channel_briefs_description">Bản tóm tắt của bạn vào các giờ đã đặt.</string>
     <string name="push_channel_holds_description">Một lệnh gọi đang được giữ lại chờ bạn trả lời. Sẽ không có gì được gửi cho đến khi bạn phê duyệt.</string>

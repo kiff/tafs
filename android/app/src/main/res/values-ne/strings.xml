@@ -1760,6 +1760,7 @@
     <string name="people_title">मानिस र समूहहरू</string>
     <string name="people_uses">%1$s प्रयोग गर्छन्</string>
     <string name="people_uses_none">अहिलेसम्म कुनै taf प्रयोग गर्दैनन्</string>
+    <string name="purchase_unreadable">यो खरिद पढ्न सकिँदैन, त्यसैले स्वीकृत गर्न सकिँदैन।</string>
     <string name="push_channel_briefs">सारांशहरू</string>
     <string name="push_channel_briefs_description">तोकिएको समयमा तपाईंको सारांश।</string>
     <string name="push_channel_holds_description">एउटा अनुरोध तपाईंको जवाफका लागि रोकिएको छ। तपाईंले स्वीकृत नगरेसम्म केही पठाइँदैन।</string>

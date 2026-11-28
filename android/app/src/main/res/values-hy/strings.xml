@@ -1760,6 +1760,7 @@
     <string name="people_title">Մարդիկ և խմբեր</string>
     <string name="people_uses">Օգտագործում է՝ %1$s</string>
     <string name="people_uses_none">Դեռ ոչ մի taf չի օգտագործում</string>
+    <string name="purchase_unreadable">Այս գնումը հնարավոր չէ կարդալ, ուստի այն հնարավոր չէ հաստատել։</string>
     <string name="push_channel_briefs">Ամփոփումներ</string>
     <string name="push_channel_briefs_description">Ձեր ամփոփումը սահմանված ժամերին։</string>
     <string name="push_channel_holds_description">Զանգը պահվում է ձեր պատասխանի համար։ Ոչինչ չի ուղարկվում, մինչև չհաստատեք։</string>

@@ -1760,6 +1760,7 @@
     <string name="people_title">People &amp; groups</string>
     <string name="people_uses">Uses %1$s</string>
     <string name="people_uses_none">Uses no taf yet</string>
+    <string name="purchase_unreadable">This purchase can\'t be read, so it can\'t be approved.</string>
     <string name="push_channel_briefs">Briefs</string>
     <string name="push_channel_briefs_description">Your brief at its set times.</string>
     <string name="push_channel_holds_description">A call is held for your answer. Nothing is sent until you approve it.</string>

@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import androidx.compose.ui.platform.testTag
 import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
@@ -107,6 +108,9 @@ class DoorActions(
   val openRimRequest: suspend (String) -> Unit = {},
   /** A door "From another application" (`api`): its keys, opening it again and removing it, each signed. */
   val api: ApiDoorActions = ApiDoorActions(),
+  /** A held reply: Send (signed over the text's hash, behind the fingerprint) and Don't send (taf, reply). */
+  val sendReply: suspend (String, bot.tafs.app.kiff.HeldReply) -> Boolean = { _, _ -> false },
+  val discardReply: suspend (String, bot.tafs.app.kiff.HeldReply) -> Boolean = { _, _ -> false },
 )
 
 /**
@@ -214,6 +218,9 @@ fun KnocksPanel(taf: Taf, state: AppState, actions: DoorActions) {
   val doors = state.doors[taf.id] ?: return
   val scope = rememberCoroutineScope()
   val (paired, waiting) = doors.openKnocks.filter { !it.isLine }.partition { it.paired }
+  // Replies the taf wrote to someone outside, held for the owner: the exact text that would go, then Send or Don't send, in
+  // tafs cloud's words. One from a tafs cloud that sends no words isn't drawn: the app has none of its own for it.
+  doors.replies.filter { it.words != null }.forEach { reply -> HeldReplyCard(reply, doors.busy, { actions.sendReply(taf.id, reply) }, { actions.discardReply(taf.id, reply) }) }
   if (waiting.isNotEmpty()) {
     Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
       Eyebrow(Words.Door.knocksWaiting, Theme.amber)
@@ -224,6 +231,27 @@ fun KnocksPanel(taf: Taf, state: AppState, actions: DoorActions) {
     Panel {
       Eyebrow(Words.Door.paired)
       paired.forEach { KnockCard(it, taf.name, doors.busy, compact = true) { action, say -> scope.launch { actions.answer(taf.id, it, action, say) } } }
+    }
+  }
+}
+
+/** One held reply: tafs cloud's line, its subject, the exact text that would go, and Send (behind the fingerprint) or Don't send. */
+@Composable
+internal fun HeldReplyCard(reply: bot.tafs.app.kiff.HeldReply, busy: Boolean, send: suspend () -> Boolean, discard: suspend () -> Boolean) {
+  val words = reply.words ?: return
+  val scope = rememberCoroutineScope()
+  Panel(stroke = Theme.amber.copy(alpha = 0.45f), modifier = Modifier.testTag("reply-" + reply.run)) {
+    Text(words.line, style = scaled(14, FontWeight.SemiBold, Theme.ink))
+    reply.subject?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, FontWeight.Medium, Theme.soft)) }
+    // The exact text: what Send signs the hash of, and all that goes.
+    androidx.compose.foundation.text.selection.SelectionContainer {
+      Text(reply.text, style = scaled(14, color = Theme.ink), modifier = Modifier.testTag("reply-text"))
+    }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      Box(Modifier.weight(1f)) {
+        ApprovalGate { PrimaryButton(words.send, { scope.launch { send() } }, Modifier.fillMaxWidth().confirms(), enabled = !busy) }
+      }
+      OutlineButton(words.discard, { scope.launch { discard() } }, Modifier.weight(1f).confirms(), enabled = !busy)
     }
   }
 }

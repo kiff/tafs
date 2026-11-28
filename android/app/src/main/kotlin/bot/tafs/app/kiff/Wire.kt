@@ -163,7 +163,12 @@ data class HomeLabel(
 
 /** One door's light on Home: how many knocks wait at it for the owner (docs/doors.md). */
 @Serializable
-data class HomeDoorLight(val knocks: Int = 0)
+data class HomeDoorLight(
+  val knocks: Int = 0,
+  /** Replies at this door waiting for the owner to send them, and the newest one's line, as its notification said it. */
+  val replies: Int = 0,
+  @SerialName("reply_line") val replyLine: String? = null,
+)
 
 /** A mission, as its label carries it on Home: what the filtered list's mission row shows, and the id its log is read by. */
 @Serializable
@@ -604,6 +609,11 @@ data class CardException(
    * own hash ([HeldBrowser.servedSha256]).
    */
   @SerialName("browser_sha256") val browserSha256: String? = null,
+  /**
+   * A held purchase (contracts/purchase.json, `approval.value`; docs/purchases.md): the case's id, version and digest and KIFF's
+   * words for it, read by [PurchaseHold.read] so one bad block never hides the account's other held calls. Absent for any other hold.
+   */
+  val purchase: JsonElement? = null,
 )
 
 /**

@@ -199,6 +199,10 @@ have gone out on its own").
     `TestAgentDraftFromHoldContract`). A few keys are read but not compared, each with why in the vector
     (`read_not_compared`): KIFF's `lines` and a grant's `title` are words, and the Card in force's `active`, `domain_id`
     and `hold_expiry_seconds` can't change through a draft this check signs;
+  - **a grant's openings** (`opens`, K4: a category the Card opens) are compared among its terms (`DraftGrant.openTerms`), and
+    `opens` isn't among the keys `keysKnown` reads, so a draft that opens anything is never signed here until the apps
+    draw an opening in KIFF's words. Android also refuses a Coach version whose Card opens a category, before any
+    fingerprint ("Couldn't read this version's Card"), for the same reason;
   - it signs the `version` it read.
 - One signature: the draft's confirm with the approval key KIFF names, with
   `hold: {id, accounting_version}` when the switch is on.

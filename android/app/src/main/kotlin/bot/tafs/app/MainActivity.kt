@@ -411,6 +411,7 @@ fun RootView(model: AppModel) {
         bot.tafs.app.views.LocalYourStepActions provides remember(model) { bot.tafs.app.views.YourStepActions(answer = model::answerYourStep) },
         bot.tafs.app.views.LocalAllowHold provides (if (state.mode == Mode.kiff && state.canManageCards) model::openAllow else null),
         bot.tafs.app.views.LocalFillRefusal provides model::fillRefusal,
+        bot.tafs.app.views.LocalApprovePurchase provides (if (state.mode == Mode.kiff) ({ call, shown -> model.answer(call, bot.tafs.app.model.Answer.ApproveOnce, shownPurchase = shown) }) else null),
         LocalCoachInstalls provides remember(model) {
           CoachInstalls(
             begin = model::beginCoachInstall,
@@ -636,6 +637,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
       pair = { taf, door, sender, name -> model.pairDoor(taf, door, sender, name) },
       unpair = { taf, door, key -> model.unpairDoor(taf, door, key) },
       answer = { taf, knock, action, say -> model.answerKnock(taf, knock, action, say) },
+      sendReply = model::sendHeldReply,
+      discardReply = model::discardHeldReply,
       dismissError = model::dismissDoorsError,
       loadKnob = model::loadKnob,
       runNow = { taf -> model.runNow(taf); model.loadKnob(taf) },

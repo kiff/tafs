@@ -97,6 +97,23 @@ class AllowFromNowOnTest {
        "draft":"dr_9","confirm_key":"critical","send_held":true}}""",
   )
 
+  // MARK: Openings (K4)
+
+  /**
+   * KIFF may fill a draft's openings (a category the Card opens: irreversible, delete, money). This phone draws no line for one,
+   * so a draft that opens anything the Card in force doesn't is never what was offered, and nothing is signed.
+   */
+  @Test fun aDraftThatOpensACategoryTheOfferDidntNameIsntSigned() {
+    val opens = ""","opens":[{"class":"money"}]"""
+    assertTrue("as offered", signs(card(now = """"grants":[${refund(raised)}]""", was = """"grants":[${refund(cap)}]""")))
+    assertFalse("an opening filled", signs(card(now = """"grants":[${refund(raised).dropLast(1)}$opens}]""", was = """"grants":[${refund(cap)}]""")))
+    // An opening the Card in force already has, kept as it is: the same terms.
+    assertTrue(
+      "kept",
+      signs(card(now = """"grants":[${refund(raised).dropLast(1)}$opens}]""", was = """"grants":[${refund(cap).dropLast(1)}$opens}]""")),
+    )
+  }
+
   // MARK: The app's own rule for the button
 
   @Test fun theButtonShowsOnAHoldACardChangeCanLiftForWhoeverManagesCards() = runTest {

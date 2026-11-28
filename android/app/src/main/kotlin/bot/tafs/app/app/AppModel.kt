@@ -182,6 +182,8 @@ data class TafDoors(
   val doors: List<Door> = emptyList(),
   val apps: List<DoorApp> = emptyList(),
   val knocks: List<Knock> = emptyList(),
+  /** Replies waiting for the owner to send them, with the exact text (docs/doors.md). */
+  val replies: List<bot.tafs.app.kiff.HeldReply> = emptyList(),
   val loaded: Boolean = false,
   val busy: Boolean = false,
   val error: String? = null,
@@ -7839,9 +7841,10 @@ class AppModel(
     installed: Boolean = false,
     approvedWithCard: Boolean = false,
     presigned: SignedAnswer? = null,
+    shownPurchase: bot.tafs.app.model.PurchaseApproval? = null,
   ): Boolean =
     // A held call's answer that goes through ticks success; one that doesn't, a warning.
-    answerNow(call, answer, confirmed, installed, approvedWithCard, presigned).also { done ->
+    answerNow(call, answer, confirmed, installed, approvedWithCard, presigned, shownPurchase).also { done ->
       if (done) bot.tafs.app.design.Haptics.success() else bot.tafs.app.design.Haptics.warning()
     }
 
@@ -7852,9 +7855,23 @@ class AppModel(
     installed: Boolean,
     approvedWithCard: Boolean,
     presigned: SignedAnswer?,
+    shownPurchase: bot.tafs.app.model.PurchaseApproval?,
   ): Boolean {
     val before = _state.value
     if (before.held.none { it.id == call.id }) return false
+    // A held purchase (docs/purchases.md) is answered with Approve once or Refuse only, and every answer signs its case's line.
+    // Approve once only from its own card, the case it drew being the case held ([shownPurchase]): never from another screen, a
+    // presigned answer or a Card's confirm. One whose case can't be read can't be signed at all; one whose words can't be read,
+    // only refused.
+    if (call.isPurchase) {
+      val approving = answer is Answer.ApproveOnce
+      if (call.purchaseLine == null || (answer !is Answer.ApproveOnce && answer !is Answer.Refuse) ||
+        approving && (call.purchase == null || shownPurchase != call.purchase || presigned != null || confirmed || installed || approvedWithCard)
+      ) {
+        fail(Words.Purchase.unreadable)
+        return false
+      }
+    }
     // Approving Coach's install is installing it (kiff/tafs#206): the switch and its Card come first, then this answer, so
     // tafs never hears of a half-done install.
     if (call.install != null && answer is Answer.ApproveOnce && !confirmed && !installed) {
@@ -7909,7 +7926,12 @@ class AppModel(
     val answered = try {
       presigned ?: signAnswer(
         call, answer,
-        if (release != null) Words.Chrome.releasePromptAllow(site = call.browser?.site.orEmpty()) else Words.NeedsYou.Prompt.answer(summary = call.proposed.summary),
+        when {
+          release != null -> Words.Chrome.releasePromptAllow(site = call.browser?.site.orEmpty())
+          // KIFF's own words for what's bought: the shop and the total.
+          call.purchase != null -> call.purchase.words.prompt
+          else -> Words.NeedsYou.Prompt.answer(summary = call.proposed.summary)
+        },
         confirmed,
       )
     } catch (e: SignerException) {
@@ -8012,7 +8034,7 @@ class AppModel(
     var signedAt = ""
     val message = {
       signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
-      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt, call.browserSha256)
+      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt, call.browserSha256.takeIf { call.purchaseLine == null }, call.purchaseLine)
     }
     // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
     // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no
@@ -8162,7 +8184,13 @@ class AppModel(
     val generation = accountGeneration
     kiff.tenant = tenant
     return try {
-      kiff.draft(id).takeIf { generation == accountGeneration }
+      val draft = kiff.draft(id).takeIf { generation == accountGeneration }
+      // A Card that opens a category (K4) is one this phone can't draw yet: never shown as if it didn't, so never signed here.
+      if (draft != null && draft.cards.orEmpty().any { c -> c.grants.orEmpty().any { it.opens.orEmpty().isNotEmpty() } }) {
+        versionError(tafId, Words.Version.cardNotRead(why = Words.Coach.unknownAnswer))
+        return null
+      }
+      draft
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -8477,7 +8505,7 @@ class AppModel(
       try {
         val read = cloud.doors(cloudId)
         if (generation != accountGeneration) return
-        updateDoors(tafId) { it.copy(doors = read.doors, apps = read.apps, knocks = read.knocks, loaded = true, error = null) }
+        updateDoors(tafId) { it.copy(doors = read.doors, apps = read.apps, knocks = read.knocks, replies = read.replies, loaded = true, error = null) }
         return
       } catch (e: CancellationException) {
         throw e
@@ -8688,6 +8716,70 @@ class AppModel(
       // In the app's words, as the chat says it, not tafs cloud's.
       val words = if (e is CloudError && e.status == 429) Words.Door.Knock.tooMany else Words.Door.Knock.notSent(why = ErrorWords.of(e))
       updateDoors(tafId) { it.copy(error = words) }
+    } finally {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
+  /**
+   * Sends a held reply (docs/doors.md): the approval key, behind the fingerprint, signs `POST` with the hash of the exact text the
+   * owner read, and tafs cloud sends only that text, to its writer only. A reply that changed since (409 `reply_changed`) sends
+   * nothing and is read again. False when nothing went.
+   */
+  suspend fun sendHeldReply(tafId: String, reply: bot.tafs.app.kiff.HeldReply): Boolean {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || !_state.value.manages(tafId)) return false
+    val words = reply.words?.takeIf { it.prompt.isNotBlank() } ?: return false
+    // The fingerprint binds the text this phone drew: its own hash of it, which must be the one tafs cloud gave. If they differ,
+    // what would go isn't what's shown, so nothing is asked or sent, and the reply is read again.
+    val shown = bot.tafs.app.kiff.PlanqueClient.sha256Hex(reply.text.toByteArray(Charsets.UTF_8))
+    if (shown != reply.textSha256) {
+      loadDoors(tafId)
+      updateDoors(tafId) { it.copy(error = words.changed.ifBlank { null }) }
+      return false
+    }
+    val path = cloud.heldReplyPath(cloudId, reply.run)
+    val body = cloud.sendReplyBody(shown)
+    val signature = signDoor(tafId, "POST", path, body, words.prompt) ?: return false
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true) }
+    try {
+      cloud.sendHeldReply(cloudId, reply.run, body, signature)
+      if (generation != accountGeneration) return false
+      updateDoors(tafId) { d -> d.copy(replies = d.replies.filterNot { it.run == reply.run }, error = null) }
+      refresh()
+      return true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation != accountGeneration) return false
+      val changed = e is CloudError && e.status == 409 && e.code == "reply_changed"
+      // A reply that changed is read again first, so the owner reads what would go now; then why nothing went.
+      if (changed) loadDoors(tafId)
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = if (changed) words.changed.ifBlank { ErrorWords.of(e) } else ErrorWords.of(e)) }
+      return false
+    } finally {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
+  /** Doesn't send a held reply: nothing goes, so nothing is signed. */
+  suspend fun discardHeldReply(tafId: String, reply: bot.tafs.app.kiff.HeldReply): Boolean {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || !_state.value.manages(tafId)) return false
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true) }
+    try {
+      cloud.discardHeldReply(cloudId, reply.run)
+      if (generation != accountGeneration) return false
+      updateDoors(tafId) { d -> d.copy(replies = d.replies.filterNot { it.run == reply.run }, error = null) }
+      refresh()
+      return true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = ErrorWords.of(e)) }
+      return false
     } finally {
       if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
     }

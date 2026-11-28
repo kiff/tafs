@@ -19,6 +19,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [coach.md](coach.md) | Coach mode: making a taf, connecting tools, improving a taf, versions, trials, and Coach's own tools |
 | [approvals.md](approvals.md) | Held calls: how they reach the owner, how an answer is signed, what happens next, halting |
 | [report-payment.md](report-payment.md) | Report this payment: a payment you didn't expect, reported from its receipt; KIFF keeps the receipt and the taf is halted |
+| [purchases.md](purchases.md) | A held purchase on the phone: KIFF's words for the case, Show more, Approve once from its own card, the signed purchase line (the contract) |
 | [allow-from-now-on.md](allow-from-now-on.md) | A held call's third answer: the narrowest Card change that would have let it go, what it would have done, one signature (the contract) |
 | [languages.md](languages.md) | The eight languages, the glossary every surface uses, and how the person's language is chosen |
 | [store-listing.md](store-listing.md) | The Play Store listing in English and the seven other languages, each reviewed against the glossary |

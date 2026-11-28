@@ -1760,6 +1760,7 @@
     <string name="people_title">Хүмүүс ба бүлгүүд</string>
     <string name="people_uses">%1$s-ыг ашигладаг</string>
     <string name="people_uses_none">Одоогоор ямар ч taf ашигладаггүй</string>
+    <string name="purchase_unreadable">Энэ худалдан авалтыг уншиж чадахгүй тул зөвшөөрөх боломжгүй.</string>
     <string name="push_channel_briefs">Товчлолууд</string>
     <string name="push_channel_briefs_description">Таны товчлол тогтоосон цагт.</string>
     <string name="push_channel_holds_description">Нэг хүсэлт таны хариуг хүлээж түр барьсан. Та зөвшөөрөхгүй бол юу ч илгээгдэхгүй.</string>
