@@ -1,0 +1,1 @@
+- **Needs you lists a taf with a knock on Android (Android).** A taf with a knock waiting at one of its doors gets a row in Needs you, with its name and how many knocks, as on iOS; tapping it opens the taf on Activity, where the knock is answered. Needs you's count already included it. See [the Android app](docs/android-app.md).
