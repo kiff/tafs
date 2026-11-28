@@ -390,6 +390,8 @@ struct ReceiptView: View {
                         Text(stateLabel).scaledFont(14, weight: .semibold).foregroundColor(entry.kind.color)
                     }
                     Text(entry.titleWithAmount).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                    // A purchase's own signed receipt, KIFF's words under this device's check, before the call's facts.
+                    if let purchase = entry.purchaseCase { PurchaseReceiptPanel(caseID: purchase) }
                     Panel {
                         line(Words.Receipt.Fact.taf, model.taf(entry.tafID)?.name ?? "–")
                         line(Words.Receipt.Fact.at, entry.at.zonedShown(date: .abbreviated, time: .standard))

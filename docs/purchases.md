@@ -10,7 +10,8 @@ The contract is [contracts/purchase.json](../contracts/purchase.json): the case,
 the approval the apps draw, the answer's signed bytes and their test vector.
 
 **Built on Android, the Mac, and the iPhone and iPad**, each from the same contract. The receipt in the
-Record is built on Android; the other apps follow once KIFF's receipt key is pinned.
+Record is built on Android and the iPhone and iPad, each with KIFF's receipt key (`kiff-receipts-1`) built in; the Mac
+follows.
 
 ## The held purchase
 
