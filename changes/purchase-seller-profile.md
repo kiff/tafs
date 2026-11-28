@@ -1,0 +1,1 @@
+- **The purchase case names the seller's Stripe profile a token pays** (`merchant.stripe_profile` in `contracts/purchase.json`): read only from the checkout's own site, signed into the case, the token's seller, and kept on the receipt. The example case's digest and the answer vector change with it.
