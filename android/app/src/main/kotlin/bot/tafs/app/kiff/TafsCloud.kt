@@ -889,6 +889,16 @@ class TafsCloud(
     "/v1/home/coach-waiting/" + (session?.let { "${escaped(it)}/" } ?: "") + "set-aside",
     extra = proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap())))
 
+  /** Later on a sign-in that needs the owner soon (docs/api.md): hidden for everyone on the account until the next check. */
+  suspend fun signInLater(grant: String, site: String) {
+    send("POST", "/v1/needs-you/sign-in/${escaped(grant)}/${escaped(site)}/later", jsonBody())
+  }
+
+  /** Skip this run, held for a sign-in that stopped (docs/api.md): that run is dropped, and the schedules come back from the next. */
+  suspend fun skipHeldRun(id: String) {
+    send("POST", "/v1/tafs/${escaped(id)}/held-sign-in/skip", jsonBody())
+  }
+
   /** Drops a taf being set up: tafs cloud ends the Coach chat that drafted it, and Home stops listing it. Its Cards are revoked first. */
   suspend fun discardSettingUp(agent: String, signature: String) {
     send("POST", discardPath(agent), extra = mapOf("KIFF-Device-Signature" to signature))

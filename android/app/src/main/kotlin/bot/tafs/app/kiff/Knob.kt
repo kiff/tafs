@@ -216,7 +216,46 @@ data class ConnectApps(
    * is from a removed taf. Only for someone who manages Cards; empty otherwise, or from a tafs cloud without it.
    */
   @SerialName("removed_tafs") val removedTafs: List<RemovedTaf> = emptyList(),
+  /**
+   * How a taf uses websites, both ways at the account level (docs/api.md, "The two ways"), with or without a browser
+   * connection: `cloud` and `chrome`, each in tafs cloud's words. Read one at a time; one without its title is left out.
+   */
+  @Serializable(with = EachWay::class) val ways: List<Way> = emptyList(),
+  /** Each cloud connection's saved sign-in, per site, with its health in tafs cloud's words (docs/api.md, "Sign-in health"). */
+  @SerialName("saved_sign_ins") @Serializable(with = EachSavedSignIn::class) val savedSignIns: List<SavedSignIn> = emptyList(),
 ) {
+  /** A cloud connection's saved sign-in on one site: the tafs that use it, its health, and the action that signs in again. */
+  @Serializable
+  data class SavedSignIn(
+    val grant: String,
+    val site: String,
+    @SerialName("used_by") val usedBy: List<String> = emptyList(),
+    val health: SiteHealth,
+    @SerialName("sign_in") val signIn: SiteSignIn? = null,
+  )
+
+  /** A site's sign-in health, as tafs cloud decides it from planque's check: its state and its words. */
+  @Serializable
+  data class SiteHealth(
+    val state: String,
+    @SerialName("checked_at") val checkedAt: String? = null,
+    @SerialName("needs_you_by") val needsYouBy: String? = null,
+    val words: HealthWords,
+  ) {
+    /** Needs the owner (ends soon, or stopped working): its line in amber, and Sign in again offered. */
+    val needsYou: Boolean get() = state == "needs_you_soon" || state == "stopped"
+  }
+
+  @Serializable
+  data class HealthWords(val line: String, val why: String = "")
+
+  /** One way a taf uses websites, in tafs cloud's words: its title, its line, two facts and its state on this account. */
+  @Serializable
+  data class Way(val way: String, val words: WayWords)
+
+  @Serializable
+  data class WayWords(val title: String, val line: String = "", val facts: List<String> = emptyList(), val status: String? = null)
+
   @Serializable
   data class RemovedTaf(
     val agent: String,
@@ -314,3 +353,15 @@ data class ConnectStart(
 
 /** What a Connect apps row reads as: tafs cloud's `name`, else its `title` (a tafs cloud before `name`). */
 val ConnectApps.App.displayName: String get() = name?.takeIf { it.isNotBlank() } ?: title
+
+/** The ways, each read on its own: one that can't be read, or has no title, is left out, never the list. */
+internal object EachWay : EachReadable<ConnectApps.Way>(ConnectApps.Way.serializer()) {
+  override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): List<ConnectApps.Way> =
+    super.deserialize(decoder).filter { it.words.title.isNotBlank() }
+}
+
+/** Saved sign-ins, each read on its own: one without its line is left out, never the list. */
+internal object EachSavedSignIn : EachReadable<ConnectApps.SavedSignIn>(ConnectApps.SavedSignIn.serializer()) {
+  override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): List<ConnectApps.SavedSignIn> =
+    super.deserialize(decoder).filter { it.grant.isNotBlank() && it.site.isNotBlank() && it.health.words.line.isNotBlank() }
+}

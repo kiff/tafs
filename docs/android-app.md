@@ -1576,6 +1576,34 @@ implementation of §5.2 must give literally: the P-256 keys of private keys 1 an
 the first alone `LTJFF6`; RFC 4648's base32 vectors; what is read, the signed
 request, the window, each refusal) and `PairComputerTest` (the sheet).
 
+## How a taf uses websites, and sign-in health
+
+Browser batch 2 on Android (contract: [api.md](api.md), "How a taf uses websites: the two ways, and sign-in health"). Every
+word is tafs cloud's; the app works out nothing: not which way, not "soon", not whether a run waits.
+
+- **Connect apps** draws both ways at the account level (`ways[]`, `WayCard`): each way's title and line, its two facts and
+  its state on the account ("2 sign-ins saved"), above the apps while the search is empty. Under them, each saved sign-in in
+  the cloud browser (`saved_sign_ins[]`, `SavedSignInRow`): the site, the tafs that use it, and its health line. Where the
+  health says it needs the owner (`needs_you_soon` or `stopped`), the row offers its `sign_in` action, which opens planque's
+  live sign-in view for that connection (`AppModel.openSiteSignIn`). A way or a saved sign-in that can't be read, or has no
+  words, is left out.
+- **Needs you** lists Home's `sign_ins[]` (`SignInPanel`): `sign_in_soon` with Sign in again and Later, and `sign_in_stopped`
+  (a run waits) with Sign in again and Skip this run, each in tafs cloud's words, with its `why` under them. Later is
+  `POST /v1/needs-you/sign-in/{grant}/{site}/later` and Skip this run `POST /v1/tafs/{id}/held-sign-in/skip`, each read again
+  after (`AppModel.signInLater`, `skipHeldRun`). An item of a kind this build doesn't know, or without what its buttons need
+  (its site, its words, and for Skip this run the taf whose run it skips), isn't drawn. Each row is its kind, connection,
+  site and taf together (`SignInItem.key`), so two tafs held on one site are two rows; the same item sent twice is one.
+  Each counts in the app's own count when tafs cloud sends none.
+- **The taf's setup** (`GET /v1/tafs/{id}/setup`): a browser connection's sheet shows its way (`way_words`, and a `chrome`
+  connection's `chrome_name`) and each site of a `cloud` connection with its health line (`connections[].sites[]`,
+  `ConnectedSiteRow`), in amber with its `why` when it needs the owner. Signing in again is the connection's own Sign in
+  again, as before. Under the workflow, `browsing` (`BrowsingSection`) shows the way's title and line and Coach's reason
+  (`why`). Its `switch` button, shown only to someone who may ask Coach about the taf, opens Coach on the taf with `ask`
+  written in for the owner to send (`AppModel.askCoachAbout`). Nothing is sent, and the app changes no way itself: a new way
+  is a new grant and Card, approved as any Card change. A site without its name is left out; a health without its line, a
+  browsing without its way's title, or a switch without its button or ask isn't drawn, and the rest of the setup still
+  reads.
+
 ## Help: Chrome and the emailed code (Android follows)
 
 The words are in (`Words.Help`, from `help.json` in every language); Android's How tafs works does not draw the two sections yet. They follow iOS's rule: Chrome once planque lists Chromes, the emailed code once KIFF says it is available. Until then nothing calls `Words.Help`.

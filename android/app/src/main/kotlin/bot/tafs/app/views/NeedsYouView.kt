@@ -202,6 +202,8 @@ fun NeedsYouView(
   onOpenKnocks: ((String) -> Unit)? = null,
   /** A step handed over in the hosted browser: Open (true) or Not now (false). Null in the sample: no such rows. */
   onYourTurn: ((bot.tafs.app.kiff.YourTurn, Boolean) -> Unit)? = null,
+  /** A cloud browser sign-in that needs the owner: Sign in again, Later or Skip this run. Null in the sample: no such rows. */
+  onSignIn: ((bot.tafs.app.kiff.SignInItem, SignInAnswer) -> Unit)? = null,
 ) {
   val turns = if (onYourTurn == null) emptyList() else state.yourTurns
   // A knock at a taf's door waits for the owner too, as tafs cloud counts it in Needs you (as iOS lists it).
@@ -274,6 +276,9 @@ fun NeedsYouView(
       items(state.held, key = { it.id }) { call -> HeldCallCard(call, state, onAnswer) }
       // A step a taf handed its owner in the hosted browser, in tafs cloud's words: Open asks planque for its live view.
       if (onYourTurn != null) items(turns, key = { "yt|" + it.hand }) { turn -> YourTurnPanel(turn, busy = state.answeringTurn != null, answer = onYourTurn) }
+      if (onSignIn != null) items(state.signIns, key = { "si|" + it.key }) { item ->
+        SignInPanel(item, busy = state.answeringSignIn != null, answer = onSignIn)
+      }
       // Its knocks are answered on Activity (Do it, Pair them, Ignore), so the row opens the taf there, not on Chat.
       if (onOpenKnocks != null) items(knocked, key = { "kn|" + it.id }) { taf -> KnockedRow(taf) { onOpenKnocks(taf.id) } }
       // Its held replies are sent or not on Activity, where the exact text shows: the row opens the taf there.
@@ -612,6 +617,28 @@ private fun YourTurnPanel(turn: bot.tafs.app.kiff.YourTurn, busy: Boolean, answe
       PrimaryButton(w.open, { answer(turn, true) }, Modifier.weight(1f), enabled = !busy)
       OutlineButton(w.notNow, { answer(turn, false) }, Modifier.weight(1f), enabled = !busy)
     }
+  }
+}
+
+/** What the owner does with a sign-in that needs them. */
+enum class SignInAnswer { SignIn, Later, Skip }
+
+/**
+ * A cloud browser sign-in that needs the owner (docs/api.md), every word tafs cloud's: its title and line, Sign in again, then
+ * Later (ends soon) or Skip this run (stopped, a run waits), and why it's known.
+ */
+@Composable
+internal fun SignInPanel(item: bot.tafs.app.kiff.SignInItem, busy: Boolean, answer: (bot.tafs.app.kiff.SignInItem, SignInAnswer) -> Unit) {
+  val w = item.words
+  val tone = if (item.stopped) Theme.no else Theme.amber
+  Panel(stroke = tone.copy(alpha = 0.45f), modifier = Modifier.testTag("sign-in-" + item.key)) {
+    Text(bot.tafs.app.kiff.KiffMapping.visible(w.title), style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    if (w.line.isNotBlank()) Text(bot.tafs.app.kiff.KiffMapping.visible(w.line), style = scaled(14, color = Theme.ink))
+    PrimaryButton(w.signIn, { answer(item, SignInAnswer.SignIn) }, Modifier.fillMaxWidth(), enabled = !busy)
+    val second = if (item.stopped) w.skip to SignInAnswer.Skip else w.later to SignInAnswer.Later
+    OutlineButton(second.first, { answer(item, second.second) }, Modifier.fillMaxWidth(), enabled = !busy)
+    // How it's known, in tafs cloud's words: one page read with the saved sign-in, never a click.
+    if (w.why.isNotBlank()) Text(bot.tafs.app.kiff.KiffMapping.visible(w.why), style = scaled(12, color = Theme.dim))
   }
 }
 

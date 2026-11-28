@@ -178,6 +178,59 @@ data class YourTurn(
 @Serializable
 data class YourTurnTaf(val id: String = "", val name: String = "")
 
+/**
+ * A saved sign-in in the cloud browser that needs the owner (docs/api.md): `sign_in_soon` before it ends, or `sign_in_stopped`,
+ * which holds the taf's run until the owner signs in again or skips it. Every word is tafs cloud's.
+ */
+@Serializable
+data class SignInItem(
+  val kind: String,
+  val grant: String,
+  val site: String = "",
+  @SerialName("needs_you_by") val needsYouBy: String? = null,
+  @SerialName("checked_at") val checkedAt: String? = null,
+  @SerialName("run_at") val runAt: String? = null,
+  val taf: YourTurnTaf? = null,
+  val words: SignInItemWords,
+) {
+  val stopped: Boolean get() = kind == STOPPED
+
+  /**
+   * One row each: tafs cloud sends no id, and two tafs on one site are two items (each its own run held, or its own soon item), so
+   * the row is its kind, connection, site and taf together.
+   */
+  val key: String get() = listOf(kind, grant, site, taf?.id.orEmpty()).joinToString("|")
+
+  companion object {
+    const val SOON = "sign_in_soon"
+    const val STOPPED = "sign_in_stopped"
+  }
+}
+
+/** tafs cloud's words for a sign-in item: its title and line, Sign in again, Later (soon) or Skip this run (stopped), and why. */
+@Serializable
+data class SignInItemWords(
+  val title: String = "",
+  val line: String = "",
+  @SerialName("sign_in") val signIn: String = "",
+  val later: String = "",
+  val skip: String = "",
+  val why: String = "",
+)
+
+/**
+ * Sign-in items read one at a time: one of a kind this build doesn't know, or without what its buttons need, is left out. Later
+ * needs the site and its word; Skip this run needs the taf whose run it skips. A repeat of a row already read is left out too.
+ */
+internal object EachSignInItem : EachReadable<SignInItem>(SignInItem.serializer()) {
+  override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): List<SignInItem> =
+    super.deserialize(decoder).filter {
+      it.grant.isNotBlank() && it.site.isNotBlank() && it.words.title.isNotBlank() && it.words.signIn.isNotBlank() &&
+        ((it.kind == SignInItem.SOON && it.words.later.isNotBlank()) ||
+          (it.kind == SignInItem.STOPPED && it.words.skip.isNotBlank() && !it.taf?.id.isNullOrBlank()))
+    }.distinctBy { it.key }
+}
+
 /** tafs cloud's words: "Your turn on {site}", the taf's ask in quotes, "Open until {HH:MM}", Open and Not now. */
 @Serializable
 data class YourTurnWords(
@@ -241,6 +294,8 @@ data class Home(
   @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException>? = null,
   /** Steps a taf handed its owner in planque's hosted browser ("Your turn"), in tafs cloud's words; absent while it's off. */
   @SerialName("your_turns") @Serializable(with = EachYourTurn::class) val yourTurns: List<YourTurn>? = null,
+  /** A cloud browser sign-in that needs the owner, or holds a run (docs/api.md, "Needs you, and the run that waits"). */
+  @SerialName("sign_ins") @Serializable(with = EachSignInItem::class) val signIns: List<SignInItem>? = null,
   /** Steps a taf handed its owner, oldest first (docs/api.md › Your step): Needs you draws them. */
   @SerialName("your_steps") val yourSteps: List<YourStep>? = null,
   /** Coach's chats waiting on this person for an answer or approval, oldest first (docs/api.md › Coach waiting): Needs you draws them. */
