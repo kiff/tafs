@@ -644,6 +644,9 @@ private fun ApprovalCard(c: SetupComponent, setup: String?, state: AppState, ans
                 grant.needsReconnect -> Words.Connect.signInAgain
                 needsKey -> Words.Connect.giveKeyOnSheet
                 windowWords != null -> Words.Approval.approve
+                // Approve signs nothing on this card (`takes: "none"`): tafs cloud answers it with no step, or reads it again, so
+                // the button never names the fingerprint (docs/chat.md). The fingerprint is asked only for a step that signs.
+                c.signs?.nothingToSign == true -> Words.Approval.approve
                 else -> Words.Approval.approveWith(biometry)
               },
               { if (needsKey) actions.openKeySheet(c, draft?.version) else actions.approve(c, grant.digest, draft?.version) },

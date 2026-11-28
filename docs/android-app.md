@@ -2087,7 +2087,9 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   happens:** signing reads the same rule (`CoachWords.approvesAsTap`), so a card that says "Approve with your fingerprint"
   asks for it even while this phone holds a window, and its call doesn't ride on that window. Before, a card tafs cloud didn't
   mark could still go as a tap inside a held window, under the fingerprint's words (`PlanqueTest`,
-  `aCardThatSaysFingerprintAsksForItEvenInsideAWindow`).
+  `aCardThatSaysFingerprintAsksForItEvenInsideAWindow`). **A card whose Approve signs nothing** (`signs.takes: "none"`: already approved or nothing new, or a conversation
+  whose start tafs cloud can't read yet) says "Approve", never naming the fingerprint; the phone asks for one only when tafs
+  cloud's answer is a step that signs, so none is spent there (`SetupSigns.nothingToSign`, `NothingToSignCardTest`).
 - **One approval runs at a time** (`AppState.connecting`), and a card another approval holds says so, "Another approval
   is going through. Approve this one once it's done.", never a greyed button with no word (`approvalHeld`). A sign-in the
   owner came back from with no link (its vendor's page left) holds nothing: approving another card gives it up, as

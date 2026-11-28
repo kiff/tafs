@@ -1,0 +1,1 @@
+- **Android: an approval that signs nothing doesn't name the fingerprint.** A card tafs cloud marks `takes: "none"` (already approved, nothing new, or a conversation it can't read yet) says "Approve", not "Approve with your fingerprint"; no fingerprint was ever asked there ([android-app.md](docs/android-app.md)).
