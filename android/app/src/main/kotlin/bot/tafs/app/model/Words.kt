@@ -2326,6 +2326,7 @@ object Words {
       val nextStep: String get() = Res.s(R.string.sample_support_next_step)
       val promise7802: String get() = Res.s(R.string.sample_support_promise_7802)
       val promise7802Why: String get() = Res.s(R.string.sample_support_promise_7802_why)
+      val reply4821: String get() = Res.s(R.string.sample_support_reply_4821)
       val reply7781: String get() = Res.s(R.string.sample_support_reply_7781)
       val reply7781Why: String get() = Res.s(R.string.sample_support_reply_7781_why)
       val reply7790: String get() = Res.s(R.string.sample_support_reply_7790)

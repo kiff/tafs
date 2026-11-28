@@ -38,6 +38,7 @@
     "other": "{count} coisas aguardam por você em Precisa de você."
   },
   "sample.support.job": "Responder aos pedidos de suporte no próprio dia. Promessas de reembolso, desconto ou substituição esperam por você. Nunca enviar os dados de um cliente a outra pessoa.",
+  "sample.support.reply_4821": "Responder ao ticket #4821 prometendo uma troca",
   "sample.support.reply_7781_why": "Perguntou onde está o pedido; rastreamento em anexo",
   "sample.support.share_history": "Enviar o histórico de pedidos de um cliente para outro endereço"
 }
