@@ -14,6 +14,7 @@ const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
  */
 export const ptBR: Words = {
   ...pt,
+  door_reply_waiting: (who: string, taf: string) => `${taf} escreveu uma resposta para ${who}. Ela está esperando você enviar.`,
   work_working: "Em andamento",
   work_waiting_approval: "Aguardando sua aprovação",
   // The owner approved a held call after the run that paused on it had ended: nothing ran, and they are told so.
