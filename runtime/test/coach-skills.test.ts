@@ -41,11 +41,12 @@ describe("Coach's skills, as files", () => {
     expect(() => checkLock([{ ...one, skill_md: one.skill_md + "\nOne more line.\n" }], lock)).toThrow("a stored version never changes");
     const bumped = String(Number(one.version) + 1);
     const next = checkLock([{ ...one, version: bumped, skill_md: one.skill_md + "\nOne more line.\n" }], lock);
-    expect(Object.keys(next).sort()).toEqual([`${one.name}@${one.version}`, `${one.name}@${bumped}`]);
+    // Both sorted the same way: as text, "@10" comes before "@9".
+    expect(Object.keys(next).sort()).toEqual([`${one.name}@${one.version}`, `${one.name}@${bumped}`].sort());
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@8", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@40", "did-this-happen@1", "draft-the-card@56", "drive-the-app@3", "halting@1", "improve-a-taf@7", "name-the-tools@23", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@9", "ask-a-taf@3", "cards-and-holds@3", "connect-an-app@40", "did-this-happen@1", "draft-the-card@56", "drive-the-app@3", "halting@1", "improve-a-taf@7", "name-the-tools@23", "set-up-a-taf@16", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");

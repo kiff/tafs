@@ -60,7 +60,7 @@ export interface RequestView {
  */
 export interface SkippedView {
   due: string;
-  why: "missed" | "busy" | "switching" | "check_failed" | "retrying" | "unfinished" | "too_large" | "credits";
+  why: "missed" | "busy" | "switching" | "check_failed" | "retrying" | "unfinished" | "too_large" | "credits" | "sign_in";
   words: string;
 }
 
@@ -72,6 +72,8 @@ const SKIPPED_WHY: Record<string, SkippedView["why"]> = {
   skipped_missed: "missed", skipped_busy: "busy", skipped_switching: "switching",
   failed_check: "check_failed", failed_retrying: "retrying", failed_unfinished: "unfinished",
   skipped_too_large: "too_large", skipped_credits: "credits",
+  // A run its stopped sign-in held before it started (browser batch 2, kiff/agents' held_sign_in): no run, no failure.
+  held_sign_in: "sign_in",
 };
 
 /** How many skipped firings the page shows, newest first, and from how far back. */
@@ -96,7 +98,7 @@ export function skippedOf(fired: Fired[], zone: string, now: Date, lang: Lang = 
         missed: w.work_skipped_late, busy: w.work_skipped_busy, switching: w.work_skipped_switching,
         // A check of its own cause (health.ts checkCause) failed, the app wasn't unreadable.
         check_failed: checkCause(f.reason) ? w.work_check_stuck : w.work_check_failed, retrying: w.work_run_retrying, unfinished: w.work_run_unfinished,
-        too_large: w.work_skipped_too_large, credits: w.work_skipped_credits,
+        too_large: w.work_skipped_too_large, credits: w.work_skipped_credits, sign_in: w.work_skipped_sign_in,
       }[why](when);
       return { due: new Date(f.due).toISOString(), why, words };
     });

@@ -1,3 +1,6 @@
+import { type Browse, browseOf, browsingOf, wayOf, waysView } from "./browse.js";
+import { type Health as SignInHealth, healthOf as signInHealthOf, readHealth, type SiteVerdict } from "./sign-in-health.js";
+import { heldSignIn, laterKey, type SignInItem, signInItems } from "./sign-ins.js";
 import { checkMisfitSeen } from "./checkseen.js";
 import { anotherConnectionsTool, connectionsOfJob, connectionTail, grantSuffix, rulesAgreement } from "./rules.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
@@ -63,7 +66,7 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, reportKey, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
 import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, removedRecordTafs, removedTafsKey, type RemovedTaf } from "./record.js";
-import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
+import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, setupView, siteSignIn } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { inboxMarks, inboxState, markInbox } from "./watch-inbox.js";
@@ -466,10 +469,23 @@ export interface Taf {
    */
   sourcesBy?: Record<string, Source[]>;
   /**
+   * How it browses, as Coach picked it (browse.ts): the way and a reason from a closed list, never Coach's words. Its
+   * setup shows the reason only while it's for the way its browser grant has. `browseBy` keeps each version's, as
+   * `sourcesBy` does: the live one's becomes `browse` when it goes live.
+   */
+  browse?: Browse;
+  browseBy?: Record<string, Browse>;
+  /**
    * By version, the apps (lower case) whose new connection is another account kept beside the one in use (a second
    * inbox), as the owner told Coach and its result said (`keep_both`): that version's switch keeps both for those apps.
    */
   keepBothBy?: Record<string, string[]>;
+  /**
+   * Home's sign-in items the owner put off or skipped (browser batch 2): Later hides a site's "needs you soon" until planque's
+   * next check (by `grant|site`, the check it was put off at); Skip drops a held run's item (the held firing's due time).
+   */
+  signInLater?: Record<string, string>;
+  signInSkipped?: string;
   /**
    * A version's Card re-pointed at a new connection (a fresh sign-in for more access while the owner tried it), by version:
    * the draft its try and switch use in place of the one it was made with. Its own tools stay (keepsVersionTools).
@@ -812,6 +828,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts[1] === "connect" && parts[2] === "grants" && parts.length === 5 && parts[4] === "sheet" && method === "GET") {
     return grantSheet(event, decodeURIComponent(parts[3] ?? ""), await person(event, deps), deps);
+  }
+  if (parts[1] === "needs-you" && parts[2] === "sign-in" && parts.length === 6 && parts[5] === "later" && method === "POST") {
+    return signInLater(decodeURIComponent(parts[3] ?? ""), decodeURIComponent(parts[4] ?? ""), event, await person(event, deps), deps);
   }
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
   if (method === "GET" && parts.length === 2 && parts[1] === "recipes") return recipes(event, await person(event, deps), deps);
@@ -1192,6 +1211,16 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     await deps.tafs.put(me.tenantID, updated);
     await tellChange(me.tenantID, "taf", taf.id, deps);
     return { taf: await view(updated, me, deps, undefined, undefined, langOf(event)) };
+  }
+  if (parts.length === 5 && method === "POST" && action === "held-sign-in" && parts[4] === "skip") {
+    // Skip this run (browser batch 2): the run its stopped sign-in held is dropped, and Home lists it no more. The next
+    // firing is checked again: a sign-in still stopped holds it too.
+    await needTaf(event, me, taf, deps);
+    const held = heldSignIn(await deps.agents.scheduleFirings(me.tenantID, taf.id, HEALTH_FIRINGS).catch(() => [] as Fired[]), taf);
+    if (!held) throw new HTTPError(409, "no run of this taf waits for a sign-in");
+    await changeTaf(me.tenantID, taf.id, (cur) => ({ ...cur, signInSkipped: held.due }), deps);
+    await tellChange(me.tenantID, "taf", taf.id, deps);
+    return { skipped: held.due };
   }
   if (parts.length === 4 && method === "POST" && action === "run") {
     await needTaf(event, me, taf, deps);
@@ -1706,6 +1735,9 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   try { writesFor = writesForOf(body.writes_for); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   // No one named: the account's company, as KIFF names it (gap 18), never "for the company".
   writesFor ??= me.companyName ?? await companyOf(me.tenantID, deps);
+  // How it browses, as Coach picked it: a way and a reason from the closed list (browse.ts), refused otherwise.
+  let browse: Browse | undefined;
+  try { browse = browseOf(body.browse); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   if (body.job === undefined || body.job === CUSTOM) {
     const kickoff = str(body.kickoff).trim();
     if (!kickoff || kickoff.length > MAX_KICKOFF) throw new HTTPError(400, `a job of its own says what each run does (kickoff), in ${MAX_KICKOFF} characters at most`);
@@ -1841,7 +1873,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
     budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def), color,
     ...(unscheduled ? { unscheduled: true } : {}), ...(summary ? { summary } : {}), ...(work ? { work } : {}), ...(disclose?.length ? { disclose } : {}),
     ...(writesFor ? { writesFor } : {}), ...(ownerLang !== "en" ? { ownerLang } : {}), ...(workCheck ? { check: workCheck } : {}),
-    ...(tools.length ? { tools } : {}), ...(recipe ? { recipe } : {}),
+    ...(tools.length ? { tools } : {}), ...(recipe ? { recipe } : {}), ...(browse ? { browse } : {}),
   };
   try {
     await deps.agents.putAgent(me.tenantID, tafID, def);
@@ -5772,6 +5804,9 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   try { sources = sourcesOf(body.sources); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   if (sources && taf.job !== CUSTOM) throw new HTTPError(409, "a starter job's taf works from what its job names: only a taf with its own job takes sources");
   const built = sources ? { ...taf, work: { ...taf.work!, ...(sources.length ? { sources } : { sources: undefined }) } } : taf;
+  // How it browses under this version, when the improvement says (Coach's pick changed with the way): kept per version.
+  let browse: Browse | undefined;
+  try { browse = browseOf(body.browse); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   let def: AgentDefinition;
   try {
     // An improvement's sender name is this version's: the live taf takes it once it's installed (keepNotes).
@@ -5789,7 +5824,7 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   const listed = (summary && !taf.summaries) || (kept && !taf.sourcesBy) ? (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions : undefined;
   const live = listed ? listed.find((v) => v.live)?.n ?? (listed.length === 0 ? 1 : undefined) : undefined;
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", by_kind: "agent", ...(draft ? { draft } : {}) }));
-  if (from || tryWith || summary || kept || keepBoth) {
+  if (from || tryWith || summary || kept || browse || keepBoth) {
     // Kept so the same result hands over this version again, with what to
     // try it with and what it does. A record that changed meanwhile is read again once.
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -5799,7 +5834,9 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
       const summaries = summary ? { ...(live !== undefined && cur.summaries?.[String(live)] === undefined ? { [String(live)]: cur.summary ?? "" } : {}), ...cur.summaries, [String(n)]: summary } : undefined;
       // The live version keeps what it works from too, [] for nothing, so going back to it brings that back.
       const sourcesBy = kept ? { ...(live !== undefined && cur.sourcesBy?.[String(live)] === undefined ? { [String(live)]: cur.work?.sources ?? [] } : {}), ...cur.sourcesBy, [String(n)]: kept } : undefined;
-      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}), ...(sourcesBy ? { sourcesBy } : {}), ...(keepBoth ? { keepBothBy: { ...cur.keepBothBy, [String(n)]: keepBoth } } : {}) };
+      // A version that says how it browses keeps it; the live one's own pick is kept first, so going back brings it back.
+      const browseBy = browse ? { ...(live !== undefined && cur.browse && cur.browseBy?.[String(live)] === undefined ? { [String(live)]: cur.browse } : {}), ...cur.browseBy, [String(n)]: browse } : undefined;
+      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}), ...(sourcesBy ? { sourcesBy } : {}), ...(browseBy ? { browseBy } : {}), ...(keepBoth ? { keepBothBy: { ...cur.keepBothBy, [String(n)]: keepBoth } } : {}) };
       if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
     }
   }
@@ -5954,7 +5991,14 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   const seen = again && againAccount && againTafs.length ? await Promise.all([deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase)])
     .then(([records, access]) => new Set(records.filter((t) => !t.removing && listable(access, t.kiffAgent)).map((t) => t.name)), () => new Set<string>()) : new Set<string>();
   const shownTafs = againTafs.filter((n) => seen.has(n));
-  return { ...setup,
+  await syncSignIn(me, [taf], grants.grants, deps);
+  // Each site of a connected hosted-browser connection says how its saved sign-in held at planque's last check.
+  const health = await cloudHealth(event, me, grants.grants.filter((g) => g.request.agent === taf.kiffAgent), deps);
+  const connections = health.size ? setup.connections.map((c) => {
+    const bySite = health.get(c.id);
+    return bySite && c.sites ? { ...c, sites: c.sites.map((x) => (bySite.has(x.site) ? { ...x, health: bySite.get(x.site)! } : x)) } : c;
+  }) : setup.connections;
+  return { ...setup, connections,
     ...(again && againAccount && againTafs.length
       ? { connected_again: { grant: again.id, words: w.connected_again_as(appDisplayName(again, langOf(event)), againAccount, shownTafs, againTafs.length - shownTafs.length) } } : {}),
     ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title,
@@ -5962,6 +6006,8 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
         ? { fresh: true, words: w.connect_again_fresh_words(out.name, taf.name), done_words: w.connect_again_fresh_done(out.name) }
         : { words: connectAgainWords(w, out.signed_out_cause, out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) }) } } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}),
+    // How it uses websites (browse.ts): its browser connection's way, and the other way's button.
+    ...(() => { const b = browsingOf(taf, grants.grants.filter((g) => g.request.agent === taf.kiffAgent), langOf(event)); return b ? { browsing: b } : {}; })(),
     ...(grants.error ? { connections_error: grants.error } : {}) };
 }
 
@@ -6235,7 +6281,9 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   const ids = planned.map((_, i) => (i === 0 ? taf.id : `${taf.id}-t${i + 1}`));
   for (const [i, p] of planned.entries()) {
     const s: Schedule = { id: ids[i]!, agent: taf.id, cron: p.cron ?? "", time_zone: zone, input, enabled, ...(p.kind !== "cron" ? { kind: p.kind } : {}),
-      ...(p.at ? { at: instantIn(p.at, zone) } : {}), busy: p.busy, ...(p.skip ? { skip: p.skip } : {}), ...(p.check ? { check: p.check } : {}) };
+      ...(p.at ? { at: instantIn(p.at, zone) } : {}), busy: p.busy, ...(p.skip ? { skip: p.skip } : {}), ...(p.check ? { check: p.check } : {}),
+      // Every timetable of a browsing taf keeps its sign-in check (syncSignIn): a dial written anew never drops it.
+      ...(own?.sign_in ? { sign_in: own.sign_in } : {}) };
     const exists = i === 0 ? own : await deps.agents.getSchedule(me.tenantID, s.id).catch(() => undefined);
     await agentsCall(() => (exists ? deps.agents.updateSchedule(me.tenantID, s) : deps.agents.createSchedule(me.tenantID, s)));
   }
@@ -6422,13 +6470,16 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const sources = taf.sourcesBy?.[String(n)];
     if (sources && named.work) named.work = { ...named.work, ...(sources.length ? { sources } : { sources: undefined }) };
     if (named.work && !named.work.sources) delete named.work.sources;
+    // How it browses is the live version's, when one said it.
+    const pick = taf.browseBy?.[String(n)];
+    if (pick) named.browse = pick;
     const next: Taf = { ...named, definition: digest(definition(taf.id, jobOf(named), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
     const summary = taf.summaries?.[String(n)];
     if (summary) next.summary = summary; else if (summary === "") delete next.summary;
     if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition || next.summary !== taf.summary || next.writesFor !== taf.writesFor || next.ownerLang !== taf.ownerLang ||
-      JSON.stringify(next.work?.sources ?? []) !== JSON.stringify(taf.work?.sources ?? [])) await deps.tafs.putIf(me.tenantID, next, taf);
+      JSON.stringify(next.work?.sources ?? []) !== JSON.stringify(taf.work?.sources ?? []) || JSON.stringify(next.browse) !== JSON.stringify(taf.browse)) await deps.tafs.putIf(me.tenantID, next, taf);
   } catch (err) {
     // The switch stands; the next switch, or the upgrade's read-back, catches the record up.
     console.error(`keep notes: ${taf.id} v${n}:`, err);
@@ -8889,14 +8940,19 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const yourTurns = process.env.TAFS_HOSTED_HANDS === "on" && deps.planqueBase
     ? handsOf(await accountHands(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => []), tafs, langOf(event), me.timeZone ?? "UTC", now)
     : [];
+  // A hosted-browser connection's saved sign-in that needs the owner soon, or stopped and held a run (browser batch 2).
+  // Only for the tafs this person manages: Later and Skip need that (needTaf), so a viewer gets no item they can't act on,
+  // and none counts in their Needs you.
+  const managed = (t: Taf) => me.capabilities.includes("cards.manage") && (t.kiffAgent ? access.get(t.kiffAgent)?.manage === true : true);
+  const signIns = await homeSignIns(event, me, tafs.filter(managed), fired.filter((_, i) => managed(tafs[i]!)), deps, now);
   // What Needs you lists, counted once here so Home, the tab badge and the lock screen agree with it
   // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a
   // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
   // count what they have, rather than show a number that's short.
   const needsYou = unsure === undefined ? undefined : (() => {
     const parts = { held: kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length, unsure, unit: unitExceptions.length,
-      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, replies: heldReplies.length, steps: yourSteps.length, turns: yourTurns.length, coach: coachWaiting.length };
-    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.replies + parts.steps + parts.turns + parts.coach;
+      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, replies: heldReplies.length, steps: yourSteps.length, turns: yourTurns.length, coach: coachWaiting.length, sign_ins: signIns.length };
+    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.replies + parts.steps + parts.turns + parts.coach + parts.sign_ins;
     // Its parts, counts only, so a count the list doesn't show names where it comes from.
     if (count > 0) console.log(JSON.stringify({ event: "needs_you", tenant: me.tenantID, count, ...parts }));
     // In the person's language, as every line of tafs cloud's (docs/api.md, The person's language).
@@ -8906,7 +8962,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   })();
   // Which tafs matter now (docs/api.md, Home): something of theirs in Needs you, or a run or change in the last 24 hours. Worked
   // out here from what Home already read, so the iPad's sidebar and every other app show the same tafs.
-  const stepTafs = new Set([...yourSteps, ...yourTurns].map((s) => s.taf.id));
+  const stepTafs = new Set([...yourSteps, ...yourTurns, ...signIns].map((s) => s.taf.id));
   const withRelevance = listed.map((v, i) => {
     const t = tafs[i]!;
     const why = relevantNow({ held: (waiting.get(t.kiffAgent) ?? 0) > 0, step: stepTafs.has(t.id), knock: lights[i]!.some((d) => d.knocks > 0),
@@ -8919,7 +8975,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const labels = labelSet ? labelsView(labelSet, listed, labelsOf, langOf(event)) : [];
   return { tafs: withRelevance, headline, setting_up: settingUp, others, removing, limits,
     ...(labels.length ? { labels, labels_words: { all: wordsIn(langOf(event)).labels_all } } : {}), ...(doors.length ? { doors_offered: doors } : {}),
-    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(yourTurns.length ? { your_turns: yourTurns } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
+    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(yourTurns.length ? { your_turns: yourTurns } : {}), ...(signIns.length ? { sign_ins: signIns } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
 /**
@@ -9529,6 +9585,133 @@ const PLAN_KEPT_MS = 2 * 24 * 3600_000;
 const planKey = (tenant: string) => `${tenant}#plan`;
 
 /** What `work` gives within `ms`, or undefined: a read that's late is left out, never waited for. */
+/**
+ * Each scheduled taf's schedules name its hosted-browser connection (`sign_in {grant}`), so kiff/agents checks the saved
+ * sign-in before a firing starts a run (kiff/agents#712). Only tafs cloud knows the grant, from planque's grants read with
+ * the phone's proof, so it's kept in step whenever that read happens (the taf's setup, Connect apps): set when the taf has
+ * one connected hosted-browser connection, removed when it has none. Two such connections name none: no guess. A write that
+ * fails is logged and tried on the next read; it never fails the read. Only for someone who manages Cards.
+ */
+async function syncSignIn(me: KIFFIdentity, tafs: ReadonlyArray<Taf>, grants: ReadonlyArray<GrantView>, deps: Deps): Promise<void> {
+  if (!me.capabilities.includes("cards.manage")) return;
+  await Promise.all(tafs.filter((t) => !t.removing && t.job !== SETUP_JOB).map(async (taf) => {
+    const cloud = grants.filter((g) => g.request.agent === taf.kiffAgent && wayOf(g) === "cloud" && g.status === "connected");
+    const grant = cloud.length === 1 ? cloud[0]!.id : undefined;
+    const schedules = await deps.agents.listSchedules(me.tenantID, taf.id).catch(() => [] as Schedule[]);
+    for (const s of schedules) {
+      if (s.follow_up || s.sign_in?.grant === grant) continue;
+      const { sign_in: _old, ...rest } = s;
+      await deps.agents.updateSchedule(me.tenantID, grant ? { ...rest, sign_in: { grant } } : rest).catch((err: unknown) =>
+        console.warn(JSON.stringify({ msg: "sign_in not kept on schedule", taf: taf.id, schedule: s.id, why: (err as Error).message })));
+    }
+  }));
+}
+
+/**
+ * Home's sign-in items (sign-ins.ts): each taf's run a stopped sign-in holds, from its schedule's firings, and each site
+ * whose saved sign-in ends within 3 days, from what planque keeps of the connection its schedule names (`sign_in`), read
+ * with the person's own session. A read that fails or is late shows no "soon" item; a held run still shows.
+ */
+async function homeSignIns(event: HTTPEvent, me: KIFFIdentity, tafs: Taf[], fired: ReadonlyArray<readonly Fired[] | undefined>, deps: Deps, now: Date): Promise<SignInItem[]> {
+  const grantOf = new Map<string, string>();
+  const health = new Map<string, SiteVerdict[]>();
+  if (deps.planqueBase && tafs.length) {
+    const schedules = await within(deps.agents.listSchedules(me.tenantID).catch(() => [] as Schedule[]), SIGN_IN_HEALTH_MS) ?? [];
+    const ours = new Set(tafs.map((t) => t.id));
+    for (const s of schedules) if (s.sign_in?.grant && ours.has(s.agent) && !grantOf.has(s.agent)) grantOf.set(s.agent, s.sign_in.grant);
+    await Promise.all([...new Set(grantOf.values())].map(async (grant) => {
+      const read = await within(readHealth(deps.fetch ?? fetch, deps.planqueBase!, me.tenantID, bearer(event), grant).catch(() => undefined), SIGN_IN_HEALTH_MS);
+      if (read) health.set(grant, read);
+    }));
+  }
+  return signInItems({ tafs, fired, grantOf, health, now, timeZone: me.timeZone ?? "UTC", lang: langOf(event) });
+}
+
+/**
+ * Later on a sign-in that needs the owner soon: hidden for everyone on the account until planque's next check of that
+ * site, kept on each taf whose schedule names the connection. Answers the check it was put off at.
+ */
+async function signInLater(grant: string, site: string, event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(grant) || !site || site.length > 253) throw new HTTPError(400, "name a connection and one of its sites");
+  if (!deps.planqueBase) throw new HTTPError(503, "sign-in checks aren't set up here");
+  const verdict = (await readHealth(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), grant).catch(() => {
+    throw new HTTPError(502, "planque couldn't say how that sign-in is; try again");
+  })).find((v) => v.site === site.toLowerCase());
+  if (!verdict?.checked_at) throw new HTTPError(404, "that site has no check to put off");
+  const schedules = await agentsCall(() => deps.agents.listSchedules(me.tenantID));
+  const tafIDs = new Set(schedules.filter((s) => s.sign_in?.grant === grant).map((s) => s.agent));
+  const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => tafIDs.has(t.id) && !t.removing);
+  if (!tafs.length) throw new HTTPError(404, "no taf of this account uses that connection");
+  const key = laterKey(grant, verdict.site);
+  // As Home compares it: the check's time as healthOf writes it.
+  const at = new Date(verdict.checked_at);
+  if (Number.isNaN(at.getTime())) throw new HTTPError(502, "planque's check has no readable time");
+  const checked = at.toISOString();
+  // Every taf is checked before any is written, so a person who manages one but not another changes none.
+  for (const t of tafs) await needTaf(event, me, t, deps);
+  for (const t of tafs) {
+    await changeTaf(me.tenantID, t.id, (cur) => ({ ...cur, signInLater: { ...cur.signInLater, [key]: checked } }), deps);
+    await tellChange(me.tenantID, "taf", t.id, deps);
+  }
+  return { later: { grant, site: verdict.site, until_check_after: checked } };
+}
+
+/**
+ * Writes one change to a taf on a fresh read, only over the record it read (putIf), read again and tried again when
+ * something else wrote it meanwhile (a re-point's draft, a version going live), so neither write drops the other's.
+ * 404 when the taf is gone; 503 when it kept changing.
+ */
+async function changeTaf(tenant: string, id: string, change: (cur: Taf) => Taf, deps: Deps): Promise<Taf> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const cur = await deps.tafs.get(tenant, id);
+    if (!cur) throw new HTTPError(404, "not found");
+    const next = change(cur);
+    if (await deps.tafs.putIf(tenant, next, cur)) return next;
+  }
+  throw new HTTPError(503, "the taf kept changing: try again");
+}
+
+/** How long a read waits for planque's kept sign-in checks before it's drawn without them. */
+const SIGN_IN_HEALTH_MS = 2500;
+
+/**
+ * The health of each site of the given grants' connected hosted-browser connections, by grant then site, from what planque
+ * keeps (`GET …/health`, the person's own session, which runs no check). A connection planque can't answer for in time is
+ * left out, so it's drawn with no health rather than a guess. Days and times in the account's zone.
+ */
+async function cloudHealth(event: HTTPEvent, me: KIFFIdentity, grants: ReadonlyArray<GrantView>, deps: Deps): Promise<Map<string, Map<string, SignInHealth>>> {
+  const out = new Map<string, Map<string, SignInHealth>>();
+  if (!deps.planqueBase) return out;
+  const cloud = grants.filter((g) => wayOf(g) === "cloud" && g.status === "connected");
+  const now = deps.now?.() ?? new Date();
+  const lang = langOf(event);
+  await Promise.all(cloud.map(async (g) => {
+    const read = await within(readHealth(deps.fetch ?? fetch, deps.planqueBase!, me.tenantID, bearer(event), g.id).catch((err: unknown) => {
+      console.warn(JSON.stringify({ msg: "sign-in health unread", grant: g.id, why: (err as Error).message }));
+      return undefined;
+    }), SIGN_IN_HEALTH_MS);
+    if (read) out.set(g.id, new Map(read.map((v) => [v.site, signInHealthOf(v, now, me.timeZone ?? "UTC", lang)])));
+  }));
+  return out;
+}
+
+/**
+ * Connect apps' saved sign-ins (docs/api.md, "Sign-in health"): one row per connected hosted-browser connection and site,
+ * with the tafs that use it, its health from planque's last check, and Sign in again (planque's live view). A connection in
+ * the owner's Chrome keeps no sign-in at tafs, so it has none.
+ */
+async function savedSignIns(event: HTTPEvent, me: KIFFIdentity, grants: ReadonlyArray<GrantView>, deps: Deps): Promise<Array<{ grant: string; site: string; used_by: string[]; health?: SignInHealth; sign_in: { title: string; words: string } }>> {
+  const cloud = grants.filter((g) => wayOf(g) === "cloud" && g.status === "connected");
+  if (!cloud.length) return [];
+  const health = await cloudHealth(event, me, cloud, deps);
+  const signIn = siteSignIn(langOf(event));
+  return cloud.flatMap((g) => (g.request.browser?.sites ?? []).map((site) => {
+    const h = health.get(g.id)?.get(site);
+    return { grant: g.id, site, used_by: (g.used_by ?? []).filter((n): n is string => typeof n === "string" && n.trim() !== "").map((n) => n.trim()),
+      ...(h ? { health: h } : {}), sign_in: signIn };
+  }));
+}
+
 async function within<T>(work: Promise<T>, ms: number): Promise<T | undefined> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const late = new Promise<undefined>((resolve) => { timer = setTimeout(() => resolve(undefined), ms); });
@@ -11280,7 +11463,7 @@ export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; p
  * the card with. Throws only what may pass on a retry (a server error).
  */
 /** What an improvement result names: the taf it improves, and the version it describes. */
-interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; writes_for?: unknown; sources?: unknown; keep_both?: unknown; repoints?: unknown; withdraws?: unknown; tools?: string[] }
+interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; writes_for?: unknown; sources?: unknown; browse?: unknown; keep_both?: unknown; repoints?: unknown; withdraws?: unknown; tools?: string[] }
 
 /**
  * The version an improvement result hands over, made once per result for the person whose run it
@@ -11342,6 +11525,7 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
     const { version } = await makeVersion({
       note: want.note, notes: want.notes, draft: want.draft, try: want.try, agent: want.agent, from: `${cardID}|${what}`, ...(writesFor ? { writes_for: writesFor } : {}),
       ...(want.sources !== undefined ? { sources: want.sources } : {}),
+      ...(want.browse !== undefined ? { browse: want.browse } : {}),
       ...(typeof want.summary === "string" ? { summary: want.summary } : {}),
       ...(want.keep_both !== undefined ? { keep_both: want.keep_both } : {}),
     }, me, taf, deps);
@@ -11407,7 +11591,7 @@ async function sendingCheck(tenant: string, agent: string | undefined, tools: st
  * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` with the `check` its schedule reads first, or `unscheduled`. A `job` naming
  * one of the five starter jobs is refused (makeTaf), and Coach is told why.
  */
-interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; sources?: unknown; cron?: string; check?: unknown; disclose?: unknown; writes_for?: unknown; tools?: string[]; recipe?: unknown }
+interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; sources?: unknown; cron?: string; check?: unknown; disclose?: unknown; writes_for?: unknown; browse?: unknown; tools?: string[]; recipe?: unknown }
 
 async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
@@ -11442,6 +11626,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       ...(taf.check !== undefined ? { check: taf.check } : {}),
       ...(Array.isArray(taf.disclose) ? { disclose: taf.disclose } : {}),
       ...(typeof taf.writes_for === "string" ? { writes_for: taf.writes_for } : {}),
+      ...(taf.browse !== undefined ? { browse: taf.browse } : {}),
       ...(taf.tools ? { tools: taf.tools } : {}),
       // The recipe Coach built it from, when the result names one: kept for its estimate.
       ...(typeof taf.recipe === "string" ? { recipe: taf.recipe } : {}),
@@ -11985,7 +12170,12 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       // A proof is tafs cloud's for the gallery (connectsOf), never served to the apps.
       const apps = page.apps.map(({ icon, proved: _proof, ...app }) => ({ ...(icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app), ...appRow(app, me, uses, langOf(event)), ...needFields(app, needs) }));
       const { proved: _proved, ...listed } = page;
-      return { ...listed, apps, removed_tafs: removed };
+      // The two ways a taf browses, at the account level, with or without a browser connection (browse.ts).
+      const ways = waysView((await reads())?.grants, langOf(event));
+      const saved = await savedSignIns(event, me, (await reads())?.grants ?? [], deps);
+      const granted = (await reads())?.grants;
+      if (granted && me.capabilities.includes("cards.manage")) await syncSignIn(me, await deps.tafs.list(me.tenantID).catch(() => []), granted, deps);
+      return { ...listed, apps, ways, ...(saved.length ? { saved_sign_ins: saved } : {}), removed_tafs: removed };
     }
     if (parts.length === 4 && method === "POST") {
       need(me, "cards.manage");

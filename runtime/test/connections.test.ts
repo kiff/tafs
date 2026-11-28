@@ -213,3 +213,21 @@ describe("connections no taf uses", () => {
     expect(chatLeftAgents(requestedAgents(events), conns, new Set(), "")).toEqual([]);
   });
 });
+
+// Browser batch 2: a browser connection in the owner's Chrome says so (kiff/planque#515), so Coach's pick is that
+// connection's; one that says no driver is never read as the hosted browser (a planque from before the field).
+describe("a browser connection's way", () => {
+  it("is read only as planque says it, and named on Coach's line only for the owner's Chrome", async () => {
+    const answer = { connections: [
+      { agent: "files", vendor: "Websites", kind: "browser", status: "connected", sites: ["books.example"], driver: "extension" },
+      { agent: "invoices", vendor: "Websites", kind: "browser", status: "connected", sites: ["supplier-portal.example"] },
+      { agent: "other", vendor: "Websites", kind: "browser", status: "connected", sites: ["a.example"], driver: "something" },
+    ] };
+    const conns = await accountConnections(async () => new Response(JSON.stringify(answer)), "https://planque.test", "t1", "tok");
+    expect(conns.map((c) => c.driver)).toEqual(["extension", undefined, undefined]);
+    const lines = connectionLines(conns, new Map([["files", "Month end"], ["invoices", "File invoices"], ["other", "Other"]]));
+    expect(lines[0]).toContain("in the owner's Chrome (browse way chrome)");
+    expect(lines[1]).not.toContain("Chrome");
+    expect(lines[1]).not.toContain("way");
+  });
+});

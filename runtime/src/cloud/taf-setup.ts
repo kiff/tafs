@@ -5,6 +5,7 @@ import { amountWords, type ActivityCall, activityMatches } from "./activity.js";
 import { vendorName } from "./steps.js";
 import { type Lang, plural, wordsIn } from "./words/index.js";
 import { type Fetch } from "./kiff.js";
+import { type Way, wayFields } from "./browse.js";
 
 export interface GrantView {
   id: string; vendor?: string; status: string; status_words?: string; signed_in?: boolean; entry?: string;
@@ -16,7 +17,9 @@ export interface GrantView {
   provider?: string;
   /** A managed connection's vendor account, as the provider names it, and its mode in planque's words ("Live", "Test", ...). */
   account_name?: string; mode_words?: string;
-  request: { agent: string; server?: string; tools?: Array<{ tool: string; name?: string; title?: string; setup_reads?: boolean }> };
+  request: { agent: string; server?: string; tools?: Array<{ tool: string; name?: string; title?: string; setup_reads?: boolean }>;
+    /** A browser grant's limits, as the owner approved them (kiff/planque#86): its sites, and `driver: "extension"` for their own Chrome. */
+    browser?: { sites?: string[]; driver?: string; chrome_name?: string } };
   /** The connection's tools as KIFF names them, once planque has connected them: the Card's actions. */
   tools?: string[];
   /**
@@ -139,6 +142,10 @@ export interface SetupView {
     workflow_words?: string;
     /** A connected browser connection's sign-in to a site (kiff/planque#86): the action's title and its line. */
     site_sign_in?: { title: string; words: string };
+    /** A browser connection's way (browse.ts): `cloud` or `chrome`, with its words, its paired Chrome's name and its sites. */
+    way?: Way; way_words?: { title: string; line: string }; chrome_name?: string;
+    /** Its sites; on a connected hosted-browser connection, each with its saved sign-in's health (sign-in-health.ts). */
+    sites?: Array<{ site: string; health?: import("./sign-in-health.js").Health }>;
     workflow_steps: Array<{ number: number; label: string; words: string; running: boolean }>;
     steps: number[]; running: boolean; stats: { calls: number; done: number; held: number; words: string; complete: boolean; activity_query: string } }>;
   workflow: { title: string; summary: string; steps: Array<{ number: number; label: string; words: string; app?: string; grant?: string; running: boolean }>; running_step?: number };
@@ -187,6 +194,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
       ...(custodyWords(g.custody, lang) ? { custody_words: custodyWords(g.custody, lang) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
       ...(accountWords(g) ? { account_words: accountWords(g) } : {}),
       ...(g.provider === "browser" && g.status === "connected" ? { site_sign_in: siteSignIn(lang) } : {}),
+      ...wayFields(g, lang),
       action_words: actions.length ? w.setup_actions(actions.length, plural(lang, actions.length)) : w.setup_choose_actions,
       actions, steps: steps.filter((s) => s.grant === g.id).map((s) => s.number), workflow_steps: steps.filter((s) => s.grant === g.id),
       running: Boolean(input.running && tools.has(input.running)),
