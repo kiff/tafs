@@ -366,10 +366,6 @@ object Chat {
   }
 
   /**
-   * The live answer's key: the key its words will have once they're in the thread, the run's next message; [fallback] until the
-   * stream names the run.
-   */
-  /**
    * Whether something new waits below the part of the thread on screen, for the dot on the way to the end (as on the iPad): set
    * when something [arrived] (a row, or the answer's words) while the thread wasn't following it, cleared once the end is in
    * view. Otherwise it stays as it [was].
@@ -380,6 +376,10 @@ object Chat {
     else -> was
   }
 
+  /**
+   * The live answer's key: the key its words will have once they're in the thread, the run's next message; [fallback] until the
+   * stream names the run.
+   */
   fun liveKey(items: List<ChatItem>, live: LiveAnswer?, fallback: String): String {
     val run = live?.run ?: return fallback
     val written = items.count { (it as? ChatItem.Message)?.message?.let { m -> m.from == ChatMessage.From.taf && m.serverId?.let(::runOf) == run } == true }
