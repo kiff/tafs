@@ -459,7 +459,9 @@ struct HomeSplitView: View {
             Label(title, systemImage: icon).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 .modifier(drives(title, screen))
         }
-        .badge(badge)
+        // A badge only where there's a count: `.badge(0)` on a sidebar row left one tap unselected on iPadOS 26, the List
+        // clearing its own selection right after setting it (kiff/tafs#2297).
+        .modifier(CountBadge(count: badge))
         .accessibilityIdentifier("sidebar." + title)
     }
 
@@ -615,5 +617,13 @@ struct HomeSplitView: View {
         .driveWords(Words.Settings.title)
         .accessibilityLabel(model.accountLabel.map { Words.Settings.accountNamed(account: "\($0)") } ?? Words.Settings.title)
         .accessibilityIdentifier("bar.Account")
+    }
+}
+
+/// A sidebar row's count as a badge, and nothing at all for none.
+private struct CountBadge: ViewModifier {
+    let count: Int
+    @ViewBuilder func body(content: Content) -> some View {
+        if count > 0 { content.badge(count) } else { content }
     }
 }
