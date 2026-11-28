@@ -214,6 +214,12 @@ export interface HeldReply {
   at: string;
   /** What the content check found, for the owner (guard.ts): why it couldn't go on its own. */
   concerns?: string[];
+  /**
+   * The taf couldn't do what was asked (`no_app`: the app it needs isn't connected, as the taf said with
+   * CANT_DO; `unfinished`: its run stopped before an answer). Nothing was drafted, so `text` is empty: the owner
+   * connects an app, answers in their own words, or ignores it, and the writer gets nothing until then.
+   */
+  cant_do?: "no_app" | "unfinished";
 }
 
 /**

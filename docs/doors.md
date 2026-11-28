@@ -429,5 +429,11 @@ A door's message reaches the taf with a first line saying who wrote and that the
 to someone outside the company whom the owner lets give it work (`doorMessage`): a paired sender, since a
 stranger's message is a knock and never starts a run. It tells the taf to do what they ask within its job, reads included, and to answer
 with what they asked for in plain words. A paired sender asking for the last three charges gets them;
-refusing them would make the door useless for reads. When something failed, it says only that it
-can't be done now and the owner will follow up: never an error, a code, a tool, an id, or how anything is connected. The details stay in the owner's chat.
+refusing them would make the door useless for reads. When it can't do what they ask (the app it needs isn't
+connected, it has no tool for it, or something failed), it answers with the one line `TAFS_CANT_DO` and writes them
+nothing. Its run stopping before an answer counts the same. Either way tafs drafts no failure to the writer, whatever
+the door's replies are set to: their message waits in Needs you ("{taf} can't do what {who} asked: the app it needs
+isn't connected…", or "couldn't finish"), with **Connect an app** (only when an app is missing; it opens Coach's
+add-app flow), **Answer them yourself** (the owner's own words, sent with Send, which signs the SHA-256 of that text),
+and **Ignore**. The doors list carries it as a reply with `cant_do` (`no_app` or `unfinished`), no `text`, and those
+words. The writer gets nothing until the owner acts.
