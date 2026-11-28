@@ -1,0 +1,1 @@
+- **A purchase receipt that doesn't check out never says "Bought" (Android).** A receipt the phone couldn't check shows that first, with KIFF's words muted under it; one that was changed shows only that it doesn't check out. See [Purchases](docs/purchases.md).

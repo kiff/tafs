@@ -79,8 +79,9 @@ and its sheet reads the receipt from there (`PurchaseReceipt`, `AppModel.purchas
   keys **pinned in the app** (`PurchaseReceipt.PINNED`), as the Record's own receipt signer is pinned (`ReceiptCheck.KIFF_SIGNER`).
   - **Never against a key fetched with the receipt.** KIFF's published key set is for others; a new key ships in the app before
     KIFF signs with it, and a revoked one leaves in a release.
-  - **Checked:** "KIFF's receipt · checked on this phone".
-  - **Changed, or another case's:** "KIFF's receipt doesn't check out".
+  - **Checked:** KIFF's state is the headline ("Bought"), then its lines, then "KIFF's receipt · checked on this phone".
+  - **Not checked** (a key this app doesn't hold): that line comes first, and KIFF's words follow muted, never as a headline.
+  - **Changed, or another case's:** only "KIFF's receipt doesn't check out" and why. Its words aren't drawn, since they can't be relied on.
   - **A key this app doesn't hold:** "It's signed in a way this app doesn't know". It's never shown as checked, and that includes
     every receipt until KIFF's first key is pinned.
 - **Bouncy Castle** does the Ed25519 check (Android 11 has none of its own). `proguard-rules.pro` keeps it whole for release.

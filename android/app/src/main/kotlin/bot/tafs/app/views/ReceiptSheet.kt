@@ -120,15 +120,21 @@ private fun PurchaseReceiptPanel(case: String, state: AppState) {
   val (receipt, check) = r
   val ok = check == bot.tafs.app.kiff.PurchaseReceipt.Check.Verified
   Panel(stroke = if (ok) Theme.ok.copy(alpha = 0.4f) else Theme.line, modifier = Modifier.testTag("purchase-receipt")) {
-    Text(receipt.words.state, style = scaled(15, FontWeight.SemiBold, Theme.ink))
-    Text(receipt.words.line, style = scaled(14, color = Theme.ink))
-    receipt.words.lines.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
     when (check) {
+      // Checked: KIFF's state as the headline, then its lines, then what the check found.
       bot.tafs.app.kiff.PurchaseReceipt.Check.Verified -> {
+        Text(receipt.words.state, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+        Text(receipt.words.line, style = scaled(14, color = Theme.ink))
+        receipt.words.lines.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
         Text(Words.Receipt.checkedOnDevice(bot.tafs.app.model.ThisDevice.word), style = scaled(13, FontWeight.SemiBold, Theme.ok))
         Text(Words.Receipt.checkedWhy, style = scaled(12, color = Theme.soft))
       }
-      bot.tafs.app.kiff.PurchaseReceipt.Check.UnknownKey -> Text(Words.Receipt.Check.unknownSignature, style = scaled(13, color = Theme.soft))
+      // Not checked (a key this app doesn't hold): that first, then KIFF's words, muted, never a headline.
+      bot.tafs.app.kiff.PurchaseReceipt.Check.UnknownKey -> {
+        Text(Words.Receipt.Check.unknownSignature, style = scaled(13, FontWeight.SemiBold, Theme.soft))
+        (listOf(receipt.words.state, receipt.words.line) + receipt.words.lines).forEach { Text(it, style = scaled(13, color = Theme.soft)) }
+      }
+      // Changed, or another case's: its words can't be relied on, so only what the check found is drawn.
       bot.tafs.app.kiff.PurchaseReceipt.Check.Changed, bot.tafs.app.kiff.PurchaseReceipt.Check.OtherCase -> {
         Text(Words.Receipt.doesntCheckOut, style = scaled(13, FontWeight.SemiBold, Theme.no))
         Text(Words.Receipt.changed, style = scaled(12, color = Theme.soft))

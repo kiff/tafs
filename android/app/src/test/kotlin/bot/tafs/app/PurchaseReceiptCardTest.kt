@@ -20,6 +20,7 @@ import bot.tafs.app.views.ReceiptSheet
 import java.io.File
 import kotlinx.serialization.json.jsonObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -77,12 +78,17 @@ class PurchaseReceiptCardTest {
     draw(PurchaseReceipt.Check.UnknownKey)
     compose.onNodeWithText("Bought").assertExists()
     compose.onNodeWithText(Words.Receipt.Check.unknownSignature).assertExists()
+    // Said first: the "not checked" line sits above KIFF's state.
+    val top = { text: String -> compose.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.top }
+    assertTrue(top(Words.Receipt.Check.unknownSignature) < top("Bought"))
     compose.onAllNodesWithText(Words.Receipt.checkedOnDevice(bot.tafs.app.model.ThisDevice.word)).assertCountEquals(0)
   }
 
   @Test fun aChangedReceiptSaysItDoesntCheckOut() {
     draw(PurchaseReceipt.Check.Changed)
     compose.onNodeWithText(Words.Receipt.doesntCheckOut).assertExists()
+    // Its words can't be relied on: no "Bought" drawn.
+    compose.onAllNodesWithText("Bought").assertCountEquals(0)
     compose.onAllNodesWithText(Words.Receipt.checkedOnDevice(bot.tafs.app.model.ThisDevice.word)).assertCountEquals(0)
   }
 }
