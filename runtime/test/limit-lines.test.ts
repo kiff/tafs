@@ -33,6 +33,35 @@ describe("limit lines from the agreed figures", () => {
     // A per-item figure with no item named, no title, and a language without its words.
     expect(limitLine({ quantity: "count", window: "calendar_day", limit: 1, per: "order_id" }, "ask", { title: "Draft invoices" }, "en")).toBeUndefined();
     expect(limitLine({ quantity: "count", window: "calendar_day", limit: 10 }, "ask", { title: " " }, "en")).toBeUndefined();
-    expect(limitLine({ quantity: "count", window: "calendar_day", limit: 10 }, "ask", { title: "Refunds" }, "de")).toBeUndefined();
+    expect(limitLine({ quantity: "count", window: "calendar_day", limit: 10 }, "ask", { title: "Refunds" }, "ko")).toBeUndefined();
+  });
+  it("says the lines in the eight languages and pt-BR, in each one's number format", () => {
+    const plain = (s?: string) => s?.replace(/[\u00a0\u202f]/g, " ");
+    const sum = { quantity: "sum(amount)", window: "call", limit: 5000 } as const;
+    const perDay = { quantity: "count", window: "calendar_day", limit: 1000, per: "order_id" } as const;
+    const zero = { quantity: "count", window: "calendar_day", limit: 0 } as const;
+    const cases: [Parameters<typeof limitLine>[3], string, string, string, string, string][] = [
+      ["de", "Rückerstattungen", "Bestellung", "Rückerstattungen: bis zu 50,00 € jedes Mal; für mehr fragt er dich",
+        "Rückerstattungen: bis zu 1.000 pro Tag pro Bestellung; mehr wird abgelehnt", "Rückerstattungen: fragt dich jedes Mal zuerst"],
+      ["fr", "remboursements", "commande", "Remboursements : jusqu'à 50,00 € à chaque fois; au-delà, il vous demande",
+        "Remboursements : jusqu'à 1 000 par jour par commande; au-delà, c'est refusé", "Remboursements : toujours soumis à votre accord"],
+      ["es", "Reembolsos", "pedido", "Reembolsos: hasta 50,00 € cada vez; por encima, te lo pregunta",
+        "Reembolsos: hasta 1000 al día por pedido; por encima, se rechaza", "Reembolsos: siempre te lo pregunta antes"],
+      ["it", "Rimborsi", "ordine", "Rimborsi: fino a 50,00 € ogni volta; oltre, chiede a te",
+        "Rimborsi: fino a 1000 al giorno per ordine; oltre, viene rifiutato", "Rimborsi: chiede sempre prima a te"],
+      ["pt", "Reembolsos", "encomenda", "Reembolsos: até 50,00 € de cada vez; acima disso, pergunta-lhe",
+        "Reembolsos: até 1000 por dia por encomenda; acima disso, é recusado", "Reembolsos: pergunta-lhe sempre antes"],
+      ["pt-BR", "Reembolsos", "pedido", "Reembolsos: até € 50,00 de cada vez; acima disso, pergunta a você",
+        "Reembolsos: até 1.000 por dia por pedido; acima disso, é recusado", "Reembolsos: sempre pergunta a você antes"],
+      ["nl", "Terugbetalingen", "bestelling", "Terugbetalingen: tot € 50,00 per keer; daarboven vraagt het je",
+        "Terugbetalingen: tot 1.000 per dag per bestelling; daarboven wordt het geweigerd", "Terugbetalingen: vraagt het je altijd eerst"],
+      ["pl", "Zwroty", "zamówienie", "Zwroty: do 50,00 € za każdym razem; powyżej tej granicy pyta Ciebie",
+        "Zwroty: do 1000 dziennie (osobno dla każdej pozycji: zamówienie); powyżej tej granicy jest odrzucane", "Zwroty: zawsze najpierw pyta Ciebie"],
+    ];
+    for (const [lang, title, perLabel, money, count, none] of cases) {
+      expect(plain(limitLine(sum, "ask", { title, currency: "EUR" }, lang))).toBe(money);
+      expect(plain(limitLine(perDay, "refuse", { title, perLabel }, lang))).toBe(count);
+      expect(plain(limitLine(zero, "ask", { title }, lang))).toBe(none);
+    }
   });
 });

@@ -34,17 +34,81 @@ interface LineWords {
 const EN_WINDOW: Record<Window, string> = {
   call: "each time", calendar_day: "a day", rolling_1h: "an hour", rolling_24h: "in 24 hours", rolling_7d: "in 7 days", lifetime: "in all",
 };
+const DE_WINDOW: Record<Window, string> = {
+  call: "jedes Mal", calendar_day: "pro Tag", rolling_1h: "pro Stunde", rolling_24h: "in 24 Stunden", rolling_7d: "in 7 Tagen", lifetime: "insgesamt",
+};
+const FR_WINDOW: Record<Window, string> = {
+  call: "à chaque fois", calendar_day: "par jour", rolling_1h: "par heure", rolling_24h: "sur 24 heures", rolling_7d: "sur 7 jours", lifetime: "au total",
+};
+const ES_WINDOW: Record<Window, string> = {
+  call: "cada vez", calendar_day: "al día", rolling_1h: "por hora", rolling_24h: "en 24 horas", rolling_7d: "en 7 días", lifetime: "en total",
+};
+const IT_WINDOW: Record<Window, string> = {
+  call: "ogni volta", calendar_day: "al giorno", rolling_1h: "all'ora", rolling_24h: "in 24 ore", rolling_7d: "in 7 giorni", lifetime: "in totale",
+};
+const PT_WINDOW: Record<Window, string> = {
+  call: "de cada vez", calendar_day: "por dia", rolling_1h: "por hora", rolling_24h: "em 24 horas", rolling_7d: "em 7 dias", lifetime: "no total",
+};
+const NL_WINDOW: Record<Window, string> = {
+  call: "per keer", calendar_day: "per dag", rolling_1h: "per uur", rolling_24h: "binnen 24 uur", rolling_7d: "binnen 7 dagen", lifetime: "in totaal",
+};
+const PL_WINDOW: Record<Window, string> = {
+  call: "za każdym razem", calendar_day: "dziennie", rolling_1h: "na godzinę", rolling_24h: "w ciągu 24 godzin", rolling_7d: "w ciągu 7 dni", lifetime: "łącznie",
+};
 
-/** The lines' words by language: English first; the other languages come with their reviewed words. */
+/** The lines' words by language: the eight and pt-BR; any other language gets no line until its words are reviewed. */
 const WORDS: Partial<Record<Lang, LineWords>> = {
   en: {
     upTo: (title, amount, window, per) => `${title}: up to ${amount} ${EN_WINDOW[window]}${per ? ` for each ${per}` : ""}`,
     none: (title, over, per) => `${title}: ${over === "refuse" ? "never" : "every one asks you first"}${per ? ` for each ${per}` : ""}`,
     past: (over) => (over === "refuse" ? "past that, it's refused" : "past that, it asks you"),
   },
+  // The per label is the notice's own noun ("Bestellung", "commande"), so each language puts it where a bare noun reads
+  // right: after "pro", "par", "por", "per"; Polish, whose cases would change the noun, after a colon.
+  de: {
+    upTo: (title, amount, window, per) => `${title}: bis zu ${amount} ${DE_WINDOW[window]}${per ? ` pro ${per}` : ""}`,
+    none: (title, over, per) => `${title}: ${over === "refuse" ? "nie" : "fragt dich jedes Mal zuerst"}${per ? ` (pro ${per})` : ""}`,
+    past: (over) => (over === "refuse" ? "mehr wird abgelehnt" : "für mehr fragt er dich"),
+  },
+  fr: {
+    upTo: (title, amount, window, per) => `${title} : jusqu'à ${amount} ${FR_WINDOW[window]}${per ? ` par ${per}` : ""}`,
+    none: (title, over, per) => `${title} : ${over === "refuse" ? "jamais" : "toujours soumis à votre accord"}${per ? ` (par ${per})` : ""}`,
+    past: (over) => (over === "refuse" ? "au-delà, c'est refusé" : "au-delà, il vous demande"),
+  },
+  es: {
+    upTo: (title, amount, window, per) => `${title}: hasta ${amount} ${ES_WINDOW[window]}${per ? ` por ${per}` : ""}`,
+    none: (title, over, per) => `${title}: ${over === "refuse" ? "nunca" : "siempre te lo pregunta antes"}${per ? ` (por ${per})` : ""}`,
+    past: (over) => (over === "refuse" ? "por encima, se rechaza" : "por encima, te lo pregunta"),
+  },
+  it: {
+    upTo: (title, amount, window, per) => `${title}: fino a ${amount} ${IT_WINDOW[window]}${per ? ` per ${per}` : ""}`,
+    none: (title, over, per) => `${title}: ${over === "refuse" ? "mai" : "chiede sempre prima a te"}${per ? ` (per ${per})` : ""}`,
+    past: (over) => (over === "refuse" ? "oltre, viene rifiutato" : "oltre, chiede a te"),
+  },
+  pt: {
+    upTo: (title, amount, window, per) => `${title}: até ${amount} ${PT_WINDOW[window]}${per ? ` por ${per}` : ""}`,
+    none: (title, over, per) => `${title}: ${over === "refuse" ? "nunca" : "pergunta-lhe sempre antes"}${per ? ` (por ${per})` : ""}`,
+    past: (over) => (over === "refuse" ? "acima disso, é recusado" : "acima disso, pergunta-lhe"),
+  },
+  "pt-BR": {
+    upTo: (title, amount, window, per) => `${title}: até ${amount} ${PT_WINDOW[window]}${per ? ` por ${per}` : ""}`,
+    none: (title, over, per) => `${title}: ${over === "refuse" ? "nunca" : "sempre pergunta a você antes"}${per ? ` (por ${per})` : ""}`,
+    past: (over) => (over === "refuse" ? "acima disso, é recusado" : "acima disso, pergunta a você"),
+  },
+  nl: {
+    upTo: (title, amount, window, per) => `${title}: tot ${amount} ${NL_WINDOW[window]}${per ? ` per ${per}` : ""}`,
+    none: (title, over, per) => `${title}: ${over === "refuse" ? "nooit" : "vraagt het je altijd eerst"}${per ? ` (per ${per})` : ""}`,
+    past: (over) => (over === "refuse" ? "daarboven wordt het geweigerd" : "daarboven vraagt het je"),
+  },
+  pl: {
+    upTo: (title, amount, window, per) => `${title}: do ${amount} ${PL_WINDOW[window]}${per ? ` (osobno dla każdej pozycji: ${per})` : ""}`,
+    none: (title, over, per) => `${title}: ${over === "refuse" ? "nigdy" : "zawsze najpierw pyta Ciebie"}${per ? ` (osobno dla każdej pozycji: ${per})` : ""}`,
+    past: (over) => (over === "refuse" ? "powyżej tej granicy jest odrzucane" : "powyżej tej granicy pyta Ciebie"),
+  },
 };
 
-const locale = (lang: Lang) => (lang === "en" ? "en-GB" : lang);
+// European Portuguese groups and spaces its figures as Portugal does ("1000", "50,00 €"); Intl's bare "pt" is Brazil's.
+const locale = (lang: Lang) => (lang === "en" ? "en-GB" : lang === "pt" ? "pt-PT" : lang);
 const CURRENCY = /^[A-Z]{3}$/;
 
 /**
