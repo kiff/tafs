@@ -61,6 +61,16 @@ class UnansweredCardTest {
     assertEquals(listOf("connect", "send:I'll send it today."), pressed)
   }
 
+  @Test fun someoneWhoCantConnectAnAppIsntOfferedIt() {
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+    compose.setContent {
+      TafsTheme { UnansweredCard(writer("Connect an app"), busy = false, answer = { true }, ignore = { true }, connect = null) }
+    }
+    compose.onNodeWithText(line).assertExists()
+    compose.onNodeWithText("Connect an app").assertDoesNotExist()
+    compose.onNodeWithText("Answer them yourself").assertExists()
+  }
+
   @Test fun withoutAMissingAppThereIsNoConnectAndIgnoreGoes() {
     Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
     val pressed = mutableListOf<String>()

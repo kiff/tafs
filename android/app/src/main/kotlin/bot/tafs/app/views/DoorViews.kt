@@ -114,7 +114,8 @@ class DoorActions(
   /** A writer the taf couldn't answer: the owner's own answer (signed over its hash), Ignore, and Connect an app. */
   val answerUnanswered: suspend (String, bot.tafs.app.kiff.Unanswered, String) -> Boolean = { _, _, _ -> false },
   val ignoreUnanswered: suspend (String, bot.tafs.app.kiff.Unanswered) -> Boolean = { _, _ -> false },
-  val connectApp: () -> Unit = {},
+  /** Null where this person can't connect apps (only those who manage the account's Cards can). */
+  val connectApp: (() -> Unit)? = null,
 )
 
 /**
@@ -232,7 +233,7 @@ fun KnocksPanel(taf: Taf, state: AppState, actions: DoorActions) {
       writer, doors.busy,
       answer = { text -> actions.answerUnanswered(taf.id, writer, text) },
       ignore = { actions.ignoreUnanswered(taf.id, writer) },
-      connect = actions.connectApp,
+      connect = actions.connectApp?.takeIf { state.canManageCards },
     )
   }
   if (waiting.isNotEmpty()) {
@@ -271,12 +272,12 @@ internal fun HeldReplyCard(reply: bot.tafs.app.kiff.HeldReply, busy: Boolean, se
 }
 
 /**
- * A writer the taf couldn't answer, in tafs cloud's words: its line and subject, Connect an app (only when tafs cloud offers it),
+ * A writer the taf couldn't answer, in tafs cloud's words: its line and subject, Connect an app (only when tafs cloud offers it, to whoever can connect one),
  * Answer them yourself, which opens a field for the owner's own words and Send (behind the fingerprint, signed over exactly what
  * was typed), and Ignore.
  */
 @Composable
-internal fun UnansweredCard(writer: bot.tafs.app.kiff.Unanswered, busy: Boolean, answer: suspend (String) -> Boolean, ignore: suspend () -> Boolean, connect: () -> Unit) {
+internal fun UnansweredCard(writer: bot.tafs.app.kiff.Unanswered, busy: Boolean, answer: suspend (String) -> Boolean, ignore: suspend () -> Boolean, connect: (() -> Unit)?) {
   val words = writer.words ?: return
   val scope = rememberCoroutineScope()
   var answering by rememberSaveable(writer.run) { mutableStateOf(false) }
@@ -284,7 +285,8 @@ internal fun UnansweredCard(writer: bot.tafs.app.kiff.Unanswered, busy: Boolean,
   Panel(stroke = Theme.amber.copy(alpha = 0.45f), modifier = Modifier.testTag("unanswered-" + writer.run)) {
     Text(words.line, style = scaled(14, FontWeight.SemiBold, Theme.ink))
     writer.subject?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, FontWeight.Medium, Theme.soft)) }
-    words.connect?.takeIf { it.isNotBlank() }?.let { PrimaryButton(it, connect, Modifier.fillMaxWidth(), enabled = !busy) }
+    // Only for someone who can connect an app: anyone else would open a list they can't add to.
+    if (connect != null) words.connect?.takeIf { it.isNotBlank() }?.let { PrimaryButton(it, connect, Modifier.fillMaxWidth(), enabled = !busy) }
     if (answering) {
       // The owner's words exactly as typed: what Send signs the hash of, and all that goes.
       Box(Modifier.testTag("unanswered-text")) { Field(text, { text = it }, hint = "", minHeight = 80) }
