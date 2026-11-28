@@ -838,8 +838,9 @@ private fun LiveWork(live: LiveAnswer) {
       // With the phone's animations off, a spinner stands still and reads as stuck: none, and the line counts the time instead,
       // a second at a time (a change of words, never an animation).
       val animating = remember { android.animation.ValueAnimator.areAnimatorsEnabled() }
-      val started = remember { System.currentTimeMillis() }
-      var now by remember { androidx.compose.runtime.mutableLongStateOf(started) }
+      // From when the answer began, as the stream says, so it reads the same however often the line is drawn again.
+      val started = live.started.toEpochMilli()
+      var now by remember { androidx.compose.runtime.mutableLongStateOf(System.currentTimeMillis()) }
       if (!animating && !waiting) LaunchedEffect(Unit) {
         while (true) {
           kotlinx.coroutines.delay(1_000)
