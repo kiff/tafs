@@ -133,8 +133,9 @@ export function cantDoOf(r: Pick<Run, "status" | "stop" | "output">): HeldReply[
 }
 
 /**
- * Why, and for `needs` what the taf needs from the owner: only the kinds of NEEDS it names after `needs`, in their
- * order, once each; none known reads `other`. The taf's own words after the marker never reach the owner's row.
+ * Why, and for `needs_setup` what the taf needs from the owner: only the kinds of NEEDS it names after it, in their
+ * order, once each (none: the line says it needs something). The taf's own words after the marker never reach the
+ * owner's row.
  */
 export function cantDo(r: Pick<Run, "status" | "stop" | "output">): { why: HeldReply["cant_do"]; needs?: Need[] } {
   if (r.status === "COMPLETED" && (!r.stop || r.stop === "answered")) {
@@ -145,11 +146,11 @@ export function cantDo(r: Pick<Run, "status" | "stop" | "output">): { why: HeldR
     const after = out.slice(at + CANT_DO.length);
     // Only the reason the taf names says an app is missing; no tool, a failure or none is said plainly.
     if (/^\s*no_app\b/.test(after)) return { why: "no_app" };
-    const needs = /^\s*needs\b:?([^\n]*)/.exec(after);
-    if (needs) {
-      const said = needs[1]!.toLowerCase().split(/[^a-z_]+/);
+    const setup = /^\s*needs_setup\b:?([^\n]*)/.exec(after);
+    if (setup) {
+      const said = setup[1]!.toLowerCase().split(/[^a-z_]+/);
       const known = NEEDS.filter((n) => said.includes(n)).sort((a, b) => said.indexOf(a) - said.indexOf(b));
-      if (known.length) return { why: "needs", needs: known };
+      return { why: "needs_setup", ...(known.length ? { needs: known } : {}) };
     }
     return { why: "other" };
   }
@@ -168,7 +169,7 @@ export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: strin
   // message is a knock, never a run). So the taf does what they ask within its job, reads included, and
   // answers with what they asked for. What went wrong is only "not now", never an error, a tool, an id or how anything
   // is connected.
-  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; say what you can do for them in terms of the job (orders, invoices, delivery dates), never the apps, folders, sheets, files, mailboxes, Card, limits or other people behind it, unless they need one to act (a link they were given); tafs puts the line saying an AI agent wrote it above your answer, so never write it yourself; if you can't do what they ask (the app it needs isn't connected, you need something only the owner can give, you have no tool for it, or something failed), don't answer them: answer with the one line ${CANT_DO} followed by why, no_app (the app it needs isn't connected), needs followed by what you need from the owner, any of ${NEEDS.join(", ")} (a link or detail only the owner can give), no_tool or failed, and nothing else, and tafs asks the owner while they get nothing`;
+  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; say what you can do for them in terms of the job (orders, invoices, delivery dates), never the apps, folders, sheets, files, mailboxes, Card, limits or other people behind it, unless they need one to act (a link they were given); tafs puts the line saying an AI agent wrote it above your answer, so never write it yourself; if you can't do what they ask (the app it needs isn't connected, you need something only the owner can give, you have no tool for it, or something failed), don't answer them: answer with the one line ${CANT_DO} followed by why, no_app (the app it needs isn't connected), needs_setup (you need something only the owner can give) followed by what, any of ${NEEDS.join(", ")}, no_tool or failed, and nothing else, and tafs asks the owner while they get nothing`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}${botReply(a)}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
@@ -665,9 +666,9 @@ export function heldReplyWords(w: Words, taf: string, who: string) {
   return { line: w.door_reply_waiting(who, taf), send: w.door_reply_send, discard: w.door_reply_discard, prompt: w.door_reply_prompt(who), changed: w.door_reply_changed };
 }
 
-/** The line Needs you says for a writer a taf couldn't answer: for `needs`, what it needs in KIFF's own nouns. */
+/** The line Needs you says for a writer a taf couldn't answer: for `needs_setup`, what it needs in KIFF's own nouns. */
 export function cantDoLine(w: Words, why: NonNullable<HeldReply["cant_do"]>, taf: string, who: string, needs?: readonly Need[]): string {
-  if (why === "needs" && needs?.length) return w.door_cant_do_needs(taf, who, needs.map((n) => w[`door_need_${n}`]));
+  if (why === "needs_setup") return needs?.length ? w.door_cant_do_needs(taf, who, needs.map((n) => w[`door_need_${n}`])) : w.door_cant_do_setup(taf, who);
   return why === "no_app" ? w.door_cant_do(taf, who) : why === "unfinished" ? w.door_cant_finish(taf, who) : w.door_cant_do_other(taf, who);
 }
 

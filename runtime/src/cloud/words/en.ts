@@ -570,8 +570,10 @@ export const en = {
   door_cant_finish: (taf: string, who: string) => `${taf} couldn't finish what ${who} asked. Their message waits here, and they haven't been answered.`,
   door_cant_do_other: (taf: string, who: string) => `${taf} can't do what ${who} asked. Their message waits here, and they haven't been answered.`,
   // A taf that needs something only the owner can give, named in KIFF's nouns from a closed list, never its own words.
+  door_cant_do_setup: (taf: string, who: string) =>
+    `${taf} needs something from you before it can do what ${who} asked. Their message waits here, and they haven't been answered.`,
   door_cant_do_needs: (taf: string, who: string, things: string[]) =>
-    `${taf} needs something from you to do what ${who} asked: ${new Intl.ListFormat("en", { type: "conjunction" }).format(things)}. Share it in its chat. Their message waits here, and they haven't been answered.`,
+    `${taf} needs something from you before it can do what ${who} asked: ${new Intl.ListFormat("en", { type: "conjunction" }).format(things)}. Their message waits here, and they haven't been answered.`,
   door_need_folder: "a folder",
   door_need_sheet: "a spreadsheet",
   door_need_file: "a file",
