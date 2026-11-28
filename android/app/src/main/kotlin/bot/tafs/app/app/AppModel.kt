@@ -6510,10 +6510,6 @@ class AppModel(
     run?.let { resumeChat(COACH_CHAT, cloudId, it, again = true) } ?: followChat(COACH_CHAT)
   }
 
-  /**
-   * Sign in again, for a grant whose sign-in was left: a new approval, one confirmation. What it came to goes back to Coach as the
-   * card's answer: "signed in", or "failed: why".
-   */
   /** The coroutine of the connection under way (`connecting`): Cancel ends it wherever it is ([cancelConnecting]). */
   @Volatile private var connectAttempt: Job? = null
 
@@ -6521,7 +6517,7 @@ class AppModel(
    * Cancel on a sign-in under way. While the vendor's page waits, its wait ends as a closed sign-in, as before. Before that (the
    * approval still on its way, the fingerprint asked, or a request that never came back), the attempt itself ends: the card goes
    * back to its sign-in, nothing is answered to Coach, and the owner can start it again. Before, Cancel there did nothing, and
-   * the card stayed on "Opening the sign-in…" (the Qonto re-test, a Home press mid-approval).
+   * the card stayed on "Opening the sign-in…".
    */
   fun cancelConnecting() {
     if (_state.value.vendorPageOpen) vendorSignIn.cancel() else connectAttempt?.cancel()
@@ -6537,6 +6533,10 @@ class AppModel(
     }
   }
 
+  /**
+   * Sign in again, for a grant whose sign-in was left: a new approval, one confirmation. What it came to goes back to Coach as the
+   * card's answer: "signed in", or "failed: why".
+   */
   suspend fun signInAgain(c: SetupComponent) {
     val grantId = c.grant ?: return
     // The sign-in card shows no terms: it approves the grant as the app last showed it.

@@ -93,7 +93,7 @@ class ConnectAgainTest {
   }
 
   /**
-   * Cancel before the vendor's page opens: the approval still on its way (a Home press mid-approval in the Qonto re-test left the
+   * Cancel before the vendor's page opens: the approval still on its way (a Home press mid-approval left the
    * card on "Opening the sign-in…", and Cancel did nothing, since it only ended a page's wait). The attempt ends, the card is free
    * to start again, and nothing else is asked of planque.
    */
