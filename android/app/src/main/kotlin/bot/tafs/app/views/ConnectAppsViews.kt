@@ -207,6 +207,8 @@ fun ConnectAppsSheet(
   dismissConnectedNow: () -> Unit = {},
   /** Reads planque's connections again: a connected row whose connections the phone doesn't hold reads them before it opens. */
   onReadConnections: suspend () -> Unit = {},
+  /** A saved sign-in's Sign in again: planque's live sign-in view for that connection (docs/api.md, `site_sign_in`). */
+  onSiteSignIn: ((String) -> Unit)? = null,
 ) {
   val readScope = androidx.compose.runtime.rememberCoroutineScope()
   var query by rememberSaveable { mutableStateOf("") }
@@ -574,6 +576,10 @@ fun ConnectAppsSheet(
           }, usedBy = usedBy(state, app), onAskCoach = onAskCoach.takeIf { onConnect != null && connectHere == null },
             removing = state.disconnecting?.let { id -> connectionsOf(state, app).any { it.id == id } } == true)
         }
+        // How a taf uses websites (docs/api.md, "The two ways"): both ways, in tafs cloud's words, above the apps, while not searching.
+        if (query.isBlank()) apps?.ways?.forEach { WayCard(it) }
+        // Each saved sign-in in the cloud browser, with its health as tafs cloud words it, and Sign in again where it needs the owner.
+        if (query.isBlank()) apps?.savedSignIns?.forEach { SavedSignInRow(it, onSignIn = onSiteSignIn) }
         if (yours.isNotEmpty()) {
           bot.tafs.app.design.Eyebrow(Words.Connect.Apps.yours)
           yours.forEach { row(it) }
@@ -606,6 +612,33 @@ fun ConnectAppsSheet(
           }
         }
       }
+    }
+  }
+}
+
+/** A saved sign-in on one site: the site, the tafs that use it, its health line, and Sign in again where it needs the owner. */
+@Composable
+internal fun SavedSignInRow(saved: ConnectApps.SavedSignIn, onSignIn: ((String) -> Unit)?) {
+  Panel(modifier = Modifier.testTag("saved-sign-in-" + saved.grant + "-" + saved.site)) {
+    Text(saved.site, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    if (saved.usedBy.isNotEmpty()) Text(bot.tafs.app.model.Res.list(saved.usedBy), style = scaled(12, color = Theme.dim))
+    Text(saved.health.words.line, style = scaled(13, FontWeight.Medium, if (saved.health.needsYou) Theme.amberText else Theme.soft))
+    val action = saved.signIn?.title?.takeIf { it.isNotBlank() }
+    if (saved.health.needsYou && action != null && onSignIn != null) {
+      Text(action, style = scaled(14, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping { onSignIn(saved.grant) }.padding(top = 8.dp))
+    }
+  }
+}
+
+/** One way a taf uses websites, as tafs cloud words it: its title and line, two facts, and its state on this account. */
+@Composable
+internal fun WayCard(way: ConnectApps.Way) {
+  Panel(modifier = Modifier.testTag("way-" + way.way)) {
+    Text(way.words.title, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+    if (way.words.line.isNotBlank()) Text(way.words.line, style = scaled(14, FontWeight.Medium, Theme.soft))
+    way.words.facts.filter { it.isNotBlank() }.forEach { Text("· $it", style = scaled(13, color = Theme.soft)) }
+    way.words.status?.takeIf { it.isNotBlank() }?.let {
+      Text(it, style = scaled(12, FontWeight.Medium, Theme.ok), modifier = Modifier.padding(top = 2.dp))
     }
   }
 }

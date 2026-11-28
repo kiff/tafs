@@ -1,0 +1,1 @@
+- **Android: how a taf uses websites, and saved sign-ins that need you.** Connect apps shows the cloud browser and the Chrome extension, each in tafs cloud's words, and each saved sign-in with its health; Needs you lists a sign-in that will need you soon (Sign in again, Later) or has stopped and holds a run (Sign in again, Skip this run) ([android-app.md](docs/android-app.md)).
