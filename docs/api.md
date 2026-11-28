@@ -415,8 +415,8 @@ A browser connection works one of two ways, named by what the owner gets, never 
   supplier-portal.example in the cloud browser: works while your computer is off."
 - **Changing the way** is a new grant with the owner's approval and its Card, like any Card change: Touch ID or the
   fingerprint, by device. No route changes `way` in place.
-  - The taf's setup carries the other way's button, `browsing.switch: {words: {button}, ask}`, e.g. "Use your Chrome
-    instead". `ask` is tafs cloud's words for Coach ("Change File invoices to use my Chrome for supplier-portal.example.").
+  - The taf's setup carries the other way's button, `browsing.switch: {words: {button}, ask}`: "Use your Chrome instead"
+    on a `cloud` connection, "Use the cloud browser instead" on a `chrome` one. `ask` is tafs cloud's words for Coach ("Change File invoices to use my Chrome for supplier-portal.example.").
   - The button is an `ask_coach`: it opens Coach on the taf with `ask` written in, as an `ask_coach` card does. Coach makes
     the new version with the new grant (improve-a-taf).
 
@@ -451,8 +451,9 @@ makes no click and no write. Only the verdict is kept.
   - **once a day,** an hour before the first scheduled run of the day of a taf on that connection, in the taf's time zone;
   - **after the owner signs in again,** while a Needs you item for that site holds a run (below): every 5 minutes, only
     for the held items' sites, until it reads `signed_in` or the hold ends.
-  - planque checks a site at most once a day, whatever the verdict. A new sign-in in the live view makes it due again
-    (planque clears that site's kept verdict). A call that isn't due answers what's kept.
+  - planque checks a site at most once a day, whatever the verdict, and not again within 6 hours of an `unknown`. A new
+    saved sign-in for that site makes it due again at once (planque#514: a verdict remembers which sign-in it read). A
+    call that isn't due answers what's kept.
   - No other check runs: never in a sweep of every connection, never for a taf with no schedule. A taf that only runs from
     a door uses what's kept (`GET …/health`), which runs nothing.
 - **What each site carries** (`sites[]` on the connection, in setup and Connect apps): `health: {state, checked_at?,
