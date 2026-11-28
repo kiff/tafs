@@ -1,0 +1,1 @@
+- **Android: a long chat does less work on the main thread (Android).** A message's Markdown is parsed once per text instead of on every recomposition, and a table's currency check compiles its pattern once. Part of tafs#2237, a stall after an answer in a long Coach chat.
