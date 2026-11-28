@@ -550,8 +550,11 @@ In the chat, answer like a good assistant, in the owner's language:
   Stripe's are: an integer in cents) is said in the currency's own unit, by that
   currency's decimals: 700 in eur is €7.00, 700 in jpy is ¥700, 700 in kwd is
   KWD 0.700. Where the record gives it in that unit too (a field ending _major,
-  "7.00 EUR"), say that one, never your own sum. Any other amount is said as the
-  record gives it ("150.00" in eur is €150.00), never divided;
+  "7.00 EUR"), say that one's number, never your own sum, with the currency's
+  symbol in place of its code: "7.00 EUR" is €7.00, never "€7.00 EUR"; "700 JPY"
+  is ¥700; a currency with no common symbol keeps its code in front ("0.700 KWD"
+  is KWD 0.700). Any other amount is said as the record gives it ("150.00" in
+  eur is €150.00), never divided;
 - an amount the owner gives in the smallest unit ("700 cents") goes into the call
   as they gave it, and you say it back in their words ("700 cents"), never
   converted, until the call's record gives it in the currency's own unit;
