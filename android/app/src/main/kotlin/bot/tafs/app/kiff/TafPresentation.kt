@@ -67,8 +67,64 @@ import java.net.URLEncoder
   /** Which vendor account it works in and in which mode, tafs cloud's one line from planque's words: "Demo Shop · Live". */
   @SerialName("account_words") val accountWords: String? = null,
   /** A browser connection's own sign-in to a site (kiff/planque#86): tafs cloud's title and line; none on any other connection. */
-  @SerialName("site_sign_in") val siteSignIn: SiteSignIn? = null)
+  @SerialName("site_sign_in") val siteSignIn: SiteSignIn? = null,
+  /** A browser connection's way (`cloud` or `chrome`, from planque's grant) and its words; none on any other connection. */
+  val way: String? = null,
+  @SerialName("way_words") @Serializable(with = LenientWayLine::class) val wayWords: WayLine? = null,
+  /** A `chrome` connection's paired Chrome, by the name planque keeps. */
+  @SerialName("chrome_name") val chromeName: String? = null,
+  /** A `cloud` connection's sites, each with its sign-in health in tafs cloud's words (docs/api.md, "Sign-in health"). */
+  @Serializable(with = EachConnectedSite::class) val sites: List<ConnectedSite> = emptyList())
 @Serializable data class SiteSignIn(val title: String, val words: String = "")
+
+/** A way's title and one line, in tafs cloud's words: "Cloud browser", "Works while your computer is off." */
+@Serializable data class WayLine(val title: String = "", val line: String = "")
+
+/** One site of a cloud browser connection, and its sign-in health. */
+@Serializable data class ConnectedSite(val site: String, val health: ConnectApps.SiteHealth? = null)
+
+/**
+ * How the taf browses (docs/api.md, "Coach's pick, and why"): the way, why Coach chose it, in tafs cloud's words, and the other
+ * way's button, which asks Coach (`switch`). The app decides none of it.
+ */
+@Serializable data class Browsing(
+  val way: String = "",
+  @SerialName("way_words") @Serializable(with = LenientWayLine::class) val wayWords: WayLine? = null,
+  val reason: String? = null,
+  val why: String = "",
+  @SerialName("chosen_by") val chosenBy: String? = null,
+  @Serializable(with = LenientBrowsingSwitch::class) val switch: BrowsingSwitch? = null,
+)
+
+/** The other way's button: its word, and what's written in Coach for the owner to send ("Change File invoices to use my Chrome…"). */
+@Serializable data class BrowsingSwitch(val words: SwitchWords = SwitchWords(), val ask: String = "")
+@Serializable data class SwitchWords(val button: String = "")
+
+/** Reads one value on its own: another shape, or one [keep] refuses, is none, and the rest of the setup still reads. */
+open class LenientOne<T : Any>(private val item: kotlinx.serialization.KSerializer<T>, private val keep: (T) -> Boolean) :
+  kotlinx.serialization.KSerializer<T?> {
+  override val descriptor = kotlinx.serialization.json.JsonElement.serializer().descriptor
+  override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): T? {
+    val d = decoder as kotlinx.serialization.json.JsonDecoder
+    val e = d.decodeJsonElement()
+    return runCatching { d.json.decodeFromJsonElement(item, e) }.getOrNull()?.takeIf(keep)
+  }
+  override fun serialize(encoder: kotlinx.serialization.encoding.Encoder, value: T?) {
+    val j = encoder as kotlinx.serialization.json.JsonEncoder
+    j.encodeJsonElement(if (value == null) kotlinx.serialization.json.JsonNull else j.json.encodeToJsonElement(item, value))
+  }
+}
+
+object LenientWayLine : LenientOne<WayLine>(WayLine.serializer(), { it.title.isNotBlank() })
+object LenientBrowsingSwitch : LenientOne<BrowsingSwitch>(BrowsingSwitch.serializer(), { it.words.button.isNotBlank() && it.ask.isNotBlank() })
+/** Nothing to draw without the way's title: then the taf's browsing isn't shown. */
+object LenientBrowsing : LenientOne<Browsing>(Browsing.serializer(), { it.wayWords != null })
+
+/** Each site read on its own: one without its name is left out; a health without its line is none, and the site still shows. */
+internal object EachConnectedSite : EachReadable<ConnectedSite>(ConnectedSite.serializer()) {
+  override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): List<ConnectedSite> =
+    super.deserialize(decoder).filter { it.site.isNotBlank() }.map { s -> s.health?.takeIf { it.words.line.isBlank() }?.let { s.copy(health = null) } ?: s }
+}
 @Serializable data class WorkflowStep(val number: Int, val label: String, val words: String, val app: String? = null, val grant: String? = null, val running: Boolean = false)
 @Serializable data class WorkflowView(val title: String = Words.Taf.Workflow.title, val summary: String = "", val steps: List<WorkflowStep> = emptyList(),
   @SerialName("running_step") val runningStep: Int? = null)
@@ -80,7 +136,9 @@ import java.net.URLEncoder
   /** The taf's own Connect again, when tafs cloud says a connection's sign-in expired (docs/api.md): the connection it names, in its words. */
   @SerialName("connect_again") @Serializable(with = LenientConnectAgain::class) val connectAgain: ConnectAgain? = null,
   /** Read after a fresh sign-in (`?connected_again=`): which account it went to and which tafs use it now, in tafs cloud's words. */
-  @SerialName("connected_again") @Serializable(with = LenientConnectedAgain::class) val connectedAgain: ConnectedAgain? = null)
+  @SerialName("connected_again") @Serializable(with = LenientConnectedAgain::class) val connectedAgain: ConnectedAgain? = null,
+  /** How the taf uses websites, when it has a browser connection: the way, Coach's reason, and the other way's button. */
+  @Serializable(with = LenientBrowsing::class) val browsing: Browsing? = null)
 
 /** After a fresh sign-in, tafs cloud's words naming the account it went to and the tafs that use it now. */
 @Serializable data class ConnectedAgain(val grant: String = "", val words: String = "")

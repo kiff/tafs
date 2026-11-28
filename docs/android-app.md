@@ -1594,7 +1594,15 @@ word is tafs cloud's; the app works out nothing: not which way, not "soon", not 
   (its site, its words, and for Skip this run the taf whose run it skips), isn't drawn. Each row is its kind, connection,
   site and taf together (`SignInItem.key`), so two tafs held on one site are two rows; the same item sent twice is one.
   Each counts in the app's own count when tafs cloud sends none.
-- **Not yet:** the taf's setup (`connections[].way`, its sites' health, `browsing` and its switch button) comes next.
+- **The taf's setup** (`GET /v1/tafs/{id}/setup`): a browser connection's sheet shows its way (`way_words`, and a `chrome`
+  connection's `chrome_name`) and each site of a `cloud` connection with its health line (`connections[].sites[]`,
+  `ConnectedSiteRow`), in amber with its `why` when it needs the owner. Signing in again is the connection's own Sign in
+  again, as before. Under the workflow, `browsing` (`BrowsingSection`) shows the way's title and line and Coach's reason
+  (`why`). Its `switch` button, shown only to someone who may ask Coach about the taf, opens Coach on the taf with `ask`
+  written in for the owner to send (`AppModel.askCoachAbout`). Nothing is sent, and the app changes no way itself: a new way
+  is a new grant and Card, approved as any Card change. A site without its name is left out; a health without its line, a
+  browsing without its way's title, or a switch without its button or ask isn't drawn, and the rest of the setup still
+  reads.
 
 ## Help: Chrome and the emailed code (Android follows)
 

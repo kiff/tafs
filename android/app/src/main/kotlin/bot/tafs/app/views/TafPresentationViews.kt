@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.padding
@@ -121,6 +122,9 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
         improve?.let { TextButton({ it(taf.id) }) { Text(Words.Taf.Workflow.changeWithCoach, color = Theme.amberText) } }
       }
     }
+    source?.browsing?.let { browsing ->
+      BrowsingSection(browsing, onSwitch = if (state.mayAskCoachAbout(taf.id)) ({ ask -> actions.askCoachAbout(taf.id, ask) }) else null)
+    }
   }
   source?.connections?.firstOrNull { it.id == chosen }?.let { app ->
     // Full height, as every sheet here: the back key closes it, rather than lowering it to half.
@@ -130,6 +134,15 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
         Text(app.statusWords, style = scaled(14, color = if (app.reconnect) Theme.amberText else Theme.soft))
         app.accountWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(14, color = Theme.ink)) }
         app.custodyWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+        // A browser connection's way and each site's sign-in health, in tafs cloud's words (docs/api.md, "Sign-in health").
+        app.wayWords?.let { way ->
+          Column(Modifier.testTag("connection-way-" + app.id)) {
+            Text(way.title, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+            if (way.line.isNotBlank()) Text(way.line, style = scaled(13, color = Theme.soft))
+            app.chromeName?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+          }
+        }
+        app.sites.forEach { site -> ConnectedSiteRow(app.id, site) }
         // A browser connection: the owner signs in to a site themselves, in planque's live view (tafs cloud's words).
         app.siteSignIn?.takeIf { state.manages(taf.id) }?.let { action ->
           TextButton({ scope.launch { actions.connections.siteSignIn(app.id) } }, enabled = state.openingSiteSignIn == null) {
@@ -387,4 +400,37 @@ private fun ActivityFilterPill(title: String, selected: Boolean, onClick: () -> 
       .tapping(role = androidx.compose.ui.semantics.Role.Tab, onClick = onClick).semantics { this.selected = selected }
       .padding(horizontal = 14.dp, vertical = 8.dp),
   )
+}
+
+/**
+ * One site of a cloud browser connection: its name and its health line, amber when it needs the owner, with tafs cloud's Why? under
+ * it. Signing in again is the connection's own Sign in again, below.
+ */
+@Composable
+internal fun ConnectedSiteRow(grant: String, site: bot.tafs.app.kiff.ConnectedSite) {
+  Column(Modifier.fillMaxWidth().testTag("connection-site-" + grant + "-" + site.site)) {
+    Text(site.site, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    site.health?.let { health ->
+      Text(health.words.line, style = scaled(13, color = if (health.needsYou) Theme.amberText else Theme.soft))
+      if (health.needsYou && health.words.why.isNotBlank()) Text(health.words.why, style = scaled(12, color = Theme.dim))
+    }
+  }
+}
+
+/**
+ * How the taf uses websites, all in tafs cloud's words: the way, why Coach chose it, and the other way's button, which opens Coach on
+ * the taf with tafs cloud's ask written in (nothing is sent). The button shows only to someone who may ask Coach about the taf.
+ */
+@Composable
+internal fun BrowsingSection(browsing: bot.tafs.app.kiff.Browsing, onSwitch: ((String) -> Unit)?) {
+  val way = browsing.wayWords ?: return
+  Column(Modifier.fillMaxWidth().testTag("taf-browsing"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Text(way.title, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    if (way.line.isNotBlank()) Text(way.line, style = scaled(13, color = Theme.soft))
+    if (browsing.why.isNotBlank()) Text(browsing.why, style = scaled(13, color = Theme.dim))
+    val switch = browsing.switch
+    if (switch != null && onSwitch != null) {
+      TextButton({ onSwitch(switch.ask) }, Modifier.testTag("taf-browsing-switch")) { Text(switch.words.button, color = Theme.amberText) }
+    }
+  }
 }
