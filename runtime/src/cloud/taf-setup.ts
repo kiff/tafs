@@ -143,7 +143,9 @@ export interface SetupView {
     /** A connected browser connection's sign-in to a site (kiff/planque#86): the action's title and its line. */
     site_sign_in?: { title: string; words: string };
     /** A browser connection's way (browse.ts): `cloud` or `chrome`, with its words, its paired Chrome's name and its sites. */
-    way?: Way; way_words?: { title: string; line: string }; chrome_name?: string; sites?: Array<{ site: string }>;
+    way?: Way; way_words?: { title: string; line: string }; chrome_name?: string;
+    /** Its sites; on a connected hosted-browser connection, each with its saved sign-in's health (sign-in-health.ts). */
+    sites?: Array<{ site: string; health?: import("./sign-in-health.js").Health }>;
     workflow_steps: Array<{ number: number; label: string; words: string; running: boolean }>;
     steps: number[]; running: boolean; stats: { calls: number; done: number; held: number; words: string; complete: boolean; activity_query: string } }>;
   workflow: { title: string; summary: string; steps: Array<{ number: number; label: string; words: string; app?: string; grant?: string; running: boolean }>; running_step?: number };

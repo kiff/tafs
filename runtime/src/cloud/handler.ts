@@ -1,4 +1,5 @@
-import { type Browse, browseOf, browsingOf, waysView } from "./browse.js";
+import { type Browse, browseOf, browsingOf, wayOf, waysView } from "./browse.js";
+import { type Health as SignInHealth, healthOf as signInHealthOf, readHealth } from "./sign-in-health.js";
 import { checkMisfitSeen } from "./checkseen.js";
 import { anotherConnectionsTool, connectionsOfJob, connectionTail, grantSuffix, rulesAgreement } from "./rules.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
@@ -64,7 +65,7 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, reportKey, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
 import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, removedRecordTafs, removedTafsKey, type RemovedTaf } from "./record.js";
-import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
+import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, setupView, siteSignIn } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { inboxMarks, inboxState, markInbox } from "./watch-inbox.js";
@@ -5959,7 +5960,13 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   const seen = again && againAccount && againTafs.length ? await Promise.all([deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase)])
     .then(([records, access]) => new Set(records.filter((t) => !t.removing && listable(access, t.kiffAgent)).map((t) => t.name)), () => new Set<string>()) : new Set<string>();
   const shownTafs = againTafs.filter((n) => seen.has(n));
-  return { ...setup,
+  // Each site of a connected hosted-browser connection says how its saved sign-in held at planque's last check.
+  const health = await cloudHealth(event, me, grants.grants.filter((g) => g.request.agent === taf.kiffAgent), deps);
+  const connections = health.size ? setup.connections.map((c) => {
+    const bySite = health.get(c.id);
+    return bySite && c.sites ? { ...c, sites: c.sites.map((x) => (bySite.has(x.site) ? { ...x, health: bySite.get(x.site)! } : x)) } : c;
+  }) : setup.connections;
+  return { ...setup, connections,
     ...(again && againAccount && againTafs.length
       ? { connected_again: { grant: again.id, words: w.connected_again_as(appDisplayName(again, langOf(event)), againAccount, shownTafs, againTafs.length - shownTafs.length) } } : {}),
     ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title,
@@ -9466,6 +9473,47 @@ const PLAN_KEPT_MS = 2 * 24 * 3600_000;
 const planKey = (tenant: string) => `${tenant}#plan`;
 
 /** What `work` gives within `ms`, or undefined: a read that's late is left out, never waited for. */
+/** How long a read waits for planque's kept sign-in checks before it's drawn without them. */
+const SIGN_IN_HEALTH_MS = 2500;
+
+/**
+ * The health of each site of the given grants' connected hosted-browser connections, by grant then site, from what planque
+ * keeps (`GET …/health`, the person's own session, which runs no check). A connection planque can't answer for in time is
+ * left out, so it's drawn with no health rather than a guess. Days and times in the account's zone.
+ */
+async function cloudHealth(event: HTTPEvent, me: KIFFIdentity, grants: ReadonlyArray<GrantView>, deps: Deps): Promise<Map<string, Map<string, SignInHealth>>> {
+  const out = new Map<string, Map<string, SignInHealth>>();
+  if (!deps.planqueBase) return out;
+  const cloud = grants.filter((g) => wayOf(g) === "cloud" && g.status === "connected");
+  const now = deps.now?.() ?? new Date();
+  const lang = langOf(event);
+  await Promise.all(cloud.map(async (g) => {
+    const read = await within(readHealth(deps.fetch ?? fetch, deps.planqueBase!, me.tenantID, bearer(event), g.id).catch((err: unknown) => {
+      console.warn(JSON.stringify({ msg: "sign-in health unread", grant: g.id, why: (err as Error).message }));
+      return undefined;
+    }), SIGN_IN_HEALTH_MS);
+    if (read) out.set(g.id, new Map(read.map((v) => [v.site, signInHealthOf(v, now, me.timeZone ?? "UTC", lang)])));
+  }));
+  return out;
+}
+
+/**
+ * Connect apps' saved sign-ins (docs/api.md, "Sign-in health"): one row per connected hosted-browser connection and site,
+ * with the tafs that use it, its health from planque's last check, and Sign in again (planque's live view). A connection in
+ * the owner's Chrome keeps no sign-in at tafs, so it has none.
+ */
+async function savedSignIns(event: HTTPEvent, me: KIFFIdentity, grants: ReadonlyArray<GrantView>, deps: Deps): Promise<Array<{ grant: string; site: string; used_by: string[]; health?: SignInHealth; sign_in: { title: string; words: string } }>> {
+  const cloud = grants.filter((g) => wayOf(g) === "cloud" && g.status === "connected");
+  if (!cloud.length) return [];
+  const health = await cloudHealth(event, me, cloud, deps);
+  const signIn = siteSignIn(langOf(event));
+  return cloud.flatMap((g) => (g.request.browser?.sites ?? []).map((site) => {
+    const h = health.get(g.id)?.get(site);
+    return { grant: g.id, site, used_by: (g.used_by ?? []).filter((n): n is string => typeof n === "string" && n.trim() !== "").map((n) => n.trim()),
+      ...(h ? { health: h } : {}), sign_in: signIn };
+  }));
+}
+
 async function within<T>(work: Promise<T>, ms: number): Promise<T | undefined> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const late = new Promise<undefined>((resolve) => { timer = setTimeout(() => resolve(undefined), ms); });
@@ -11887,7 +11935,8 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       const { proved: _proved, ...listed } = page;
       // The two ways a taf browses, at the account level, with or without a browser connection (browse.ts).
       const ways = waysView((await reads())?.grants, langOf(event));
-      return { ...listed, apps, ways, removed_tafs: removed };
+      const saved = await savedSignIns(event, me, (await reads())?.grants ?? [], deps);
+      return { ...listed, apps, ways, ...(saved.length ? { saved_sign_ins: saved } : {}), removed_tafs: removed };
     }
     if (parts.length === 4 && method === "POST") {
       need(me, "cards.manage");

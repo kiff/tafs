@@ -1200,6 +1200,52 @@ describe("tafs cloud", () => {
     contract("taf-setup-reconnect-fresh", "GET /v1/tafs/{id}/setup when the taf's connection can only come back with a new sign-in (planque's reconnect: fresh): Connect again with fresh: true.", await setup("needs_reconnect", "en", "fresh"));
   });
 
+  // Browser batch 2: a hosted-browser connection's saved sign-in per site, from what planque keeps of its last check (read with
+  // the person's own session, which runs no check), on the taf's setup and Connect apps' saved sign-ins.
+  it("puts each site's saved sign-in health on the setup and Connect apps, and none for the owner's Chrome or when planque can't say", async () => {
+    const w = world();
+    w.now = new Date("2026-11-28T10:00:00Z");
+    const healthAsked: Array<{ url: string; auth: string }> = [];
+    let healthStatus = 200;
+    const browser = (id: string, extra: Record<string, unknown> = {}) => ({ id, status: "connected", provider: "browser", vendor: "Browser", used_by: ["Rae"],
+      request: { agent: "rae", browser: { sites: ["portal.example", "shop.example"], ...extra }, tools: [{ tool: "browse_open", title: "Open a page" }] } });
+    const deps = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/health")) {
+        healthAsked.push({ url, auth: String((init?.headers as Record<string, string>)?.authorization ?? "") });
+        return new Response(JSON.stringify({ grant: "grt_cloud", sites: [
+          { site: "portal.example", verdict: "signed_in", checked_at: "2026-11-28T06:00:00Z", expires_at: "2026-11-30T06:00:00Z" },
+          { site: "shop.example", verdict: "signed_out", checked_at: "2026-11-28T06:55:00Z", page: "never kept" },
+        ] }), { status: healthStatus });
+      }
+      if (url.startsWith("https://planque.test/v1/accounts/t_acme/catalog")) return new Response(JSON.stringify({ entries: [] }), { status: 200 });
+      if (url.endsWith("/grants")) return new Response(JSON.stringify({ grants: [browser("grt_cloud"), browser("grt_chrome", { driver: "extension", chrome_name: "Work laptop" })] }), { status: 200 });
+      if (url.startsWith("https://planque.test/")) return new Response("{}", { status: 500 });
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] } as Deps;
+    const get = async (path: string) => JSON.parse((await handle({ rawPath: path, requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev" } }, deps)).body);
+    const setup = await get(`/v1/tafs/${RAE}/setup`) as { connections: Array<{ id: string; sites?: Array<{ site: string; health?: { state: string; needs_you_by?: string; words: { line: string } } }> }> };
+    const cloud = setup.connections.find((c) => c.id === "grt_cloud")!;
+    expect(cloud.sites?.map((x) => [x.site, x.health?.state])).toEqual([["portal.example", "needs_you_soon"], ["shop.example", "stopped"]]);
+    expect(cloud.sites?.[0].health?.needs_you_by).toBe("2026-11-30T06:00:00.000Z");
+    // The owner's Chrome keeps no sign-in at tafs: no health, and planque isn't asked for it.
+    expect(setup.connections.find((c) => c.id === "grt_chrome")!.sites?.every((x) => x.health === undefined)).toBe(true);
+    expect(healthAsked.map((h) => h.url)).toEqual(["https://planque.test/v1/accounts/t_acme/grants/grt_cloud/health"]);
+    // The person's own session, a GET: it runs no check.
+    expect(healthAsked[0].auth).toBe("Bearer ana");
+    expect(JSON.stringify(setup)).not.toContain("never kept");
+    const apps = await get("/v1/connect/apps") as { saved_sign_ins?: Array<{ grant: string; site: string; used_by: string[]; health?: { state: string }; sign_in: { title: string } }> };
+    expect(apps.saved_sign_ins?.map((r) => [r.grant, r.site, r.used_by, r.health?.state])).toEqual([
+      ["grt_cloud", "portal.example", ["Rae"], "needs_you_soon"], ["grt_cloud", "shop.example", ["Rae"], "stopped"]]);
+    expect(apps.saved_sign_ins?.[0].sign_in.title).toBeTruthy();
+    // planque can't say: the rows stay, with no health rather than a guess.
+    healthStatus = 503;
+    const unread = await get("/v1/connect/apps") as { saved_sign_ins?: Array<{ health?: unknown }> };
+    expect(unread.saved_sign_ins?.length).toBe(2);
+    expect(unread.saved_sign_ins?.every((r) => r.health === undefined)).toBe(true);
+    expect((await get(`/v1/tafs/${RAE}/setup`) as typeof setup).connections.find((c) => c.id === "grt_cloud")!.sites?.every((x) => x.health === undefined)).toBe(true);
+  });
+
   // After a fresh sign-in the owner sees which account it went to and which tafs use it now, as planque names them, so a
   // sign-in to the wrong mailbox shows at once. Without the account's name, nothing: the app keeps the done words.
   it("says which account a fresh sign-in went to, and which tafs use it now, when asked after it", async () => {
