@@ -26,7 +26,7 @@ describe("a taf's note claims", () => {
       "J'ai bien noté le nom de l'onglet.": "Je ne l'ai pas enregistré.",
       "C'est noté pour la suite.": "Je ne l'ai pas enregistré.",
       "Ich habe mir den Tab-Namen gemerkt.": "Das habe ich nicht gespeichert.",
-      "Ist notiert.": "Das habe ich nicht gespeichert.",
+      "Ich habe es notiert.": "Das habe ich nicht gespeichert.",
       "Lo he anotado para las próximas ejecuciones.": "No lo he guardado.",
       "Queda anotado.": "No lo he guardado.",
       "Ho preso nota del foglio.": "Non l'ho salvato.",
@@ -52,6 +52,16 @@ describe("a taf's note claims", () => {
       "Ich habe gemerkt, dass die Rechnung fehlt.",
       "I'll check again next time.",
       "Your Card lets me file receipts.",
+      "Die Rechnung ist im System notiert.",
+      "Pour les prochaines exécutions, le dossier reste le même.",
+      "Für künftige Läufe gilt die Karte.",
+      "Para las próximas ejecuciones, la carpeta es la misma.",
+      "Per le prossime esecuzioni serve la cartella.",
+      "Para as próximas execuções, a pasta é a mesma.",
+      "De factuur is genoteerd in het systeem.",
+      "Voor volgende runs blijft de map hetzelfde.",
+      "Na kolejne uruchomienia folder jest ten sam.",
+      "Faktura jest zanotowane w systemie.",
     ]) expect(claims(text), text).toBeUndefined();
   });
 

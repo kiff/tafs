@@ -34,50 +34,40 @@ export const TAF_WORDING: readonly TafWording[] = [
     `c${APOS}est noté`,
     `je (?:m${APOS}en )?souviendrai`,
     `je (?:le |la |l${APOS})?retiens`,
-    `pour les prochaines? (?:exécutions?|fois)`,
   ], "Je ne l'ai pas enregistré. Pour qu'il serve à chaque exécution, demandez à Coach de l'ajouter à ma configuration."),
   rule([
     `ich habe (?:[\\pL-]+ ){0,3}(?:notiert|vermerkt)`,
     `ich habe mir (?:[\\pL-]+ ){0,3}gemerkt`,
-    `(?:ist )?notiert`,
     `ich (?:merke|notiere) mir`,
     `ich werde mir (?:[\\pL-]+ ){0,2}merken`,
-    `für (?:künftige|zukünftige|die nächsten) (?:läufe|male)`,
-  ], "Das habe ich nicht gespeichert. Damit es bei jedem Lauf gilt, bitte Coach, es zu meiner Einrichtung hinzuzufügen."),
+  ], "Das habe ich nicht gespeichert. Damit es bei jedem Lauf gilt, bitte Coach, es zu meinem Setup hinzuzufügen."),
   rule([
     `(?:lo |la )?he (?:[\\pL-]+ )?(?:anotado|apuntado|memorizado|tomado nota)`,
     `(?:queda|ya está) anotado`,
     `tomo nota`,
     `(?:lo |la )?recordaré`,
-    `para (?:las )?próximas (?:ejecuciones|veces)`,
   ], "No lo he guardado. Para que sirva en cada ejecución, pide a Coach que lo añada a mi configuración."),
   rule([
     `(?:l${APOS})?ho (?:[\\pL-]+ )?(?:annotato|memorizzato|preso nota)`,
     `prendo nota`,
     `(?:me lo |lo )?ricorderò`,
-    `per le prossime (?:esecuzioni|volte)`,
   ], "Non l'ho salvato. Perché valga a ogni esecuzione, chiedi a Coach di aggiungerlo alla mia configurazione."),
   rule([
     `(?:já )?(?:anotei|tomei nota|memorizei)`,
     `fica anotado`,
     `(?:vou|irei) (?:me )?lembrar`,
     `lembrarei`,
-    `para as próximas (?:execuções|vezes)`,
   ], "Não guardei isso. Para valer em cada execução, peça ao Coach para o adicionar à minha configuração."),
   rule([
     `ik heb (?:[\\pL-]+ ){0,3}(?:genoteerd|onthouden)`,
-    `(?:is )?genoteerd`,
     `ik (?:zal )?(?:[\\pL-]+ ){0,2}onthouden`,
     `ik onthoud`,
-    `voor (?:volgende|toekomstige) (?:runs|keren)`,
-  ], "Dat heb ik niet opgeslagen. Vraag Coach om het aan mijn instellingen toe te voegen, zodat het bij elke run geldt."),
+  ], "Dat heb ik niet opgeslagen. Vraag Coach om het aan mijn setup toe te voegen, zodat het bij elke run geldt."),
   rule([
     `(?:zanotowa|zapamięta)(?:łem|łam)`,
     `zapisa(?:łem|łam)(?: to| sobie)? w (?:moich )?notatkach`,
     `zapamiętam`,
-    `zanotowane`,
-    `na (?:przyszłe|kolejne) (?:uruchomienia|razy)`,
-  ], "Tego nie zapisano. Aby obowiązywało przy każdym uruchomieniu, poproś Coach o dodanie tego do mojej konfiguracji."),
+  ], "Tego nie zapisano. Aby obowiązywało przy każdym uruchomieniu, poproś Coacha o dodanie tego do mojej konfiguracji."),
 ];
 
 /**
