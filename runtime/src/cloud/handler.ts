@@ -6348,18 +6348,19 @@ export function cardDifferences(first: readonly unknown[], later: readonly unkno
   };
   const canon = (x: unknown): unknown => Array.isArray(x) ? x.map(canon)
     : x && typeof x === "object" ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, canon((x as Record<string, unknown>)[k])])) : x;
+  // Every grant under a tool, sorted: a tool named twice (pinned and unpinned) is never read as the one it names last.
   const named = (cards: readonly unknown[]) => {
-    const out = new Map<string, string>();
+    const lists = new Map<string, string[]>();
     for (const card of cards) {
       const grants = (card as { grants?: unknown })?.grants;
       if (!Array.isArray(grants)) continue;
       for (const g of grants) {
         const { action, ...rest } = (g ?? {}) as Record<string, unknown>;
         const key = keyOf(action);
-        if (key) out.set(key, JSON.stringify(canon({ grant: rest, connection: safety(action) })));
+        if (key) lists.set(key, [...(lists.get(key) ?? []), JSON.stringify(canon({ grant: rest, connection: safety(action) }))]);
       }
     }
-    return out;
+    return new Map([...lists].map(([k, v]) => [k, JSON.stringify(v.sort())]));
   };
   const a = named(first), b = named(later);
   return [

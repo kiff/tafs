@@ -3702,6 +3702,17 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     // The same vendor tool on a connection without the draft pin: it could make a finished invoice, so it isn't the same.
     repointed([{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_nopin", max_per_day: 10 }]);
     expect(String((await sw()).body.error)).toContain("changes qonto create_client_invoice");
+    // The same vendor tool named twice, pinned and unpinned, in either order and on one Card or two: never read as the pinned one alone.
+    for (const grants of [
+      [{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_nopin", max_per_day: 10 }, { action: "create_client_invoice_0cty", max_per_day: 10 }],
+      [{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_0cty", max_per_day: 10 }, { action: "create_client_invoice_nopin", max_per_day: 10 }],
+    ]) {
+      repointed(grants);
+      expect(String((await sw()).body.error), JSON.stringify(grants)).toContain("changes qonto create_client_invoice");
+    }
+    w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae", cards: v2 }, drf_v2b: { status: "draft", agent_id: "rae",
+      cards: [{ grants: [{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_0cty", max_per_day: 10 }] }, { grants: [{ action: "create_client_invoice_nopin", max_per_day: 10 }] }] } };
+    expect(String((await sw()).body.error)).toContain("changes qonto create_client_invoice");
     // Widened: a limit changed, or a tool added.
     repointed([{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_0cty", max_per_day: 50 }]);
     expect(String((await sw()).body.error)).toContain("changes qonto create_client_invoice");
