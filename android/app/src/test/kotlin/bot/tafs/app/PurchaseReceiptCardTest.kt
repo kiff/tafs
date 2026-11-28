@@ -38,7 +38,7 @@ class PurchaseReceiptCardTest {
   @get:Rule val compose = createComposeRule()
 
   private val value = KiffClient.json.parseToJsonElement(File("../../contracts/purchase.json").readText()).jsonObject
-    .getValue("receipt").jsonObject.getValue("value").jsonObject
+    .getValue("receipt").jsonObject.getValue("value").jsonObject.let(::orderKeyed)
 
   private val entry = KiffMapping.record(
     listOf(

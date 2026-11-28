@@ -72,7 +72,7 @@ and its sheet reads the receipt from there (`PurchaseReceipt`, `AppModel.purchas
 
 - **Every word is KIFF's:**
   - `words.state` ("Bought", "Not known yet", "Not bought"), then `line`;
-  - then what was allowed, the card, the order and refunds, as sent.
+  - then what was allowed, the card, the order (`words.order`, or `shipping` on a receipt from before) and refunds, as sent.
 
   `unknown` is said as unknown, never as bought.
 - **Checked on the phone:** Ed25519 over the canonical JSON (RFC 8785) of `value` without `sig`, checked against KIFF's receipt

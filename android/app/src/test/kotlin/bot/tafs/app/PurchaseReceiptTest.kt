@@ -21,9 +21,18 @@ import org.junit.Test
  * over the canonical JSON of `value` without `sig`, against a key the phone holds. The contract's `sig` is a placeholder, so a
  * test key signs the contract's own value here.
  */
+/** The contract's receipt with its order line as `words.order`, whichever key the contract file still uses. */
+internal fun orderKeyed(v: JsonObject): JsonObject {
+  val words = v["words"] as? JsonObject ?: return v
+  val shipping = words["shipping"] ?: return v
+  if (words.containsKey("order")) return v
+  return JsonObject(v + ("words" to JsonObject(words - "shipping" + ("order" to shipping))))
+}
+
 class PurchaseReceiptTest {
   private val contract = KiffClient.json.parseToJsonElement(File("../../contracts/purchase.json").readText()).jsonObject.getValue("receipt").jsonObject
-  private val value = contract.getValue("value").jsonObject
+  // The order line is `words.order` (a contract from before calls it `shipping`): the test reads either.
+  private val value = orderKeyed(contract.getValue("value").jsonObject)
   private val private = Ed25519PrivateKeyParameters(SecureRandom())
   private val keys = mapOf("kiff-receipts-1" to private.generatePublicKey().encoded)
   private val case = value.getValue("case_id").let { (it as JsonPrimitive).content }
@@ -86,6 +95,13 @@ class PurchaseReceiptTest {
     assertNull(PurchaseReceipt.read(with(value, "schema", JsonPrimitive("kiff.receipt.v1"))))
     assertNull(PurchaseReceipt.read(JsonObject(value - "kid")))
     assertNull(PurchaseReceipt.read(JsonObject(value - "words")))
+  }
+
+  @Test fun theOrderLineIsOrderOrShippingOnAnOlderReceipt() {
+    val words = value.getValue("words").jsonObject
+    val older = JsonObject(value + ("words" to JsonObject(words - "order" + ("shipping" to words.getValue("order")))))
+    assertEquals("Order PL-2026-118204 confirmed by the shop.", PurchaseReceipt.read(older)!!.words.order)
+    assertEquals("Order PL-2026-118204 confirmed by the shop.", PurchaseReceipt.read(value)!!.words.order)
   }
 
   @Test fun withNoKeyPinnedYetNothingReadsAsChecked() {

@@ -32,11 +32,12 @@ data class PurchaseReceipt(
     val state: String,
     val allowed: String? = null,
     val card: String? = null,
-    val shipping: String? = null,
+    /** The order's state, as the shop confirmed it (`words.order`). */
+    val order: String? = null,
     val refunds: String? = null,
   ) {
     /** The lines under the state, in the contract's order. */
-    val lines: List<String> get() = listOfNotNull(allowed, card, shipping, refunds)
+    val lines: List<String> get() = listOfNotNull(allowed, card, order, refunds)
   }
 
   /** What the phone's check of a receipt found. */
@@ -92,7 +93,8 @@ data class PurchaseReceipt(
         digest = v.text("digest") ?: return null,
         caseState = states?.text("case").orEmpty(),
         path = v.text("path"),
-        words = Words(line, state, word("allowed"), word("card"), word("shipping"), word("refunds")),
+// `order`, or `shipping` on a receipt issued before the order line had its own name.
+        words = Words(line, state, word("allowed"), word("card"), word("order") ?: word("shipping"), word("refunds")),
         kid = v.text("kid") ?: return null,
         signed = JsonObject(v - "sig"),
         sig = v.text("sig") ?: return null,
