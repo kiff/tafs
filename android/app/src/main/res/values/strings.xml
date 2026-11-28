@@ -2182,6 +2182,7 @@
     <string name="sample_support_next_step">Ask for a photo first</string>
     <string name="sample_support_promise_7802">Promise a replacement on ticket #7802</string>
     <string name="sample_support_promise_7802_why">Arrived broken, photo attached</string>
+    <string name="sample_support_reply_4821">Reply to ticket #4821, promising a replacement</string>
     <string name="sample_support_reply_7781">Reply to ticket #7781</string>
     <string name="sample_support_reply_7781_why">Asked where the order is; tracking attached</string>
     <string name="sample_support_reply_7790">Reply to ticket #7790</string>

@@ -543745,6 +543745,269 @@
         }
       }
     },
+    "sample.support.reply_4821": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرد على التذكرة ⁦#4821⁩ مع وعد باستبدال"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#4821 müraciətinə əvəzetmə vəd edərək cavab verin"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отговор на запитване № 4821 с обещание за замяна"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টিকিট #4821-এর উত্তর দিন, প্রতিস্থাপনের প্রতিশ্রুতি দিয়ে"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respon el tiquet #4821 prometent una substitució"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpovědět na tiket č. 4821 se slibem výměny"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket #4821 beantworten und einen Ersatz zusagen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply to ticket #4821, promising a replacement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder al ticket #4821 prometiendo un reemplazo"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vasta piletile #4821, lubades asendust"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondre au ticket n° 4821 en promettant un remplacement"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מענה לפנייה ⁦#4821⁩ עם הבטחה להחלפה"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "टिकट #4821 का जवाब दें, बदलने का वादा करते हुए"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odgovorite na zahtjev #4821 uz obećanje zamjene"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válasz a #4821-es jegyre, cserét ígérve"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Պատասխանեք #4821 հայտին՝ փոխարինում խոստանալով"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balas tiket #4821 dengan menjanjikan penggantian"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispondi al ticket n. 4821 promettendo una sostituzione"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チケット #4821に返信（交換を約束）"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "უპასუხეთ მოთხოვნას #4821 ჩანაცვლების დაპირებით"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ឆ្លើយតបសំបុត្រ #4821 ដោយសន្យាផ្តល់ការប្តូរ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "티켓 #4821에 교환을 약속하는 답장"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ຕອບປີ້ #4821 ໂດຍສັນຍາປ່ຽນໃໝ່"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atsakyti į užklausą #4821 pažadant pakeitimą"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atbildēt uz pieteikumu #4821, apsolot apmaiņu"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одговори на барањето #4821 со ветување за замена"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#4821 хүсэлтэд солих амлалттайгаар хариулах"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "टिकट #४८२१ को जवाफ दिनुहोस्, बदल्ने वाचा गर्दै"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket #4821 beantwoorden met de belofte van een vervanging"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpowiedź na zgłoszenie #4821 z obietnicą wymiany"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder ao pedido n.º 4821 prometendo uma substituição"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder ao ticket #4821 prometendo uma troca"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Răspundeți la tichetul nr. 4821, promițând o înlocuire"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpovedať na tiket č. 4821 so sľubom výmeny"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odgovori na zahtevek št. 4821 z obljubo zamenjave"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Përgjigjuni biletës #4821 duke premtuar një zëvendësim"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odgovorite na zahtev #4821 uz obećanje zamene"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ตอบทิกเก็ต #4821 โดยสัญญาว่าจะเปลี่ยนสินค้าให้"
+          }
+        },
+        "tk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#4821 ýüzlenmä çalyşmagy wada berip jogap beriň"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#4821 numaralı talebe değişim sözü vererek yanıt ver"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ٹکٹ #4821 کا جواب دیں، تبدیلی کا وعدہ کرتے ہوئے"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trả lời phiếu #4821, hứa đổi hàng"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回覆工單 #4821，承諾更換商品"
+          }
+        }
+      }
+    },
     "sample.support.reply_7781": {
       "extractionState": "manual",
       "localizations": {

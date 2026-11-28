@@ -4302,6 +4302,8 @@ enum Words {
             static var promise7802: String { Words.line("sample.support.promise_7802") }
             /// Arrived broken, photo attached
             static var promise7802Why: String { Words.line("sample.support.promise_7802_why") }
+            /// Reply to ticket #4821, promising a replacement
+            static var reply4821: String { Words.line("sample.support.reply_4821") }
             /// Reply to ticket #7781
             static var reply7781: String { Words.line("sample.support.reply_7781") }
             /// Asked where the order is; tracking attached
