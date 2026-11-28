@@ -128,7 +128,7 @@ describe("the purchase contract", () => {
     expect(doc.states.order).toContain(r.states.order);
     expect(r.kid).toBeTruthy();
     expect(r.path).toBe(c.path);
-    for (const k of ["line", "state", "allowed", "card", "shipping", "refunds"]) expect(r.words[k], k).toBeTruthy();
+    for (const k of ["line", "state", "allowed", "card", "order", "refunds"]) expect(r.words[k], k).toBeTruthy();
     expect(doc.receipt["approver.method"]).toContain(r.approver.method);
     expect(typeof r.approver.self).toBe("boolean");
     expect(doc.receipt.examples.unknown.words.state).toBe("Not known yet");
