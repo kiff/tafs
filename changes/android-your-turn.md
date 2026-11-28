@@ -1,0 +1,1 @@
+- **"Your turn" on Android (Android).** A step a taf hands its owner in the hosted browser (a cookie wall, a check) shows in Needs you in tafs cloud's words, with Open, which asks planque for its live view signed by this phone and opens it only on planque's own address, and Not now, signed too. See [Approvals](docs/approvals.md).

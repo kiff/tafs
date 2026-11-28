@@ -1760,6 +1760,7 @@
     <string name="people_title">लोग और समूह</string>
     <string name="people_uses">%1$s का उपयोग करता है</string>
     <string name="people_uses_none">अभी कोई taf उपयोग नहीं करता</string>
+    <string name="purchase_unreadable">यह खरीद पढ़ी नहीं जा सकती, इसलिए इसे मंज़ूर नहीं किया जा सकता।</string>
     <string name="push_channel_briefs">ब्रीफ़</string>
     <string name="push_channel_briefs_description">आपकी ब्रीफ़ उसके तय समयों पर।</string>
     <string name="push_channel_holds_description">कोई कॉल आपके उत्तर के लिए रोकी गई है। आपके मंज़ूर करने तक कुछ नहीं भेजा जाता।</string>

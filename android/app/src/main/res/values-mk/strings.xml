@@ -1760,6 +1760,7 @@
     <string name="people_title">Луѓе и групи</string>
     <string name="people_uses">Користи %1$s</string>
     <string name="people_uses_none">Сè уште не користи ниеден taf</string>
+    <string name="purchase_unreadable">Ова купување не може да се прочита, па не може да се одобри.</string>
     <string name="push_channel_briefs">Прегледи</string>
     <string name="push_channel_briefs_description">Твојот преглед во зададените часови.</string>
     <string name="push_channel_holds_description">Едно барање е задржано за твојот одговор. Ништо не се испраќа додека не го одобриш.</string>

@@ -736,6 +736,9 @@ class KiffClient(
   /** KIFF's receipt for a call, as KIFF wrote it: its bytes are what [ReceiptCheck] checks, never decoded and written again. */
   suspend fun receipt(traceId: String): ByteArray = send("GET", "/v1/receipts/${escaped(traceId)}")
 
+  /** KIFF's signed receipt for a purchase case, once the case has ended (404 before): `contracts/purchase.json`, `receipt.value`. */
+  suspend fun purchaseReceipt(caseId: String): ByteArray = send("GET", "/v1/me/purchases/${escaped(caseId)}/receipt")
+
   /**
    * KIFF's words for a connection's [profile] (KIFF's profile contract, `kiff.words.v1`), with this person's session: the words the owner reads before
    * approving, checked against their digests here ([ProfileWords.checked]).
@@ -1166,7 +1169,8 @@ class KiffClient(
     /**
      * What the phone signs to answer a held call: KIFF's signed answer message, `kiff.answer.v1`, one field per line. For a held
      * sealed fill, [browserSha256] (the hold's `browser_sha256`) is a ninth line, so the answer covers the block the card drew;
-     * no line otherwise.
+     * no line otherwise. For a held purchase, [purchase] (`purchase:<case_id>:<version>:<digest>`, [PurchaseHold.line]) is the last
+     * line, so the answer binds that case's digest (contracts/purchase.json, `answer`); a purchase never has a browser line.
      */
     fun answerMessage(
       tenant: String,
@@ -1177,10 +1181,12 @@ class KiffClient(
       accountingVersion: Int,
       signedAt: String,
       browserSha256: String? = null,
+      purchase: String? = null,
     ): ByteArray {
+      require(purchase.isNullOrEmpty() || browserSha256.isNullOrEmpty()) { "a purchase has no browser line" }
       val noteHash = note?.takeIf { it.isNotEmpty() }?.let { sha256Hex(it.toByteArray()) } ?: ""
       val lines = listOf("kiff.answer.v1", tenant, exceptionId, answer, nextStep ?: "", noteHash, accountingVersion.toString(), signedAt) +
-        listOfNotNull(browserSha256?.takeIf { it.isNotEmpty() })
+        listOfNotNull(browserSha256?.takeIf { it.isNotEmpty() }, purchase?.takeIf { it.isNotEmpty() })
       return lines.joinToString("\n").toByteArray()
     }
 

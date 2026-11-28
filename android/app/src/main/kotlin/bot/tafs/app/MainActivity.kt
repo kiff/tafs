@@ -400,6 +400,7 @@ fun RootView(model: AppModel) {
         ),
         // KIFF's receipt for a Record line, signed in: the sample has none.
         LocalReceipt provides (if (state.mode == Mode.kiff) model::receipt else null),
+        bot.tafs.app.views.LocalPurchaseReceipt provides (if (state.mode == Mode.kiff) model::purchaseReceipt else null),
         LocalReportPayment provides (if (state.mode == Mode.kiff) model::reportPayment else null),
         // The pictures kept before a Record line's Chrome steps, signed in: the sample has none.
         bot.tafs.app.views.LocalChromeShots provides remember(model, state.mode) {
@@ -411,6 +412,7 @@ fun RootView(model: AppModel) {
         bot.tafs.app.views.LocalYourStepActions provides remember(model) { bot.tafs.app.views.YourStepActions(answer = model::answerYourStep) },
         bot.tafs.app.views.LocalAllowHold provides (if (state.mode == Mode.kiff && state.canManageCards) model::openAllow else null),
         bot.tafs.app.views.LocalFillRefusal provides model::fillRefusal,
+        bot.tafs.app.views.LocalApprovePurchase provides (if (state.mode == Mode.kiff) ({ call, shown -> model.answer(call, bot.tafs.app.model.Answer.ApproveOnce, shownPurchase = shown) }) else null),
         LocalCoachInstalls provides remember(model) {
           CoachInstalls(
             begin = model::beginCoachInstall,
@@ -638,6 +640,10 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
       answer = { taf, knock, action, say -> model.answerKnock(taf, knock, action, say) },
       sendReply = model::sendHeldReply,
       discardReply = model::discardHeldReply,
+      answerUnanswered = model::answerUnanswered,
+      ignoreUnanswered = model::ignoreUnanswered,
+      // Connect an app, for a writer the taf couldn't answer because an app isn't connected: the account's Connect apps.
+      connectApp = { showingConnectApps = true },
       dismissError = model::dismissDoorsError,
       loadKnob = model::loadKnob,
       runNow = { taf -> model.runNow(taf); model.loadKnob(taf) },
@@ -1053,7 +1059,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
         Tab.NeedsYou -> BriefTab(state, briefActions, onAnswerHold = { call, answer -> model.answer(call, answer) }) {
           NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null,
             // A taf with knocks opens on Activity, where they're answered, as a knock's alert opens it.
-            onOpenKnocks = if (state.mode == Mode.kiff) ({ id -> tab = Tab.Tafs; showingSettings = false; coachOpen = false; openTaf = id; openOnActivity = id }) else null)
+            onOpenKnocks = if (state.mode == Mode.kiff) ({ id -> tab = Tab.Tafs; showingSettings = false; coachOpen = false; openTaf = id; openOnActivity = id }) else null,
+            onYourTurn = if (state.mode == Mode.kiff) ({ turn, open -> scope.launch { if (open) model.openYourTurn(turn) else model.declineYourTurn(turn) } }) else null)
         }
         Tab.Record -> RecordView(
           state,

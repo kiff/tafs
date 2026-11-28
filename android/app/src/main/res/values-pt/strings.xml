@@ -1760,6 +1760,7 @@
     <string name="people_title">Pessoas e grupos</string>
     <string name="people_uses">Usa %1$s</string>
     <string name="people_uses_none">Ainda não usa nenhum taf</string>
+    <string name="purchase_unreadable">Esta compra não pode ser lida, por isso não pode ser aprovada.</string>
     <string name="push_channel_briefs">Resumos</string>
     <string name="push_channel_briefs_description">O seu resumo às horas definidas.</string>
     <string name="push_channel_holds_description">Uma chamada está retida à espera da sua resposta. Nada é enviado até a aprovar.</string>

@@ -1,0 +1,1 @@
+- **A taf says an amount's currency once (tafs cloud).** A record's major amount, as planque writes it ("45.00 EUR"), was said with the symbol added ("a €45.00 EUR charge"). A taf now says the number with the currency's symbol in place of its code (€45.00); a currency with no common symbol keeps its code in front (KWD 0.700).

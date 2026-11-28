@@ -1821,6 +1821,7 @@
     <string name="people_title">Cilvēki un grupas</string>
     <string name="people_uses">Lieto: %1$s</string>
     <string name="people_uses_none">Vēl nelieto nevienu taf</string>
+    <string name="purchase_unreadable">Šo pirkumu nevar nolasīt, tāpēc to nevar apstiprināt.</string>
     <string name="push_channel_briefs">Kopsavilkumi</string>
     <string name="push_channel_briefs_description">Tavs kopsavilkums noteiktajos laikos.</string>
     <string name="push_channel_holds_description">Izsaukums ir aizturēts, gaidot tavu atbildi. Nekas netiek nosūtīts, kamēr tu to neapstiprini.</string>

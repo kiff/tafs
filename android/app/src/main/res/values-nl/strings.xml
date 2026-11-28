@@ -1760,6 +1760,7 @@
     <string name="people_title">Mensen en groepen</string>
     <string name="people_uses">Gebruikt %1$s</string>
     <string name="people_uses_none">Gebruikt nog geen taf</string>
+    <string name="purchase_unreadable">Deze aankoop is niet leesbaar, dus kan hij niet worden goedgekeurd.</string>
     <string name="push_channel_briefs">Briefings</string>
     <string name="push_channel_briefs_description">Jouw briefing op de vaste tijden.</string>
     <string name="push_channel_holds_description">Een aanroep wordt vastgehouden voor je antwoord. Er wordt niets verzonden tot je het goedkeurt.</string>

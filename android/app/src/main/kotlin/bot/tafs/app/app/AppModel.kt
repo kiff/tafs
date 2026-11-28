@@ -184,6 +184,8 @@ data class TafDoors(
   val knocks: List<Knock> = emptyList(),
   /** Replies waiting for the owner to send them, with the exact text (docs/doors.md). */
   val replies: List<bot.tafs.app.kiff.HeldReply> = emptyList(),
+  /** Writers the taf couldn't answer, held for the owner with nothing drafted (docs/doors.md). */
+  val unanswered: List<bot.tafs.app.kiff.Unanswered> = emptyList(),
   val loaded: Boolean = false,
   val busy: Boolean = false,
   val error: String? = null,
@@ -326,6 +328,10 @@ data class AppState(
   val setAsideNote: String? = null,
   /** Cards asked to take another currency, as tafs cloud draws them from KIFF; counted with the held calls in Needs you. */
   val cardUnitExceptions: List<bot.tafs.app.kiff.CardUnitException> = emptyList(),
+  /** Steps handed to the owner in the hosted browser ("Your turn"), as Home lists them, with tafs cloud's words. */
+  val yourTurns: List<bot.tafs.app.kiff.YourTurn> = emptyList(),
+  /** The hand being opened or put off now: its row waits, so a second tap sends nothing. */
+  val answeringTurn: String? = null,
   /** The ones whose Dismiss is on its way to KIFF. */
   val dismissingCardUnits: Set<String> = emptySet(),
   /** The ones KIFF took a Dismiss for: kept out of every page and Setup read since, even one that was on its way already. */
@@ -830,7 +836,7 @@ data class AppState(
   /** Coach's waiting rows as Needs you draws them: one being set aside isn't drawn while tafs cloud is asked. */
   val coachWaitingShown: List<bot.tafs.app.kiff.CoachWaiting> get() = coachWaiting.filterNot { it.session in settingAside }
 
-  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size + coachWaiting.size)
+  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size + coachWaiting.size + yourTurns.size)
 
   /**
    * The tab's badge: Needs you's count, less a Coach chat waiting on its person while that very chat is on screen, where the
@@ -1767,6 +1773,9 @@ class AppModel(
         settingUp = settingUp.orEmpty(),
         held = held,
         cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
+        yourTurns = read.home.yourTurns.orEmpty().filter { t ->
+          t.grant.isNotBlank() && t.hand.isNotBlank() && t.words.title.isNotBlank() && t.words.open.isNotBlank() && t.words.notNow.isNotBlank()
+        },
         yourSteps = read.home.yourSteps.orEmpty().filterNot { it.handoff in s.answeredSteps },
         coachWaiting = read.home.coachWaiting.orEmpty().filter { it.session.isNotBlank() && it.words.line.isNotBlank() && it.session !in s.settingAside },
         coachWaitingClear = read.home.coachWaitingClear?.takeIf { it.words.button.isNotBlank() },
@@ -2917,6 +2926,16 @@ class AppModel(
 
   /** KIFF's receipt for a Record line, as KIFF wrote it, for the phone to check. */
   suspend fun receipt(traceId: String): ByteArray = kiff.receipt(traceId)
+
+  /**
+   * KIFF's purchase receipt for [caseId], read and checked on this phone against the keys pinned in the app
+   * ([bot.tafs.app.kiff.PurchaseReceipt.PINNED]), never a key fetched with it. Null when KIFF's answer isn't a purchase receipt.
+   */
+  suspend fun purchaseReceipt(caseId: String): Pair<bot.tafs.app.kiff.PurchaseReceipt, bot.tafs.app.kiff.PurchaseReceipt.Check>? {
+    val raw = kiff.purchaseReceipt(caseId)
+    val r = bot.tafs.app.kiff.PurchaseReceipt.read(KiffClient.json.parseToJsonElement(String(raw, Charsets.UTF_8))) ?: return null
+    return r to r.check(caseId)
+  }
 
   /**
    * Finishes removals tafs cloud lists as begun. They were confirmed, signed, when they began; finishing only deletes what's left of a
@@ -4899,6 +4918,50 @@ class AppModel(
   }
 
   fun closeSiteSignIn() = _state.update { it.copy(siteSignIn = null) }
+
+  /**
+   * Opens a step a taf handed its owner in the hosted browser ("Your turn"): planque's live view, asked for with this device's
+   * signature and opened as the site sign-in's is, only on planque's own address. The owner does the step there, and Done or Not
+   * now is the page's own. A step that no longer waits (410) leaves the list.
+   */
+  suspend fun openYourTurn(turn: bot.tafs.app.kiff.YourTurn) = answerTurn(turn) {
+    val view = planque.handView(turn.grant, turn.hand) { signer.signConfirmed(it) }
+    if (!onPlanque(view.view)) {
+      fail(Words.Connect.SignInView.wrongAddress)
+      return@answerTurn
+    }
+    _state.update { it.copy(siteSignIn = view) }
+  }
+
+  /** Not now on a handed step: signed, nothing kept, and the row goes. */
+  suspend fun declineYourTurn(turn: bot.tafs.app.kiff.YourTurn) = answerTurn(turn) {
+    planque.handDecline(turn.grant, turn.hand) { signer.signConfirmed(it) }
+    _state.update { s -> s.copy(yourTurns = s.yourTurns.filterNot { it.hand == turn.hand }) }
+  }
+
+  private suspend fun answerTurn(turn: bot.tafs.app.kiff.YourTurn, act: suspend () -> Unit) {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null || _state.value.answeringTurn != null) return
+    val generation = accountGeneration
+    _state.update { it.copy(answeringTurn = turn.hand) }
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    try {
+      act()
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation != accountGeneration) return
+      if (e is PlanqueError.Server && e.status == 410) {
+        // It no longer waits: done, put off or lapsed. Gone from the list, and the next read agrees.
+        _state.update { s -> s.copy(yourTurns = s.yourTurns.filterNot { it.hand == turn.hand }) }
+      } else if (e !is SignerException) {
+        fail(Words.Connect.SignInView.notOpened(why = ErrorWords.of(e)))
+      }
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(answeringTurn = null) }
+    }
+  }
 
   /** Whether [url] is on planque's own https origin (scheme, host and port): the only place a sign-in view may come from. */
   private fun onPlanque(url: String): Boolean = bot.tafs.app.views.sameHttpsOrigin(url, planque.baseUrl)
@@ -7841,9 +7904,10 @@ class AppModel(
     installed: Boolean = false,
     approvedWithCard: Boolean = false,
     presigned: SignedAnswer? = null,
+    shownPurchase: bot.tafs.app.model.PurchaseApproval? = null,
   ): Boolean =
     // A held call's answer that goes through ticks success; one that doesn't, a warning.
-    answerNow(call, answer, confirmed, installed, approvedWithCard, presigned).also { done ->
+    answerNow(call, answer, confirmed, installed, approvedWithCard, presigned, shownPurchase).also { done ->
       if (done) bot.tafs.app.design.Haptics.success() else bot.tafs.app.design.Haptics.warning()
     }
 
@@ -7854,9 +7918,23 @@ class AppModel(
     installed: Boolean,
     approvedWithCard: Boolean,
     presigned: SignedAnswer?,
+    shownPurchase: bot.tafs.app.model.PurchaseApproval?,
   ): Boolean {
     val before = _state.value
     if (before.held.none { it.id == call.id }) return false
+    // A held purchase (docs/purchases.md) is answered with Approve once or Refuse only, and every answer signs its case's line.
+    // Approve once only from its own card, the case it drew being the case held ([shownPurchase]): never from another screen, a
+    // presigned answer or a Card's confirm. One whose case can't be read can't be signed at all; one whose words can't be read,
+    // only refused.
+    if (call.isPurchase) {
+      val approving = answer is Answer.ApproveOnce
+      if (call.purchaseLine == null || (answer !is Answer.ApproveOnce && answer !is Answer.Refuse) ||
+        approving && (call.purchase == null || shownPurchase != call.purchase || presigned != null || confirmed || installed || approvedWithCard)
+      ) {
+        fail(Words.Purchase.unreadable)
+        return false
+      }
+    }
     // Approving Coach's install is installing it (kiff/tafs#206): the switch and its Card come first, then this answer, so
     // tafs never hears of a half-done install.
     if (call.install != null && answer is Answer.ApproveOnce && !confirmed && !installed) {
@@ -7911,7 +7989,12 @@ class AppModel(
     val answered = try {
       presigned ?: signAnswer(
         call, answer,
-        if (release != null) Words.Chrome.releasePromptAllow(site = call.browser?.site.orEmpty()) else Words.NeedsYou.Prompt.answer(summary = call.proposed.summary),
+        when {
+          release != null -> Words.Chrome.releasePromptAllow(site = call.browser?.site.orEmpty())
+          // KIFF's own words for what's bought: the shop and the total.
+          call.purchase != null -> call.purchase.words.prompt
+          else -> Words.NeedsYou.Prompt.answer(summary = call.proposed.summary)
+        },
         confirmed,
       )
     } catch (e: SignerException) {
@@ -8014,7 +8097,7 @@ class AppModel(
     var signedAt = ""
     val message = {
       signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
-      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt, call.browserSha256)
+      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt, call.browserSha256.takeIf { call.purchaseLine == null }, call.purchaseLine)
     }
     // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
     // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no
@@ -8164,7 +8247,13 @@ class AppModel(
     val generation = accountGeneration
     kiff.tenant = tenant
     return try {
-      kiff.draft(id).takeIf { generation == accountGeneration }
+      val draft = kiff.draft(id).takeIf { generation == accountGeneration }
+      // A Card that opens a category (K4) is one this phone can't draw yet: never shown as if it didn't, so never signed here.
+      if (draft != null && draft.cards.orEmpty().any { c -> c.grants.orEmpty().any { it.opens.orEmpty().isNotEmpty() } }) {
+        versionError(tafId, Words.Version.cardNotRead(why = Words.Coach.unknownAnswer))
+        return null
+      }
+      draft
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -8479,7 +8568,7 @@ class AppModel(
       try {
         val read = cloud.doors(cloudId)
         if (generation != accountGeneration) return
-        updateDoors(tafId) { it.copy(doors = read.doors, apps = read.apps, knocks = read.knocks, replies = read.replies, loaded = true, error = null) }
+        updateDoors(tafId) { it.copy(doors = read.doors, apps = read.apps, knocks = read.knocks, replies = read.replies, unanswered = read.unanswered, loaded = true, error = null) }
         return
       } catch (e: CancellationException) {
         throw e
@@ -8747,6 +8836,60 @@ class AppModel(
       cloud.discardHeldReply(cloudId, reply.run)
       if (generation != accountGeneration) return false
       updateDoors(tafId) { d -> d.copy(replies = d.replies.filterNot { it.run == reply.run }, error = null) }
+      refresh()
+      return true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = ErrorWords.of(e)) }
+      return false
+    } finally {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
+  /**
+   * Answers a writer the taf couldn't answer in the owner's own words (docs/doors.md): the approval key, behind the fingerprint,
+   * signs `POST` with [text] exactly as typed and this phone's hash of it, and tafs cloud sends only that text, to that writer
+   * only. False when nothing went.
+   */
+  suspend fun answerUnanswered(tafId: String, writer: bot.tafs.app.kiff.Unanswered, text: String): Boolean {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || !_state.value.manages(tafId)) return false
+    val words = writer.words?.takeIf { it.prompt.isNotBlank() } ?: return false
+    if (text.isBlank()) return false
+    val path = cloud.heldReplyPath(cloudId, writer.run)
+    val body = cloud.ownReplyBody(text, bot.tafs.app.kiff.PlanqueClient.sha256Hex(text.toByteArray(Charsets.UTF_8)))
+    val signature = signDoor(tafId, "POST", path, body, words.prompt) ?: return false
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true) }
+    try {
+      cloud.sendHeldReply(cloudId, writer.run, body, signature)
+      if (generation != accountGeneration) return false
+      updateDoors(tafId) { d -> d.copy(unanswered = d.unanswered.filterNot { it.run == writer.run }, error = null) }
+      refresh()
+      return true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // tafs cloud's own words for why nothing went (an answer too long, say), or the app's when it sends none.
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = ErrorWords.of(e)) }
+      return false
+    } finally {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
+  /** Ignores a writer the taf couldn't answer: nothing goes to them, so nothing is signed. */
+  suspend fun ignoreUnanswered(tafId: String, writer: bot.tafs.app.kiff.Unanswered): Boolean {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || !_state.value.manages(tafId)) return false
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true) }
+    try {
+      cloud.discardHeldReply(cloudId, writer.run)
+      if (generation != accountGeneration) return false
+      updateDoors(tafId) { d -> d.copy(unanswered = d.unanswered.filterNot { it.run == writer.run }, error = null) }
       refresh()
       return true
     } catch (e: CancellationException) {

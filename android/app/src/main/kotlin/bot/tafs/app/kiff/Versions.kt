@@ -122,7 +122,16 @@ data class DraftGrant(
   val resources: DraftResources? = null,
   /** The answers besides approve and refuse the owner may give on a held call under this grant. */
   @SerialName("next_steps") val nextSteps: List<String>? = null,
-)
+  /**
+   * The categories the grant opens (K4: irreversible, delete or money, whole or for one argument's value), as KIFF keeps them.
+   * Read so the phone compares them: this app draws no line for an opening yet, so a draft that opens anything the Card in force
+   * doesn't is never signed here (docs/allow-from-now-on.md).
+   */
+  val opens: List<kotlinx.serialization.json.JsonElement>? = null,
+) {
+  /** Its openings as comparable text, each a canonical JSON object, in order. */
+  val openTerms: List<String> get() = opens.orEmpty().map { Jcs.canonical(it) }.sorted()
+}
 
 /** A grant's scope: one parameter, and the values it may act on. */
 @Serializable

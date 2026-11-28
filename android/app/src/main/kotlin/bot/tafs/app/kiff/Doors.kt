@@ -165,6 +165,8 @@ data class DoorsRead(
   @Serializable(with = EachKnock::class) val knocks: List<Knock> = emptyList(),
   /** Replies the taf wrote to someone outside, waiting for the owner to send them (docs/doors.md). */
   @Serializable(with = EachHeldReply::class) val replies: List<HeldReply> = emptyList(),
+  /** Writers the taf couldn't answer, held for the owner with nothing drafted (docs/doors.md). */
+  @Serializable(with = EachUnanswered::class) val unanswered: List<Unanswered> = emptyList(),
 )
 
 /**
@@ -194,6 +196,36 @@ data class HeldReplyWords(
   val changed: String = "",
 )
 
+/**
+ * A door's writer the taf couldn't answer (docs/doors.md): nothing was drafted to them, so there's no text. [cantDo] is tafs
+ * cloud's reason (`no_app`, `other`, `unfinished`); the owner connects an app, answers in their own words, or ignores it.
+ */
+@Serializable
+data class Unanswered(
+  val run: String,
+  val door: String,
+  val to: String,
+  val subject: String? = null,
+  @Serializable(with = InstantAsString::class) val at: Instant,
+  @SerialName("cant_do") val cantDo: String,
+  /** tafs cloud's words for it, in the person's language. */
+  val words: UnansweredWords? = null,
+)
+
+/**
+ * tafs cloud's words for a writer the taf couldn't answer: its line, Connect an app (only when an app is missing), Answer them
+ * yourself, Ignore, the fingerprint's prompt, and what a changed answer says.
+ */
+@Serializable
+data class UnansweredWords(
+  val line: String = "",
+  val connect: String? = null,
+  val reply: String = "",
+  val ignore: String = "",
+  val prompt: String = "",
+  val changed: String = "",
+)
+
 /** A JSON list read one item at a time: an item that can't be read is left out, never the list. */
 open class EachReadable<T>(private val item: KSerializer<T>) : KSerializer<List<T>> {
   private val list = ListSerializer(item)
@@ -212,6 +244,7 @@ internal object EachDoor : EachReadable<Door>(Door.serializer())
 internal object EachDoorApp : EachReadable<DoorApp>(DoorApp.serializer())
 internal object EachKnock : EachReadable<Knock>(Knock.serializer())
 internal object EachHeldReply : EachReadable<HeldReply>(HeldReply.serializer())
+internal object EachUnanswered : EachReadable<Unanswered>(Unanswered.serializer())
 
 @Serializable
 internal data class DoorResponse(val door: Door)

@@ -1,0 +1,2 @@
+• La réponse qu'un taf écrit à quelqu'un d'extérieur vous attend désormais sur sa page : lisez-la, puis Envoyer ou Ne pas envoyer.
+• Vous attend affiche un taf quand quelqu'un a fait une demande d'accès à sa porte, et l'ouvre là où vous répondez.

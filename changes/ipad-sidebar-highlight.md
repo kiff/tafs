@@ -1,0 +1,1 @@
+- **iPad: Plan & usage is shown as chosen in the sidebar after one tap.** A sidebar item with no count no longer carries an empty badge, which left the row unselected (kiff/tafs#2297).

@@ -1,0 +1,1 @@
+- **The purchase receipt names its order line `words.order`** (`contracts/purchase.json`): it says the order's state as the shop confirmed it; `words.shipping` is kept for the delivery's, once there is one.

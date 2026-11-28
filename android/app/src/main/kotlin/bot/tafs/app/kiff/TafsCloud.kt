@@ -943,6 +943,17 @@ class TafsCloud(
       put("text_sha256", kotlinx.serialization.json.JsonPrimitive(textSha256))
     }).toByteArray()
 
+  /**
+   * The owner's own answer to a writer the taf couldn't answer: the action, their text exactly as typed, and its hash, the exact
+   * bytes signed and sent.
+   */
+  fun ownReplyBody(text: String, textSha256: String): ByteArray =
+    KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), kotlinx.serialization.json.buildJsonObject {
+      put("action", kotlinx.serialization.json.JsonPrimitive("send"))
+      put("text", kotlinx.serialization.json.JsonPrimitive(text))
+      put("text_sha256", kotlinx.serialization.json.JsonPrimitive(textSha256))
+    }).toByteArray()
+
   /** Sends a held reply: [body] from [sendReplyBody], signed with the approval key ([signature]). 409 `reply_changed` sends nothing. */
   suspend fun sendHeldReply(id: String, run: String, body: ByteArray, signature: String) {
     send("POST", heldReplyPath(id, run), body, mapOf("KIFF-Device-Signature" to signature))

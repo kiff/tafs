@@ -161,6 +161,36 @@ data class HomeLabel(
   val mission: HomeLabelMission? = null,
 )
 
+/**
+ * A step a taf handed its owner in planque's hosted browser (docs/approvals.md, "Your turn"): the connection and hand, the site,
+ * and tafs cloud's words. The owner does it in planque's live view, asked for fresh and signed on each Open.
+ */
+@Serializable
+data class YourTurn(
+  val grant: String,
+  val hand: String,
+  val site: String = "",
+  val expires: String? = null,
+  val taf: YourTurnTaf? = null,
+  val words: YourTurnWords,
+)
+
+@Serializable
+data class YourTurnTaf(val id: String = "", val name: String = "")
+
+/** tafs cloud's words: "Your turn on {site}", the taf's ask in quotes, "Open until {HH:MM}", Open and Not now. */
+@Serializable
+data class YourTurnWords(
+  val title: String = "",
+  val ask: String = "",
+  val until: String = "",
+  val open: String = "",
+  @SerialName("not_now") val notNow: String = "",
+)
+
+/** Home's `your_turns`, one at a time: one that can't be read, or has no words to draw, is left out. */
+object EachYourTurn : EachReadable<YourTurn>(YourTurn.serializer())
+
 /** One door's light on Home: how many knocks wait at it for the owner (docs/doors.md). */
 @Serializable
 data class HomeDoorLight(
@@ -209,6 +239,8 @@ data class Home(
   @SerialName("labels_words") val labelsWords: HomeLabelsWords? = null,
   /** Cards asked to take a currency they have no limit for, for the tafs this person sees: Needs you draws them. */
   @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException>? = null,
+  /** Steps a taf handed its owner in planque's hosted browser ("Your turn"), in tafs cloud's words; absent while it's off. */
+  @SerialName("your_turns") @Serializable(with = EachYourTurn::class) val yourTurns: List<YourTurn>? = null,
   /** Steps a taf handed its owner, oldest first (docs/api.md › Your step): Needs you draws them. */
   @SerialName("your_steps") val yourSteps: List<YourStep>? = null,
   /** Coach's chats waiting on this person for an answer or approval, oldest first (docs/api.md › Coach waiting): Needs you draws them. */
@@ -609,6 +641,11 @@ data class CardException(
    * own hash ([HeldBrowser.servedSha256]).
    */
   @SerialName("browser_sha256") val browserSha256: String? = null,
+  /**
+   * A held purchase (contracts/purchase.json, `approval.value`; docs/purchases.md): the case's id, version and digest and KIFF's
+   * words for it, read by [PurchaseHold.read] so one bad block never hides the account's other held calls. Absent for any other hold.
+   */
+  val purchase: JsonElement? = null,
 )
 
 /**
@@ -742,6 +779,8 @@ data class ActivityCall(
   val detail: String? = null,
   /** KIFF: the call's tool moves money (by its owner-approved profile) and the call was sent. Only then did money move. */
   val payment: Boolean? = null,
+  /** A purchase's line: the case its signed receipt is read by (`GET /v1/me/purchases/{case_id}/receipt`). */
+  @SerialName("case_id") val caseId: String? = null,
 )
 
 @Serializable

@@ -214,7 +214,21 @@ export interface HeldReply {
   at: string;
   /** What the content check found, for the owner (guard.ts): why it couldn't go on its own. */
   concerns?: string[];
+  /**
+   * The taf couldn't do what was asked, as it said with CANT_DO and a reason (`no_app`: the app it needs isn't
+   * connected; `other`: no tool for it, something failed, or no reason given), or its run stopped before an answer
+   * (`unfinished`). Nothing was drafted, so `text` is empty: the owner answers in their own words or ignores it (and
+   * connects an app, for `no_app`), and the writer gets nothing until then. `needs_setup`: it needs something only the
+   * owner can give, of the kinds in `needs` when it named any.
+   */
+  cant_do?: "no_app" | "needs_setup" | "other" | "unfinished";
+  /** For `needs_setup`, what the taf needs from the owner, from a closed list: never its own words. */
+  needs?: Need[];
 }
+
+/** What a taf may say it needs from the owner to answer a door's writer: KIFF's words name each, never the taf's. */
+export const NEEDS = ["folder", "sheet", "file", "link", "info"] as const;
+export type Need = (typeof NEEDS)[number];
 
 /**
  * What doors keep, in tafs cloud's table. Every item but a door's route is

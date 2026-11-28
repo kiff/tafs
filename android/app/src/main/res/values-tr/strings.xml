@@ -1760,6 +1760,7 @@
     <string name="people_title">Kişiler ve gruplar</string>
     <string name="people_uses">Kullandığı: %1$s</string>
     <string name="people_uses_none">Henüz hiçbir taf kullanmıyor</string>
+    <string name="purchase_unreadable">Bu satın alma okunamıyor, bu yüzden onaylanamaz.</string>
     <string name="push_channel_briefs">Özetler</string>
     <string name="push_channel_briefs_description">Özetiniz, belirlenen saatlerde.</string>
     <string name="push_channel_holds_description">Bir çağrı yanıtınızı bekliyor. Siz onaylayana kadar hiçbir şey gönderilmez.</string>

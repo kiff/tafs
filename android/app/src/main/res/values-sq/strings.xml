@@ -1760,6 +1760,7 @@
     <string name="people_title">Njerëz dhe grupe</string>
     <string name="people_uses">Përdor %1$s</string>
     <string name="people_uses_none">Ende nuk përdor asnjë taf</string>
+    <string name="purchase_unreadable">Kjo blerje nuk mund të lexohet, ndaj nuk mund të miratohet.</string>
     <string name="push_channel_briefs">Përmbledhjet</string>
     <string name="push_channel_briefs_description">Përmbledhja juaj në orët e caktuara.</string>
     <string name="push_channel_holds_description">Një thirrje mbahet për përgjigjen tuaj. Asgjë nuk dërgohet derisa ta miratoni.</string>

@@ -1821,6 +1821,7 @@
     <string name="people_title">Žmonės ir grupės</string>
     <string name="people_uses">Naudoja: %1$s</string>
     <string name="people_uses_none">Dar nenaudoja jokio taf</string>
+    <string name="purchase_unreadable">Šio pirkimo neįmanoma perskaityti, todėl jo patvirtinti negalima.</string>
     <string name="push_channel_briefs">Suvestinės</string>
     <string name="push_channel_briefs_description">Jūsų suvestinė nustatytu laiku.</string>
     <string name="push_channel_holds_description">Užklausa sulaikyta, kol atsakysite. Niekas nesiunčiama, kol jos nepatvirtinsite.</string>

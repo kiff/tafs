@@ -25,6 +25,12 @@ export const en = {
   your_step_open: (vendor: string) => `Open in ${vendor}`,
   your_step_reminder: (what: string) => `Your step is still waiting: ${what}`,
   your_step_line: (what: string) => `Your step: ${what}`,
+  // "Your turn" in the hosted browser: a step its taf handed to the owner, done in the live view (hands.ts).
+  your_turn_title: (site: string) => `Your turn on ${site}`,
+  your_turn_ask: (words: string) => `“${words}”`,
+  your_turn_until: (hm: string) => `Open until ${hm}`,
+  your_turn_open: "Open",
+  your_turn_not_now: "Not now",
   // KIFF's spending windows: `each` ends a limit ("€300 a day"), `now` names its use so far ("€40 used today").
   window_words: {
     calendar_day: { each: "a day", now: "today" },
@@ -560,6 +566,23 @@ export const en = {
   door_reply_discard: "Don't send",
   door_reply_prompt: (who: string) => `Send this reply to ${who}`,
   door_reply_changed: "This reply changed since you read it. Read it again before sending.",
+  // A door's writer the taf couldn't answer: held for the owner with nothing drafted (doors.ts cantDoOf).
+  door_cant_do: (taf: string, who: string) => `${taf} can't do what ${who} asked: the app it needs isn't connected. Their message waits here, and they haven't been answered.`,
+  door_cant_finish: (taf: string, who: string) => `${taf} couldn't finish what ${who} asked. Their message waits here, and they haven't been answered.`,
+  door_cant_do_other: (taf: string, who: string) => `${taf} can't do what ${who} asked. Their message waits here, and they haven't been answered.`,
+  // A taf that needs something only the owner can give, named in KIFF's nouns from a closed list, never its own words.
+  door_cant_do_setup: (taf: string, who: string) =>
+    `${taf} needs something from you before it can do what ${who} asked. Their message waits here, and they haven't been answered.`,
+  door_cant_do_needs: (taf: string, who: string, things: string[]) =>
+    `${taf} needs something from you before it can do what ${who} asked: ${new Intl.ListFormat("en", { type: "conjunction" }).format(things)}. Their message waits here, and they haven't been answered.`,
+  door_need_folder: "a folder",
+  door_need_sheet: "a spreadsheet",
+  door_need_file: "a file",
+  door_need_link: "a link",
+  door_need_info: "some information",
+  door_cant_do_action: "Connect an app",
+  door_cant_do_reply: "Answer them yourself",
+  door_cant_do_ignore: "Ignore",
   unanswered_dial: (n: number, form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? "event" : "message"}${form === "one" ? "" : "s"} went unanswered while your tafs waited for credits`,
   unanswered_door: (who: string, door: string) => `A message by ${door} from ${who} went unanswered: your tafs waited for credits.`,
   unanswered_event: (name: string) => `An event from ${name} went unanswered: your tafs waited for credits.`,
