@@ -1,0 +1,1 @@
+- **Android: a chat says it's working with animations off, and shows when something new is below.** With the phone's animations off, the working line counts the seconds instead of a spinner that stands still; and the way to the end of a chat gets a dot when something new arrived below what's on screen, as on the iPad ([chat.md](docs/chat.md)).
