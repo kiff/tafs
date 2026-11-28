@@ -5,7 +5,7 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, ID_PLACEHOLDER, type Job, JOBS, jobBy
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, type AISource, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type Switching, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers, membersOf } from "./kiff.js";
+import { actionsInForce, activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers, membersOf } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, tafChatNotification, watchAskNotification, watchInboxNotification, reconcileDevices, ALERT_CAPABILITIES } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -5459,7 +5459,9 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   }
   if (sub === "try") {
     if (version.live) throw new HTTPError(409, "that version is live already");
-    return { draft: await trialDraftFor(event, me, taf, version, deps) };
+    const draft = await trialDraftFor(event, me, taf, version, deps);
+    await oneNewConnectionPerApp(event, taf, draft, deps);
+    return { draft };
   }
   if (sub === "switch") {
     if (version.live) throw new HTTPError(409, "that version is live already");
@@ -5470,6 +5472,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     // The version it leaves keeps the Cards it ran under, for going back to it.
     await recordLiveCards(event, me, taf, state, deps);
     const draft = await draftFor(event, me, taf, version, again, deps);
+    if (draft) await oneNewConnectionPerApp(event, taf, draft, deps);
     // Drafted again for a switch under way: it waits for the new draft instead,
     // its mark kept, so no run starts in between.
     if (sw && sw.n === n && draft) return { switching: await agentsCall(() => deps.agents.replaceSwitchDraft(me.tenantID, taf.id, n, draft)) };
@@ -5488,11 +5491,6 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
       const d = await draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))());
       if (d?.agent && d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
       if (!d || !issued(d.status)) throw new HTTPError(409, "confirm this version's Card first");
-      // A version uses one connection per app: a Card naming tools of two connections to the same app (an older one beside
-      // the version's new sign-in) would keep its runs on the older one (a version 2 trial read through the old Qonto
-      // connection, its own never called). Refused, naming the app, so Coach drafts it again on the new connection alone.
-      const mixed = mixedConnections(d.cards ?? [], await gatewayConnections(bearer(event), deps.fetch, deps.kiffGateway).catch(() => undefined));
-      if (mixed) throw new HTTPError(409, `this version's Card names tools of two ${mixed} connections: draft it again with the new connection's tools only`);
     }
     // Going back without a switch: a version that ran under other Card revisions
     // goes live only once a switch has restored them, never under the Cards in
@@ -5507,34 +5505,60 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
 }
 
 /**
- * The app a draft's Cards reach through two connections, or undefined: each tool a Card names, by KIFF's name, is matched
- * to the account's gateway connection of that name, and the connections are told apart by their relay audience (one per
- * planque grant) and grouped by their app (the connection's `app`). A tool the list doesn't name, a connection with no app,
- * or one with no audience (connected straight to KIFF), says nothing. No list (KIFF's gateway didn't answer):
- * nothing is refused on a guess.
+ * A version that brings in a new connection to an app uses it alone (a version 2 trial read through the old Qonto
+ * connection, its own never called: its Card named both). Checked before the owner confirms the draft, when the Cards
+ * in force are still the live version's: refused, naming the app, so Coach drafts it again on the new connection alone.
+ * A taf that already works with one app through two connections (two inboxes) keeps both.
  */
-export function mixedConnections(cards: readonly unknown[], conns: ReadonlyArray<{ name: string; url?: string; app?: unknown; audience?: unknown }> | undefined): string | undefined {
-  if (!conns) return undefined;
+async function oneNewConnectionPerApp(event: HTTPEvent, taf: Taf, draftID: string, deps: Deps): Promise<void> {
+  const token = bearer(event);
+  const [d, conns, live] = await Promise.all([
+    draftInfo(token, draftID, deps.fetch, deps.kiffBase).catch(() => undefined),
+    gatewayConnections(token, deps.fetch, deps.kiffGateway).catch(() => undefined),
+    actionsInForce(token, taf.kiffAgent, deps.fetch, deps.kiffBase).catch(() => undefined),
+  ]);
+  const mixed = mixedConnections(d?.cards ?? [], conns, live);
+  if (mixed) throw new HTTPError(409, `this version's Card names tools of a new ${mixed} connection beside the one in use: draft it again with the new connection's tools only`);
+}
+
+/**
+ * The app whose tools a draft names through a connection new to the taf beside one its Cards in force already use, or
+ * undefined. Each tool a Card names, by KIFF's name, is matched to the account's gateway connection of that name; the
+ * connections are told apart by their relay audience (one per planque grant) and grouped by their app (the connection's
+ * `app`). A connection is in use when a Card in force (`live`) names one of its tools. A tool the list doesn't name, a
+ * connection with no app, or one with no audience (connected straight to KIFF), says nothing. No list, or no Cards in
+ * force to compare with: nothing is refused on a guess.
+ */
+export function mixedConnections(cards: readonly unknown[], conns: ReadonlyArray<{ name: string; url?: string; app?: unknown; audience?: unknown }> | undefined, live: ReadonlySet<string> | undefined): string | undefined {
+  if (!conns || !live) return undefined;
   const fold = (x: unknown) => (typeof x === "string" ? x.trim().toLowerCase() : "");
+  const keyOf = (c: { app?: unknown; audience?: unknown } | undefined) => {
+    // Only a connection whose app is named is grouped: a relay's url is planque's own host for every app.
+    const app = typeof c?.app === "string" ? c.app.trim() : "";
+    const audience = typeof c?.audience === "string" ? c.audience.trim() : "";
+    return app && audience ? { app, audience } : undefined;
+  };
   const byName = new Map(conns.map((c) => [fold(c.name), c]));
-  const seen = new Map<string, Set<string>>(); // app → the audiences its named tools go through
+  const inUse = new Map<string, Set<string>>(); // app → the audiences the Cards in force name
+  for (const action of live) {
+    const k = keyOf(byName.get(fold(action)));
+    if (k) inUse.set(k.app, (inUse.get(k.app) ?? new Set<string>()).add(k.audience));
+  }
+  const named = new Map<string, Set<string>>(); // app → the audiences the draft names
   for (const card of cards) {
     const grants = (card as { grants?: unknown })?.grants;
     if (!Array.isArray(grants)) continue;
     for (const g of grants) {
-      const c = byName.get(fold((g as { action?: unknown })?.action));
-      const audience = typeof c?.audience === "string" ? c.audience.trim() : "";
-      if (!c || !audience) continue;
-      // Only a connection whose app is named is grouped: a relay's url is planque's own host for every app, so an app-less
-      // connection says nothing about which app it is.
-      const app = typeof c.app === "string" ? c.app.trim() : "";
-      if (!app) continue;
-      const set = seen.get(app) ?? new Set<string>();
-      set.add(audience);
-      seen.set(app, set);
+      const k = keyOf(byName.get(fold((g as { action?: unknown })?.action)));
+      if (k) named.set(k.app, (named.get(k.app) ?? new Set<string>()).add(k.audience));
     }
   }
-  for (const [app, audiences] of seen) if (audiences.size > 1) return app.charAt(0).toUpperCase() + app.slice(1);
+  for (const [app, audiences] of named) {
+    const used = inUse.get(app) ?? new Set<string>();
+    const fresh = [...audiences].some((a) => !used.has(a));
+    const old = [...audiences].some((a) => used.has(a));
+    if (fresh && old) return app.charAt(0).toUpperCase() + app.slice(1);
+  }
   return undefined;
 }
 

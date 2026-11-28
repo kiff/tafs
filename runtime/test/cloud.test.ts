@@ -3661,17 +3661,29 @@ describe("a taf's versions (kiff/tafs#107)", () => {
   });
 
   // A version 2 trial read through the old Qonto connection while its own new one was never called: its Card named both.
-  it("refuses a version whose Card names tools of two connections to one app, and lets one connection per app go live", async () => {
+  it("refuses to switch to a version whose Card brings a new connection to an app beside the one in use, and keeps a taf's two", async () => {
     const w = twoVersions();
     const relay = (name: string, grant: string) => ({ name, url: "https://planque.example/v1/relay", app: "qonto", audience: `https://planque.example/mcp/t_acme/${grant}` });
     w.account.connections = [relay("list_client_invoices_yhbp", "grt_old"), relay("list_client_invoices_bhtn", "grt_new"), relay("create_client_invoice_bhtn", "grt_new")];
-    w.account.drafts = { drf_v2: { status: "confirmed", agent_id: "rae", cards: [{ grants: [{ action: "list_client_invoices_yhbp" }, { action: "create_client_invoice_bhtn" }] }] } };
-    const mixed = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" });
+    // The live version's Card uses the old connection.
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, grants: [{ action: "list_client_invoices_yhbp" }] } as never];
+    w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae", cards: [{ grants: [{ action: "list_client_invoices_yhbp" }, { action: "create_client_invoice_bhtn" }] }] } };
+    const mixed = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
     expect(mixed.status).toBe(409);
-    expect(String(mixed.body.error)).toContain("two Qonto connections");
-    expect(w.agents.calls).not.toContain(`switchVersion ${RAE} 2`);
-    w.account.drafts = { drf_v2: { status: "confirmed", agent_id: "rae", cards: [{ grants: [{ action: "list_client_invoices_bhtn" }, { action: "create_client_invoice_bhtn" }] }] } };
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).body).toEqual({ live: 2 });
+    expect(String(mixed.body.error)).toContain("a new Qonto connection beside the one in use");
+    expect(w.agents.calls).not.toContain(`beginSwitch ${RAE} 2`);
+    // The new connection alone: the switch begins.
+    w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae", cards: [{ grants: [{ action: "list_client_invoices_bhtn" }, { action: "create_client_invoice_bhtn" }] }] } };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" })).status).toBe(200);
+  });
+
+  it("switches a taf meant to use one app through two connections, both already in use", async () => {
+    const w = twoVersions();
+    const inbox = (name: string, grant: string) => ({ name, url: "https://planque.example/v1/relay", app: "gmail", audience: `https://planque.example/mcp/t_acme/${grant}` });
+    w.account.connections = [inbox("send_email_a1", "grt_inbox_a"), inbox("send_email_b2", "grt_inbox_b")];
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, grants: [{ action: "send_email_a1" }, { action: "send_email_b2" }] } as never];
+    w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae", cards: [{ grants: [{ action: "send_email_a1" }, { action: "send_email_b2" }] }] } };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" })).status).toBe(200);
   });
 
   // A version that kept a Gmail read after its taf moved to Calendar went live, and every firing failed with no_tool
