@@ -429,5 +429,14 @@ A door's message reaches the taf with a first line saying who wrote and that the
 to someone outside the company whom the owner lets give it work (`doorMessage`): a paired sender, since a
 stranger's message is a knock and never starts a run. It tells the taf to do what they ask within its job, reads included, and to answer
 with what they asked for in plain words. A paired sender asking for the last three charges gets them;
-refusing them would make the door useless for reads. When something failed, it says only that it
-can't be done now and the owner will follow up: never an error, a code, a tool, an id, or how anything is connected. The details stay in the owner's chat.
+refusing them would make the door useless for reads. When it can't do what they ask, it answers with the one
+line `TAFS_CANT_DO` and its reason (`no_app`: the app it needs isn't connected; `no_tool`; `failed`), found anywhere
+in its answer, and writes them nothing. Its run stopping before an answer counts the same. Either way tafs drafts no
+failure to the writer, whatever the door's replies are set to. The doors list carries the writer apart from the
+replies, in `unanswered: [{run, door, to, subject?, at, cant_do, words}]`, with `cant_do` `no_app`, `other` (no tool,
+a failure, or no reason) or `unfinished`, and no text. Its words: "{taf} can't do what {who} asked: the app it needs
+isn't connected…" (`no_app`), "{taf} can't do what {who} asked…" (`other`) or "couldn't finish" (`unfinished`);
+**Connect an app** (only for `no_app`; it opens Coach's add-app flow), **Answer them yourself** (the owner's own
+words, sent with Send, which signs the SHA-256 of the text exactly as typed), and **Ignore** (discard). The owner's
+phones are told at once; Needs you's count and the door's `reply_line` leave it out until the apps draw `unanswered`,
+so the count never differs from the list. The writer gets nothing until the owner acts.

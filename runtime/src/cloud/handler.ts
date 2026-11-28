@@ -8506,7 +8506,8 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     : []));
   // A door reply waiting for the owner to send it: one line in Needs you each. Each taf's door light carries its
   // newest reply's line, in the person's language, so Needs you shows it as the notification says it.
-  const heldReplies = (await Promise.all(tafs.map((t) => deps.doors ? heldRepliesOf(deps.doors.store, me.tenantID, t.id).catch(() => []) : []))).flat();
+  // Held replies the apps can send (a writer the taf couldn't answer isn't counted until the apps draw it).
+  const heldReplies = (await Promise.all(tafs.map((t) => deps.doors ? heldRepliesOf(deps.doors.store, me.tenantID, t.id).catch(() => []) : []))).flat().filter((h) => !h.cant_do);
   // Each taf's versions, kept a minute: the Cards its live version was approved with show as one Card, and its last change.
   const versionsOf = await Promise.all(tafs.map((t) => keptVersions(deps, me.tenantID, t.id, now)));
   // Labels (labels.ts): each taf's that the account still has. One that can't be read leaves the filter row out, never the list.
