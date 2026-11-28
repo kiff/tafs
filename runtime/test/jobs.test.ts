@@ -402,9 +402,11 @@ describe("KIFF's skill", () => {
 });
 
 describe("the disclosure line names the business in each language's own grammar", () => {
-  it("elides French and Catalan \"de\" before a vowel or a mute h, and names a business in Greek whatever its name's gender", () => {
+  it("elides French \"de\" before a vowel and Catalan's before a vowel or an h, and names a business in Greek whatever its name's gender", () => {
     expect(disclosureLines({ writesFor: "Acme" }).fr).toBe("Rédigé par un agent d'IA au nom d'Acme.");
-    expect(disclosureLines({ writesFor: "Hôtel Lumière" }).fr).toBe("Rédigé par un agent d'IA au nom d'Hôtel Lumière.");
+    // A name's h may be aspirated in French, so it isn't elided before: "de Hachette", never "d'Hachette".
+    expect(disclosureLines({ writesFor: "Hachette" }).fr).toBe("Rédigé par un agent d'IA au nom de Hachette.");
+    expect(disclosureLines({ writesFor: "Hostalric" }).ca).toBe("Escrit per un agent d'IA en nom d'Hostalric.");
     expect(disclosureLines({ writesFor: "Papeterie Lumière" }).fr).toBe("Rédigé par un agent d'IA au nom de Papeterie Lumière.");
     expect(disclosureLines({ writesFor: "Acme" }).ca).toBe("Escrit per un agent d'IA en nom d'Acme.");
     expect(disclosureLines({ writesFor: "Barcelona Tools" }).ca).toBe("Escrit per un agent d'IA en nom de Barcelona Tools.");

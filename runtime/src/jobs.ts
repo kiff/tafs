@@ -74,15 +74,17 @@ const lineFor = (who: string) => `Written by an AI agent on behalf of ${who}.`;
 export const DISCLOSURE_MAX_BYTES = 300;
 
 /**
- * French and Catalan "de" before a name: elided to "d'" before a vowel or a mute h ("au nom d'Acme"), as both
- * languages write it.
+ * "de" before a name, elided to "d'" as each language writes it: French before a vowel only ("au nom d'Acme"), since
+ * a name's h may be aspirated ("au nom de Hachette") and a name doesn't say which; Catalan before a vowel or an h,
+ * which is always mute there ("en nom d'Hostalric").
  */
-const de = (who: string): string => (/^[aeiouyàâäéèêëîïôöùûüh]/i.test(who) ? "d'" : "de ") + who;
+const deFr = (who: string): string => (/^[aeiouyàâäéèêëîïôöùûü]/i.test(who) ? "d'" : "de ") + who;
+const deCa = (who: string): string => (/^[aeiouàèéíïòóúüh]/i.test(who) ? "d'" : "de ") + who;
 
 /** The line in other languages, by ISO 639-1 code, naming who the messages come from. */
 const LINES_FOR: Readonly<Record<string, (who: string) => string>> = {
   es: (who) => `Escrito por un agente de IA en nombre de ${who}.`,
-  fr: (who) => `Rédigé par un agent d'IA au nom ${de(who)}.`,
+  fr: (who) => `Rédigé par un agent d'IA au nom ${deFr(who)}.`,
   de: (who) => `Von einem KI-Agenten im Auftrag von ${who} geschrieben.`,
   pt: (who) => `Escrito por um agente de IA em nome de ${who}.`,
   it: (who) => `Scritto da un agente di IA per conto di ${who}.`,
@@ -113,7 +115,7 @@ const LINES_FOR: Readonly<Record<string, (who: string) => string>> = {
   az: (who) => `${who} adından AI agenti tərəfindən yazılıb.`,
   bn: (who) => `${who}-এর পক্ষ থেকে AI এজেন্ট লিখেছে।`,
   he: (who) => `נכתב על ידי סוכן בינה מלאכותית מטעם ${who}.`,
-  ca: (who) => `Escrit per un agent d'IA en nom ${de(who)}.`,
+  ca: (who) => `Escrit per un agent d'IA en nom ${deCa(who)}.`,
   mk: (who) => `Напишано од AI агент во име на ${who}.`,
   mn: (who) => `${who}-ийн нэрийн өмнөөс AI агент бичсэн.`,
   ne: (who) => `${who}को तर्फबाट AI एजेन्टले लेखेको।`,
