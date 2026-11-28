@@ -460,9 +460,9 @@ export interface Taf {
   summaries?: Record<string, string>;
   /**
    * What each version works from (a folder, a sheet, a form, a board, each by id), as an improvement's result set it
-   * ("add this to the setup"), by version: the live one's becomes `work.sources` when it goes live, so every run
-   * of it, a door's and a schedule's too, has them. [] is a version that has none. A version not listed keeps the
-   * sources it had.
+   * ("add this to the setup"), by version, recorded for every version of a taf with its own job: the live one's
+   * becomes `work.sources` when it goes live, so every run of it, a door's and a schedule's too, has them. [] is a
+   * version that has none. A version from before this was kept, not listed, keeps the sources the taf has.
    */
   sourcesBy?: Record<string, Source[]>;
   /**
@@ -5693,10 +5693,12 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   if (event) await recordLiveCards(event, me, taf, await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)), deps);
   // The version live now keeps the line it has, so going back to it brings the line back too.
   // A taf stored before versions has none listed: what's live then is version 1.
-  const listed = (summary && !taf.summaries) || (sources && !taf.sourcesBy) ? (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions : undefined;
+  // Every version of a taf with its own job records what it works from, so going back to any of them brings that back.
+  const kept = sources ?? (taf.job === CUSTOM ? taf.work?.sources ?? [] : undefined);
+  const listed = (summary && !taf.summaries) || (kept && !taf.sourcesBy) ? (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions : undefined;
   const live = listed ? listed.find((v) => v.live)?.n ?? (listed.length === 0 ? 1 : undefined) : undefined;
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", by_kind: "agent", ...(draft ? { draft } : {}) }));
-  if (from || tryWith || summary || sources) {
+  if (from || tryWith || summary || kept) {
     // Kept so the same result hands over this version again, with what to
     // try it with and what it does. A record that changed meanwhile is read again once.
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -5705,7 +5707,7 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
       // The live version keeps its line, or "" for none, so going back to it brings that back.
       const summaries = summary ? { ...(live !== undefined && cur.summaries?.[String(live)] === undefined ? { [String(live)]: cur.summary ?? "" } : {}), ...cur.summaries, [String(n)]: summary } : undefined;
       // The live version keeps what it works from too, [] for nothing, so going back to it brings that back.
-      const sourcesBy = sources ? { ...(live !== undefined && cur.sourcesBy?.[String(live)] === undefined ? { [String(live)]: cur.work?.sources ?? [] } : {}), ...cur.sourcesBy, [String(n)]: sources } : undefined;
+      const sourcesBy = kept ? { ...(live !== undefined && cur.sourcesBy?.[String(live)] === undefined ? { [String(live)]: cur.work?.sources ?? [] } : {}), ...cur.sourcesBy, [String(n)]: kept } : undefined;
       const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}), ...(sourcesBy ? { sourcesBy } : {}) };
       if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
     }

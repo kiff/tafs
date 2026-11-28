@@ -5997,9 +5997,16 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(kept.sourcesBy).toEqual({ "1": [], [String(n)]: [folder, sheet] });
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });
     expect(w.tafs.held.get(`t_acme#${RAE}`)?.work?.sources).toEqual([folder, sheet]);
+    // A later version made without sources keeps what the one it came from works from, and going back to it brings that back.
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
+    const later = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Replies in French" } });
+    const m = (later.body as { version: number }).version;
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.sourcesBy?.[String(m)]).toEqual([folder, sheet]);
     // Back to version 1: nothing again.
     await call(w, "POST", `/v1/tafs/${RAE}/versions/1/live`, { token: "ana" });
     expect(w.tafs.held.get(`t_acme#${RAE}`)?.work?.sources).toBeUndefined();
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/${m}/live`, { token: "ana" });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.work?.sources).toEqual([folder, sheet]);
   });
 
   it("refuses an improvement's sources with no id, or for a starter job's taf, with words Coach can act on", async () => {
