@@ -58,6 +58,34 @@ class VendorWaitTest {
     assertTrue(result.await().exceptionOrNull() is VendorSignInCancelled)
   }
 
+  /**
+   * The owner pressed Home after the fingerprint, while the approval was on its way (Qonto, re-test 6): the wait starts with tafs
+   * off the screen, so no pause comes after it, and Android may block the tab altogether. Back in tafs, it's marked left, with
+   * Open again and Cancel, never stuck on "Opening the sign-in…".
+   */
+  @Test fun aWaitStartedOffTheScreenIsLeftWhenTheAppComesBack() = runTest {
+    val wait = VendorWait()
+    wait.paused() // Home, before the sign-in's wait starts
+    val waiting = wait.start()
+    wait.resumed(this) // back in tafs, with no link
+    advanceTimeBy(VendorWait.RETURN_GRACE_MS + 1)
+    runCurrent()
+    assertTrue(wait.left.value)
+    assertFalse("the sign-in still waits", waiting.isCompleted)
+  }
+
+  /** A fingerprint's dialog before the tab opens is over before the wait starts: coming back from it isn't leaving. */
+  @Test fun aPauseThatEndedBeforeTheWaitIsNotLeaving() = runTest {
+    val wait = VendorWait()
+    wait.paused() // the fingerprint's dialog
+    wait.resumed(this)
+    wait.start()
+    wait.resumed(this)
+    advanceTimeBy(VendorWait.RETURN_GRACE_MS + 1)
+    runCurrent()
+    assertFalse(wait.left.value)
+  }
+
   /** A link that came back as the tab closed wins: the sign-in goes on, never marked left. */
   @Test fun theTabClosedAfterItsLinkKeepsTheLink() = runTest {
     val wait = VendorWait()

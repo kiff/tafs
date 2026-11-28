@@ -1,0 +1,1 @@
+- **Android: a sign-in left with Home before its page opened offers Open again.** Pressing Home after the fingerprint, while the sign-in was still starting, left the card on "Opening the sign-in…" with only Cancel. Back in tafs, it now offers to open the sign-in again, as for any sign-in left.

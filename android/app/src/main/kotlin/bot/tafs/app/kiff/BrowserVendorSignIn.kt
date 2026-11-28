@@ -136,10 +136,17 @@ internal fun tabIntent(privateBrowser: String?): CustomTabsIntent {
 class VendorWait {
   @Volatile private var waiting: CompletableDeferred<String>? = null
   @Volatile private var away = false
+  /** The app is off the screen (paused, not yet resumed), whether or not a sign-in waits. */
+  @Volatile private var background = false
   private val _left = MutableStateFlow(false)
   val left: StateFlow<Boolean> get() = _left
 
-  fun start(): CompletableDeferred<String> = CompletableDeferred<String>().also { waiting = it; away = false; _left.value = false }
+  /**
+   * A wait that starts while the app is off the screen counts as away: the owner pressed Home after the fingerprint, while the
+   * approval was still on its way, so the tab opened (or Android blocked it) with tafs in the background and no pause of its own.
+   * Back in tafs, the sign-in is then marked [left], with Open again and Cancel, never "Opening the sign-in…" with Cancel alone.
+   */
+  fun start(): CompletableDeferred<String> = CompletableDeferred<String>().also { waiting = it; away = background; _left.value = false }
 
   fun done(of: CompletableDeferred<String>) {
     if (waiting === of) { waiting = null; away = false; _left.value = false }
@@ -164,10 +171,12 @@ class VendorWait {
   }
 
   fun paused() {
+    background = true
     if (waiting != null) away = true
   }
 
   fun resumed(scope: CoroutineScope) {
+    background = false
     val of = waiting ?: return
     if (!away) return
     away = false
