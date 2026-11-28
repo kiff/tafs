@@ -74,7 +74,8 @@ class PurchaseCardTest {
   }
 
   @Test fun itDrawsKiffsWordsWithTheItemsClosedUntilShowMore() {
-    val call = held()
+    // KIFF's "Show less" for the open toggle, as the contract carries it (added to a copy that predates it).
+    val call = held(if ("show_less" in approval) approval else approval.replace("\"show_more\":\"Show more\"", "\"show_more\":\"Show more\",\"show_less\":\"Show less\""))
     draw(call)
     val w = call.purchase!!.words
     for (line in listOf(w.title, w.total, w.delivery, w.priceRule!!, w.grant!!, w.buysNow!!, w.nothingUntil!!)) {
@@ -84,8 +85,11 @@ class PurchaseCardTest {
     compose.onNodeWithText(w.reason!!).assertExists()
     compose.onAllNodesWithText("Over the limit").assertCountEquals(0)
     compose.onAllNodesWithTag("purchase-lines").assertCountEquals(0)
+    compose.onNodeWithText("Show more").assertExists()
     compose.onNodeWithTag("purchase-show-more").performClick()
     compose.onNodeWithText("A4 paper, 80 g, 5 reams").assertExists()
+    // Open, the toggle says KIFF's "Show less" (the frozen design's 1b).
+    compose.onNodeWithText("Show less").assertExists()
     compose.onNodeWithText("€9.50").assertExists()
   }
 

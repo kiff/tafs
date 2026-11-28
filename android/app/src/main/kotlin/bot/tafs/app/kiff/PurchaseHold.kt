@@ -71,7 +71,7 @@ object PurchaseHold {
         caseId = caseId, version = version, digest = digest,
         words = PurchaseWords(
           title = title, subtitle = say("subtitle"), total = total, totalNote = say("total_note"), delivery = delivery,
-          showMore = say("show_more"), lines = lines, charges = charges, priceRule = say("price_rule"), grant = say("grant"),
+          showMore = say("show_more"), showLess = say("show_less"), lines = lines, charges = charges, priceRule = say("price_rule"), grant = say("grant"),
           buysNow = say("buys_now"), nothingUntil = say("nothing_until"), reason = say("reason"), prompt = prompt,
         ),
       ),

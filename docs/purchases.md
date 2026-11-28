@@ -20,7 +20,7 @@ field, **`purchase`**: the contract's `approval.value`, `{case_id, version, dige
 - **Every line is KIFF's.** The card draws `words` as they came:
   - the shop (`title`) and its `subtitle`;
   - the total, large, with its `total_note` and the `delivery` address under it;
-  - the items and charges, behind **Show more** (`show_more`);
+  - the items and charges, behind **Show more** (`show_more`), which says `show_less` while open;
   - the `price_rule`;
   - what the card allows (`grant`);
   - when it buys (`buys_now`);

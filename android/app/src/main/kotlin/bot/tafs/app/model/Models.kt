@@ -591,6 +591,8 @@ data class PurchaseWords(
   /** Where it's delivered: signed with the case, so a purchase without it isn't drawn. */
   val delivery: String,
   val showMore: String? = null,
+  /** What the toggle says while the lines are open; KIFF's `show_less`. */
+  val showLess: String? = null,
   val lines: List<PurchaseLine> = emptyList(),
   val charges: List<PurchaseCharge> = emptyList(),
   val priceRule: String? = null,

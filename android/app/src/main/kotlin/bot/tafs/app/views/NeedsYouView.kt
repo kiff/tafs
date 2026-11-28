@@ -542,7 +542,7 @@ internal fun PurchaseFace(p: bot.tafs.app.model.PurchaseApproval) {
     Text(w.delivery, style = scaled(14, color = Theme.ink))
     if (w.lines.isNotEmpty() || w.charges.isNotEmpty()) {
       Text(
-        w.showMore ?: if (open) Words.NeedsYou.detailsOpen else Words.NeedsYou.detailsClosed,
+        (if (open) w.showLess else w.showMore) ?: if (open) Words.NeedsYou.detailsOpen else Words.NeedsYou.detailsClosed,
         style = scaled(13, FontWeight.SemiBold, Theme.blue),
         modifier = Modifier.tapping { open = !open }.padding(vertical = 4.dp).testTag("purchase-show-more"),
       )
