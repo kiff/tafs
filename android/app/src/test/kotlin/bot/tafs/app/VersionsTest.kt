@@ -479,6 +479,17 @@ class VersionsTest {
     assertTrue((same.lines + differ.lines + draft.cardLines.flatten()).none { "yhbp" in it || "bhtn" in it })
   }
 
+  @Test fun twoToolsUnderOneNameAreStillToldApartByTheirWords() {
+    // Under one name, two tools whose words after it are real words, not planque's four-character suffixes, read apart.
+    val card = KiffClient.json.decodeFromString<DraftCard>(
+      """{"grants":[{"action":"send_email","title":"Send"},{"action":"send_sms","title":"Send"}]}""",
+    )
+    assertEquals(listOf("Send · send email", "Send · send sms"), card.lines)
+    assertFalse(DraftCard.onlyPlanqueSuffix("Send", "send email"))
+    assertTrue(DraftCard.onlyPlanqueSuffix("List client invoices", "list client invoices yhbp bhtn"))
+    assertFalse(DraftCard.onlyPlanqueSuffix("List client invoices", "list client invoices"))
+  }
+
   @Test fun kiffsOwnLinesAreShownAsTheyCome() {
     val card = KiffClient.json.decodeFromString<DraftCard>(
       """{"on_exceed":"owner","aggregates":[{"quantity":"count","limit":0,"window":"day"}],"lines":["Each call asks you first, in KIFF's words"],

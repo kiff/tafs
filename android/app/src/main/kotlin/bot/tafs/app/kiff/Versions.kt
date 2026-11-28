@@ -234,9 +234,10 @@ data class DraftCard(
         if (KiffMapping.isSum(cap.quantity)) Words.Card.Line.upToEach(amount = KiffMapping.money(cap.max, cap.unit, cap.scale).formatted) else Words.Card.Line.upToEach(amount = cap.max.toString())
       }
       // Two grants that read alike are told apart by their actions' words ("Write Stripe API data · create refund"), unless those
-      // only repeat the name with planque's own suffix ("list client invoices yhbp"): then they say nothing the owner can use.
+      // only repeat the name with planque's own suffix, four letters or digits of its grant per name ("list client invoices yhbp"):
+      // then they say nothing the owner can use. Any other word after the name ("send email", "send sms") still tells them apart.
       val words = KiffMapping.toolWords(g.action)
-      val action = if (name.lowercase() in alike && !words.lowercase().startsWith(name.lowercase())) "$name · $words" else name
+      val action = if (name.lowercase() in alike && !onlyPlanqueSuffix(name, words)) "$name · $words" else name
       val more = if (asksPastLimits) Words.Card.Line.moreAsks else ""
       out += if (caps.isEmpty()) action else "$action: " + caps.joinToString(", ") + more
     }
@@ -253,6 +254,16 @@ data class DraftCard(
   }
 
   companion object {
+    /**
+     * Whether an action's [words] are its [name] followed only by planque's suffixes: four letters or digits of a grant's id,
+     * added once per name it gives a tool (planque's `toolKey`), so the same tool through two grants reads alike but for them.
+     */
+    fun onlyPlanqueSuffix(name: String, words: String): Boolean {
+      val n = name.lowercase().split(' ').filter { it.isNotEmpty() }
+      val w = words.lowercase().split(' ').filter { it.isNotEmpty() }
+      return w.size > n.size && w.take(n.size) == n && w.drop(n.size).all { it.length == 4 && it.all { c -> c in 'a'..'z' || c in '0'..'9' } }
+    }
+
     /** The names, ignoring case, that more than one of these grants would read as. */
     fun alike(grants: List<DraftGrant>): Set<String> {
       val seen = mutableSetOf<String>()
