@@ -1209,6 +1209,25 @@ async function resumedRefusal(ask: ApprovalAsk, grant: ApprovalGrant, vendor: st
   return undefined;
 }
 
+/**
+ * Whether an approval's answer is the earlier-connection refusal (resumedRefusal): the grant was asked in an earlier
+ * conversation, or for another taf, and isn't resumed here. Nothing was approved and nothing failed: Coach asks for the app
+ * again for this taf, so the apps never draw it as "it didn't go through".
+ */
+export function earlierConnectionAnswer(answer: unknown): boolean {
+  return typeof answer === "string" && /^failed: this .{1,200} connection was started in an earlier conversation, /.test(answer);
+}
+
+/**
+ * The earlier-connection refusal for an approval card, read before the card is drawn (the chat's read): the same check
+ * decide makes after Approve, so a grant asked in another conversation or for another taf is answered before the owner
+ * spends a fingerprint on it. Undefined when it would be resumed, or when it can't be told yet (read again).
+ */
+export async function earlierConnectionOnRead(ask: ApprovalAsk, grant: ApprovalGrant, ctx: DecideContext): Promise<Decision | undefined> {
+  const d = await resumedRefusal(ask, grant, vendorOf(grant), ctx);
+  return d && d.outcome === "answered" && earlierConnectionAnswer(d.answer) ? d : undefined;
+}
+
 /** The steps a phone signs for an approval card. */
 export type SignStep = "connect" | "cards" | "key_and_cards" | "tools_and_cards";
 

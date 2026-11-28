@@ -910,6 +910,54 @@ describe("a half-made connection from an earlier conversation: resumed only for 
     }
   });
 
+  // 28 Nov, the owner's phone: a pending Qonto grant asked in an earlier chat for another taf ("Qonto morning balance",
+  // read-only) was shown in this chat with Approve. The owner spent a fingerprint on it, and it came back "Approve · it
+  // didn't go through". The chat's read now answers it before Approve exists, with tafs cloud's note, and Coach asks again.
+  it("the chat's read answers it before Approve, so no fingerprint is spent, and never says it didn't go through", async () => {
+    const CHAT = `/v1/tafs/${COACH}/conversation`;
+    const s = services();
+    const g = resumed();
+    s.grants = [g];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "another-taf-a1b2c3d4", cards: CARD("refund") };
+    const w = await world(s, { draft: "drf_1" });
+    const a1 = (r: { body: Record<string, unknown> }) =>
+      (r.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string; words: string; answer?: string } }>).find((c) => c.component.id === "a1");
+    const read = await w.call("GET", CHAT, undefined);
+    expect(a1(read)?.answer?.state).toBe("answered");
+    expect(a1(read)?.component.signs).toBeUndefined();
+    expect(a1(read)?.answer?.words).toBe(wordsIn("en").approval_earlier_connection("Stripe"));
+    expect(a1(read)?.answer?.answer).toBe("asked again");
+    expect(JSON.stringify(a1(read))).not.toContain("didn't go through");
+    // Coach hears decide's own refusal, and asks for the app again for this taf.
+    expect(String(w.told()?.answer)).toMatch(/^failed: this Stripe connection was started in an earlier conversation, /);
+    expect(String(w.told()?.answer)).toContain("request Stripe again for this taf as a new connection");
+    // Once, across reads: drawn answered again, and Coach is told nothing more.
+    const told = w.told();
+    const again = await w.call("GET", CHAT, undefined);
+    expect(a1(again)?.answer?.words).toBe(wordsIn("en").approval_earlier_connection("Stripe"));
+    expect(w.told()).toEqual(told);
+    // An Approve sent anyway, from any app, gets nothing to sign: the card is answered and no longer waits.
+    const tapped = await w.call("POST", ASK, ask(g, "drf_1"));
+    expect(tapped.status).toBe(409);
+    expect(tapped.body).not.toHaveProperty("ask");
+    // With no note kept (past its time), the same words, never "it didn't go through".
+    expect(approvalAnswerWords({ type: "approval", answer: String(told?.answer) }, "en")).toBe(wordsIn("en").approval_earlier_connection("Stripe"));
+    expect(settledApprovalAnswer(String(told?.answer))).toBe("asked again");
+  });
+
+  it("this conversation's own connection, or its taf's under its Card, is drawn with Approve as before", async () => {
+    const CHAT = `/v1/tafs/${COACH}/conversation`;
+    const s = services();
+    const g = resumed();
+    s.grants = [g];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: CARD("refund") };
+    const w = await world(s, { draft: "drf_1" });
+    const read = await w.call("GET", CHAT, undefined);
+    const a1 = (read.body.components as Array<{ component: { id?: string }; answer?: unknown }>).find((c) => c.component.id === "a1");
+    expect(a1?.answer).toBeUndefined();
+    expect(w.told()).toBeUndefined();
+  });
+
   it("with no Card draft: refused, so it's never signed alone", async () => {
     const s = services();
     const g = resumed();

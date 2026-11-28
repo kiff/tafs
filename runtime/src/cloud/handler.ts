@@ -69,7 +69,7 @@ import { tafPurpose } from "./taf-purpose.js";
 import { inboxMarks, inboxState, markInbox } from "./watch-inbox.js";
 import { type Ask, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, askDay, askOfSession, type AskState, checkedLine, CLIENT_ID, dayTurns, fullAnswer, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, ROUTING_MS, shownAsk, SINCE_DEFAULT_MS, tafLine, WATCH_TOOLS, watchCoachLine, watchDaysOf, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, rulesFirstAnswer, type ApprovalGrant, REDRAFT_CODES, unagreedRefusal, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
+import { CARD_NEXT, ApprovalError, earlierConnectionAnswer, earlierConnectionOnRead, rulesFirstAnswer, type ApprovalGrant, REDRAFT_CODES, unagreedRefusal, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
@@ -2989,7 +2989,8 @@ export interface CardAnswer {
   outcome?: ResultOutcome & { plan_needed?: { words: string } };
   /**
    * An approval card's answer, settled and free of any language (settledApprovalAnswer): `approved`, `already approved`,
-   * `connected` (a connect step that worked, its Card next), `rules first` (Coach asked for the rules before any approval: nothing approved, nothing failed), `declined` or `failed: <why>`. The apps draw "approved" only
+   * `connected` (a connect step that worked, its Card next), `rules first` (Coach asked for the rules before any approval: nothing approved, nothing failed), `asked again` (a connection
+   * from an earlier chat or another taf, not resumed here: Coach asks for the app again, nothing failed), `declined` or `failed: <why>`. The apps draw "approved" only
    * for the first three, and anything else, or none, as not approved.
    */
   answer?: string;
@@ -3539,7 +3540,9 @@ export function settledApprovalAnswer(answer: unknown): string | undefined {
     const next = why.endsWith(`; ${CARD_NEXT}`) && / is connected$/.test(why.slice(0, -`; ${CARD_NEXT}`.length));
     if (next) return "connected";
     // Coach's re-ask for the rules: nothing approved, nothing failed. The apps draw it as not approved, never as a failure.
-    return rulesFirstAnswer(answer) ? "rules first" : answer;
+    if (rulesFirstAnswer(answer)) return "rules first";
+    // A connection from an earlier chat or another taf, not resumed here: Coach asks for the app again. Never a failure.
+    return earlierConnectionAnswer(answer) ? "asked again" : answer;
   }
   return undefined;
 }
@@ -3556,6 +3559,14 @@ export function approvalAnswerWords(b: { type?: unknown; answer?: unknown; note?
     if (next) return w.approval_connected_card_next(why.slice(0, next.index));
     // Coach's re-ask for the rules, before the owner agreed to them: a step, never "it didn't go through".
     if (rulesFirstAnswer(b.answer)) return w.approval_rules_first;
+    // A connection from an earlier chat or another taf: tafs cloud's own note says Coach asks for the app again, and
+    // nothing more ("it didn't go through" read as a failure to the owner, 28 Nov).
+    if (earlierConnectionAnswer(b.answer)) {
+      if (typeof b.note === "string" && b.note) return b.note;
+      // No note kept (past its time): the same words, from the app the answer names.
+      const vendor = /^failed: this (.{1,200}) connection was started in an earlier conversation, /.exec(b.answer)?.[1];
+      if (vendor) return w.approval_earlier_connection(vendor);
+    }
     // The reason after "failed: " is written for Coach (what to draft again, what never to say), never for the owner
     // (21 Nov, the owner on the emulator: a refused Card's line carried "Show the rules again as a new notice…"). The
     // owner reads the line alone, or the owner's own note where tafs cloud kept one (the precheck's).
@@ -3722,6 +3733,16 @@ async function markSteps(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     const card = c.component as { grant: string; draft?: unknown };
     const grant = grants.find((g) => g.id === card.grant);
     const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
+    // A connection asked in an earlier chat or for another taf is never offered: decide would refuse it after the
+    // fingerprint (resumedRefusal). Answered now, before Approve exists, and Coach asks for the app again (28 Nov: the
+    // owner spent a fingerprint on another taf's read-only approval).
+    if (grant) {
+      const earlier = await earlierFirst(event, me, taf, c, grant, draft, deps);
+      if (earlier) {
+        c.answer = earlier;
+        continue;
+      }
+    }
     const asked = grant && stepFor(grant, { draft, can }, flags);
     if (!asked) {
       // Approve signs nothing here: decide answers it (already approved, nothing new, past approving). The card says so,
@@ -3900,12 +3921,14 @@ async function fillApprovalNotes(event: HTTPEvent, me: KIFFIdentity, components:
   await Promise.all(components.map(async (c) => {
     const card = c.component as { type?: unknown; id?: unknown } | undefined;
     const settled = c.answer?.answer;
-    if (!c.answer || c.answer.state !== "answered" || card?.type !== "approval" || typeof settled !== "string" || !settled.startsWith("failed: ")) return;
+    // "asked again" (a connection from an earlier chat or another taf) reads as its note alone, never as a failure.
+    const again = settled === "asked again";
+    if (!c.answer || c.answer.state !== "answered" || card?.type !== "approval" || typeof settled !== "string" || (!again && !settled.startsWith("failed: "))) return;
     const id = String(card.id ?? "");
     if (!id) return;
     const kept = (await deps.coach!.get(approvalNoteKey(me.tenantID, c.session, id)).catch(() => undefined)) as { note?: unknown } | undefined;
     if (typeof kept?.note !== "string" || !kept.note) return;
-    c.answer = { ...c.answer, words: approvalAnswerWords({ type: "approval", answer: settled, note: kept.note }, lang) ?? c.answer.words };
+    c.answer = { ...c.answer, words: again ? kept.note : approvalAnswerWords({ type: "approval", answer: settled, note: kept.note }, lang) ?? c.answer.words };
   }));
 }
 
@@ -3959,6 +3982,64 @@ async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadC
     return undefined;
   }
   const told: PrecheckTold = { answer: out.answer, at: now.toISOString(), ...(out.note ? { note: out.note } : {}) };
+  await deps.coach.put(toldKey, told, kept).catch(() => undefined);
+  await keepApprovalNote(deps, me.tenantID, c.session, component, out.answer, out.note);
+  return shown(told);
+}
+
+const earlierFirstKeys = {
+  claim: (tenant: string, session: string, component: string) => `${tenant}#earlier-first#${session}#${component}`,
+  told: (tenant: string, session: string, component: string) => `${tenant}#earlier-first-told#${session}#${component}`,
+};
+
+/**
+ * An approval for a connection asked in an earlier conversation, or for another taf, answered as the chat is read, before
+ * the card is drawn: Coach hears decide's own refusal (resumedRefusal), asks for the app again for this taf, and the card
+ * is drawn answered with tafs cloud's note, never with Approve, so no fingerprint is spent on what can't be approved. Once
+ * per card, across phones and reads (a claim, then the answer kept), as rulesFirst is; a person who can't manage Cards or
+ * hasn't agreed to AI use sees the card as before, and the tap refuses it.
+ */
+async function earlierFirst(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadComponent, grant: ApprovalGrant, draft: string | undefined, deps: Deps): Promise<CardAnswer | undefined> {
+  if (!deps.coach || !me.capabilities.includes("cards.manage")) return undefined;
+  if (grant.status !== "pending" && grant.status !== "approved") return undefined;
+  const component = String((c.component as { id?: unknown })?.id ?? "");
+  if (!component) return undefined;
+  const now = nowOf(deps);
+  const lang = langOf(event);
+  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer, note: t.note }, lang) ?? "", at: t.at,
+    ...(settledApprovalAnswer(t.answer) ? { answer: settledApprovalAnswer(t.answer) } : {}) });
+  const toldKey = earlierFirstKeys.told(me.tenantID, c.session, component);
+  const told0 = (await deps.coach.get(toldKey).catch(() => undefined)) as PrecheckTold | undefined;
+  if (told0 && typeof told0.answer === "string" && typeof told0.at === "string") return shown(told0);
+  const ctx = withRules(checkContext(event, me, deps), me, c.session, deps);
+  let out: Awaited<ReturnType<typeof earlierConnectionOnRead>>;
+  try {
+    out = await within(earlierConnectionOnRead({ grant: grant.id, ...(draft ? { draft } : {}) }, grant, ctx), SIGNS_READ_MS);
+  } catch {
+    return undefined;
+  }
+  if (!out || out.outcome !== "answered") return undefined;
+  const claim = earlierFirstKeys.claim(me.tenantID, c.session, component);
+  const kept = new Date(now.getTime() + PRECHECK_KEPT_MS);
+  if (!(await deps.coach.once(claim, kept).catch(() => false))) {
+    const told = (await deps.coach.get(toldKey).catch(() => undefined)) as PrecheckTold | undefined;
+    return told && typeof told.answer === "string" && typeof told.at === "string" ? shown(told) : undefined;
+  }
+  const release = () => deps.coach!.remove(claim).catch(() => undefined);
+  try {
+    await requireAIConsent(event, me, deps);
+  } catch {
+    await release();
+    return undefined;
+  }
+  try {
+    await tellCoach(me, taf, { session: c.session, run: c.run }, component, out.answer, deps);
+  } catch (err) {
+    if (!(err instanceof HTTPError && err.status === 409)) await release();
+    return undefined;
+  }
+  console.log(`approval precheck: ${out.code ?? "resumed"} (earlier connection)`);
+  const told: PrecheckTold = { answer: out.answer, at: now.toISOString(), note: out.note };
   await deps.coach.put(toldKey, told, kept).catch(() => undefined);
   await keepApprovalNote(deps, me.tenantID, c.session, component, out.answer, out.note);
   return shown(told);
