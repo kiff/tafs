@@ -3805,6 +3805,60 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" })).status).toBe(200);
   });
 
+  // The re-pointed Card is a new revision the owner signs: exactly the version's tools and limits on the new connection.
+  it("switches a re-pointed version only when its new Card has exactly its tools, limits and pins, on any connection", async () => {
+    const w = twoVersions();
+    // As KIFF's gateway lists them: `tool` is the relay's own name, `vendor_tool` the vendor's, the pins on the connection.
+    const draftPin = [{ path: "status", value: "draft" }];
+    const tool = (name: string, vendorTool: string, grant: string, extra: Record<string, unknown> = {}) => ({ name, url: "https://planque.example/v1/relay", app: "qonto",
+      tool: name, vendor_tool: vendorTool, audience: `https://planque.example/mcp/t_acme/${grant}`, ...extra });
+    w.account.connections = [
+      tool("list_client_invoices_yhbp", "list_client_invoices", "grt_old", { read_only: true }), tool("create_client_invoice_yhbp", "create_client_invoice", "grt_old", { vendor_pins: draftPin }),
+      tool("list_client_invoices_0cty", "list_client_invoices", "grt_new", { read_only: true }), tool("create_client_invoice_0cty", "create_client_invoice", "grt_new", { vendor_pins: draftPin }),
+      tool("create_client_invoice_nopin", "create_client_invoice", "grt_new"), tool("delete_client_invoice_0cty", "delete_client_invoice", "grt_new")];
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, grants: [{ action: "list_client_invoices_yhbp" }] } as never];
+    const v2 = [{ grants: [{ action: "list_client_invoices_yhbp" }, { action: "create_client_invoice_yhbp", max_per_day: 10 }] }];
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rae, draftBy: { "2": "drf_v2b" } });
+    const repointed = (grants: unknown[], status = "draft") => { w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae", cards: v2 }, drf_v2b: { status, agent_id: "rae", cards: [{ grants }] } }; };
+    const sw = () => call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    // The draft write left out (the version 3 that was made): refused, naming it.
+    repointed([{ action: "list_client_invoices_0cty" }]);
+    const dropped = await sw();
+    expect(dropped.status).toBe(409);
+    expect(String(dropped.body.error)).toContain("leaves out qonto create_client_invoice");
+    // The same vendor tool on a connection without the draft pin: it could make a finished invoice, so it isn't the same.
+    repointed([{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_nopin", max_per_day: 10 }]);
+    expect(String((await sw()).body.error)).toContain("changes qonto create_client_invoice");
+    // The same vendor tool named twice, pinned and unpinned, in either order and on one Card or two: never read as the pinned one alone.
+    for (const grants of [
+      [{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_nopin", max_per_day: 10 }, { action: "create_client_invoice_0cty", max_per_day: 10 }],
+      [{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_0cty", max_per_day: 10 }, { action: "create_client_invoice_nopin", max_per_day: 10 }],
+    ]) {
+      repointed(grants);
+      expect(String((await sw()).body.error), JSON.stringify(grants)).toContain("changes qonto create_client_invoice");
+    }
+    w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae", cards: v2 }, drf_v2b: { status: "draft", agent_id: "rae",
+      cards: [{ grants: [{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_0cty", max_per_day: 10 }] }, { grants: [{ action: "create_client_invoice_nopin", max_per_day: 10 }] }] } };
+    expect(String((await sw()).body.error)).toContain("changes qonto create_client_invoice");
+    // Widened: a limit changed, or a tool added.
+    repointed([{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_0cty", max_per_day: 50 }]);
+    expect(String((await sw()).body.error)).toContain("changes qonto create_client_invoice");
+    repointed([{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_0cty", max_per_day: 10 }, { action: "delete_client_invoice_0cty" }]);
+    expect(String((await sw()).body.error)).toContain("adds qonto delete_client_invoice");
+    expect(w.agents.calls).not.toContain(`beginSwitch ${RAE} 2`);
+    // Confirmed in KIFF straight away, a narrowed Card can't go live either.
+    repointed([{ action: "list_client_invoices_0cty" }], "confirmed");
+    const live = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" });
+    expect(live.status).toBe(409);
+    expect(String(live.body.error)).toContain("leaves out qonto create_client_invoice");
+    // Exactly its tools, limits and pins on the new connection: the switch begins, with the new draft for the owner to sign.
+    repointed([{ action: "list_client_invoices_0cty" }, { action: "create_client_invoice_0cty", max_per_day: 10 }]);
+    const ok = await sw();
+    expect(ok.status).toBe(200);
+    expect(ok.body.switching).toMatchObject({ n: 2, draft: "drf_v2b" });
+  });
+
   it("switches a taf meant to use one app through two connections, both already in use", async () => {
     const w = twoVersions();
     const inbox = (name: string, grant: string) => ({ name, url: "https://planque.example/v1/relay", app: "gmail", audience: `https://planque.example/mcp/t_acme/${grant}` });
@@ -6157,6 +6211,48 @@ describe("Coach's result, handed over by tafs cloud", () => {
 
   // A run said "I've noted the tab name for future runs" over links given in the owner's chat; a door run five minutes
   // later had none. What a taf works from is its version's: every run has it, a door's and a schedule's too.
+  // A fresh Qonto sign-in during version 2's trial made a version 3 with the read alone, dropping the approved draft write.
+  it("re-points the version being tried at a new draft rather than make a new version, and withdraws one made by mistake", async () => {
+    const better = { type: "result", id: "repoint", taf: { agent: "rae", improves: RAE, note: "Uses the new Qonto connection", repoints: 2, draft: "drf_v2b", withdraws: [3] } };
+    const { w, note, answer } = await paused(better);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.versions.set(`t_acme|${RAE}`, [
+      { n: 1, note: "Started by Setup", by: "setup", created: "2026-10-18T09:00:00Z", digest: "d1", live: true },
+      { n: 2, note: "Drafts invoices", by: "setup", created: "2026-10-20T09:00:00Z", digest: "d2", live: false, draft: "drf_v2" },
+      { n: 3, note: "Lists invoices on the new connection", by: "setup", created: "2026-10-21T09:00:00Z", digest: "d3", live: false, draft: "drf_v3" },
+    ]);
+    const made = w.agents.calls.length;
+    await note();
+    expect((answer() as { answer: { version: number } }).answer.version).toBe(2);
+    // No new version: version 2 now tries and switches with the new draft, and version 3 is gone from the list.
+    expect(w.agents.calls.slice(made).some((c) => c.startsWith("createVersion"))).toBe(false);
+    expect(w.tafs.held.get(`t_acme#${RAE}`)).toMatchObject({ draftBy: { "2": "drf_v2b" }, withdrawn: [3] });
+    const list = await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" });
+    expect((list.body.versions as Array<{ n: number }>).map((v) => v.n)).toEqual([1, 2]);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/3/try`, { token: "ana" })).status).toBe(404);
+  });
+
+  it("refuses to re-point a live version, or one with no new draft", async () => {
+    for (const [taf, says] of [
+      [{ repoints: 1, draft: "drf_x" }, "version 1 is live already"],
+      [{ repoints: 2 }, "re-pointing version 2 needs its new draft"],
+      [{ repoints: 2, draft: "drf_x", withdraws: [1] }, "only a version made after version 2"],
+      [{ repoints: 2, draft: "drf_x", withdraws: [3] }, "version 3 is live, has been"],
+      [{ repoints: 2, draft: "drf_x", withdraws: [4] }, "version 4 was made by a person"],
+    ] as const) {
+      const { w, note, answer } = await paused({ type: "result", id: "rp", taf: { agent: "rae", improves: RAE, note: "x", ...taf } });
+      w.agents.access.set("u_ana", { cards_manage: true });
+      w.agents.versions.set(`t_acme|${RAE}`, [
+        { n: 1, note: "Started", by: "setup", created: "2026-10-18T09:00:00Z", digest: "d1", live: true },
+        { n: 2, note: "Drafts", by: "setup", created: "2026-10-20T09:00:00Z", digest: "d2", live: false, draft: "drf_v2" },
+        { n: 3, note: "Ran once", by: "setup", created: "2026-10-21T09:00:00Z", digest: "d3", live: false, cards: [{ id: "card_rae", revision: 2 }] },
+        { n: 4, note: "Ana's", by: "u_ana", by_kind: "person", created: "2026-10-22T09:00:00Z", digest: "d4", live: false },
+      ]);
+      await note();
+      expect(JSON.stringify(answer()), JSON.stringify(taf)).toContain(says);
+    }
+  });
+
   it("puts what a taf works from in an improvement's version, its run's definition with each id, and on the taf once that version goes live", async () => {
     const folder = { kind: "folder", name: "P2-GD", id: "1AbCdEfGhIjKlMnOp" };
     const sheet = { kind: "sheet", name: "Orders", id: "1ZyXwVuTsRqPoNmLk" };
@@ -6913,7 +7009,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@40,draft-the-card@56,halting@1,improve-a-taf@6,name-the-tools@23`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@40,draft-the-card@56,halting@1,improve-a-taf@7,name-the-tools@23`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);

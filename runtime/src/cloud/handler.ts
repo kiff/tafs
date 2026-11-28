@@ -487,6 +487,13 @@ export interface Taf {
   signInLater?: Record<string, string>;
   signInSkipped?: string;
   /**
+   * A version's Card re-pointed at a new connection (a fresh sign-in for more access while the owner tried it), by version:
+   * the draft its try and switch use in place of the one it was made with. Its own tools stay (keepsVersionTools).
+   */
+  draftBy?: Record<string, string>;
+  /** Versions Coach withdrew, made by mistake: never listed, tried or switched to. */
+  withdrawn?: number[];
+  /**
    * Where its results go (docs/reliability.md): through the door the work came in on, a line
    * in the app, an email to the owner. Absent: the door's reply alone, as before.
    */
@@ -5461,7 +5468,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     // Who made each, in words: the apps show them, never their own copy. Version 1 is the
     // taf as it was set up: kiff/agents records it only when a second is made, so it says
     // when the taf was set up, not when that record was written.
-    const versions = state.versions.map((v) => {
+    const versions = state.versions.filter((v) => !taf.withdrawn?.includes(v.n)).map((v) => {
       const by = versionBy(v, me);
       const created = v.n === 1 && taf.created && Date.parse(taf.created) < Date.parse(v.created) ? taf.created : v.created;
       return { ...v, created, ...(by ? { by_words: by } : {}) };
@@ -5485,7 +5492,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   if (action !== "versions" || parts.length !== 6 || method !== "POST" || !Number.isInteger(n) || n < 1) throw new HTTPError(404, "not found");
   await needTaf(event, me, taf, deps);
   const version = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions.find((v) => v.n === n);
-  if (!version) throw new HTTPError(404, "no such version");
+  if (!version || taf.withdrawn?.includes(n)) throw new HTTPError(404, "no such version");
   if (sub === "trial") {
     await requireAIConsent(event, me, deps);
     // What a trial works on: the owner's words, else what each scheduled run asks of it.
@@ -5497,6 +5504,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   if (sub === "try") {
     if (version.live) throw new HTTPError(409, "that version is live already");
     const draft = await trialDraftFor(event, me, taf, version, deps);
+    await keepsVersionTools(event, taf, version, draft, deps);
     await oneNewConnectionPerApp(event, taf, n, draft, deps);
     return { draft };
   }
@@ -5509,6 +5517,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     // The version it leaves keeps the Cards it ran under, for going back to it.
     await recordLiveCards(event, me, taf, state, deps);
     const draft = await draftFor(event, me, taf, version, again, deps);
+    if (draft) await keepsVersionTools(event, taf, version, draft, deps);
     if (draft) await oneNewConnectionPerApp(event, taf, n, draft, deps);
     // Drafted again for a switch under way: it waits for the new draft instead,
     // its mark kept, so no run starts in between.
@@ -5523,11 +5532,13 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     // The draft the switch waits for: prepared by switch, or the version's own.
     const sw = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).switching;
     const pending = sw && sw.n === n;
-    const draft = pending ? sw.draft : version.draft;
+    const draft = pending ? sw.draft : versionDraft(taf, version);
     if (draft) {
       const d = await draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))());
       if (d?.agent && d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
       if (!d || !issued(d.status)) throw new HTTPError(409, "confirm this version's Card first");
+      // A re-pointed Card confirmed in KIFF straight away is held to the same check as at try and switch.
+      await keepsVersionTools(event, taf, version, draft, deps);
     }
     // Going back without a switch: a version that ran under other Card revisions
     // goes live only once a switch has restored them, never under the Cards in
@@ -6335,6 +6346,78 @@ function sameCards(a: CardRevision[], b: CardRevision[]): boolean {
  *   (going back), a draft that restores those revisions;
  * - none when the Cards in force are the ones it runs under.
  */
+/** The draft a version's try and switch use: its re-pointed one (draftBy), else the one it was made with. */
+function versionDraft(taf: Taf, version: AgentVersion): string | undefined {
+  return taf.draftBy?.[String(version.n)] ?? version.draft;
+}
+
+/**
+ * A re-pointed version's Card is the one it was made with on another connection, and nothing more (a fresh Qonto sign-in
+ * made a version that dropped the draft write the owner had approved). The new draft is a new Card revision the owner signs
+ * at try or switch, never a swap of tool names under a signature. Each tool is compared by its app and the vendor's own
+ * name for it (the gateway connection's `tool`), with every limit and pin its grant carries: one dropped, added or changed
+ * is refused, naming it, so a re-point can't narrow or widen a Card unseen. Checked at try and switch, with the person's
+ * session. Nothing to compare with (no list, a draft KIFF can't read): refused, since what the owner signs couldn't be checked.
+ */
+async function keepsVersionTools(event: HTTPEvent, taf: Taf, version: AgentVersion, draftID: string, deps: Deps): Promise<void> {
+  if (!taf.draftBy?.[String(version.n)] || !version.draft || version.draft === draftID) return;
+  const token = bearer(event);
+  const [first, now, conns] = await Promise.all([
+    draftInfo(token, version.draft, deps.fetch, deps.kiffBase).catch(() => undefined),
+    draftInfo(token, draftID, deps.fetch, deps.kiffBase).catch(() => undefined),
+    gatewayConnections(token, deps.fetch, deps.kiffGateway).catch(() => undefined),
+  ]);
+  if (!first || !now || !conns) throw new HTTPError(503, `version ${version.n}'s new Card couldn't be checked against the one it had: try again`);
+  const diff = cardDifferences(first.cards ?? [], now.cards ?? [], conns);
+  if (diff.length) {
+    throw new HTTPError(409, `version ${version.n}'s new Card isn't the one it had on the new connection (${diff.join("; ")}): draft version ${version.n} again with exactly its tools and limits on the new connection, asking for any tool the connection lacks`);
+  }
+}
+
+/**
+ * How a later draft's Cards differ from a first draft's, tool by tool: "leaves out {tool}", "adds {tool}", "changes {tool}".
+ * A tool is the same on any connection when its app and the vendor's own name for it (`vendor_tool`, else `tool`) are; its
+ * grant (every field but its KIFF name) and its connection's pins and class marks must be the same too. A tool the list doesn't know, or with no app, is compared by its KIFF name alone.
+ */
+export function cardDifferences(first: readonly unknown[], later: readonly unknown[], conns: ReadonlyArray<{ name: string; app?: unknown; tool?: unknown; vendor_tool?: unknown; vendor_pins?: unknown; read_only?: unknown; destructive_hint?: unknown }>): string[] {
+  const fold = (x: unknown) => (typeof x === "string" ? x.trim().toLowerCase() : "");
+  const byName = new Map(conns.map((c) => [fold(c.name), c]));
+  // The vendor's own name for the tool (a relay's `tool` is its own name for it), else the upstream one.
+  const keyOf = (action: unknown) => {
+    const c = byName.get(fold(action));
+    const app = fold(c?.app), tool = fold(c?.vendor_tool) || fold(c?.tool);
+    return app && tool ? `${app} ${tool}` : fold(action);
+  };
+  // What makes a tool safe beside its grant, from its connection: the pins KIFF signs into its permit (a draft-only
+  // write is draft-only by them), and its class marks. The same vendor tool on a connection without them isn't the same.
+  const safety = (action: unknown) => {
+    const c = byName.get(fold(action));
+    return { vendor_pins: c?.vendor_pins ?? null, read_only: c?.read_only === true, destructive_hint: c?.destructive_hint === true };
+  };
+  const canon = (x: unknown): unknown => Array.isArray(x) ? x.map(canon)
+    : x && typeof x === "object" ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, canon((x as Record<string, unknown>)[k])])) : x;
+  // Every grant under a tool, sorted: a tool named twice (pinned and unpinned) is never read as the one it names last.
+  const named = (cards: readonly unknown[]) => {
+    const lists = new Map<string, string[]>();
+    for (const card of cards) {
+      const grants = (card as { grants?: unknown })?.grants;
+      if (!Array.isArray(grants)) continue;
+      for (const g of grants) {
+        const { action, ...rest } = (g ?? {}) as Record<string, unknown>;
+        const key = keyOf(action);
+        if (key) lists.set(key, [...(lists.get(key) ?? []), JSON.stringify(canon({ grant: rest, connection: safety(action) }))]);
+      }
+    }
+    return new Map([...lists].map(([k, v]) => [k, JSON.stringify(v.sort())]));
+  };
+  const a = named(first), b = named(later);
+  return [
+    ...[...a.keys()].filter((k) => !b.has(k)).map((k) => `leaves out ${k}`),
+    ...[...b.keys()].filter((k) => !a.has(k)).map((k) => `adds ${k}`),
+    ...[...a.keys()].filter((k) => b.has(k) && a.get(k) !== b.get(k)).map((k) => `changes ${k}`),
+  ];
+}
+
 async function draftFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, version: AgentVersion, again: boolean, deps: Deps): Promise<string | undefined> {
   const token = bearer(event);
   const now = (deps.now ?? (() => new Date()))();
@@ -6344,14 +6427,15 @@ async function draftFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, version: A
       throw err;
     }
   };
-  if (version.draft) {
-    const d = await draftInfo(token, version.draft, deps.fetch, deps.kiffBase, now);
+  const own = versionDraft(taf, version);
+  if (own) {
+    const d = await draftInfo(token, own, deps.fetch, deps.kiffBase, now);
     if (!d || d.status === "discarded") throw new HTTPError(409, "this version's Card draft is gone: improve the taf again");
     // A version made with no session wasn't checked when made: its draft must be this taf's.
     if (d.agent && d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
     if (!issued(d.status)) {
-      if (d.status === "draft" && !again) return version.draft;
-      return kiffCall(() => redraft(token, version.draft!, deps.fetch, deps.kiffBase));
+      if (d.status === "draft" && !again) return own;
+      return kiffCall(() => redraft(token, own, deps.fetch, deps.kiffBase));
     }
     // Issued: it says how the version first went live. Going back to it is
     // then as for any version: by the Cards it recorded.
@@ -11360,7 +11444,7 @@ export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; p
  * the card with. Throws only what may pass on a retry (a server error).
  */
 /** What an improvement result names: the taf it improves, and the version it describes. */
-interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; writes_for?: unknown; sources?: unknown; browse?: unknown; keep_both?: unknown; tools?: string[] }
+interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; writes_for?: unknown; sources?: unknown; browse?: unknown; keep_both?: unknown; repoints?: unknown; withdraws?: unknown; tools?: string[] }
 
 /**
  * The version an improvement result hands over, made once per result for the person whose run it
@@ -11414,6 +11498,8 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
   // line alone. The live taf takes it when that version is installed (keepNotes), never before (#574).
   let writesFor: string | undefined;
   try { writesFor = writesForOf(want.writes_for); } catch (err) { return { failed: (err as Error).message }; }
+  // A fresh sign-in while the owner tries a version is for that version: its Card re-pointed, never a new version.
+  if (want.repoints !== undefined) return repointVersion(tenant, taf, want, deps);
   try {
     // The key the apps make it under, so a version an app makes for the same result is this one.
     const what = want.draft || createHash("sha256").update(want.note ?? "").digest("hex").slice(0, 16);
@@ -11429,6 +11515,43 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
     if (err instanceof HTTPError && err.status >= 400 && err.status < 500) return { failed: err.message };
     throw err;
   }
+}
+
+/**
+ * Re-points a version not yet live at a new draft (a fresh sign-in for more access while the owner tries it): its try and
+ * switch use that draft from then on, and keepsVersionTools holds it to every tool the version had. `withdraws` names
+ * versions made by mistake for the same change (not live, not the one re-pointed): no longer listed or tried. Nothing
+ * else of the version changes. Answers the version re-pointed.
+ */
+async function repointVersion(tenant: string, taf: Taf, want: ImprovedTaf, deps: Deps): Promise<ResultOutcome> {
+  const n = Number(want.repoints);
+  const draft = typeof want.draft === "string" ? want.draft.trim() : "";
+  if (!Number.isInteger(n) || n < 1) return { failed: "repoints is the number of the version the owner is trying" };
+  if (!draft) return { failed: `re-pointing version ${n} needs its new draft` };
+  const withdraws = want.withdraws === undefined ? [] : Array.isArray(want.withdraws) && want.withdraws.every((x) => Number.isInteger(x) && (x as number) > 0) ? [...new Set(want.withdraws as number[])] : undefined;
+  if (!withdraws) return { failed: "withdraws is a list of version numbers" };
+  const state = await deps.agents.versions(tenant, taf.id);
+  const of = (k: number) => state.versions.find((v) => v.n === k);
+  const target = of(n);
+  if (!target || taf.withdrawn?.includes(n)) return { failed: `${taf.name} has no version ${n}` };
+  if (target.live) return { failed: `version ${n} is live already: improve it as a new version` };
+  if (state.switching?.n === n) return { failed: `the owner is switching to version ${n}: wait until it's done` };
+  // Only a mistaken remake of the version being tried: made after it, by Coach, and never live (one that ran keeps its Cards
+  // for going back to it).
+  for (const k of withdraws) {
+    const v = of(k);
+    if (!v || k <= n) return { failed: `version ${k} can't be withdrawn: only a version made after version ${n} for the same change can` };
+    if (v.live || v.cards?.length || state.switching?.n === k) return { failed: `version ${k} is live, has been, or is being switched to: it can't be withdrawn` };
+    if (v.by_kind === "person") return { failed: `version ${k} was made by a person: only one Coach made can be withdrawn` };
+  }
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const cur = (await deps.tafs.get(tenant, taf.id)) ?? taf;
+    const next = { ...cur, draftBy: { ...cur.draftBy, [String(n)]: draft }, ...(withdraws.length ? { withdrawn: [...new Set([...(cur.withdrawn ?? []), ...withdraws])] } : {}) };
+    if (await deps.tafs.putIf(tenant, next, cur)) break;
+  }
+  await tellChange(tenant, "taf", taf.id, deps);
+  console.log(JSON.stringify({ event: "version_repointed", taf: taf.id, version: n, withdrawn: withdraws }));
+  return { version: n };
 }
 
 /**

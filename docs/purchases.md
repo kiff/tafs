@@ -82,8 +82,9 @@ and its sheet reads the receipt from there (`PurchaseReceipt`, `AppModel.purchas
   - **Checked:** KIFF's state is the headline ("Bought"), then its lines, then "KIFF's receipt · checked on this phone".
   - **Not checked** (a key this app doesn't hold): that line comes first, and KIFF's words follow muted, never as a headline.
   - **Changed, or another case's:** only "KIFF's receipt doesn't check out" and why. Its words aren't drawn, since they can't be relied on.
-  - **A key this app doesn't hold:** "It's signed in a way this app doesn't know". It's never shown as checked, and that includes
-    every receipt until KIFF's first key is pinned.
+  - **A key this app doesn't hold:** "It's signed in a way this app doesn't know". It's never shown as checked.
+  - **Pinned on Android:** `kiff-receipts-1`, KIFF's first receipt key (public `x`
+    `_6t9hrjlcGOCqoGUrOf95mAk6oW9Z8zEj1_rtj2c4Pg`). Until KIFF serves receipts, there's nothing to check.
 - **Bouncy Castle** does the Ed25519 check (Android 11 has none of its own). `proguard-rules.pro` keeps it whole for release.
 
 ## Tests

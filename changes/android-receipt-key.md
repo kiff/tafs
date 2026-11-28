@@ -1,0 +1,1 @@
+- **Android: KIFF's purchase receipts check on the phone.** KIFF's first receipt key (`kiff-receipts-1`) is pinned, so a receipt KIFF signed reads "KIFF's receipt · checked on this phone" ([purchases.md](docs/purchases.md)).
