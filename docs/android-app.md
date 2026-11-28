@@ -406,7 +406,7 @@ leaves the app's own count of the tafs at work.
 
 **Needs you's count** (Home's line and the tab's badge) is tafs cloud's (`needs_you`: its count and
 words, covering held calls, "Did this happen?" calls, currency requests and tafs with a knock). When
-tafs cloud leaves it out (it couldn't read all of it), the app counts what it has (`needsYouCount`).
+tafs cloud leaves it out (it couldn't read all of it), the app counts what it has (`needsYouCount`). **A taf with a knock** at one of its doors is listed too, as on iOS: its name and how many knocks wait (`needs_you.knocks`), from Home's `doors[].knocks`, and the row opens the taf on Activity, where the knock is answered (`KnockedRow`).
 Android shows each alert on the lock screen as it comes, with no count of its own there. Locked, the phone, and any watch it bridges alerts to, show only **A taf needs you** (`alert.needs_you`): every alert is private, with that as its public version (`Alert.Show.locked`), so an amount, a merchant or a person's name waits for the unlock, as iOS's hidden previews do (`LockedAlertTest`). An app's
 sheet with no saved workflow says so once, under a Workflow line of its own (`workflow_words`).
 
