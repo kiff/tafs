@@ -54,6 +54,14 @@ class AskedAgainCardTest {
     compose.onNodeWithText(title, substring = true).assertDoesNotExist()
   }
 
+  @Test fun rulesFirstReadsAsTafsCloudsLineAloneToo() {
+    val rulesFirst = "Rules first: agree to them, then approve."
+    draw(CardAnswer(words = rulesFirst, answer = "rules first"))
+    compose.onNodeWithText(rulesFirst).assertExists()
+    compose.onNodeWithText(grantText, substring = true).assertDoesNotExist()
+    compose.onNodeWithText(title, substring = true).assertDoesNotExist()
+  }
+
   @Test fun anyOtherAnswerStillNamesWhatItWas() {
     draw(CardAnswer(words = "Approved", answer = "approved"))
     compose.onNodeWithText("Approved · $title").assertExists()

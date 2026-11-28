@@ -543,9 +543,10 @@ private fun ApprovalCard(c: SetupComponent, setup: String?, state: AppState, ans
   // length: with no title, planque's text can run to paragraphs. With a Card, a tap opens it again to read the Card that was
   // approved, KIFF's draft at the version signed, with nothing to answer; another tap folds it. planque's grant isn't shown
   // there: it reads as it is now, and a later approval can widen it past what this one approved.
-  // A connection from an earlier chat or another taf, which tafs cloud answered before any fingerprint (`asked again`): its
-  // note alone. Nothing was approved or failed, and the grant's own text ("You're already signed in") would contradict it.
-  if (answered != null && settled == CoachWords.ASKED_AGAIN) {
+  // A connection from an earlier chat or another taf (`asked again`), or an approval checked before the rules were agreed
+  // (`rules first`), both answered by tafs cloud before any fingerprint: its line alone. Nothing was approved or failed, and
+  // the grant's own text ("You're already signed in") would contradict it.
+  if (answered != null && settled in CoachWords.NOTE_ALONE) {
     Text(answered, style = scaled(14, FontWeight.Medium, Theme.dim), modifier = Modifier.testTag("asked-again-" + c.id))
     return
   }

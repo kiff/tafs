@@ -183,6 +183,7 @@
     "a purchase has no browser line": "a programming error's message, never shown to a person"
   },
   "model/CoachWords.kt": {
-    "asked again": "tafs cloud's stored answer, a wire value it sends, compared and never shown"
+    "asked again": "tafs cloud's stored answer, a wire value it sends, compared and never shown",
+    "rules first": "tafs cloud's stored answer, a wire value it sends, compared and never shown"
   }
 }

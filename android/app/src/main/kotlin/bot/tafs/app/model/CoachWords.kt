@@ -309,6 +309,15 @@ object CoachWords {
    */
   const val ASKED_AGAIN = "asked again"
 
+  /**
+   * tafs cloud's stored answer for an approval Coach checked before the owner agreed to the rules: a step still to come, not a
+   * failure. It reads as tafs cloud's line alone, as [ASKED_AGAIN] does.
+   */
+  const val RULES_FIRST = "rules first"
+
+  /** Stored answers whose card reads as tafs cloud's line alone, never beside the title or planque's grant text. */
+  val NOTE_ALONE = setOf(ASKED_AGAIN, RULES_FIRST)
+
   /** Taken by tafs cloud, before the thread shows it in kiff/agents' words. */
   val TAKEN get() = Words.Coach.answered
 
